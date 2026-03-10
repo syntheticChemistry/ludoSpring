@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# ludoSpring workspace — the science of play, interaction, and game design.
+#
+# Stops Cargo from walking up to the parent ecoPrimals workspace.
+# Each sub-crate retains its own [workspace] root so that `cargo test`
+# works both from sub-crate directories and from this root via
+# `--manifest-path`.
+
+[workspace]
+resolver = "2"
+members = [
+    "barracuda",
+    "metalForge/forge",
+    "experiments/exp001_doom_raycaster_analysis",
+    "experiments/exp002_procedural_molecule_gen",
+    "experiments/exp003_tufte_game_ui",
+    "experiments/exp004_folding_adversarial",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.87"
+license = "AGPL-3.0-or-later"

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[package]
+name = "ludospring-barracuda"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.87"
+authors = ["Squirrel Team"]
+license = "AGPL-3.0-or-later"
+description = "Ludology — game science, interaction design, and play mechanics via barraCuda"
+keywords = ["games", "ludology", "procedural-generation", "interaction", "gpu"]
+categories = ["science", "game-engines", "command-line-utilities"]
+
+[features]
+default = []
+gpu = ["barracuda/gpu", "dep:wgpu", "dep:tokio"]
+# JSON-RPC IPC server for biomeOS (ludospring-server binary).
+ipc = ["dep:serde", "dep:serde_json"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+barracuda = { path = "../../barraCuda/crates/barracuda", default-features = false }
+
+wgpu = { version = "28", default-features = false, features = [
+    "wgsl",
+    "vulkan-portability",
+], optional = true }
+tokio = { version = "1", features = ["rt"], optional = true }
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+expect_used = "deny"
+unwrap_used = "deny"
+doc_markdown = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
