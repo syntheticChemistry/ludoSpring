@@ -50,6 +50,13 @@ members = [
     "experiments/exp035_noise_throughput",
     "experiments/exp036_raycaster_throughput",
     "experiments/exp037_tick_budget",
+    "experiments/exp038_external_roguelike_control",
+    "experiments/exp039_noise_cross_validation",
+    "experiments/exp040_quality_discrimination",
+    "experiments/exp041_ncbi_qs_integration",
+    "experiments/exp042_tower_atomic_local",
+    "experiments/exp043_qs_gene_fetch",
+    "experiments/exp044_anderson_qs_explorer",
 ]
 
 [workspace.package]

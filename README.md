@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 11, 2026
-**Version:** V4 (37 experiments, 330 validation checks, 133 tests)
+**Version:** V6 (44 experiments, 410 validation checks, 144 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.3 (standalone, 150+ primitives)
@@ -103,6 +103,39 @@ cargo run --bin exp032_mixed_hardware                # 12/12 PCIe + mixed pipeli
 cargo run --bin exp033_nucleus_pipeline              # 11/11 Tower/Node/Nest atomics
 ```
 
+## External Control Groups
+
+Validates the metrics framework against real external game libraries:
+
+```bash
+cargo run --bin exp038_external_roguelike_control    # 12/12 metrics on foreign content
+cargo run --bin exp039_noise_cross_validation        # 12/12 three-way noise comparison
+cargo run --bin exp040_quality_discrimination        # 12/12 archetype quality separation
+```
+
+Key results:
+- **Metrics work on foreign content**: bracket-pathfinding roguelike produces valid engagement, flow, fun, DDA
+- **We're the fastest noise impl**: 0.93x fastnoise-lite (C), 2.85x faster than noise-rs
+- **Flow discriminates quality**: 4/5 good games in Flow, 5/5 bad games NOT in Flow
+- **Scientific finding**: engagement alone doesn't measure quality — you need Flow state (Csikszentmihalyi 1990)
+
+## Cross-Spring Experiments (NCBI, NUCLEUS, Anderson QS)
+
+First experiments bridging ludoSpring game science with wetSpring bioinformatics and biomeOS infrastructure:
+
+```bash
+cargo run --release -p ludospring-exp041 -- validate  # 12/12 NCBI QS gene pipeline
+cargo run --release -p ludospring-exp042 -- validate  # 10/10 Tower Atomic (BearDog+Songbird)
+cargo run --release -p ludospring-exp043 -- validate  # 10/10 QS gene dataset (6 families × 20 genera)
+cargo run --release -p ludospring-exp044 -- validate  # 12/12 Anderson QS interactive explorer
+```
+
+Key results:
+- **Live NCBI integration**: luxI/luxS/agrB gene search, SRA metagenomes, protein databases via E-utilities
+- **Biological validation**: gut microbes use AI-2 (luxS) not AHL (luxI) — NCBI data confirms published biology
+- **Tower Atomic boot**: BearDog crypto.hash (Blake3, SHA3-256) validated via JSON-RPC over Unix sockets
+- **Anderson QS explorer**: Perlin noise as disorder landscape, QS propagation with localization transition, engagement/flow/fun/DDA metrics on microbial exploration. Diversity dominates O2 in the W model (wetSpring Exp356).
+
 ## Specs Paper Validation + Performance Benchmarks
 
 Validates claims from the specs/ paper queue against live measurements:
@@ -199,7 +232,7 @@ ludoSpring/
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 37 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark)
+├── experiments/           # 44 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
@@ -247,9 +280,9 @@ cargo doc --workspace --no-deps
 |-------|--------|
 | `cargo fmt --check` | Clean |
 | `cargo clippy --pedantic` | 0 warnings (new code) |
-| `cargo test` | 133 tests, 0 failures |
+| `cargo test` | 144 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
-| 38 validation binaries | 330 checks, 0 failures |
+| 45 validation binaries | 410 checks, 0 failures |
 | 7 Python baselines | All pass |
 | `#![forbid(unsafe_code)]` | All crate roots |
 | Files > 1000 LOC | None |

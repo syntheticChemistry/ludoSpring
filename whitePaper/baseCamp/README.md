@@ -2,7 +2,7 @@
 
 **Date:** March 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks — 37 experiments, 330 checks, 2 playable prototypes, 3 game adapters
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring — 44 experiments, 410 checks, 2 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring (NCBI, NUCLEUS, Anderson QS)
 
 ---
 
@@ -36,6 +36,8 @@ validated HCI models benefit every primal in the ecosystem.
 | Fun & Engagement | Engagement, Four Keys, DDA, retention | 010, 018, 020–022 | 52 |
 | Compute Dispatch | CPU-GPU parity, routing, mixed hw, NUCLEUS | 030–033 | 49 |
 | Benchmark Validation | Python parity, noise BM-002, raycaster BM-003, tick budget | 034–037 | 45 |
+| External Controls | External roguelike, 3-way noise, quality discrimination | 038–040 | 36 |
+| Cross-Spring | NCBI QS pipeline, Tower Atomic, QS gene dataset, Anderson QS explorer | 041–044 | 44 |
 
 ### Cross-Spring Provenance
 
@@ -44,6 +46,9 @@ validated HCI models benefit every primal in the ecosystem.
 - **Tolerances** centralized with citations in `tolerances/mod.rs`
 - **petalTongue** integration: 3 dashboard binaries, all 7 `GameChannelType` channels wired
 - **GPU promotion**: 8 modules Tier A (pure math, embarrassingly parallel)
+- **NCBI integration**: Direct E-utilities access (esearch, esummary) for QS gene data — nestgate provider documented but needs module wiring
+- **NUCLEUS atomics**: Tower Atomic (BearDog + Songbird) validated via JSON-RPC 2.0 over Unix sockets
+- **wetSpring cross-spring**: Anderson QS disorder model (W = 3.5H' + 8.0·O₂) with Perlin noise landscapes and game metrics
 
 ### Connection to Constrained Evolution Thesis
 
@@ -83,6 +88,13 @@ that constrained evolution produces transferable specializations.
 | 035 | Noise Throughput (BM-002) | 13.1M samples/s Perlin, 0.93x fastnoise-lite | `exp035_noise_throughput.md` |
 | 036 | Raycaster Throughput (BM-003) | 6,623 FPS DDA raycaster, 110x 60Hz target | `exp036_raycaster_throughput.md` |
 | 037 | Tick Budget Validation | 10K entities in 910us, 70% headroom under 3ms budget | `exp037_tick_budget.md` |
+| 038 | External Roguelike Control | Metrics work on foreign content (bracket-pathfinding) | `exp038_external_roguelike_control.md` |
+| 039 | Noise Cross-Validation | 3-way comparison: ours fastest (0.93x fastnoise-lite) | `exp039_noise_cross_validation.md` |
+| 040 | Quality Discrimination | Flow discriminates quality: 4/5 good in flow, 5/5 bad not | `exp040_quality_discrimination.md` |
+| 041 | NCBI QS Integration | Live NCBI E-utilities: luxI/luxS/agrB gene search, SRA metagenomes | — |
+| 042 | Tower Atomic Local | BearDog crypto.hash + Songbird IPC via JSON-RPC 2.0 Unix sockets | — |
+| 043 | QS Gene Dataset | 6 QS gene families × 20 gut genera — AI-2 dominant in gut | — |
+| 044 | Anderson QS Explorer | Cross-spring: Perlin disorder landscapes, QS propagation, game metrics | — |
 
 ### Barrier Removal Philosophy
 
@@ -103,7 +115,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc --lib --tests              # 123 Rust tests
+cargo test --features ipc --lib --tests             # 144 Rust tests
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike
@@ -119,6 +131,13 @@ cargo run --bin exp034_python_parity_bench           # Python parity: 15/15 chec
 cargo run --bin exp035_noise_throughput              # BM-002 noise: 10/10 checks
 cargo run --bin exp036_raycaster_throughput          # BM-003 raycaster: 10/10 checks
 cargo run --bin exp037_tick_budget                   # tick budget: 10/10 checks
+cargo run --bin exp038_external_roguelike_control    # external control: 12/12 checks
+cargo run --bin exp039_noise_cross_validation        # noise cross-val: 12/12 checks
+cargo run --bin exp040_quality_discrimination        # quality discrim: 12/12 checks
+cargo run --release -p ludospring-exp041 -- validate # NCBI QS integration: 12/12 checks
+cargo run --release -p ludospring-exp042 -- validate # Tower Atomic local: 10/10 checks
+cargo run --release -p ludospring-exp043 -- validate # QS gene dataset: 10/10 checks
+cargo run --release -p ludospring-exp044 -- validate # Anderson QS explorer: 12/12 checks
 cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
 ```
 

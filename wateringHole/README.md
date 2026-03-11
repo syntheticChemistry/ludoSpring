@@ -23,19 +23,21 @@ coralReef (shader compilation), biomeOS (orchestration), petalTongue (visualizat
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V2** | `LUDOSPRING_V2_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | Mar 11 | Full validation: 22 experiments (183 checks), 123 tests, 13 models, petalTongue integration, GPU shader promotion map |
-| **V2** | `LUDOSPRING_V2_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | Mar 11 | GPU evolution: 8 Tier A shader targets, WGSL sketches, toadStool streaming, precision characteristics |
+| **V3** | `LUDOSPRING_V3_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | Mar 11 | Full validation: 44 experiments (410 checks), 144 tests, 13 models, 4 cross-spring experiments, NCBI integration, NUCLEUS atomics, Anderson QS explorer |
+| **V3** | `LUDOSPRING_V3_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | Mar 11 | GPU evolution: 8 Tier A + cross-spring validated, Perlin as cross-spring critical primitive, batch metrics serve science + games, NUCLEUS dispatch integration |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science)
+ludoSpring (game science, 44 experiments, 410 checks)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify)
-    ├─→ toadStool (dispatch: noise fields, raycaster, WFC, engagement batch)
+    ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline)
     ├─→ coralReef (compile: f64-canonical shaders, log2 only transcendental)
     ├─→ petalTongue (render: 7 GameChannelType channels, streaming sessions)
-    └─→ biomeOS (orchestrate: game_logic + metrics nodes, needs Continuous mode)
+    ├─→ biomeOS (orchestrate: game_logic + metrics nodes, Tower Atomic validated)
+    ├─→ wetSpring (cross-spring: Anderson QS explorer, disorder landscapes, W model)
+    └─→ nestgate (data: NCBI E-utilities for QS genes, providers module needs wiring)
 ```
 
 ## petalTongue Integration
@@ -73,6 +75,8 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V2 | `handoffs/archive/LUDOSPRING_V2_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | V3 Full Validation |
+| V2 | `handoffs/archive/LUDOSPRING_V2_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | V3 GPU Evolution |
 | V1 | `handoffs/archive/LUDOSPRING_V1_SCAFFOLD_HANDOFF_MAR_2026.md` | V2 Full Validation |
 
 ## License

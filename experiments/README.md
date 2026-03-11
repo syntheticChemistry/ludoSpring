@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 11, 2026
-**Total:** 37 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark), 330 checks, 0 failures
+**Total:** 44 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring), 410 checks, 0 failures
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -90,6 +90,23 @@
 | 036 | `exp036_raycaster_throughput` | 10 | PASS | BM-003, Lodev DDA reference | DDA 320/640-col cast, 60Hz sustainability, determinism |
 | 037 | `exp037_tick_budget` | 10 | PASS | GAME_ENGINE_NICHE_SPEC budget table | game_logic 3ms, metrics 1ms, 10K entities at 60Hz |
 
+### Track 10: External Control Groups
+
+| # | Binary | Checks | Status | Reference | Modules Validated |
+|---|--------|--------|--------|-----------|-------------------|
+| 038 | `exp038_external_roguelike_control` | 12 | PASS | bracket-pathfinding (A*, FOV), drunkard's walk | Metrics on foreign content: engagement, flow, fun, DDA |
+| 039 | `exp039_noise_cross_validation` | 12 | PASS | noise-rs, fastnoise-lite (C) | 3-way noise comparison: values, stats, game metrics, timing |
+| 040 | `exp040_quality_discrimination` | 12 | PASS | 5 archetypes x 2 quality levels | Flow discriminates quality, fun keys classify archetypes |
+
+### Track 11: Cross-Spring Experiments (NCBI, NUCLEUS, Anderson QS)
+
+| # | Binary | Checks | Status | Reference | Modules Validated |
+|---|--------|--------|--------|-----------|-------------------|
+| 041 | `exp041_ncbi_qs_integration` | 12 | PASS | NCBI E-utilities, nestgate | NCBI esearch/esummary: luxI/luxS/agrB genes, SRA metagenomes, proteins |
+| 042 | `exp042_tower_atomic_local` | 10 | PASS | biomeOS tower_atomic_bootstrap.toml | BearDog crypto.hash (Blake3, SHA3-256), Songbird IPC, JSON-RPC 2.0 |
+| 043 | `exp043_qs_gene_fetch` | 10 | PASS | NCBI gene/protein databases | QS gene families (luxI/luxS/agrB/luxR/lasI/rhlI) × 20 gut genera |
+| 044 | `exp044_anderson_qs_explorer` | 12 | PASS | wetSpring Exp356 (W model) | `procedural::noise`, `interaction::flow`, `metrics::engagement`, `metrics::fun_keys`, `interaction::difficulty` |
+
 ### metalForge Dispatch
 
 | Binary | Checks | Status | Modules Validated |
@@ -139,11 +156,22 @@ cargo run --bin exp033_nucleus_pipeline               # NUCLEUS pipeline (11 che
 cargo run --bin exp026_game_telemetry -- generate session.ndjson
 cargo run --bin exp026_game_telemetry -- analyze session.ndjson
 
+# Run external control groups
+cargo run --bin exp038_external_roguelike_control         # external roguelike (12 checks)
+cargo run --bin exp039_noise_cross_validation             # 3-way noise validation (12 checks)
+cargo run --bin exp040_quality_discrimination             # quality discrimination (12 checks)
+
 # Run specs paper validation + benchmarks
 cargo run --bin exp034_python_parity_bench               # Python-Rust parity (15 checks)
 cargo run --bin exp035_noise_throughput                   # BM-002 noise throughput (10 checks)
 cargo run --bin exp036_raycaster_throughput               # BM-003 raycaster throughput (10 checks)
 cargo run --bin exp037_tick_budget                        # tick budget validation (10 checks)
+
+# Run cross-spring experiments
+cargo run --release -p ludospring-exp041 -- validate      # NCBI QS integration (12 checks)
+cargo run --release -p ludospring-exp042 -- validate      # Tower Atomic local (10 checks)
+cargo run --release -p ludospring-exp043 -- validate      # QS gene dataset (10 checks)
+cargo run --release -p ludospring-exp044 -- validate      # Anderson QS explorer (12 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests
