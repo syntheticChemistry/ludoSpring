@@ -3,10 +3,10 @@
 [package]
 name = "ludospring-forge"
 version = "0.1.0"
-edition = "2024"
-rust-version = "1.87"
+edition.workspace = true
+rust-version.workspace = true
 description = "Hardware discovery and cross-substrate dispatch for ludoSpring"
-license = "AGPL-3.0-or-later"
+license.workspace = true
 
 [dependencies]
 barracuda = { path = "../../../barraCuda/crates/barracuda" }

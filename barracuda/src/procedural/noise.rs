@@ -37,11 +37,11 @@ const PERM: [u8; 512] = {
 };
 
 fn fade(t: f64) -> f64 {
-    t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+    t * t * t * t.mul_add(t.mul_add(6.0, -15.0), 10.0)
 }
 
 fn lerp(a: f64, b: f64, t: f64) -> f64 {
-    a + t * (b - a)
+    t.mul_add(b - a, a)
 }
 
 fn grad2(hash: u8, x: f64, y: f64) -> f64 {
@@ -53,6 +53,10 @@ fn grad2(hash: u8, x: f64, y: f64) -> f64 {
     }
 }
 
+#[expect(
+    clippy::match_same_arms,
+    reason = "Perlin's original gradient table (2002); arms 9/13 and 11/_ intentionally share values"
+)]
 fn grad3(hash: u8, x: f64, y: f64, z: f64) -> f64 {
     match hash & 15 {
         0 => x + y,
@@ -74,8 +78,13 @@ fn grad3(hash: u8, x: f64, y: f64, z: f64) -> f64 {
     }
 }
 
-/// 2D Perlin noise. Returns value in approximately [-1, 1].
+/// 2D Perlin noise. Returns value in approximately \[-1, 1\].
 #[must_use]
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "Perlin noise: floor + mask to 0..255 guarantees safe usize"
+)]
 pub fn perlin_2d(x: f64, y: f64) -> f64 {
     let xi = x.floor() as usize & 255;
     let yi = y.floor() as usize & 255;
@@ -97,8 +106,14 @@ pub fn perlin_2d(x: f64, y: f64) -> f64 {
     )
 }
 
-/// 3D Perlin noise. Returns value in approximately [-1, 1].
+/// 3D Perlin noise. Returns value in approximately \[-1, 1\].
 #[must_use]
+#[expect(
+    clippy::many_single_char_names,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "Perlin noise: u/v/w/a/b are standard names; floor + mask to 0..255 guarantees safe usize"
+)]
 pub fn perlin_3d(x: f64, y: f64, z: f64) -> f64 {
     let xi = x.floor() as usize & 255;
     let yi = y.floor() as usize & 255;
@@ -196,21 +211,21 @@ mod tests {
 
     #[test]
     fn perlin_2d_in_range() {
-        for i in 0..100 {
-            for j in 0..100 {
-                let v = perlin_2d(i as f64 * 0.1, j as f64 * 0.1);
-                assert!(v >= -2.0 && v <= 2.0, "value {v} out of range");
+        for i in 0..100_i32 {
+            for j in 0..100_i32 {
+                let v = perlin_2d(f64::from(i) * 0.1, f64::from(j) * 0.1);
+                assert!((-2.0..=2.0).contains(&v), "value {v} out of range");
             }
         }
     }
 
     #[test]
     fn perlin_3d_in_range() {
-        for i in 0..20 {
-            for j in 0..20 {
-                for k in 0..20 {
-                    let v = perlin_3d(i as f64 * 0.1, j as f64 * 0.1, k as f64 * 0.1);
-                    assert!(v >= -2.0 && v <= 2.0, "value {v} out of range");
+        for i in 0..20_i32 {
+            for j in 0..20_i32 {
+                for k in 0..20_i32 {
+                    let v = perlin_3d(f64::from(i) * 0.1, f64::from(j) * 0.1, f64::from(k) * 0.1);
+                    assert!((-2.0..=2.0).contains(&v), "value {v} out of range");
                 }
             }
         }

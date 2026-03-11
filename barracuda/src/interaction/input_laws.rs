@@ -29,7 +29,7 @@ pub fn fitts_movement_time(distance: f64, target_width: f64, a: f64, b: f64) -> 
         return a;
     }
     let id = (2.0 * distance / target_width + 1.0).log2();
-    a + b * id
+    b.mul_add(id, a)
 }
 
 /// Fitts's index of difficulty (bits).
@@ -50,11 +50,15 @@ pub fn fitts_index_of_difficulty(distance: f64, target_width: f64) -> f64 {
 ///
 /// Returns reaction time in milliseconds.
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "choice counts are small (≤1000); fits in f64"
+)]
 pub fn hick_reaction_time(n_choices: usize, a: f64, b: f64) -> f64 {
     if n_choices == 0 {
         return a;
     }
-    a + b * ((n_choices + 1) as f64).log2()
+    b.mul_add(((n_choices + 1) as f64).log2(), a)
 }
 
 /// Steering law: time to navigate through a tunnel.
@@ -70,7 +74,7 @@ pub fn steering_time(tunnel_length: f64, tunnel_width: f64, a: f64, b: f64) -> f
     if tunnel_width <= 0.0 {
         return f64::INFINITY;
     }
-    a + b * (tunnel_length / tunnel_width)
+    b.mul_add(tunnel_length / tunnel_width, a)
 }
 
 /// Evaluate the "interaction cost" of a UI element at a given distance and size.

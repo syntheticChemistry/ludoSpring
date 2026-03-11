@@ -36,19 +36,36 @@ pub struct DimensionScore {
     pub strengths: Vec<String>,
 }
 
+/// Features present in a visual accessibility evaluation.
+///
+/// Refactored from individual bool parameters per Xbox Accessibility Guidelines
+/// and IGDA recommendations.
+#[derive(Debug, Clone, Copy, Default)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "each bool maps to a distinct accessibility feature per IGDA/XAG guidelines"
+)]
+pub struct VisualAccessibilityFeatures {
+    /// Audio cues that convey visual events.
+    pub audio_cues: bool,
+    /// Natural language scene/object descriptions.
+    pub descriptions: bool,
+    /// Braille output support.
+    pub braille: bool,
+    /// Haptic feedback for spatial awareness.
+    pub haptic: bool,
+    /// Information encoded independently of color.
+    pub color_independent: bool,
+    /// User-scalable text size.
+    pub scalable_text: bool,
+}
+
 /// Evaluate visual accessibility of a game interface.
 ///
 /// Checks: alternative modalities, screen reader support, color independence,
 /// text sizing, contrast.
 #[must_use]
-pub fn score_visual_accessibility(
-    has_audio_cues: bool,
-    has_descriptions: bool,
-    has_braille: bool,
-    has_haptic: bool,
-    color_independent: bool,
-    scalable_text: bool,
-) -> DimensionScore {
+pub fn score_visual_accessibility(features: &VisualAccessibilityFeatures) -> DimensionScore {
     let mut score = 0.0;
     let mut issues = Vec::new();
     let mut strengths = Vec::new();
@@ -57,24 +74,29 @@ pub fn score_visual_accessibility(
         (
             "Audio cues for visual events",
             "No audio cues",
-            has_audio_cues,
+            features.audio_cues,
             0.2,
         ),
         (
             "Natural language descriptions",
             "No descriptions",
-            has_descriptions,
+            features.descriptions,
             0.2,
         ),
-        ("Braille output", "No braille", has_braille, 0.15),
-        ("Haptic feedback", "No haptic", has_haptic, 0.15),
+        ("Braille output", "No braille", features.braille, 0.15),
+        ("Haptic feedback", "No haptic", features.haptic, 0.15),
         (
             "Color-independent information",
             "Color-dependent",
-            color_independent,
+            features.color_independent,
             0.15,
         ),
-        ("Scalable text", "Fixed text size", scalable_text, 0.15),
+        (
+            "Scalable text",
+            "Fixed text size",
+            features.scalable_text,
+            0.15,
+        ),
     ];
 
     for &(strength_msg, issue_msg, present, weight) in checks {
@@ -106,6 +128,10 @@ pub struct AccessibilityReport {
 impl AccessibilityReport {
     /// Build a report from dimension scores.
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "accessibility dimensions are few (≤10); len fits in f64"
+    )]
     pub fn from_dimensions(dimensions: Vec<DimensionScore>) -> Self {
         let overall = if dimensions.is_empty() {
             0.0
@@ -125,14 +151,22 @@ mod tests {
 
     #[test]
     fn fully_accessible_scores_one() {
-        let score = score_visual_accessibility(true, true, true, true, true, true);
+        let features = VisualAccessibilityFeatures {
+            audio_cues: true,
+            descriptions: true,
+            braille: true,
+            haptic: true,
+            color_independent: true,
+            scalable_text: true,
+        };
+        let score = score_visual_accessibility(&features);
         assert!((score.score - 1.0).abs() < 1e-10);
         assert!(score.issues.is_empty());
     }
 
     #[test]
     fn no_accessibility_scores_zero() {
-        let score = score_visual_accessibility(false, false, false, false, false, false);
+        let score = score_visual_accessibility(&VisualAccessibilityFeatures::default());
         assert!((score.score - 0.0).abs() < 1e-10);
         assert_eq!(score.issues.len(), 6);
     }

@@ -25,6 +25,26 @@ pub enum FlowState {
     Anxiety,
 }
 
+impl std::fmt::Display for FlowState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl FlowState {
+    /// Lowercase string representation for JSON serialization.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Boredom => "boredom",
+            Self::Relaxation => "relaxation",
+            Self::Flow => "flow",
+            Self::Arousal => "arousal",
+            Self::Anxiety => "anxiety",
+        }
+    }
+}
+
 /// Evaluate flow state given normalized challenge and skill (both 0.0–1.0).
 ///
 /// The flow channel is a band around the `challenge == skill` diagonal.
@@ -67,10 +87,10 @@ impl DifficultyCurve {
         let n = 20;
         let points = (0..=n)
             .map(|i| {
-                let t = i as f64 / n as f64;
+                let t = f64::from(i) / f64::from(n);
                 let x = (t - 0.5) * steepness;
-                let sigmoid = 1.0 / (1.0 + (-x).exp());
-                (t, floor + (ceiling - floor) * sigmoid)
+                let s = barracuda::activations::sigmoid(x);
+                (t, (ceiling - floor).mul_add(s, floor))
             })
             .collect();
         Self { points }
@@ -93,7 +113,7 @@ impl DifficultyCurve {
             let (p1, c1) = window[1];
             if progress >= p0 && progress <= p1 {
                 let t = (progress - p0) / (p1 - p0);
-                return c0 + t * (c1 - c0);
+                return t.mul_add(c1 - c0, c0);
             }
         }
         0.5
@@ -132,7 +152,7 @@ mod tests {
         let curve = DifficultyCurve::sigmoid(0.1, 0.9, 10.0);
         let mut prev = 0.0;
         for i in 0..=100 {
-            let t = i as f64 / 100.0;
+            let t = f64::from(i) / 100.0;
             let val = curve.sample(t);
             assert!(val >= prev - 1e-10);
             prev = val;

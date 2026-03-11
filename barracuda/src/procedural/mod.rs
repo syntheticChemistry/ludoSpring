@@ -6,5 +6,7 @@
 //! determines where atoms cluster. An L-system grows a protein backbone.
 //! Wave function collapse ensures chemical validity of the generated structure.
 
+pub mod bsp;
+pub mod lsystem;
 pub mod noise;
 pub mod wfc;

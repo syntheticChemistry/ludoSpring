@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[package]
+name = "ludospring-benchmarks"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+description = "Benchmarks: ludoSpring vs open-system baselines"
+
+[dependencies]
+ludospring-barracuda = { path = "../barracuda" }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "noise_throughput"
+harness = false
+
+[[bench]]
+name = "raycaster_throughput"
+harness = false
+
+[[bench]]
+name = "ecs_tick"
+harness = false
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cast_precision_loss = "allow"
+must_use_candidate = "allow"
+suboptimal_flops = "allow"

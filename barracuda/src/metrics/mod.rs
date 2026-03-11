@@ -7,4 +7,5 @@
 //! viewer's intelligence.
 
 pub mod engagement;
+pub mod fun_keys;
 pub mod tufte_gaming;

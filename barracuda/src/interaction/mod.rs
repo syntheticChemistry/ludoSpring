@@ -8,4 +8,5 @@
 pub mod accessibility;
 pub mod difficulty;
 pub mod flow;
+pub mod goms;
 pub mod input_laws;

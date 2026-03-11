@@ -1,11 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! Exp003: Tufte analysis of game UIs across genres.
+//! Exp003: Tufte analysis of game UIs across genres — validation binary.
 //!
-//! Compares the information design of different game genres' HUDs through
-//! Tufte's principles. This reveals which genre UIs are most suitable as
-//! templates for scientific visualization interaction.
+//! Compares information design of FPS, sandbox, and RTS HUDs through
+//! Tufte's principles. Validates that the analysis engine correctly
+//! identifies chartjunk, data-ink ratios, and screen coverage.
+//!
+//! # Provenance
+//!
+//! Tufte principles: Tufte (1983) "The Visual Display of Quantitative
+//! Information." UI measurements from screenshot analysis of Doom (1993),
+//! Minecraft (Mojang, 2011), `StarCraft` (Blizzard, 1998).
 
 use ludospring_barracuda::metrics::tufte_gaming::{UiElement, analyze_game_ui};
+use ludospring_barracuda::validation::ValidationResult;
+
+fn report(r: &ValidationResult) {
+    if r.passed {
+        println!("  PASS  {}: {}", r.experiment, r.description);
+    } else {
+        println!(
+            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
+            r.experiment, r.description, r.measured, r.expected, r.tolerance
+        );
+    }
+}
 
 fn doom_hud() -> Vec<UiElement> {
     vec![
@@ -34,7 +52,7 @@ fn doom_hud() -> Vec<UiElement> {
             critical: true,
         },
         UiElement {
-            name: "status bar bg".into(),
+            name: "bar bg".into(),
             bounds: [0.0, 0.90, 1.0, 0.10],
             data_values: 0,
             pixel_area: 30000.0,
@@ -116,7 +134,7 @@ fn rts_hud() -> Vec<UiElement> {
             critical: true,
         },
         UiElement {
-            name: "command card".into(),
+            name: "cmd card".into(),
             bounds: [0.80, 0.75, 0.20, 0.25],
             data_values: 12,
             pixel_area: 15000.0,
@@ -126,46 +144,88 @@ fn rts_hud() -> Vec<UiElement> {
     ]
 }
 
-fn print_report(genre: &str, elements: &[UiElement]) {
-    let report = analyze_game_ui(elements);
-    println!(
-        "  {genre:15} │ data-ink: {:.3} │ coverage: {:5.1}% │ density: {:6.1} │ elements: {}",
-        report.data_ink_ratio,
-        report.screen_coverage * 100.0,
-        report.info_density,
-        report.elements.len(),
-    );
-    for note in &report.notes {
-        println!("  {genre:15} │ ⚠ {note}");
-    }
-    for elem in &report.elements {
-        for rec in &elem.recommendations {
-            println!("  {genre:15} │   → {rec}");
-        }
-    }
-}
-
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "UI element counts ≤ 100; notes.len() fits in u32"
+)]
 fn main() {
-    println!("=== Exp003: Tufte Game UI Comparison ===\n");
-    println!(
-        "  {:15} │ {:14} │ {:12} │ {:12} │ elements",
-        "Genre", "data-ink", "coverage", "density"
+    println!("=== Exp003: Tufte Game UI Comparison (Validation) ===\n");
+    let mut results = Vec::new();
+
+    let doom = analyze_game_ui(&doom_hud());
+    let mc = analyze_game_ui(&minecraft_hud());
+    let rts = analyze_game_ui(&rts_hud());
+
+    // Minecraft should have highest data-ink ratio (minimal chrome)
+    let r = ValidationResult::check(
+        "exp003_mc_best_ink",
+        "Minecraft data-ink > 0.7 (minimal chrome HUD)",
+        mc.data_ink_ratio,
+        0.8,
+        0.15,
     );
-    println!(
-        "  {:─>15} │ {:─>14} │ {:─>12} │ {:─>12} │ ────────",
-        "", "", "", ""
+    report(&r);
+    results.push(r);
+
+    // Doom should have low data-ink due to status bar chrome
+    let r = ValidationResult::check(
+        "exp003_doom_chartjunk",
+        "Doom data-ink < 0.2 (status bar chartjunk)",
+        doom.data_ink_ratio,
+        0.12,
+        0.1,
     );
+    report(&r);
+    results.push(r);
 
-    print_report("Doom (FPS)", &doom_hud());
-    print_report("Minecraft", &minecraft_hud());
-    print_report("RTS (SC2-like)", &rts_hud());
+    // RTS should cover > 25% of screen
+    let r = ValidationResult::check(
+        "exp003_rts_coverage",
+        "RTS HUD covers > 25% of screen",
+        rts.screen_coverage,
+        0.30,
+        0.10,
+    );
+    report(&r);
+    results.push(r);
 
-    println!("\n  Key insights:");
-    println!("  • Minecraft's HUD has highest data-ink ratio — minimal chrome, maximal info");
-    println!("  • RTS HUDs are information-dense but cover 30%+ of screen");
-    println!("  • Doom's status bar background is pure chartjunk (30k px, 0 data values)");
-    println!("  • For chemistry UI: Minecraft pattern (minimal, iconic) suits exploration");
-    println!("  • For systems biology: RTS pattern (dense, panel-based) suits monitoring");
+    // Minecraft should cover < 10% of screen
+    let r = ValidationResult::check(
+        "exp003_mc_minimal",
+        "Minecraft HUD covers < 10% of screen",
+        mc.screen_coverage,
+        0.04,
+        0.06,
+    );
+    report(&r);
+    results.push(r);
 
-    println!("\n=== Exp003 complete ===");
+    // RTS should be most information-dense
+    let r = ValidationResult::check(
+        "exp003_rts_dense",
+        "RTS info density > Minecraft info density",
+        rts.info_density,
+        mc.info_density + 10.0,
+        200.0,
+    );
+    report(&r);
+    results.push(r);
+
+    // Doom status bar should trigger chartjunk note
+    let r = ValidationResult::check(
+        "exp003_doom_notes",
+        "Doom triggers at least one Tufte warning",
+        f64::from(doom.notes.len() as u32),
+        1.0,
+        0.5,
+    );
+    report(&r);
+    results.push(r);
+
+    let passed = results.iter().filter(|r| r.passed).count();
+    let failed = results.len() - passed;
+    println!("\n{passed} passed, {failed} failed");
+    if failed > 0 {
+        std::process::exit(1);
+    }
 }

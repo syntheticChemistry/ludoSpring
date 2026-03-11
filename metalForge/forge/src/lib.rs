@@ -12,9 +12,9 @@
 //!
 //! # Design Principle
 //!
-//! Springs don't reference each other. ludoSpring doesn't import wetSpring.
-//! Both lean on ToadStool independently — ludoSpring evolves game/interaction
-//! shaders, wetSpring evolves bio shaders, and ToadStool absorbs both.
+//! Springs don't reference each other. `ludoSpring` doesn't import `wetSpring`.
+//! Both lean on `ToadStool` independently — `ludoSpring` evolves game/interaction
+//! shaders, `wetSpring` evolves bio shaders, and `ToadStool` absorbs both.
 
 /// Game science workload types for dispatch routing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

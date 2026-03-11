@@ -43,7 +43,7 @@ pub enum InteractionArchitecture {
 
 /// Maps a game genre to its analogous scientific visualization domain.
 #[must_use]
-pub fn genre_domain_analogy(arch: InteractionArchitecture) -> &'static str {
+pub const fn genre_domain_analogy(arch: InteractionArchitecture) -> &'static str {
     match arch {
         InteractionArchitecture::FirstPersonSpatial => "molecular/particle exploration",
         InteractionArchitecture::TopDownCommand => "systems biology / network orchestration",

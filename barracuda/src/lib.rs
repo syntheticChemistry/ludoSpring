@@ -50,7 +50,7 @@
 //! | Doom (1993) | Raycasting, BSP, fixed-point math, minimal UI | Exp001 |
 //! | Minecraft | Procedural voxel worlds, emergent gameplay | Exp002 |
 //! | Folding\@Home | Science-as-game, adversarial protein folding | Exp004 |
-//! | NetHack | Procedural dungeon generation, roguelike design | — |
+//! | `NetHack` | Procedural dungeon generation, roguelike design | — |
 //! | Dwarf Fortress | Complex simulation → emergent narrative | — |
 //! | KSP | Physics education through play | — |
 //!
@@ -99,12 +99,23 @@ pub mod tolerances;
 /// Validation harness and test utilities.
 pub mod validation;
 
-/// petalTongue visualization schema for game data.
+/// Visualization data channels for any visualization-capable consumer.
 pub mod visualization;
 
 /// IPC server: JSON-RPC 2.0 over Unix socket.
 #[cfg(feature = "ipc")]
 pub mod ipc;
+
+/// Re-exported barraCuda CPU primitives.
+///
+/// These are the shared math operations from the barraCuda primal.
+/// Using them instead of hand-rolling ensures consistent behavior
+/// across the Python → Rust CPU → GPU evolution path.
+pub mod barcuda_math {
+    pub use barracuda::activations::{sigmoid, sigmoid_batch};
+    pub use barracuda::rng::{lcg_step, state_to_f64, uniform_f64_sequence};
+    pub use barracuda::stats::{dot, l2_norm, mean};
+}
 
 /// Primal identity.
 pub const PRIMAL_NAME: &str = "ludospring";

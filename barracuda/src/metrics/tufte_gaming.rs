@@ -63,6 +63,10 @@ pub struct ElementAnalysis {
 
 /// Analyze a set of game UI elements through Tufte constraints.
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "UI element counts are small (≤100); fits in f64"
+)]
 pub fn analyze_game_ui(elements: &[UiElement]) -> GameUiTufteReport {
     let total_pixel_area: f64 = elements.iter().map(|e| e.pixel_area).sum();
     let total_data_ink: f64 = elements.iter().map(|e| e.data_ink_area).sum();
@@ -89,16 +93,18 @@ pub fn analyze_game_ui(elements: &[UiElement]) -> GameUiTufteReport {
             } else {
                 0.0
             };
-            let simplifiable = ratio < 0.5;
+            let simplifiable = ratio < crate::tolerances::TUFTE_SIMPLIFIABLE_THRESHOLD;
             let mut recs = Vec::new();
 
-            if ratio < 0.3 {
+            if ratio < crate::tolerances::TUFTE_SEVERE_DECORATION_THRESHOLD {
                 recs.push(format!(
                     "'{}': data-ink ratio {ratio:.2} — over 70% decoration. Consider Tufte sparkline style.",
                     e.name
                 ));
             }
-            if e.bounds[2] * e.bounds[3] > 0.05 && e.data_values < 3 {
+            if e.bounds[2] * e.bounds[3] > crate::tolerances::TUFTE_LARGE_ELEMENT_THRESHOLD
+                && e.data_values < crate::tolerances::TUFTE_MIN_DATA_VALUES_LARGE_ELEMENT
+            {
                 recs.push(format!(
                     "'{}': large area ({:.0}% of screen) for {} data values. Consider shrinking.",
                     e.name,
@@ -117,13 +123,13 @@ pub fn analyze_game_ui(elements: &[UiElement]) -> GameUiTufteReport {
         .collect();
 
     let mut notes = Vec::new();
-    if total_screen_coverage > 0.25 {
+    if total_screen_coverage > crate::tolerances::MAX_HUD_COVERAGE {
         notes.push(format!(
             "HUD covers {:.0}% of screen — consider progressive disclosure.",
             total_screen_coverage * 100.0
         ));
     }
-    if data_ink_ratio < 0.4 {
+    if data_ink_ratio < crate::tolerances::TUFTE_MIN_DATA_INK_RATIO {
         notes.push("Overall data-ink ratio below 0.4 — significant chartjunk.".into());
     }
 

@@ -7,8 +7,8 @@
 //! structure where every bond satisfies valence rules.
 //!
 //! # References
-//! - Gumin, M. (2016). "WaveFunctionCollapse" — procedural bitmap generation
-//! - Karth, I. & Smith, A.M. (2017). "WaveFunctionCollapse is Constraint
+//! - Gumin, M. (2016). "`WaveFunctionCollapse`" — procedural bitmap generation
+//! - Karth, I. & Smith, A.M. (2017). "`WaveFunctionCollapse` is Constraint
 //!   Solving in the Wild." FDG '17.
 
 use std::collections::BTreeSet;
@@ -28,6 +28,10 @@ pub struct AdjacencyRules {
 impl AdjacencyRules {
     /// Create rules for `n_tiles` with no constraints (everything allowed).
     #[must_use]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "tile counts are small (≤65535); caller invariant"
+    )]
     pub fn unconstrained(n_tiles: usize) -> Self {
         let all: BTreeSet<TileId> = (0..n_tiles as TileId).collect();
         Self {
@@ -88,6 +92,10 @@ pub struct WfcGrid {
 impl WfcGrid {
     /// Create a grid where every cell starts with all tiles possible.
     #[must_use]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "tile counts are small (≤65535); caller invariant"
+    )]
     pub fn new(width: usize, height: usize, n_tiles: usize) -> Self {
         let all: BTreeSet<TileId> = (0..n_tiles as TileId).collect();
         let cells = vec![WfcCell { options: all }; width * height];
@@ -117,10 +125,10 @@ impl WfcGrid {
             for x in 0..self.width {
                 let cell = &self.cells[y * self.width + x];
                 let entropy = cell.entropy();
-                if entropy > 1 {
-                    if best.is_none() || entropy < best.as_ref().map_or(usize::MAX, |b| b.2) {
-                        best = Some((x, y, entropy));
-                    }
+                if entropy > 1
+                    && (best.is_none() || entropy < best.as_ref().map_or(usize::MAX, |b| b.2))
+                {
+                    best = Some((x, y, entropy));
                 }
             }
         }
@@ -214,7 +222,7 @@ mod tests {
     #[test]
     fn new_grid_has_full_entropy() {
         let grid = WfcGrid::new(4, 4, 5);
-        assert_eq!(grid.get(0, 0).map(|c| c.entropy()), Some(5));
+        assert_eq!(grid.get(0, 0).map(WfcCell::entropy), Some(5));
         assert!(!grid.is_fully_collapsed());
     }
 
@@ -222,8 +230,8 @@ mod tests {
     fn collapse_reduces_to_one() {
         let mut grid = WfcGrid::new(4, 4, 5);
         grid.collapse(1, 1, 3);
-        assert!(grid.get(1, 1).map_or(false, |c| c.is_collapsed()));
-        assert_eq!(grid.get(1, 1).and_then(|c| c.collapsed_tile()), Some(3));
+        assert!(grid.get(1, 1).is_some_and(WfcCell::is_collapsed));
+        assert_eq!(grid.get(1, 1).and_then(WfcCell::collapsed_tile), Some(3));
     }
 
     #[test]
@@ -246,7 +254,9 @@ mod tests {
         grid.collapse(0, 0, 0);
         let removed = grid.propagate(&rules);
         assert!(removed > 0);
-        let right = grid.get(1, 0).unwrap();
+        let Some(right) = grid.get(1, 0) else {
+            panic!("cell (1,0) must exist in 3×1 grid");
+        };
         assert!(right.options.contains(&0));
         assert!(right.options.contains(&1));
         assert!(!right.options.contains(&2));

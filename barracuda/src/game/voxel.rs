@@ -26,7 +26,7 @@ impl BlockId {
 
     /// Whether this block is empty.
     #[must_use]
-    pub fn is_air(self) -> bool {
+    pub const fn is_air(self) -> bool {
         self.0 == 0
     }
 }
@@ -68,10 +68,15 @@ impl BlockPalette {
     }
 
     /// Register a new block type. Returns its `BlockId`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if more than `u16::MAX` block types are registered.
     pub fn register(&mut self, entry: BlockEntry) -> BlockId {
-        let id = self.entries.len();
+        let id = u16::try_from(self.entries.len())
+            .unwrap_or_else(|_| panic!("palette overflow: {} exceeds u16", self.entries.len()));
         self.entries.push(entry);
-        BlockId(id as u16)
+        BlockId(id)
     }
 
     /// Look up a block type by ID.
@@ -82,13 +87,13 @@ impl BlockPalette {
 
     /// Number of registered block types (including air).
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.entries.len()
     }
 
     /// Whether the palette is empty (only air).
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.entries.len() <= 1
     }
 }
@@ -135,7 +140,7 @@ impl Chunk {
         Self::new(16, 16, 16, position)
     }
 
-    fn index(&self, x: usize, y: usize, z: usize) -> usize {
+    const fn index(&self, x: usize, y: usize, z: usize) -> usize {
         x + z * self.size_x + y * self.size_x * self.size_z
     }
 
@@ -164,12 +169,16 @@ impl Chunk {
 
     /// Total capacity.
     #[must_use]
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         self.size_x * self.size_y * self.size_z
     }
 
     /// Fill ratio (0.0–1.0).
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "chunk dimensions are small (≤256); usize values fit in f64 mantissa"
+    )]
     pub fn density(&self) -> f64 {
         let cap = self.capacity();
         if cap == 0 {
@@ -180,20 +189,28 @@ impl Chunk {
 }
 
 /// Build a chemistry palette with common elements.
+///
+/// Colors follow the CPK (Corey-Pauling-Koltun) convention; see
+/// [`crate::tolerances`] for color constants and citations.
 #[must_use]
 pub fn chemistry_palette() -> BlockPalette {
+    use crate::tolerances::{
+        CPK_CALCIUM, CPK_CARBON, CPK_CHLORINE, CPK_HYDROGEN, CPK_IRON, CPK_NITROGEN, CPK_OXYGEN,
+        CPK_PHOSPHORUS, CPK_SODIUM, CPK_SULFUR,
+    };
+
     let mut p = BlockPalette::new();
-    let elements = [
-        ("Hydrogen", 1, [1.0, 1.0, 1.0, 1.0]),
-        ("Carbon", 6, [0.2, 0.2, 0.2, 1.0]),
-        ("Nitrogen", 7, [0.0, 0.0, 0.8, 1.0]),
-        ("Oxygen", 8, [0.8, 0.0, 0.0, 1.0]),
-        ("Phosphorus", 15, [1.0, 0.5, 0.0, 1.0]),
-        ("Sulfur", 16, [1.0, 1.0, 0.0, 1.0]),
-        ("Iron", 26, [0.6, 0.3, 0.0, 1.0]),
-        ("Sodium", 11, [0.7, 0.0, 0.7, 1.0]),
-        ("Chlorine", 17, [0.0, 0.8, 0.0, 1.0]),
-        ("Calcium", 20, [0.5, 0.5, 0.5, 1.0]),
+    let elements: [(&str, u8, [f32; 4]); 10] = [
+        ("Hydrogen", 1, CPK_HYDROGEN),
+        ("Carbon", 6, CPK_CARBON),
+        ("Nitrogen", 7, CPK_NITROGEN),
+        ("Oxygen", 8, CPK_OXYGEN),
+        ("Phosphorus", 15, CPK_PHOSPHORUS),
+        ("Sulfur", 16, CPK_SULFUR),
+        ("Iron", 26, CPK_IRON),
+        ("Sodium", 11, CPK_SODIUM),
+        ("Chlorine", 17, CPK_CHLORINE),
+        ("Calcium", 20, CPK_CALCIUM),
     ];
     for (name, num, color) in elements {
         p.register(BlockEntry {
@@ -231,9 +248,10 @@ mod tests {
     fn chemistry_palette_has_common_elements() {
         let palette = chemistry_palette();
         assert!(palette.len() > 10);
-        let hydrogen = palette.get(BlockId(1));
-        assert!(hydrogen.is_some());
-        assert_eq!(hydrogen.unwrap().atomic_number, 1);
+        let Some(hydrogen) = palette.get(BlockId(1)) else {
+            panic!("hydrogen must be in palette");
+        };
+        assert_eq!(hydrogen.atomic_number, 1);
     }
 
     #[test]

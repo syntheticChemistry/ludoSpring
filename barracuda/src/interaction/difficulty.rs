@@ -11,11 +11,15 @@
 //! - Andrade, G. et al. (2006). "Dynamic Game Balancing: An Evaluation of
 //!   User Satisfaction." AIIDE '06.
 
+use std::collections::VecDeque;
+
 /// Observed player performance metrics for DDA.
+///
+/// Uses `VecDeque` for O(1) front removal when the window is full.
 #[derive(Debug, Clone, Default)]
 pub struct PerformanceWindow {
     /// Recent success rates (0.0 = fail, 1.0 = success).
-    pub outcomes: Vec<f64>,
+    pub outcomes: VecDeque<f64>,
     /// Maximum window size.
     pub max_size: usize,
 }
@@ -25,7 +29,7 @@ impl PerformanceWindow {
     #[must_use]
     pub fn new(max_size: usize) -> Self {
         Self {
-            outcomes: Vec::with_capacity(max_size),
+            outcomes: VecDeque::with_capacity(max_size),
             max_size,
         }
     }
@@ -33,13 +37,17 @@ impl PerformanceWindow {
     /// Record an outcome (0.0–1.0).
     pub fn record(&mut self, outcome: f64) {
         if self.outcomes.len() >= self.max_size {
-            self.outcomes.remove(0);
+            self.outcomes.pop_front();
         }
-        self.outcomes.push(outcome.clamp(0.0, 1.0));
+        self.outcomes.push_back(outcome.clamp(0.0, 1.0));
     }
 
     /// Estimated skill level (moving average of recent outcomes).
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "window sizes are small (≤100); len fits in f64"
+    )]
     pub fn estimated_skill(&self) -> f64 {
         if self.outcomes.is_empty() {
             return 0.5;
@@ -49,14 +57,19 @@ impl PerformanceWindow {
 
     /// Trend: positive = improving, negative = declining.
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "window sizes are small (≤100); len fits in f64"
+    )]
     pub fn trend(&self) -> f64 {
         if self.outcomes.len() < 4 {
             return 0.0;
         }
         let mid = self.outcomes.len() / 2;
-        let first_half: f64 = self.outcomes[..mid].iter().sum::<f64>() / mid as f64;
-        let second_half: f64 =
-            self.outcomes[mid..].iter().sum::<f64>() / (self.outcomes.len() - mid) as f64;
+        let (first, second) = self.outcomes.as_slices();
+        let all: Vec<f64> = first.iter().chain(second.iter()).copied().collect();
+        let first_half: f64 = all[..mid].iter().sum::<f64>() / mid as f64;
+        let second_half: f64 = all[mid..].iter().sum::<f64>() / (all.len() - mid) as f64;
         second_half - first_half
     }
 }
@@ -75,7 +88,7 @@ pub fn suggest_adjustment(window: &PerformanceWindow, target_success_rate: f64) 
     let trend = window.trend();
 
     let deviation = skill - target_success_rate;
-    let adjustment = deviation * 2.0 + trend;
+    let adjustment = deviation.mul_add(2.0, trend);
 
     adjustment.clamp(-1.0, 1.0)
 }
@@ -114,7 +127,7 @@ mod tests {
     fn window_respects_max_size() {
         let mut w = PerformanceWindow::new(5);
         for i in 0..20 {
-            w.record(i as f64 / 20.0);
+            w.record(f64::from(i) / 20.0);
         }
         assert_eq!(w.outcomes.len(), 5);
     }

@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! petalTongue visualization schema for game data.
+//! Visualization data channels for game analytics.
 //!
-//! Defines `DataChannel` types that petalTongue can consume to render
-//! ludoSpring data: engagement curves, difficulty profiles, UI analysis,
+//! Defines `DataChannel` types that any visualization-capable primal can
+//! consume: engagement curves, difficulty profiles, UI analysis,
 //! procedural generation previews, and interaction cost maps.
+//! Discovered at runtime via the `visualization` capability.
 
-/// A data channel for petalTongue visualization.
+/// A data channel for visualization consumers.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "ipc", derive(serde::Serialize, serde::Deserialize))]
 pub struct GameDataChannel {
-    /// Channel name (e.g., "engagement_curve", "difficulty_profile").
+    /// Channel name (e.g., "`engagement_curve`", "`difficulty_profile`").
     pub name: String,
-    /// Channel type for petalTongue routing.
+    /// Channel type for visualization routing.
     pub channel_type: GameChannelType,
     /// Data points.
     pub data: Vec<GameDataPoint>,

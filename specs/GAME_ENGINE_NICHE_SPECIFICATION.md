@@ -1,16 +1,25 @@
 # Game Engine Niche Specification
 
+**Date**: March 10, 2026
+**Status**: Active
+**License**: AGPL-3.0-or-later
+
 ## Overview
 
 The game engine is the first **continuous niche** in the ecoPrimals ecosystem.
 It is not a primal. It is a coordination pattern — a biomeOS graph that ticks
 at 60 Hz, composing existing primals into an interactive real-time system.
 
-This specification defines ludoSpring's role within that niche and the
-interfaces it must provide.
+This specification defines ludoSpring's role within that niche, the biomeOS
+graph topology that composes it, the chimera patterns that extend it into a
+full platform, and the live primal binaries we use during development.
 
-See also: `whitePaper/neuralAPI/08_NICHE_API_PATTERNS.md` for the full
-architectural design of continuous niches.
+See also:
+- `whitePaper/neuralAPI/08_NICHE_API_PATTERNS.md` — continuous niche design
+- `biomeOS/chimeras/definitions/gaming-mesh.yaml` — networking chimera
+- `biomeOS/graphs/ludospring_deploy.toml` — deploy graph
+- `specs/PLATFORM_CHIMERA_SPECIFICATION.md` — Steam/Discord chimera roadmap
+- `specs/OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md` — scaffold and evolve strategy
 
 ## ludoSpring's Role
 
@@ -174,6 +183,155 @@ Each ludoSpring experiment track maps to a component of the game engine niche:
 | Track 9: Tufte-on-games | metrics node | UI Tufte scores vs player performance |
 | Track 10: Indie tooling | Niche API | What enables one-person creation |
 
+## biomeOS Graph Composition
+
+The game engine niche is a biomeOS **continuous graph**. Every node is a
+primal capability, connected by JSON-RPC edges over Unix sockets. The
+graph executor ticks the entire pipeline at the target frame rate.
+
+### Core Graph Topology
+
+```
+                         biomeOS Continuous Coordinator (60 Hz tick)
+                                      │
+           ┌──────────────────────────┼──────────────────────────┐
+           ▼                          ▼                          ▼
+    ┌─────────────┐           ┌─────────────┐           ┌─────────────┐
+    │    input     │           │  game_logic  │◄─────────│   metrics    │
+    │ (petalTongue)│──────────▶│ (ludoSpring) │──────────▶│ (ludoSpring) │
+    │  SensorEvent │           │  GameState   │           │ Engagement   │
+    └──────┬──────┘           └──────┬──────┘           └─────────────┘
+           │                         │                          ▲
+           │                  ┌──────┴──────┐                   │
+           │                  ▼              ▼                   │
+           │           ┌──────────┐  ┌────────────┐             │
+           │           │ physics   │  │ procedural  │             │
+           │           │(barraCuda)│  │(ludoSpring) │             │
+           │           │  N-body   │  │ noise, WFC  │             │
+           │           └──────┬───┘  └─────────────┘             │
+           │                  ▼                                   │
+           │           ┌──────────┐                               │
+           │           │  scene    │───────────────────────────────┘
+           │           │(petal    │
+           └──────────▶│ Tongue)  │
+                       └──────┬───┘
+                              ▼
+                       ┌──────────┐
+                       │  render   │
+                       │(toadStool)│
+                       │  wgpu     │
+                       └──────────┘
+```
+
+### Deploy Graph (ludospring_deploy.toml)
+
+The deploy graph boots primals in dependency order:
+
+```
+Phase 1: Tower Atomic    → BearDog (crypto) + Songbird (discovery)
+Phase 2: ToadStool       → GPU compute (optional, for noise/raycasting)
+Phase 3: ludoSpring      → 8 game-science capabilities
+Phase 4: Health check    → Validate all sockets respond
+```
+
+ludoSpring depends on Tower (BearDog + Songbird). ToadStool is optional —
+without GPU, noise/physics run on CPU via barraCuda fallback.
+
+### Live Primal Integration
+
+During development, ludoSpring uses **live primal binaries** from the
+ecoPrimals build tree. The IPC server discovers primals at runtime via
+capability-based routing — no hardcoded socket paths.
+
+```
+Discovery priority:
+  1. BIOMEOS_SOCKET_DIR environment variable
+  2. $XDG_RUNTIME_DIR/biomeos/
+  3. /tmp/ fallback (development only)
+```
+
+For each primal we interact with:
+
+| Primal | Discovery | Capabilities Used |
+|--------|-----------|-------------------|
+| BearDog | `security` capability | `crypto.hash`, `genetic.verify_lineage` |
+| Songbird | `discovery` capability | `discovery.announce`, `discovery.query` |
+| ToadStool | `compute` capability | `compute.execute` (GPU dispatch) |
+| barraCuda | `gpu_compute` capability | `barracuda.compute.dispatch` (reduce, matmul) |
+| NestGate | `storage` capability | `storage.store`, `storage.retrieve` |
+
+### Bonding Context
+
+Within a local NUCLEUS, ludoSpring bonds **covalently** — shared
+`family_seed`, Unix sockets, BirdSong-encrypted mesh. Cross-cluster
+interactions (multiplayer, federation) use **ionic** or **covalent** bonds
+depending on trust level. See `biomeOS/specs/NUCLEUS_BONDING_MODEL.md`.
+
+---
+
+## Chimera Patterns
+
+The game engine niche extends beyond a single graph via **chimeras** —
+composite organisms that fuse primal capabilities.
+
+### Senses Chimera (petalTongue + ludoSpring)
+
+Fuses input processing, rendering, and interaction science:
+
+```yaml
+chimera:
+  id: "game-senses"
+  components:
+    petaltongue: [scene, interaction_engine, spatial_audio]
+    ludospring: [interaction.input_laws, interaction.accessibility]
+  fusion:
+    input_optimization:
+      provider: "ludospring.fitts_cost"
+      consumer: "petaltongue.interaction_engine"
+      # Fitts/Hick models optimize petalTongue's input pipeline
+```
+
+### Simulator Chimera (barraCuda + toadStool)
+
+Fuses physics, GPU compute, and deterministic execution:
+
+```yaml
+chimera:
+  id: "game-simulator"
+  components:
+    barracuda: [reduce_ops, linalg, noise_shaders]
+    toadstool: [gpu_dispatch, deterministic_execution]
+  fusion:
+    physics_dispatch:
+      provider: "barracuda.compute.dispatch"
+      consumer: "toadstool.deterministic"
+```
+
+### Brain Chimera (ludoSpring + neuralSpring)
+
+Fuses game logic, DDA, engagement metrics, and learning prediction:
+
+```yaml
+chimera:
+  id: "game-brain"
+  components:
+    ludospring: [game.state, interaction.difficulty, metrics.engagement]
+    neuralspring: [learner_prediction]
+  fusion:
+    adaptive_difficulty:
+      provider: "ludospring.difficulty_adjustment"
+      consumer: "neuralspring.learner_prediction"
+```
+
+### Gaming-Mesh Chimera (Songbird + BearDog + ToadStool)
+
+Already defined in `biomeOS/chimeras/definitions/gaming-mesh.yaml`.
+Provides: matchmaking, relay, anti-cheat, tournament brackets.
+ludoSpring contributes engagement metrics and difficulty curves to
+parameterize matchmaking skill assessment.
+
+---
+
 ## Reference Implementations
 
 ### Phase A: Walk through atoms
@@ -190,6 +348,10 @@ input (petalTongue) → game_logic (ludoSpring: first-person controller)
 Primal count: 4. Tick rate: 60 Hz. World: static molecular structure.
 Player capability: walk, look, inspect.
 
+**biomeOS graph**: `graphs/phase_a_walk_atoms.toml`
+**Benchmark**: BM-003 raycaster throughput vs raylib (see
+`OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md`)
+
 ### Phase B: Hear the molecule
 
 Add spatial audio:
@@ -200,6 +362,8 @@ scene → audio (petalTongue: SpatialAudioCompiler → toadStool: audio device)
 
 Primal count: 4 (audio uses existing primals). New capability: spatial
 audio positioning, element-to-timbre mapping.
+
+**Benchmark**: BM-005 voice/audio latency vs Mumble
 
 ### Phase C: Touch a reaction
 
@@ -213,7 +377,24 @@ game_logic → wetSpring (Gillespie stochastic simulation, streaming)
 
 Primal count: 5. New capability: live data binding from springs to scene.
 
-### Phase D: Curriculum as world
+### Phase D: Multiplayer molecule lab
+
+Add gaming-mesh chimera for collaborative science:
+
+```
+gaming-mesh chimera:
+  Songbird[] (relay, matchmaking) + BearDog (anti-cheat) + ToadStool (authority)
+
+game_logic → gaming-mesh (state sync, player sessions)
+           → metrics (per-player engagement, collaborative flow)
+```
+
+Primal count: 5 + chimera. New capability: shared worlds, cooperative
+exploration, competitive challenges.
+
+**Benchmark**: BM-004 matchmaking latency vs Nakama
+
+### Phase E: Curriculum as world
 
 Add orchestrated learning sequences:
 
@@ -225,6 +406,20 @@ biomeOS deploys lesson graph → game_logic (ludoSpring: difficulty curve)
 
 Primal count: 6+. New capability: biomeOS graph sequencing for educational
 progression.
+
+### Phase F: Platform chimera
+
+Full sovereign platform — store, social, workshop, distribution:
+
+```
+game-senses + game-simulator + game-brain
+  + gaming-mesh (multiplayer)
+  + social chimera (BirdSong chat, beacon genetics friends)
+  + workshop chimera (NestGate mod distribution, Modrinth-like)
+  + storefront chimera (NestGate content-addressed, Songbird federation)
+```
+
+See `specs/PLATFORM_CHIMERA_SPECIFICATION.md` for the full decomposition.
 
 ## Budget Allocation
 
@@ -260,3 +455,20 @@ The game engine niche and RootPulse niche share architectural DNA:
 Both niches validate the same architectural thesis: complex capabilities
 emerge from simple primal coordination, not from monolithic construction.
 The game engine tests it under the strictest real-time constraints.
+
+---
+
+## Open System Comparison Targets
+
+Each niche phase has an open system whose performance defines our bar.
+We scaffold from these systems and evolve to pure Rust. See
+`specs/OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md` for the full methodology.
+
+| Phase | Open System | What It Benchmarks | Our Target |
+|-------|-------------|-------------------|------------|
+| A (Walk) | Bevy ECS, raylib | Entity throughput, render latency | Match within 1.5x |
+| B (Audio) | Mumble | Spatial audio latency | Match within 2x |
+| C (Reaction) | — (no open equivalent) | Novel: primal-composed live sim | Define our own baseline |
+| D (Multiplayer) | Nakama, Matchbox | Match join latency, state sync | Match with E2E encryption |
+| E (Curriculum) | — (novel) | Graph-orchestrated education | Define our own baseline |
+| F (Platform) | Revolt, Modrinth, Conduit | Chat, mods, distribution | Feature parity, sovereign |

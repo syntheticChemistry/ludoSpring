@@ -13,6 +13,69 @@
 
 use std::f64::consts::PI;
 
+/// Flat grid map for raycasting — GPU-promotion ready.
+///
+/// Row-major `bool` slice with stride, replacing `Vec<Vec<bool>>`.
+/// Flat layout maps directly to GPU buffer for Tier A shader promotion.
+#[derive(Debug, Clone)]
+pub struct GridMap {
+    data: Vec<bool>,
+    /// Grid width (number of columns).
+    pub width: usize,
+    /// Grid height (number of rows).
+    pub height: usize,
+}
+
+impl GridMap {
+    /// Create a grid map from a flat bool slice.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `data.len() != width * height`.
+    #[must_use]
+    pub fn new(width: usize, height: usize, data: Vec<bool>) -> Self {
+        assert_eq!(
+            data.len(),
+            width * height,
+            "data length must match width*height"
+        );
+        Self {
+            data,
+            width,
+            height,
+        }
+    }
+
+    /// Create from nested vecs (migration helper).
+    #[must_use]
+    pub fn from_nested(rows: &[Vec<bool>]) -> Self {
+        let height = rows.len();
+        let width = rows.first().map_or(0, Vec::len);
+        let data: Vec<bool> = rows.iter().flat_map(|r| r.iter().copied()).collect();
+        Self {
+            data,
+            width,
+            height,
+        }
+    }
+
+    /// Query a cell. Out-of-bounds returns `false`.
+    #[must_use]
+    pub fn get(&self, x: usize, y: usize) -> bool {
+        if x < self.width && y < self.height {
+            self.data[y * self.width + x]
+        } else {
+            false
+        }
+    }
+
+    /// Raw slice for GPU upload.
+    #[must_use]
+    pub fn as_slice(&self) -> &[bool] {
+        &self.data
+    }
+}
+
 /// Player state in a raycasted world.
 #[derive(Debug, Clone)]
 pub struct RayPlayer {
@@ -81,7 +144,6 @@ pub struct RayHit {
 
 /// Cast a single ray using DDA (Digital Differential Analyzer).
 ///
-/// `map` is a row-major grid where `true` means solid wall.
 /// Returns `None` if ray escapes the map bounds.
 #[must_use]
 #[expect(
@@ -93,10 +155,10 @@ pub struct RayHit {
 pub fn cast_ray(
     player: &RayPlayer,
     ray_angle: f64,
-    map: &[Vec<bool>],
+    map: &GridMap,
     max_depth: f64,
 ) -> Option<RayHit> {
-    let (height, width) = (map.len(), map.first().map_or(0, Vec::len));
+    let (height, width) = (map.height, map.width);
     if width == 0 {
         return None;
     }
@@ -104,12 +166,12 @@ pub fn cast_ray(
     let dir_x = ray_angle.cos();
     let dir_y = ray_angle.sin();
 
-    let delta_x = if dir_x.abs() < 1e-12 {
+    let delta_x = if dir_x.abs() < crate::tolerances::DDA_NEAR_ZERO {
         f64::MAX
     } else {
         (1.0 / dir_x).abs()
     };
-    let delta_y = if dir_y.abs() < 1e-12 {
+    let delta_y = if dir_y.abs() < crate::tolerances::DDA_NEAR_ZERO {
         f64::MAX
     } else {
         (1.0 / dir_y).abs()
@@ -154,7 +216,7 @@ pub fn cast_ray(
             return None;
         }
 
-        if map[map_y as usize][map_x as usize] {
+        if map.get(map_x as usize, map_y as usize) {
             let wall_offset = if vertical_hit {
                 (player.y + distance * dir_y).fract()
             } else {
@@ -173,10 +235,14 @@ pub fn cast_ray(
 
 /// Cast all rays for a screen of given width.
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "screen widths are small (≤8192); col and screen_width fit in f64 mantissa"
+)]
 pub fn cast_screen(
     player: &RayPlayer,
     screen_width: usize,
-    map: &[Vec<bool>],
+    map: &GridMap,
     max_depth: f64,
 ) -> Vec<Option<RayHit>> {
     (0..screen_width)
@@ -192,14 +258,14 @@ pub fn cast_screen(
 mod tests {
     use super::*;
 
-    fn test_map() -> Vec<Vec<bool>> {
-        vec![
+    fn test_map() -> GridMap {
+        GridMap::from_nested(&[
             vec![true, true, true, true, true],
             vec![true, false, false, false, true],
             vec![true, false, false, false, true],
             vec![true, false, false, false, true],
             vec![true, true, true, true, true],
-        ]
+        ])
     }
 
     #[test]
@@ -211,9 +277,9 @@ mod tests {
             ..Default::default()
         };
         let map = test_map();
-        let hit = cast_ray(&player, 0.0, &map, 20.0);
-        assert!(hit.is_some());
-        let hit = hit.unwrap();
+        let Some(hit) = cast_ray(&player, 0.0, &map, 20.0) else {
+            panic!("ray should hit enclosed wall");
+        };
         assert_eq!(hit.cell_x, 4);
         assert!(hit.distance > 1.0 && hit.distance < 2.0);
     }

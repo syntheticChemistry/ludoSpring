@@ -11,11 +11,30 @@
 resolver = "2"
 members = [
     "barracuda",
+    "benchmarks",
     "metalForge/forge",
     "experiments/exp001_doom_raycaster_analysis",
     "experiments/exp002_procedural_molecule_gen",
     "experiments/exp003_tufte_game_ui",
     "experiments/exp004_folding_adversarial",
+    "experiments/exp005_fitts_device_sweep",
+    "experiments/exp006_hick_menu_depth",
+    "experiments/exp007_steering_tunnel",
+    "experiments/exp008_wfc_crystal_lattice",
+    "experiments/exp009_noise_molecular_density",
+    "experiments/exp010_engagement_curves",
+    "experiments/exp011_goms_task_completion",
+    "experiments/exp012_flow_channel_calibration",
+    "experiments/exp013_lsystem_protein_backbone",
+    "experiments/exp014_hybrid_noise_wfc",
+    "experiments/exp015_accessibility_motor_limited",
+    "experiments/exp016_cognitive_load_tufte",
+    "experiments/exp017_bsp_level_generation",
+    "experiments/exp018_four_keys_fun",
+    "experiments/exp019_composite_interaction_cost",
+    "experiments/exp020_difficulty_skill_balance",
+    "experiments/exp021_retention_reward_curves",
+    "experiments/exp022_small_multiples_minimap",
 ]
 
 [workspace.package]

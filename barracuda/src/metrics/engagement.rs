@@ -47,9 +47,21 @@ pub struct EngagementMetrics {
 
 /// Compute engagement metrics from a behavior snapshot.
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "action_count is realistically small (≤10^6); fits in f64 mantissa"
+)]
 pub fn compute_engagement(snap: &EngagementSnapshot) -> EngagementMetrics {
+    use crate::tolerances::{
+        ENGAGEMENT_APM_CEILING, ENGAGEMENT_EXPLORATION_CEILING, ENGAGEMENT_WEIGHT,
+    };
+
     let minutes = snap.session_duration_s / 60.0;
-    let minutes = if minutes < 0.01 { 0.01 } else { minutes };
+    let minutes = if minutes < crate::tolerances::MIN_SESSION_MINUTES {
+        crate::tolerances::MIN_SESSION_MINUTES
+    } else {
+        minutes
+    };
 
     let apm = snap.action_count as f64 / minutes;
     let exploration_rate = f64::from(snap.exploration_breadth) / minutes;
@@ -69,13 +81,15 @@ pub fn compute_engagement(snap: &EngagementSnapshot) -> EngagementMetrics {
         0.0
     };
 
-    // Composite: weighted combination, normalized to 0–1.
-    // Weights reflect research on engagement indicators.
-    let raw = (apm / 60.0).min(1.0) * 0.2
-        + (exploration_rate / 5.0).min(1.0) * 0.2
-        + challenge_appetite.min(1.0) * 0.2
-        + persistence.min(1.0) * 0.2
-        + deliberation.min(1.0) * 0.2;
+    let components = [
+        (apm / ENGAGEMENT_APM_CEILING).min(1.0),
+        (exploration_rate / ENGAGEMENT_EXPLORATION_CEILING).min(1.0),
+        challenge_appetite.min(1.0),
+        persistence.min(1.0),
+        deliberation.min(1.0),
+    ];
+    let weights = [ENGAGEMENT_WEIGHT; 5];
+    let raw = barracuda::stats::dot(&components, &weights);
 
     EngagementMetrics {
         actions_per_minute: apm,

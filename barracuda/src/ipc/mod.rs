@@ -1,16 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! JSON-RPC 2.0 IPC server for ludoSpring.
+//! JSON-RPC 2.0 IPC for ludoSpring — server and client.
 //!
-//! Exposes game science capabilities to biomeOS and other primals:
-//! - `game.analyze_ui` — run Tufte constraints on a game UI description
-//! - `game.evaluate_flow` — compute flow state for challenge/skill pair
-//! - `game.fitts_cost` — compute Fitts's law movement time
-//! - `game.engagement` — compute engagement metrics from behavior snapshot
-//! - `game.generate_noise` — generate a noise field sample
-//! - `game.wfc_step` — perform one WFC collapse + propagation step
-//! - `game.accessibility_score` — score accessibility dimensions
+//! ## Server
+//!
+//! Exposes game science capabilities via capability-based discovery.
+//! Per wateringHole `UNIVERSAL_IPC_STANDARD_V3`, each primal implements
+//! IPC independently (~500–1000 lines).
+//!
+//! Methods: `game.analyze_ui`, `game.evaluate_flow`, `game.fitts_cost`,
+//! `game.engagement`, `game.generate_noise`, `game.wfc_step`,
+//! `game.accessibility`, `game.difficulty_adjustment`.
+//!
+//! ## Client (Discovery)
+//!
+//! Discovers live primals by probing Unix sockets in standard directories.
+//! Primals are found by **capability**, never by hardcoded name or path.
+//!
+//! ## Transport
+//!
+//! Unix domain socket, XDG-compliant path resolution (overridable via env).
+//! Protocol: newline-delimited JSON-RPC 2.0.
 
-/// JSON-RPC method names.
+mod envelope;
+mod handlers;
+mod params;
+mod results;
+mod server;
+
+pub mod discovery;
+
+pub use discovery::{PrimalEndpoint, PrimalRegistry, call_primal, discover_primals};
+pub use envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody};
+pub use handlers::dispatch;
+pub use params::*;
+pub use results::*;
+pub use server::IpcServer;
+
+/// JSON-RPC method names — capability identifiers for routing.
 pub const METHOD_ANALYZE_UI: &str = "game.analyze_ui";
 /// Evaluate flow state.
 pub const METHOD_EVALUATE_FLOW: &str = "game.evaluate_flow";
@@ -24,3 +50,5 @@ pub const METHOD_GENERATE_NOISE: &str = "game.generate_noise";
 pub const METHOD_WFC_STEP: &str = "game.wfc_step";
 /// Accessibility scoring.
 pub const METHOD_ACCESSIBILITY: &str = "game.accessibility";
+/// Dynamic difficulty adjustment recommendation.
+pub const METHOD_DIFFICULTY_ADJUSTMENT: &str = "game.difficulty_adjustment";
