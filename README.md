@@ -1,15 +1,22 @@
-# ludoSpring
+# ludoSpring — The Science of Play, Interaction, and Game Design
 
-The seventh ecoPrimals spring. The science of play, interaction, and game design.
+An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 11, 2026
-**Version:** V2 (22 experiments, 183 validation checks, 119 unit tests)
+**Version:** V2 (22 experiments, 183 validation checks, 123 tests)
 **License:** AGPL-3.0-or-later
-**barraCuda:** v0.3.3 (standalone, 150+ primitives available)
+**MSRV:** 1.87 (edition 2024)
+**barraCuda:** v0.3.3 (standalone, 150+ primitives)
 
-## What is ludoSpring?
+---
 
-Where wetSpring validates bioinformatics, hotSpring validates nuclear physics, and healthSpring builds health applications, **ludoSpring treats game design as a rigorous science** — validated against published HCI research, with Python baselines and Rust parity tests proving the math.
+## What This Is
+
+```
+Python baseline → barraCuda CPU → GPU (WGSL) → sovereign pipeline (coralReef)
+```
+
+ludoSpring validates 13 foundational HCI/game science models against published research, with Python baselines proving faithful port to Rust, and GPU shader promotion maps for every pure-math module.
 
 Games are the most demanding real-time interactive systems humans build. They solve problems every primal needs: input handling, spatial navigation, physics simulation, procedural content generation, accessibility, and the deep question of what makes interaction *engaging*.
 
@@ -22,9 +29,7 @@ Games are the most demanding real-time interactive systems humans build. They so
 | `procedural` | Content generation | Perlin noise, fBm, WFC, L-systems, BSP trees | All 4 PCG algorithms validated |
 | `metrics` | Quantifying fun | Tufte-on-games, engagement curves, Four Keys to Fun | All 3 frameworks validated |
 
-### Foundational Research Coverage
-
-Every model from the spec is implemented, validated, and has Python parity:
+## Foundational Research Coverage
 
 | Model | Source | Module | Experiments |
 |-------|--------|--------|-------------|
@@ -42,56 +47,52 @@ Every model from the spec is implemented, validated, and has Python parity:
 | BSP trees | Fuchs, Kedem, Naylor (1980) | `procedural::bsp` | 017 |
 | Tufte data-ink | Tufte (1983, 1990) | `metrics::tufte_gaming` | 003, 016, 022 |
 
-## Experiments
+## barraCuda Primitive Consumption
 
-22 validation binaries + 1 metalForge routing = 23 binaries, 183 total checks:
+| Primitive | Consumer | Why |
+|-----------|---------|-----|
+| `activations::sigmoid` | `interaction::flow::DifficultyCurve` | Replaced hand-rolled sigmoid |
+| `stats::dot` | `metrics::engagement::compute_engagement` | Weighted composite score |
+| `rng::lcg_step` | `procedural::bsp::generate_bsp` | Deterministic spatial subdivision |
+| `rng::state_to_f64` | `procedural::bsp::generate_bsp` | Float from LCG state |
 
-| # | Name | Track | Checks | What it validates |
-|---|------|-------|--------|-------------------|
-| 001 | Doom raycaster analysis | 1 | 6 | DDA, HUD Tufte, Fitts targeting |
-| 002 | Procedural molecule gen | 1 | 5 | Noise→voxel chemistry world |
-| 003 | Tufte game UI | 1 | 6 | Genre UI comparison (FPS/RTS/sandbox) |
-| 004 | Folding adversarial | 1 | 5 | Player vs AI with DDA + flow |
-| 005 | Fitts device sweep | 2 | 9 | Mouse/gamepad/gaze/voice devices |
-| 006 | Hick menu depth | 2 | 6 | Flat vs hierarchical vs radial menus |
-| 007 | Steering tunnel | 2 | 5 | Tunnel navigation D/W scaling |
-| 008 | WFC crystal lattice | 3 | 7 | NaCl adjacency rules, propagation |
-| 009 | Noise molecular density | 3 | 9 | fBm statistics, spatial coherence |
-| 010 | Engagement curves | 5 | 14 | Flow states, DDA, player archetypes |
-| 011 | GOMS task completion | 2 | 8 | KLM operator sequences |
-| 012 | Flow channel calibration | 2 | 13 | Channel width sweep, 5-state coverage |
-| 013 | L-system protein backbone | 3 | 15 | Fibonacci, Koch, turtle geometry |
-| 014 | Hybrid noise+WFC | 3 | 5 | Noise-seeded WFC, determinism |
-| 015 | Accessibility motor-limited | 4 | 9 | Eye-gaze, head-pointer, switch, sip-puff |
-| 016 | Cognitive load Tufte | 4/5 | 7 | Minimal→maximal HUD sweep |
-| 017 | BSP level generation | 3 | 10 | Area conservation, spatial query |
-| 018 | Four Keys to Fun | 5 | 10 | Archetype classification (6 games) |
-| 019 | Composite interaction cost | 2 | 6 | Fitts+Hick+Steering+GOMS pipeline |
-| 020 | Difficulty-skill balance | 5 | 7 | DDA adaptation, trend detection |
-| 021 | Retention reward curves | 5 | 7 | Fixed/variable/intrinsic rewards |
-| 022 | Small multiples minimap | 1 | 7 | Doom/RTS/RPG minimap Tufte analysis |
+## GPU Shader Promotion Readiness
 
-## Python Baselines
+| Module | Tier | GPU target | Blocking |
+|--------|------|-----------|----------|
+| `procedural::noise` | A | Perlin/fBm compute shader | Nothing — pure math |
+| `game::raycaster` | A | Per-column DDA (embarrassingly parallel) | Nothing |
+| `metrics::engagement` | A | Batch evaluation | Nothing — dot product |
+| `metrics::fun_keys` | A | Batch classification | Nothing — weighted sum |
+| `interaction::flow` | A | Batch flow evaluation | Nothing — comparisons |
+| `interaction::input_laws` | A | Batch Fitts/Hick/Steering | Nothing — log2 only |
+| `interaction::goms` | A | Batch KLM task time | Nothing — sum of ops |
+| `procedural::wfc` | B | Parallel constraint propagation | Barrier sync needed |
+| `procedural::bsp` | B | Recursive → iterative conversion | Stack elimination |
+| `procedural::lsystem` | B | Parallel string rewriting | Variable-length output |
 
-7 reference implementations in `baselines/python/` (stdlib only, no dependencies):
+## petalTongue Live Visualization
 
-| Script | Models | Parity tests |
-|--------|--------|-------------|
-| `perlin_noise.py` | Perlin 2D/3D, lattice zeros | 3 |
-| `interaction_laws.py` | Fitts, Hick, Steering | 4 |
-| `flow_engagement.py` | Flow state classification | 1 |
-| `goms_model.py` | KLM operator times | 5 |
-| `lsystem_growth.py` | Algae, Koch, protein backbone | 3 |
-| `bsp_partition.py` | BSP area conservation | 3 |
-| `fun_keys_model.py` | Four Keys classification | 6 |
+ludoSpring pushes game science data to petalTongue for live visualization:
 
-All baselines produce JSON output consumed by `barracuda/tests/python_parity.rs`.
+```bash
+# Dashboard: push 8 scenarios from validated math
+cargo run --features ipc --bin ludospring_dashboard
+
+# Live session: 120-tick streaming game simulation
+cargo run --features ipc --bin ludospring_live_session
+
+# Tufte dashboard: genre comparison, minimap analysis, cognitive load sweep
+cargo run --features ipc --bin ludospring_tufte_dashboard
+```
+
+All binaries discover petalTongue automatically via Unix socket. If petalTongue is not running, scenarios are saved as JSON to `sandbox/`.
 
 ## Architecture
 
 ```
 ludoSpring/
-├── barracuda/             # Core library (31 source files, 66 unit tests)
+├── barracuda/             # Core library + 4 binaries
 │   ├── src/
 │   │   ├── game/          # Mechanics, raycaster, voxel, genre, state
 │   │   ├── interaction/   # Fitts, Hick, Steering, GOMS, Flow, DDA
@@ -99,15 +100,16 @@ ludoSpring/
 │   │   ├── metrics/       # Tufte, engagement, Four Keys to Fun
 │   │   ├── tolerances/    # All constants with provenance (no magic numbers)
 │   │   ├── validation/    # ValidationResult harness
-│   │   ├── visualization/ # Data channels for any viz consumer
-│   │   └── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
-│   └── tests/
-│       └── python_parity.rs  # 22 cross-language parity tests
+│   │   ├── visualization/ # Data channels + PetalTonguePushClient
+│   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
+│   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
+│   └── tests/             # python_parity.rs, validation.rs, determinism.rs
 ├── experiments/           # 22 hotSpring-pattern validation binaries
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
 ├── specs/                 # 4 domain specifications
+├── whitePaper/            # Local paper staging
 └── wateringHole/          # Handoff documentation
 ```
 
@@ -123,30 +125,11 @@ Game genres are interaction architectures, not aesthetic categories:
 | Roguelike (procedural discovery) | Parameter space exploration |
 | Puzzle (constraint satisfaction) | Protein folding, crystal packing |
 
-## Evolution Path
-
-```
-Python baseline → barraCuda CPU → GPU (WGSL) → sovereign pipeline (coralReef)
-```
-
-### GPU Shader Promotion Readiness
-
-| Module | Tier | GPU target | Blocking |
-|--------|------|-----------|----------|
-| `procedural::noise` | A | Perlin/fBm compute shader | Nothing — pure math |
-| `procedural::wfc` | A | Parallel constraint propagation | Nothing — grid-parallel |
-| `procedural::bsp` | B | Recursive → iterative conversion | Stack elimination |
-| `procedural::lsystem` | B | Parallel string rewriting | Variable-length output |
-| `game::raycaster` | A | Per-column DDA (embarrassingly parallel) | Nothing |
-| `metrics::engagement` | A | Batch evaluation | Nothing — dot product |
-| `metrics::fun_keys` | A | Batch classification | Nothing — weighted sum |
-| `interaction::flow` | A | Batch flow evaluation | Nothing — comparisons |
-
 ## Build
 
 ```bash
-# All tests (119 unit + parity + validation + determinism)
-cargo test --workspace
+# All tests (81 unit + 8 determinism + 22 parity + 12 validation)
+cargo test --features ipc --lib --tests
 
 # Run a specific experiment
 cargo run --bin exp017_bsp_level_generation
@@ -154,9 +137,12 @@ cargo run --bin exp017_bsp_level_generation
 # Python baselines
 python3 baselines/python/run_all_baselines.py
 
+# UniBin server (biomeOS deployment)
+cargo run --features ipc --bin ludospring -- server
+
 # Quality checks
 cargo fmt --check
-cargo clippy --workspace --all-targets -- -W clippy::pedantic
+cargo clippy --features ipc -p ludospring-barracuda -- -W clippy::pedantic
 cargo doc --workspace --no-deps
 ```
 
@@ -165,8 +151,8 @@ cargo doc --workspace --no-deps
 | Check | Result |
 |-------|--------|
 | `cargo fmt --check` | Clean |
-| `cargo clippy --pedantic` | 0 warnings |
-| `cargo test --workspace` | 119 tests, 0 failures |
+| `cargo clippy --pedantic` | 0 warnings (new code) |
+| `cargo test` | 123 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
 | 23 validation binaries | 183 checks, 0 failures |
 | 7 Python baselines | All pass |

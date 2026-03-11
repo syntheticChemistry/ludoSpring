@@ -6,6 +6,12 @@
 //! procedural generation previews, and interaction cost maps.
 //! Discovered at runtime via the `visualization` capability.
 
+#[cfg(feature = "ipc")]
+pub mod push_client;
+
+#[cfg(feature = "ipc")]
+pub use push_client::PetalTonguePushClient;
+
 /// A data channel for visualization consumers.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "ipc", derive(serde::Serialize, serde::Deserialize))]

@@ -27,6 +27,8 @@ type HandlerResult = Result<serde_json::Value, JsonRpcError>;
 #[must_use]
 pub fn dispatch(req: &JsonRpcRequest) -> String {
     let result = match req.method.as_str() {
+        "health.check" | "lifecycle.health" | "health" => handle_health(req),
+        "capability.list" => handle_capability_list(req),
         METHOD_EVALUATE_FLOW => handle_evaluate_flow(req),
         METHOD_FITTS_COST => handle_fitts_cost(req),
         METHOD_ENGAGEMENT => handle_engagement(req),
@@ -36,17 +38,17 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         METHOD_WFC_STEP => handle_wfc_step(req),
         METHOD_DIFFICULTY_ADJUSTMENT => handle_difficulty_adjustment(req),
         _ => {
-            return serialize_error(JsonRpcError::method_not_found(req.id.clone(), &req.method));
+            return serialize_error(&JsonRpcError::method_not_found(req.id.clone(), &req.method));
         }
     };
 
     match result {
-        Ok(value) => serialize_response(JsonRpcResponse::ok(req.id.clone(), value)),
-        Err(err) => serialize_error(err),
+        Ok(value) => serialize_response(&JsonRpcResponse::ok(req.id.clone(), value)),
+        Err(err) => serialize_error(&err),
     }
 }
 
-fn serialize_response(resp: JsonRpcResponse) -> String {
+fn serialize_response(resp: &JsonRpcResponse) -> String {
     serde_json::to_string(&resp).unwrap_or_else(|e| {
         format!(
             r#"{{"jsonrpc":"2.0","error":{{"code":-32603,"message":"serialize: {e}"}},"id":null}}"#
@@ -54,7 +56,7 @@ fn serialize_response(resp: JsonRpcResponse) -> String {
     })
 }
 
-fn serialize_error(err: JsonRpcError) -> String {
+fn serialize_error(err: &JsonRpcError) -> String {
     serde_json::to_string(&err).unwrap_or_else(|e| {
         format!(
             r#"{{"jsonrpc":"2.0","error":{{"code":-32603,"message":"serialize: {e}"}},"id":null}}"#
@@ -73,6 +75,45 @@ fn parse_params<T: serde::de::DeserializeOwned>(req: &JsonRpcRequest) -> Result<
 
 fn to_json(id: &serde_json::Value, val: impl serde::Serialize) -> HandlerResult {
     serde_json::to_value(val).map_err(|e| JsonRpcError::internal(id.clone(), &e.to_string()))
+}
+
+fn handle_health(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "status": "healthy",
+            "primal": crate::PRIMAL_NAME,
+            "version": env!("CARGO_PKG_VERSION"),
+            "capabilities": [
+                METHOD_EVALUATE_FLOW,
+                METHOD_FITTS_COST,
+                METHOD_ENGAGEMENT,
+                METHOD_ANALYZE_UI,
+                METHOD_ACCESSIBILITY,
+                METHOD_WFC_STEP,
+                METHOD_DIFFICULTY_ADJUSTMENT,
+                METHOD_GENERATE_NOISE,
+            ],
+        }),
+    )
+}
+
+fn handle_capability_list(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "capabilities": [
+                METHOD_EVALUATE_FLOW,
+                METHOD_FITTS_COST,
+                METHOD_ENGAGEMENT,
+                METHOD_ANALYZE_UI,
+                METHOD_ACCESSIBILITY,
+                METHOD_WFC_STEP,
+                METHOD_DIFFICULTY_ADJUSTMENT,
+                METHOD_GENERATE_NOISE,
+            ],
+        }),
+    )
 }
 
 fn handle_evaluate_flow(req: &JsonRpcRequest) -> HandlerResult {

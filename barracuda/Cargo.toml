@@ -15,11 +15,15 @@ categories = ["science", "game-engines", "command-line-utilities"]
 default = []
 gpu = ["barracuda/gpu", "dep:wgpu", "dep:tokio"]
 # JSON-RPC IPC server for biomeOS (ludospring-server binary).
-ipc = ["dep:serde", "dep:serde_json"]
+ipc = ["dep:serde", "dep:serde_json", "dep:clap", "dep:tracing", "dep:tracing-subscriber", "dep:signal-hook", "dep:tokio"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
+clap = { version = "4", features = ["derive"], optional = true }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
+signal-hook = { version = "0.3", optional = true }
 
 barracuda = { path = "../../barraCuda/crates/barracuda" }
 
@@ -27,7 +31,27 @@ wgpu = { version = "28", default-features = false, features = [
     "wgsl",
     "vulkan-portability",
 ], optional = true }
-tokio = { version = "1", features = ["rt"], optional = true }
+tokio = { version = "1", features = ["rt", "net", "io-util", "sync"], optional = true }
+
+[[bin]]
+name = "ludospring_dashboard"
+path = "src/bin/ludospring_dashboard.rs"
+required-features = ["ipc"]
+
+[[bin]]
+name = "ludospring_live_session"
+path = "src/bin/ludospring_live_session.rs"
+required-features = ["ipc"]
+
+[[bin]]
+name = "ludospring_tufte_dashboard"
+path = "src/bin/ludospring_tufte_dashboard.rs"
+required-features = ["ipc"]
+
+[[bin]]
+name = "ludospring"
+path = "src/bin/ludospring.rs"
+required-features = ["ipc"]
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }

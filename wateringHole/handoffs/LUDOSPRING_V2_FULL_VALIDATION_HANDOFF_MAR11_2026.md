@@ -113,7 +113,40 @@ cargo doc --no-deps        → Clean
 7 Python baselines         → All pass
 ```
 
-## Part 5: What's Next
+## Part 5: petalTongue Live Integration (NEW)
+
+ludoSpring now has full petalTongue wiring via three new binaries:
+
+### New Binaries
+
+| Binary | Purpose | Output |
+|--------|---------|--------|
+| `ludospring_dashboard` | 8 scenario builders from real validated math | `sandbox/scenarios/*.json` + IPC push |
+| `ludospring_live_session` | 120-tick streaming game session demo | `sandbox/sessions/live_session.json` + stream push |
+| `ludospring_tufte_dashboard` | 3 Tufte analyses (genre comparison, minimap multiples, cognitive load sweep) | `sandbox/tufte/*.json` + IPC push |
+
+### petalTongue Connection
+
+- `PetalTonguePushClient` discovers petalTongue via Unix socket (XDG-compliant)
+- Pushes via `visualization.render` (run-to-completion) and `visualization.render.stream` (incremental)
+- Falls back to JSON file export when petalTongue is not running
+- All 7 `GameChannelType` variants are covered (EngagementCurve, DifficultyProfile, FlowTimeline, InteractionCostMap, GenerationPreview, AccessibilityReport, UiAnalysis)
+- petalTongue's `game_data_channel.rs` already maps all channels to `DataBinding` variants
+
+### Scenario Coverage
+
+| Scenario | Model | Channel |
+|----------|-------|---------|
+| Player archetype engagement | Yannakakis & Togelius (2018) | EngagementCurve |
+| DDA 60-step session | Hunicke (2005) | DifficultyProfile |
+| Flow state sweep | Csikszentmihalyi (1990) | FlowTimeline |
+| Doom HUD costs | Fitts (1954) + Hick (1952) | InteractionCostMap |
+| Perlin fBm + BSP world | Fuchs/Carmack | GenerationPreview |
+| Device accessibility grid | IGDA/XAG | AccessibilityReport |
+| Genre Tufte comparison | Tufte (1983) | UiAnalysis |
+| Four Keys to Fun | Lazzaro (2004) | EngagementCurve |
+
+## Part 6: What's Next
 
 ### For barraCuda (absorption targets)
 
@@ -140,3 +173,12 @@ cargo doc --no-deps        → Clean
 1. Continuous coordination mode still needed (V1 identified this)
 2. ludoSpring occupies `game_logic` + `metrics` nodes at 60 Hz
 3. IPC server operational with 8 JSON-RPC methods via capability-based discovery
+4. Dashboard binary is run-to-completion — ready for Sequential/Pipeline biomeOS graphs
+5. Live session binary demonstrates streaming without biomeOS Continuous mode
+
+### For petalTongue
+
+1. `game_data_channel.rs` already maps all 7 ludoSpring channel types — no changes needed
+2. Dashboard pushes 8 real math scenarios ready for live panels
+3. Streaming demo proves `append`/`set_value`/`replace` path works
+4. Tufte dashboard pushes genre comparison, minimap multiples, cognitive load sweep

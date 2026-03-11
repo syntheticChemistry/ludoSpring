@@ -8,6 +8,8 @@
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 
 use super::envelope::JsonRpcRequest;
 use super::handlers::dispatch;
@@ -92,6 +94,38 @@ impl IpcServer {
         Ok(())
     }
 
+    /// Run the server until `shutdown` is set to true.
+    ///
+    /// Uses non-blocking accept with polling to allow clean shutdown on SIGTERM.
+    /// Returns when shutdown is requested or on I/O error.
+    ///
+    /// # Errors
+    ///
+    /// Returns `std::io::Error` if the socket cannot be bound.
+    pub fn run_until(&self, shutdown: &AtomicBool) -> std::io::Result<()> {
+        if self.socket_path.exists() {
+            std::fs::remove_file(&self.socket_path)?;
+        }
+
+        let listener = UnixListener::bind(&self.socket_path)?;
+        listener.set_nonblocking(true)?;
+
+        while !shutdown.load(Ordering::Relaxed) {
+            match listener.accept() {
+                Ok((stream, _)) => {
+                    if let Err(e) = Self::handle_connection(&stream) {
+                        eprintln!("ludospring IPC connection error: {e}");
+                    }
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(Duration::from_millis(50));
+                }
+                Err(e) => eprintln!("ludospring IPC accept error: {e}"),
+            }
+        }
+        Ok(())
+    }
+
     fn handle_connection(stream: &std::os::unix::net::UnixStream) -> std::io::Result<()> {
         let reader = BufReader::new(stream);
         let mut writer = stream;
@@ -152,7 +186,8 @@ mod tests {
         }
 
         if sock.exists() {
-            let mut stream = UnixStream::connect(&sock).expect("connect to test socket");
+            let mut stream = UnixStream::connect(&sock)
+                .unwrap_or_else(|e| panic!("connect to test socket: {e}"));
             let req = r#"{"jsonrpc":"2.0","method":"game.evaluate_flow","params":{"challenge":0.5,"skill":0.5},"id":42}"#;
             stream.write_all(req.as_bytes()).ok();
             stream.write_all(b"\n").ok();

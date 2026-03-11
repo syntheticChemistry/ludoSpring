@@ -1,26 +1,57 @@
-# ludoSpring wateringHole
+# ludoSpring wateringHole — Cross-Project Handoffs
 
-**Date:** March 11, 2026
-**Purpose:** Spring-local handoff documents to `barraCuda`/`toadStool` and cross-spring provenance records.
+**Project:** ludoSpring (game science, HCI, procedural generation)
+**Last Updated:** March 11, 2026
 
 ---
+
+## What This Is
+
+Unidirectional handoff documents from ludoSpring to consuming teams. No reverse
+dependencies. Receiving teams: barraCuda (math primitives), toadStool (GPU dispatch),
+coralReef (shader compilation), biomeOS (orchestration), petalTongue (visualization).
+
+## Conventions
+
+**Naming:** `LUDOSPRING_V{VER}_{TOPIC}_HANDOFF_{MON}{DD}_{YYYY}.md`
+
+**Structure:** Header → Executive Summary → Parts → Tables → Action Items
+
+**Archive:** Superseded handoffs move to `handoffs/archive/`
 
 ## Active Handoffs
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V2** | `handoffs/LUDOSPRING_V2_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | Mar 11 | Full validation: 22 experiments (183 checks), 119 tests, all foundational research implemented. GPU shader promotion map, barraCuda primitive consumption, Python parity. |
-| **V1** | `handoffs/LUDOSPRING_V1_SCAFFOLD_HANDOFF_MAR_2026.md` | Mar 10 | Initial scaffold: 4 modules, 4 experiments, 45 tests, biomeOS integration, game engine niche architecture. |
+| **V2** | `LUDOSPRING_V2_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | Mar 11 | Full validation: 22 experiments (183 checks), 123 tests, 13 models, petalTongue integration, GPU shader promotion map |
+| **V2** | `LUDOSPRING_V2_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | Mar 11 | GPU evolution: 8 Tier A shader targets, WGSL sketches, toadStool streaming, precision characteristics |
 
-## Cross-Spring Documents
+## Cross-Spring Context
 
-| File | Purpose |
-|------|---------|
-| `handoffs/LUDOSPRING_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | GPU evolution targets: 8 Tier A modules ready for WGSL shader promotion, primitive consumption inventory, absorption requests |
+```
+ludoSpring (game science)
+    │
+    ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify)
+    ├─→ toadStool (dispatch: noise fields, raycaster, WFC, engagement batch)
+    ├─→ coralReef (compile: f64-canonical shaders, log2 only transcendental)
+    ├─→ petalTongue (render: 7 GameChannelType channels, streaming sessions)
+    └─→ biomeOS (orchestrate: game_logic + metrics nodes, needs Continuous mode)
+```
+
+## petalTongue Integration
+
+ludoSpring pushes live game science data to petalTongue via 3 binaries:
+
+| Binary | Feature | Scenarios |
+|--------|---------|-----------|
+| `ludospring_dashboard` | `ipc` | 8 real-math scenarios (all 7 `GameChannelType` channels) |
+| `ludospring_live_session` | `ipc` | 120-tick streaming session (append/set_value/replace) |
+| `ludospring_tufte_dashboard` | `ipc` | 3 Tufte analyses (genre, minimap, cognitive load) |
+
+Connection: `PetalTonguePushClient::discover()` via XDG Unix socket.
+Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/sessions/`.
 
 ## barraCuda Primitive Consumption
-
-ludoSpring consumes these `barraCuda` primitives (validated via Python parity):
 
 | Primitive | Module | Used by |
 |-----------|--------|---------|
@@ -31,19 +62,19 @@ ludoSpring consumes these `barraCuda` primitives (validated via Python parity):
 
 ### Absorption Opportunities
 
-ludoSpring has validated pure-math modules ready for upstream absorption:
-
 | Module | Lines | What barraCuda gets |
 |--------|-------|--------------------|
 | `procedural::noise` | ~200 | Perlin 2D/3D + fBm (GPU-ready) |
-| `procedural::wfc` | ~250 | Wave Function Collapse (GPU-parallel) |
+| `procedural::wfc` | ~265 | Wave Function Collapse (GPU-parallel) |
 | `procedural::lsystem` | ~200 | L-system string rewriting |
 | `procedural::bsp` | ~220 | BSP spatial partitioning |
 
-## Convention
+## Archive
 
-Following hotSpring/wetSpring naming pattern:
-`LUDOSPRING_{VERSION}_{TOPIC}_HANDOFF_{DATE}.md`
+| Version | File | Superseded by |
+|---------|------|---------------|
+| V1 | `handoffs/archive/LUDOSPRING_V1_SCAFFOLD_HANDOFF_MAR_2026.md` | V2 Full Validation |
 
-Handoffs flow: ludoSpring → barraCuda (math) and ludoSpring → toadStool (hardware).
-No reverse dependencies.
+## License
+
+AGPL-3.0-or-later
