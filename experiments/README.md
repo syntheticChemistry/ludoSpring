@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 11, 2026
-**Total:** 29 experiments (22 validation + 3 playable + 4 telemetry), 236 checks, 0 failures
+**Total:** 37 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark), 330 checks, 0 failures
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -72,6 +72,24 @@
 | 028 | `exp028_fishfolk_adapter` | 7 | PASS | Fish Folk (MIT/Apache-2.0) | `telemetry` (Bevy plugin pattern) |
 | 029 | `exp029_abstreet_adapter` | 8 | PASS | A/B Street (Apache-2.0) | `telemetry` (simulation-as-game) |
 
+### Track 8: Compute Dispatch + metalForge
+
+| # | Binary | Checks | Status | Reference | Modules Validated |
+|---|--------|--------|--------|-----------|-------------------|
+| 030 | `exp030_cpu_gpu_parity` | 16 | PASS | barraCuda CPU, WGSL shaders, wgpu 28 | CPU-vs-GPU parity (sigmoid, relu, dot, softmax, LCG, reduce) |
+| 031 | `exp031_dispatch_routing` | 10 | PASS | toadStool substrate, wgpu adapter API | Hardware discovery, workload routing |
+| 032 | `exp032_mixed_hardware` | 12 | PASS | PCIe specs, barraCuda unified_hardware | Transfer cost, mixed pipelines, NPU mock, scoring |
+| 033 | `exp033_nucleus_pipeline` | 11 | PASS | biomeOS nucleus_complete.toml | Tower/Node/Nest atomic coordination |
+
+### Track 9: Specs Paper Validation + Performance Benchmarks
+
+| # | Binary | Checks | Status | Reference | Modules Validated |
+|---|--------|--------|--------|-----------|-------------------|
+| 034 | `exp034_python_parity_bench` | 15 | PASS | Python baselines, barraCuda CPU | Sigmoid, Fitts, Hick, LCG, dot, mean, L2, Perlin parity + timing |
+| 035 | `exp035_noise_throughput` | 10 | PASS | BM-002, fastnoise-lite | Perlin 2D/3D, fBm throughput, fastnoise comparison |
+| 036 | `exp036_raycaster_throughput` | 10 | PASS | BM-003, Lodev DDA reference | DDA 320/640-col cast, 60Hz sustainability, determinism |
+| 037 | `exp037_tick_budget` | 10 | PASS | GAME_ENGINE_NICHE_SPEC budget table | game_logic 3ms, metrics 1ms, 10K entities at 60Hz |
+
 ### metalForge Dispatch
 
 | Binary | Checks | Status | Modules Validated |
@@ -111,9 +129,21 @@ cargo run --bin exp027_veloren_adapter -- validate   # Veloren adapter (9 checks
 cargo run --bin exp028_fishfolk_adapter -- validate  # Fish Folk adapter (7 checks)
 cargo run --bin exp029_abstreet_adapter -- validate  # A/B Street adapter (8 checks)
 
+# Run compute dispatch experiments
+cargo run --bin exp030_cpu_gpu_parity                 # CPU-vs-GPU parity (16 checks)
+cargo run --bin exp031_dispatch_routing               # dispatch routing (10 checks)
+cargo run --bin exp032_mixed_hardware                 # mixed hardware (12 checks)
+cargo run --bin exp033_nucleus_pipeline               # NUCLEUS pipeline (11 checks)
+
 # Generate + analyze telemetry pipeline
 cargo run --bin exp026_game_telemetry -- generate session.ndjson
 cargo run --bin exp026_game_telemetry -- analyze session.ndjson
+
+# Run specs paper validation + benchmarks
+cargo run --bin exp034_python_parity_bench               # Python-Rust parity (15 checks)
+cargo run --bin exp035_noise_throughput                   # BM-002 noise throughput (10 checks)
+cargo run --bin exp036_raycaster_throughput               # BM-003 raycaster throughput (10 checks)
+cargo run --bin exp037_tick_budget                        # tick budget validation (10 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

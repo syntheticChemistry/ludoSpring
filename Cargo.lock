@@ -1119,6 +1119,74 @@ dependencies = [
 ]
 
 [[package]]
+name = "ludospring-exp030"
+version = "0.1.0"
+dependencies = [
+ "barracuda",
+ "ludospring-barracuda",
+ "pollster 0.4.0",
+ "wgpu",
+]
+
+[[package]]
+name = "ludospring-exp031"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "ludospring-forge",
+ "pollster 0.4.0",
+ "wgpu",
+]
+
+[[package]]
+name = "ludospring-exp032"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "ludospring-forge",
+]
+
+[[package]]
+name = "ludospring-exp033"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "ludospring-forge",
+]
+
+[[package]]
+name = "ludospring-exp034"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp035"
+version = "0.1.0"
+dependencies = [
+ "fastnoise-lite",
+ "ludospring-barracuda",
+ "ludospring-benchmarks",
+]
+
+[[package]]
+name = "ludospring-exp036"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "ludospring-benchmarks",
+]
+
+[[package]]
+name = "ludospring-exp037"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "ludospring-benchmarks",
+]
+
+[[package]]
 name = "ludospring-forge"
 version = "0.1.0"
 dependencies = [

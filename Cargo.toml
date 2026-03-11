@@ -42,6 +42,14 @@ members = [
     "experiments/exp027_veloren_adapter",
     "experiments/exp028_fishfolk_adapter",
     "experiments/exp029_abstreet_adapter",
+    "experiments/exp030_cpu_gpu_parity",
+    "experiments/exp031_dispatch_routing",
+    "experiments/exp032_mixed_hardware",
+    "experiments/exp033_nucleus_pipeline",
+    "experiments/exp034_python_parity_bench",
+    "experiments/exp035_noise_throughput",
+    "experiments/exp036_raycaster_throughput",
+    "experiments/exp037_tick_budget",
 ]
 
 [workspace.package]

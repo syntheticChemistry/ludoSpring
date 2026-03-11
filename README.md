@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 11, 2026
-**Version:** V3 (29 experiments, 236 validation checks, 133 tests)
+**Version:** V4 (37 experiments, 330 validation checks, 133 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.3 (standalone, 150+ primitives)
@@ -92,6 +92,34 @@ cargo run --bin exp025_roguelike_explorer
 cargo run --bin exp023_open_systems_benchmark
 ```
 
+## Compute Dispatch + metalForge (GPU Parity, Mixed Hardware, NUCLEUS)
+
+Validates the CPU → GPU evolution pipeline and NUCLEUS atomic coordination:
+
+```bash
+cargo run --bin exp030_cpu_gpu_parity               # 16/16 CPU-vs-GPU parity checks
+cargo run --bin exp031_dispatch_routing              # 10/10 real hardware discovery
+cargo run --bin exp032_mixed_hardware                # 12/12 PCIe + mixed pipelines
+cargo run --bin exp033_nucleus_pipeline              # 11/11 Tower/Node/Nest atomics
+```
+
+## Specs Paper Validation + Performance Benchmarks
+
+Validates claims from the specs/ paper queue against live measurements:
+
+```bash
+cargo run --bin exp034_python_parity_bench           # 15/15 Python-vs-Rust math parity
+cargo run --bin exp035_noise_throughput               # 10/10 BM-002 noise (0.93x fastnoise)
+cargo run --bin exp036_raycaster_throughput           # 10/10 BM-003 raycaster (6,623 FPS)
+cargo run --bin exp037_tick_budget                    # 10/10 tick budget (70% headroom)
+```
+
+Key results:
+- **Python parity proven**: sigmoid, Fitts, Hick, LCG, dot, L2, Perlin all match Python within 1e-15
+- **Faster than fastnoise-lite**: 0.93x ratio at 256x256 Perlin (we're faster, not just within 2x)
+- **110x 60Hz headroom**: raycaster at 6,623 FPS on CPU alone
+- **70% tick budget headroom**: 10K entities ticked in 910us (budget: 3,000us)
+
 Both playable games now emit telemetry (NDJSON) during gameplay. After a session:
 
 ```bash
@@ -171,7 +199,7 @@ ludoSpring/
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 29 experiments (22 validation + 3 playable + 4 telemetry)
+├── experiments/           # 37 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
@@ -221,7 +249,7 @@ cargo doc --workspace --no-deps
 | `cargo clippy --pedantic` | 0 warnings (new code) |
 | `cargo test` | 133 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
-| 30 validation binaries | 236 checks, 0 failures |
+| 38 validation binaries | 330 checks, 0 failures |
 | 7 Python baselines | All pass |
 | `#![forbid(unsafe_code)]` | All crate roots |
 | Files > 1000 LOC | None |

@@ -2,7 +2,7 @@
 
 **Date:** March 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry — 29 experiments, 236 checks, 2 playable prototypes, 3 game adapters
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks — 37 experiments, 330 checks, 2 playable prototypes, 3 game adapters
 
 ---
 
@@ -34,6 +34,8 @@ validated HCI models benefit every primal in the ecosystem.
 | Procedural Generation | Noise, WFC, L-systems, BSP | 008–009, 013–014, 017 | 46 |
 | Accessibility/Cognitive | Motor-limited Fitts, Tufte sweep | 015–016 | 16 |
 | Fun & Engagement | Engagement, Four Keys, DDA, retention | 010, 018, 020–022 | 52 |
+| Compute Dispatch | CPU-GPU parity, routing, mixed hw, NUCLEUS | 030–033 | 49 |
+| Benchmark Validation | Python parity, noise BM-002, raycaster BM-003, tick budget | 034–037 | 45 |
 
 ### Cross-Spring Provenance
 
@@ -73,6 +75,14 @@ that constrained evolution produces transferable specializations.
 | 027 | Veloren Adapter | SPECS ECS log parser -> ludoSpring telemetry | `exp027_veloren_adapter.md` |
 | 028 | Fish Folk Adapter | Bevy plugin pattern for multiplayer PvP analysis | `exp028_fishfolk_adapter.md` |
 | 029 | A/B Street Adapter | Simulation-as-game: city planning analyzed as gameplay | `exp029_abstreet_adapter.md` |
+| 030 | CPU-vs-GPU Parity | Pure Rust math matches GPU WGSL shaders within tolerance | `exp030_cpu_gpu_parity.md` |
+| 031 | Dispatch Routing | Real wgpu adapter discovery + workload routing validation | `exp031_dispatch_routing.md` |
+| 032 | Mixed Hardware | PCIe transfer cost, mixed pipelines, NPU mock, substrate scoring | `exp032_mixed_hardware.md` |
+| 033 | NUCLEUS Pipeline | Tower/Node/Nest atomic coordination for game-science workloads | `exp033_nucleus_pipeline.md` |
+| 034 | Python-Rust Parity | barraCuda CPU = Python math, Rust faster than interpreted | `exp034_python_parity_bench.md` |
+| 035 | Noise Throughput (BM-002) | 13.1M samples/s Perlin, 0.93x fastnoise-lite | `exp035_noise_throughput.md` |
+| 036 | Raycaster Throughput (BM-003) | 6,623 FPS DDA raycaster, 110x 60Hz target | `exp036_raycaster_throughput.md` |
+| 037 | Tick Budget Validation | 10K entities in 910us, 70% headroom under 3ms budget | `exp037_tick_budget.md` |
 
 ### Barrier Removal Philosophy
 
@@ -101,6 +111,14 @@ cargo run --bin exp026_game_telemetry -- validate   # telemetry protocol: 13/13 
 cargo run --bin exp027_veloren_adapter -- validate  # Veloren adapter: 9/9 checks
 cargo run --bin exp028_fishfolk_adapter -- validate # Fish Folk adapter: 7/7 checks
 cargo run --bin exp029_abstreet_adapter -- validate # A/B Street adapter: 8/8 checks
+cargo run --bin exp030_cpu_gpu_parity               # CPU-vs-GPU parity: 16/16 checks
+cargo run --bin exp031_dispatch_routing              # dispatch routing: 10/10 checks
+cargo run --bin exp032_mixed_hardware                # mixed hardware: 12/12 checks
+cargo run --bin exp033_nucleus_pipeline              # NUCLEUS pipeline: 11/11 checks
+cargo run --bin exp034_python_parity_bench           # Python parity: 15/15 checks
+cargo run --bin exp035_noise_throughput              # BM-002 noise: 10/10 checks
+cargo run --bin exp036_raycaster_throughput          # BM-003 raycaster: 10/10 checks
+cargo run --bin exp037_tick_budget                   # tick budget: 10/10 checks
 cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
 ```
 
