@@ -2,3 +2,4 @@
 baselines/python/combined_baselines.json
 baselines/python/*_output.json
 sandbox/
+*.ndjson

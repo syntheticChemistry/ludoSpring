@@ -99,6 +99,9 @@ pub mod tolerances;
 /// Validation harness and test utilities.
 pub mod validation;
 
+/// Portable game telemetry — engine-agnostic event protocol and analysis.
+pub mod telemetry;
+
 /// Visualization data channels for any visualization-capable consumer.
 pub mod visualization;
 

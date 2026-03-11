@@ -3,12 +3,18 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 11, 2026
-**Version:** V2 (22 experiments, 183 validation checks, 123 tests)
+**Version:** V3 (29 experiments, 236 validation checks, 133 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.3 (standalone, 150+ primitives)
 
 ---
+
+## Philosophy
+
+Digital music resulted in more musicians, not fewer. Acoustic music and bands still exist. The field expanded on barrier removal.
+
+ludoSpring follows the same principle: validate the science rigorously, then build tools that remove barriers for indie devs, musicians, creative tool makers. We sketch from real games, recreate the core mechanics with validated math, and document *why* each design decision works — not just that it does. AGPL-3.0 ensures anyone can extend this.
 
 ## What This Is
 
@@ -16,7 +22,7 @@ An ecoPrimals Spring. Treats game design with the same rigor that wetSpring trea
 Python baseline → barraCuda CPU → GPU (WGSL) → sovereign pipeline (coralReef)
 ```
 
-ludoSpring validates 13 foundational HCI/game science models against published research, with Python baselines proving faithful port to Rust, and GPU shader promotion maps for every pure-math module.
+ludoSpring validates 13 foundational HCI/game science models against published research, with Python baselines proving faithful port to Rust, and GPU shader promotion maps for every pure-math module. Then it uses that validated math to build playable prototypes.
 
 Games are the most demanding real-time interactive systems humans build. They solve problems every primal needs: input handling, spatial navigation, physics simulation, procedural content generation, accessibility, and the deep question of what makes interaction *engaging*.
 
@@ -71,6 +77,66 @@ Games are the most demanding real-time interactive systems humans build. They so
 | `procedural::bsp` | B | Recursive → iterative conversion | Stack elimination |
 | `procedural::lsystem` | B | Parallel string rewriting | Variable-length output |
 
+## Playable Prototypes (baseCamp Expeditions)
+
+These build on validated math — every game mechanic traces to a published paper:
+
+```bash
+# Doom-in-a-terminal: BSP levels + DDA raycaster + collision + ratatui
+cargo run --bin exp024_doom_terminal
+
+# Roguelike explorer: engagement-driven dungeon with DDA, Flow, fun classification
+cargo run --bin exp025_roguelike_explorer
+
+# Open-systems benchmark: compare ludoSpring vs fastnoise-lite, Bevy patterns
+cargo run --bin exp023_open_systems_benchmark
+```
+
+Both playable games now emit telemetry (NDJSON) during gameplay. After a session:
+
+```bash
+cargo run --bin exp026_game_telemetry -- analyze exp024_session_42.ndjson
+```
+
+## Portable Game Telemetry Protocol
+
+Any game can emit NDJSON events; ludoSpring analyzes them. The protocol is the portability layer.
+
+```bash
+# Protocol validation (13 checks)
+cargo run --bin exp026_game_telemetry -- validate
+
+# Generate synthetic session + analyze
+cargo run --bin exp026_game_telemetry -- generate session.ndjson
+cargo run --bin exp026_game_telemetry -- analyze session.ndjson
+
+# External game adapters
+cargo run --bin exp027_veloren_adapter -- validate   # Veloren (SPECS ECS)
+cargo run --bin exp028_fishfolk_adapter -- validate  # Fish Folk (Bevy)
+cargo run --bin exp029_abstreet_adapter -- validate  # A/B Street (simulation)
+```
+
+13 event types, all `Serialize + Deserialize`. Any language that writes JSON is compatible:
+Rust (direct lib call), Unity (C#), Godot (GDScript), web (JS).
+
+## Beyond Games: Extensibility
+
+The same validated models work outside games. AGPL-3.0 means anyone can extend:
+
+| ludoSpring model | Game use | Non-game use |
+|-----------------|----------|-------------|
+| Fitts's law | HUD reachability | Any clickable UI |
+| Hick's law | Menu depth | Decision interface design |
+| Flow theory | Difficulty tuning | Learning software, adaptive assessments |
+| DDA | Monster density | Exam difficulty, workout intensity |
+| Engagement metrics | Session quality | Student attention, UX research |
+| WFC | Dungeon layout | Music composition (harmonic adjacency) |
+| BSP | Level generation | Office floor plans, warehouse routing |
+| Perlin noise | Terrain, item placement | Data visualization, texture synthesis |
+| Tufte data-ink | HUD clarity | Any dashboard or chart |
+
+A musician editing digital sheet music. A teacher building adaptive quizzes. An architect testing floor plan navigation. The math is the same — only the domain changes.
+
 ## petalTongue Live Visualization
 
 ludoSpring pushes game science data to petalTongue for live visualization:
@@ -100,11 +166,12 @@ ludoSpring/
 │   │   ├── metrics/       # Tufte, engagement, Four Keys to Fun
 │   │   ├── tolerances/    # All constants with provenance (no magic numbers)
 │   │   ├── validation/    # ValidationResult harness
+│   │   ├── telemetry/     # Portable event protocol + analysis pipeline
 │   │   ├── visualization/ # Data channels + PetalTonguePushClient
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 22 hotSpring-pattern validation binaries
+├── experiments/           # 29 experiments (22 validation + 3 playable + 4 telemetry)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
@@ -152,9 +219,9 @@ cargo doc --workspace --no-deps
 |-------|--------|
 | `cargo fmt --check` | Clean |
 | `cargo clippy --pedantic` | 0 warnings (new code) |
-| `cargo test` | 123 tests, 0 failures |
+| `cargo test` | 133 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
-| 23 validation binaries | 183 checks, 0 failures |
+| 30 validation binaries | 236 checks, 0 failures |
 | 7 Python baselines | All pass |
 | `#![forbid(unsafe_code)]` | All crate roots |
 | Files > 1000 LOC | None |

@@ -35,6 +35,13 @@ members = [
     "experiments/exp020_difficulty_skill_balance",
     "experiments/exp021_retention_reward_curves",
     "experiments/exp022_small_multiples_minimap",
+    "experiments/exp023_open_systems_benchmark",
+    "experiments/exp024_doom_terminal",
+    "experiments/exp025_roguelike_explorer",
+    "experiments/exp026_game_telemetry",
+    "experiments/exp027_veloren_adapter",
+    "experiments/exp028_fishfolk_adapter",
+    "experiments/exp029_abstreet_adapter",
 ]
 
 [workspace.package]

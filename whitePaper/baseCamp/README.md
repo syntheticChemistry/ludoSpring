@@ -2,7 +2,7 @@
 
 **Date:** March 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated — 22 experiments, 183 checks, Python parity proven
+**Status:** Validated + Playable + Telemetry — 29 experiments, 236 checks, 2 playable prototypes, 3 game adapters
 
 ---
 
@@ -62,12 +62,57 @@ that constrained evolution produces transferable specializations.
 - Perlin (1985, 2002), Gumin (2016), Lindenmayer (1968), Fuchs (1980) — PCG
 - Tufte (1983, 1990) — Information design
 
+## baseCamp Expeditions
+
+| Exp | Title | What it proves | Doc |
+|-----|-------|---------------|-----|
+| 023 | Open-Systems Benchmark | ludoSpring vs fastnoise-lite, WFC crate, Bevy ECS | `exp023_benchmarks.md` |
+| 024 | Doom-in-a-Terminal | Validated raycaster + BSP = playable first-person game | `exp024_doom_terminal.md` |
+| 025 | Roguelike Explorer | Engagement-driven PCG with DDA, Flow, fun classification | `exp025_roguelike_explorer.md` |
+| 026 | Game Telemetry Protocol | Portable NDJSON event protocol + analysis pipeline | `exp026_game_telemetry.md` |
+| 027 | Veloren Adapter | SPECS ECS log parser -> ludoSpring telemetry | `exp027_veloren_adapter.md` |
+| 028 | Fish Folk Adapter | Bevy plugin pattern for multiplayer PvP analysis | `exp028_fishfolk_adapter.md` |
+| 029 | A/B Street Adapter | Simulation-as-game: city planning analyzed as gameplay | `exp029_abstreet_adapter.md` |
+
+### Barrier Removal Philosophy
+
+Digital music expanded the field by removing barriers — more musicians, not fewer.
+ludoSpring follows the same principle:
+
+- **Validate from science** but make tools extensible beyond games
+- **AGPL-3.0** ensures anyone can extend: musicians, educators, architects, indie devs
+- **Terminal rendering** (ratatui) = zero GPU dependency, runs on any SSH session
+- **Deterministic seeding** (LCG) = reproducible results across all platforms
+
+The same WFC that generates dungeons can compose music (harmonic adjacency).
+The same DDA that tunes monster density can tune exam difficulty.
+The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
+
 ### How to Reproduce
 
 ```bash
 cd ludoSpring
-python3 baselines/python/run_all_baselines.py   # generate Python reference data
-cargo test --features ipc --lib --tests          # 123 Rust tests including 22 parity
-cargo run --bin exp017_bsp_level_generation      # any of 22 experiment binaries
+python3 baselines/python/run_all_baselines.py       # Python reference data
+cargo test --features ipc --lib --tests              # 123 Rust tests
+cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
+cargo run --bin exp024_doom_terminal                 # playable Doom walker
+cargo run --bin exp025_roguelike_explorer            # playable roguelike
+cargo run --bin exp026_game_telemetry -- validate   # telemetry protocol: 13/13 checks
+cargo run --bin exp027_veloren_adapter -- validate  # Veloren adapter: 9/9 checks
+cargo run --bin exp028_fishfolk_adapter -- validate # Fish Folk adapter: 7/7 checks
+cargo run --bin exp029_abstreet_adapter -- validate # A/B Street adapter: 8/8 checks
 cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
 ```
+
+### Cross-Engine Portability
+
+The telemetry protocol is pure JSON — any engine can emit events:
+
+| Engine | Transport | Integration |
+|--------|-----------|-------------|
+| Rust (direct) | `use ludospring_barracuda::telemetry` | Zero-overhead library call |
+| Rust (Bevy) | Bevy plugin `EventReader<T>` -> NDJSON | exp028 pattern |
+| Unity (C#) | `File.AppendAllText()` or HTTP POST | JSON serialization |
+| Godot (GDScript) | `file.store_line(JSON.stringify())` | JSON serialization |
+| Web (JS) | `fetch('/telemetry', ...)` | Standard fetch API |
+| Any language | Write NDJSON file | One JSON object per line |

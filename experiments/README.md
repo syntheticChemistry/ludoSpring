@@ -1,8 +1,8 @@
 # ludoSpring Experiments
 
 **Date:** March 11, 2026
-**Total:** 22 experiments, 183 validation checks, 0 failures
-**Pattern:** hotSpring validation — hardcoded expected values, explicit pass/fail, exit code 0/1
+**Total:** 29 experiments (22 validation + 3 playable + 4 telemetry), 236 checks, 0 failures
+**Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
 
@@ -55,6 +55,23 @@
 | 021 | `exp021_retention_reward_curves` | 7 | PASS | — | `metrics::engagement`, `metrics::fun_keys` |
 | 022 | `exp022_small_multiples_minimap` | 7 | PASS | Tufte (1983) | `metrics::tufte_gaming` |
 
+### Track 6: baseCamp Expeditions (Playable Prototypes)
+
+| # | Binary | Checks | Status | Reference | Modules Validated |
+|---|--------|--------|--------|-----------|-------------------|
+| 023 | `exp023_open_systems_benchmark` | 16 | PASS | fastnoise-lite, WFC crate, Bevy | `procedural::noise`, `procedural::wfc`, `procedural::bsp`, `game::state` |
+| 024 | `exp024_doom_terminal` | — | Playable | Doom (1993), Wolfenstein 3D | `game::raycaster`, `procedural::bsp`, `metrics::tufte_gaming` |
+| 025 | `exp025_roguelike_explorer` | — | Playable | Caves of Qud, Brogue, NetHack | `procedural::bsp`, `procedural::noise`, `interaction::difficulty`, `interaction::flow`, `metrics::engagement`, `metrics::fun_keys` |
+
+### Track 7: Telemetry Protocol + External Game Adapters
+
+| # | Binary | Checks | Status | Reference | Modules Validated |
+|---|--------|--------|--------|-----------|-------------------|
+| 026 | `exp026_game_telemetry` | 13 | PASS | OpenTelemetry, Unity Analytics | `telemetry::events`, `telemetry::mapper`, `telemetry::report` |
+| 027 | `exp027_veloren_adapter` | 9 | PASS | Veloren (GPL-3.0) | `telemetry` (SPECS ECS log parser) |
+| 028 | `exp028_fishfolk_adapter` | 7 | PASS | Fish Folk (MIT/Apache-2.0) | `telemetry` (Bevy plugin pattern) |
+| 029 | `exp029_abstreet_adapter` | 8 | PASS | A/B Street (Apache-2.0) | `telemetry` (simulation-as-game) |
+
 ### metalForge Dispatch
 
 | Binary | Checks | Status | Modules Validated |
@@ -72,7 +89,7 @@
 ## Running
 
 ```bash
-# Run a specific experiment
+# Run a specific validation experiment
 cargo run --bin exp017_bsp_level_generation
 
 # Run metalForge dispatch
@@ -82,6 +99,21 @@ cargo run --bin validate_dispatch_routing
 cargo run --features ipc --bin ludospring_dashboard
 cargo run --features ipc --bin ludospring_live_session
 cargo run --features ipc --bin ludospring_tufte_dashboard
+
+# Run baseCamp expeditions
+cargo run --bin exp023_open_systems_benchmark    # benchmark (16 checks)
+cargo run --bin exp024_doom_terminal             # playable Doom walker
+cargo run --bin exp025_roguelike_explorer        # playable roguelike
+
+# Run telemetry protocol + adapters
+cargo run --bin exp026_game_telemetry -- validate    # telemetry protocol (13 checks)
+cargo run --bin exp027_veloren_adapter -- validate   # Veloren adapter (9 checks)
+cargo run --bin exp028_fishfolk_adapter -- validate  # Fish Folk adapter (7 checks)
+cargo run --bin exp029_abstreet_adapter -- validate  # A/B Street adapter (8 checks)
+
+# Generate + analyze telemetry pipeline
+cargo run --bin exp026_game_telemetry -- generate session.ndjson
+cargo run --bin exp026_game_telemetry -- analyze session.ndjson
 
 # Run all tests
 cargo test --features ipc --lib --tests
