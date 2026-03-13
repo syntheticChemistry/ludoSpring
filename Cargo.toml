@@ -74,6 +74,11 @@ members = [
     "experiments/exp059_quorum",
     "experiments/exp060_pathogen",
     "experiments/exp061_fermenting",
+    "experiments/exp062_field_sample_provenance",
+    "experiments/exp063_consent_gated_medical",
+    "experiments/exp064_beardog_signed_chain",
+    "experiments/exp065_cross_domain_fraud",
+    "experiments/exp066_radiating_attribution",
 ]
 
 [workspace.package]

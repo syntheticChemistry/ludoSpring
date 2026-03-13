@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 13, 2026
-**Version:** V12 (61 experiments, 1121 validation checks, 138 tests)
+**Version:** V13 (66 experiments, 1349 validation checks, 138 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.3 (standalone, 150+ primitives)
@@ -246,6 +246,27 @@ Key results:
 
 See `specs/LYSOGENY_CATALOG.md` for full citation tables and cross-domain mapping.
 
+## Cross-Spring Provenance (exp062-066)
+
+Five experiments extending the fermenting system (exp061) into cross-spring scaffolds:
+
+```bash
+cargo run --release -p ludospring-exp064                   # 39/39 BearDog-signed provenance chain
+cargo run --release -p ludospring-exp062                   # 39/39 Field sample provenance (wetSpring scaffold)
+cargo run --release -p ludospring-exp063                   # 35/35 Consent-gated medical access (healthSpring scaffold)
+cargo run --release -p ludospring-exp065                   # 74/74 Cross-domain fraud unification
+cargo run --release -p ludospring-exp066                   # 41/41 Radiating attribution calculator
+```
+
+Key results:
+- **BearDog signing end-to-end**: Every vertex, certificate, and braid signed with Ed25519. Tamper detection at exact point.
+- **Field sample lifecycle**: Collect → transport → store → extract → amplify → sequence → analyze → publish. 6 fraud types. DAG isomorphism with extraction shooter.
+- **Consent-gated medical access**: Patient owns record (loamSpine cert). Provider gets scoped lending (consent cert). Every access logged. 5 fraud types. Zero-knowledge access proofs.
+- **Cross-domain fraud unification**: Same `GenericFraudDetector` catches fraud across gaming, science, and medical with >80% structural similarity.
+- **Radiating attribution**: sunCloud value distribution walks sweetGrass chains. Shares always sum to 1.0 (conservation). Decay models and role weighting.
+
+See `whitePaper/gen3/baseCamp/21_sovereign_sample_provenance.md` (Paper 21) and `whitePaper/gen3/baseCamp/22_zero_knowledge_medical_provenance.md` (Paper 22).
+
 ## Specs Paper Validation + Performance Benchmarks
 
 Validates claims from the specs/ paper queue against live measurements:
@@ -342,7 +363,7 @@ ludoSpring/
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 61 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting)
+├── experiments/           # 66 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting + 5 Cross-Spring Provenance)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
@@ -392,10 +413,10 @@ cargo doc --workspace --no-deps
 | `cargo clippy --pedantic` | 0 warnings (new code) |
 | `cargo test` | 138 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
-| 62 validation binaries | 1121 checks, 0 failures |
+| 67 validation binaries | 1349 checks, 0 failures |
 | 7 Python baselines | All pass |
 | `#![forbid(unsafe_code)]` | All crate roots |
-| Files > 1000 LOC | None |
+| Files > 1000 LOC | 1 (exp061 main.rs: 1227 — validation sections, candidate for split) |
 | TODO/FIXME/HACK in source | None |
 
 ## Benchmark Gaps (Documented)

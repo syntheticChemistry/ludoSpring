@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 13, 2026
-**Total:** 61 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting), 1121 checks, 0 failures
+**Total:** 66 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting + 1 BearDog Signing + 1 Field Sample + 1 Medical Access + 1 Cross-Domain Fraud + 1 Radiating Attribution), 1349 checks, 0 failures
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -217,6 +217,37 @@ impossible kills, unattributed container loot, and aimbot headshot anomalies.
 
 See `specs/LYSOGENY_CATALOG.md` for full citation tables.
 
+### Track 19: BearDog-Signed Provenance Chain
+
+|| # | Package | Checks | Status | Description |
+||---|---------|--------|--------|-------------|
+|| 064 | `ludospring-exp064` | 39 | PASS | BearDog Ed25519 signing wired into all trio operations: vertex, certificate, braid. Chain verification detects tampered items at exact position. IPC wire format for `crypto.sign_ed25519` / `crypto.verify_ed25519` / `crypto.blake3_hash`. |
+
+### Track 20: Cross-Spring Provenance — Field Sample (wetSpring Scaffold)
+
+|| # | Package | Checks | Status | Description |
+||---|---------|--------|--------|-------------|
+|| 062 | `ludospring-exp062` | 39 | PASS | Full biological sample lifecycle: collect → transport → store → extract → amplify → sequence → analyze → publish. 6 fraud types (PhantomSample, DuplicateAccession, BrokenColdChain, UnauthorizedAccess, MislabeledSpecimen, ContaminationGap). DAG isomorphism with extraction shooter exp053. IPC wire format. |
+
+**What wetSpring gets**: `SampleCertificate` and `SampleDag` patterns mapping directly to field genomics architecture. Fraud detectors become the QC pipeline.
+
+### Track 21: Cross-Spring Provenance — Consent-Gated Medical Access (healthSpring Scaffold)
+
+|| # | Package | Checks | Status | Description |
+||---|---------|--------|--------|-------------|
+|| 063 | `ludospring-exp063` | 35 | PASS | Patient-owned medical records via DID-based loamSpine certs. Consent certificates as scoped lending. 5 fraud types (UnauthorizedAccess, ExpiredConsent, ScopeViolation, PhantomAccess, ConsentForgery). BearDog zero-knowledge access proofs. PROV-O audit trail. |
+
+**What healthSpring gets**: consent/access model mapping to clinical tracks (PK/PD, microbiome, biosignal, TRT). Zero-knowledge access proof pattern via BearDog.
+
+### Track 22: Cross-Domain Fraud Unification + Radiating Attribution
+
+|| # | Package | Checks | Status | Description |
+||---|---------|--------|--------|-------------|
+|| 065 | `ludospring-exp065` | 74 | PASS | Same `GenericFraudDetector` catches fraud across gaming (exp053), science (exp062), medical (exp063). 5 generic fraud types, 3 vocabularies. Structural similarity >80%. |
+|| 066 | `ludospring-exp066` | 41 | PASS | sunCloud radiating attribution: walk sweetGrass chain, compute proportional credit. Decay models, role weighting. Conservation proven (shares sum to 1.0). Game/science/medical scenarios. |
+
+**Key insight**: The universality claim from Paper 18 (anti-cheat = chain-of-custody) is not just conceptual — it is the same code path. exp065 proves it with identical fraud detections across all 3 domain vocabularies.
+
 ### metalForge Dispatch
 
 | Binary | Checks | Status | Modules Validated |
@@ -311,6 +342,19 @@ cargo run --release -p ludospring-exp060 -- validate      # Pathogen: gacha anti
 
 # Run Fermenting — Memory-bound digital objects (Track 18)
 cargo run --release -p ludospring-exp061 -- validate      # Fermenting: full lifecycle (89 checks)
+
+# Run BearDog-Signed Provenance Chain (Track 19)
+cargo run --release -p ludospring-exp064                   # BearDog signing (39 checks)
+
+# Run Cross-Spring Provenance — Field Sample (Track 20)
+cargo run --release -p ludospring-exp062                   # Field sample provenance (39 checks)
+
+# Run Cross-Spring Provenance — Medical Access (Track 21)
+cargo run --release -p ludospring-exp063                   # Consent-gated medical access (35 checks)
+
+# Run Cross-Domain Fraud + Radiating Attribution (Track 22)
+cargo run --release -p ludospring-exp065                   # Cross-domain fraud unification (74 checks)
+cargo run --release -p ludospring-exp066                   # Radiating attribution calculator (41 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

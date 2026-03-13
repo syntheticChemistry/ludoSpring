@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+[package]
+name = "ludospring-exp062"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "exp062_field_sample_provenance"
+path = "src/main.rs"
+
+[dependencies]
+ludospring-barracuda = { path = "../../barracuda" }
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+uuid = { version = "1", features = ["v7"] }
+
+# Provenance Trio — core crates (no service layer)
+rhizo-crypt-core = { path = "../../../phase2/rhizoCrypt/crates/rhizo-crypt-core", default-features = false, features = [] }
+loam-spine-core = { path = "../../../phase2/loamSpine/crates/loam-spine-core" }
+sweet-grass-core = { path = "../../../phase2/sweetGrass/crates/sweet-grass-core" }

@@ -383,4 +383,18 @@ to every contributor, proportionally.
 | Conjugant | HGT / LTEE | — | — | Cover crop meta-progression |
 | Quorum | QS biofilm | — | Patient narrative | — |
 | Pathogen | — | Reward prediction error | Addiction modeling | — |
-| Novel Ferment Transcript | Sample chain-of-custody | — | Medical record provenance | Supply chain tracking |
+| Novel Ferment Transcript | Sample chain-of-custody (exp062, 39/39) | — | Medical record provenance (exp063, 35/35) | Supply chain tracking |
+
+## Cross-Spring Provenance Experiments (exp062-066)
+
+| Experiment | Checks | What It Proves |
+|-----------|--------|---------------|
+| exp062: Field Sample Provenance | 39/39 | wetSpring scaffold — sample lifecycle with 6 fraud types, DAG isomorphism with exp053 |
+| exp063: Consent-Gated Medical Access | 35/35 | healthSpring scaffold — patient-owned records, consent certificates, zero-knowledge access proofs |
+| exp064: BearDog-Signed Chain | 39/39 | Ed25519 signing on all trio operations, chain verification, tamper detection at exact point |
+| exp065: Cross-Domain Fraud Unification | 74/74 | Same GenericFraudDetector across gaming/science/medical. >80% structural similarity. |
+| exp066: Radiating Attribution Calculator | 41/41 | sunCloud value distribution — decay, role weighting, conservation (shares sum to 1.0) |
+
+**Total**: 228 cross-spring checks, 0 failures.
+
+**Papers**: Paper 21 (Sovereign Sample Provenance), Paper 22 (Zero-Knowledge Medical Provenance) in `gen3/baseCamp/`.

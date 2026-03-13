@@ -2002,6 +2002,64 @@ dependencies = [
 ]
 
 [[package]]
+name = "ludospring-exp062"
+version = "0.1.0"
+dependencies = [
+ "loam-spine-core",
+ "ludospring-barracuda",
+ "rhizo-crypt-core",
+ "serde",
+ "serde_json",
+ "sweet-grass-core",
+ "uuid",
+]
+
+[[package]]
+name = "ludospring-exp063"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "loam-spine-core",
+ "ludospring-barracuda",
+ "rhizo-crypt-core",
+ "serde",
+ "serde_json",
+ "sweet-grass-core",
+ "uuid",
+]
+
+[[package]]
+name = "ludospring-exp064"
+version = "0.1.0"
+dependencies = [
+ "loam-spine-core",
+ "ludospring-barracuda",
+ "rhizo-crypt-core",
+ "serde",
+ "serde_json",
+ "sweet-grass-core",
+ "uuid",
+]
+
+[[package]]
+name = "ludospring-exp065"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp066"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ludospring-forge"
 version = "0.1.0"
 dependencies = [

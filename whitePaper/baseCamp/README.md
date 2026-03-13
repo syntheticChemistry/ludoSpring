@@ -2,7 +2,7 @@
 
 **Date:** March 13, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz — 54 experiments, 795 checks, 138 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 1 extraction shooter, 1 composable viz
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance — 66 experiments, 1349 checks, 138 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 2 extraction shooter/viz, 6 lysogeny, 1 fermenting, 5 cross-spring provenance
 
 ---
 
@@ -43,6 +43,13 @@ validated HCI models benefit every primal in the ecosystem.
 | Provenance Trio | rhizoCrypt DAG + loamSpine certs + sweetGrass attribution wired into game sessions | 052 | 37 |
 | Extraction Shooter | 12 fraud types, zone topology, spatial cheats, consumable lifecycle, per-round provenance | 053 | 65 |
 | Composable Viz | biomeOS graph, songbird discovery, petalTongue DataBinding — zero chimeric deps | 054 | 40 |
+| Lysogeny | Usurper, Integrase, Symbiont, Conjugant, Quorum, Pathogen — open recreation from prior-art math | 055–060 | 237 |
+| Fermenting | Full NFT lifecycle: mint, trade, loan, consume, achievements, atomic swap, trio integration, IPC | 061 | 89 |
+| BearDog-Signed Chain | Ed25519 signing on every trio operation, chain verification, tamper detection | 064 | 39 |
+| Field Sample Provenance | wetSpring scaffold — sample lifecycle, 6 fraud types, DAG isomorphism | 062 | 39 |
+| Medical Access | healthSpring scaffold — consent-gated access, 5 fraud types, zero-knowledge proofs | 063 | 35 |
+| Cross-Domain Fraud | Same GenericFraudDetector across gaming/science/medical (>80% similarity) | 065 | 74 |
+| Radiating Attribution | sunCloud value distribution — decay, role weighting, conservation of attribution | 066 | 41 |
 
 ### Cross-Spring Provenance
 
@@ -113,6 +120,18 @@ that constrained evolution produces transferable specializations.
 | 052 | Provenance Trio Integration | rhizoCrypt DAG + loamSpine certs + sweetGrass braids wired into game sessions | — |
 | 053 | Extraction Shooter Provenance | 12 fraud types, zone topology, spatial detection, consumable lifecycle tracking | — |
 | 054 | Composable Raid Visualization | biomeOS graph + songbird discovery + petalTongue viz — zero chimeric deps | — |
+| 055 | Usurper (Nemesis System) | Replicator dynamics + spatial PD + Lotka-Volterra with memory = persistent adaptive NPCs | — |
+| 056 | Integrase (Capture) | Wright-Fisher fixation + QS threshold + Markov chains = capture probability | — |
+| 057 | Symbiont (Faction/Reputation) | Multi-species Lotka-Volterra + frequency-dependent fitness = faction dynamics | — |
+| 058 | Conjugant (Roguelite) | HGT + Wright-Fisher + Price equation + Red Queen = meta-progression | — |
+| 059 | Quorum (Emergent Narrative) | Agent-based + Markov + DAG causality + QS threshold = procedural story | — |
+| 060 | Pathogen (Gacha Anti-Pattern) | Operant conditioning + prospect theory + parasitism = exploitation quantification | — |
+| 061 | Fermenting System | Full NFT lifecycle: mint/trade/loan/return/consume/achievements + trio + IPC wire format | — |
+| 062 | Field Sample Provenance | wetSpring scaffold: Collect→Publish, 6 fraud types, DAG isomorphism with exp053 | — |
+| 063 | Consent-Gated Medical Access | healthSpring scaffold: patient-owned records, consent lending, 5 fraud types, ZK proofs | — |
+| 064 | BearDog-Signed Provenance Chain | Ed25519 signing on all trio operations, chain verification, tamper detection at exact point | — |
+| 065 | Cross-Domain Fraud Unification | Same GenericFraudDetector across gaming/science/medical, >80% structural similarity | — |
+| 066 | Radiating Attribution Calculator | sunCloud value distribution: decay models, role weighting, conservation (shares=1.0) | — |
 
 ### Barrier Removal Philosophy
 
@@ -166,6 +185,18 @@ cargo run --release -p ludospring-exp051 -- validate # Games@Home: 28/28 checks
 cargo run --release -p ludospring-exp052 -- validate # Provenance trio integration: 37/37 checks
 cargo run --release -p ludospring-exp053 -- validate # Extraction shooter provenance: 65/65 checks
 cargo run --release -p ludospring-exp054 -- validate # Composable raid visualization: 40/40 checks
+cargo run --release -p ludospring-exp055 -- validate # Usurper: Nemesis system: 48/48 checks
+cargo run --release -p ludospring-exp056 -- validate # Integrase: capture mechanics: 47/47 checks
+cargo run --release -p ludospring-exp057 -- validate # Symbiont: faction reputation: 35/35 checks
+cargo run --release -p ludospring-exp058 -- validate # Conjugant: roguelite meta-progression: 40/40 checks
+cargo run --release -p ludospring-exp059 -- validate # Quorum: emergent narrative: 39/39 checks
+cargo run --release -p ludospring-exp060 -- validate # Pathogen: gacha anti-pattern: 28/28 checks
+cargo run --release -p ludospring-exp061 -- validate # Fermenting: full lifecycle: 89/89 checks
+cargo run --release -p ludospring-exp062              # Field sample provenance: 39/39 checks
+cargo run --release -p ludospring-exp063              # Consent-gated medical access: 35/35 checks
+cargo run --release -p ludospring-exp064              # BearDog-signed chain: 39/39 checks
+cargo run --release -p ludospring-exp065              # Cross-domain fraud unification: 74/74 checks
+cargo run --release -p ludospring-exp066              # Radiating attribution: 41/41 checks
 cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
 ```
 
