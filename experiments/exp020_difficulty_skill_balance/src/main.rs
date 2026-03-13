@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp020: Difficulty-skill balance in protein folding challenges — validation.
 //!
 //! Simulates player sessions across skill levels tackling protein folding

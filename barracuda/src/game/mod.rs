@@ -9,5 +9,6 @@
 
 pub mod genre;
 pub mod raycaster;
+pub mod ruleset;
 pub mod state;
 pub mod voxel;

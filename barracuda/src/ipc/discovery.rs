@@ -172,6 +172,7 @@ pub fn discover_primals() -> PrimalRegistry {
         };
         for entry in entries.flatten() {
             let path = entry.path();
+            // Pattern-based: scan ALL *.sock files, never hardcode primal names.
             if path.extension().is_some_and(|ext| ext == "sock") {
                 if let Some(endpoint) = probe_socket(&path) {
                     registry.register(&endpoint);

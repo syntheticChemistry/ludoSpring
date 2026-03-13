@@ -57,6 +57,16 @@ members = [
     "experiments/exp042_tower_atomic_local",
     "experiments/exp043_qs_gene_fetch",
     "experiments/exp044_anderson_qs_explorer",
+    "experiments/exp045_ruleset_control_systems",
+    "experiments/exp046_text_adventure_dag",
+    "experiments/exp047_mtg_card_provenance",
+    "experiments/exp048_stack_resolution_folding",
+    "experiments/exp049_novel_data_combinatorics",
+    "experiments/exp050_game_tree_design_metric",
+    "experiments/exp051_games_at_home",
+    "experiments/exp052_provenance_trio_integration",
+    "experiments/exp053_extraction_shooter_provenance",
+    "experiments/exp054_composable_raid_visualization",
 ]
 
 [workspace.package]

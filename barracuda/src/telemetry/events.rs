@@ -254,6 +254,7 @@ impl TelemetryEvent {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -279,7 +280,8 @@ mod tests {
 
     #[test]
     fn snake_case_event_type() {
-        let json = r#"{"timestamp_ms":0,"session_id":"s","event_type":"session_start","payload":{}}"#;
+        let json =
+            r#"{"timestamp_ms":0,"session_id":"s","event_type":"session_start","payload":{}}"#;
         let evt: TelemetryEvent = serde_json::from_str(json).expect("parse");
         assert_eq!(evt.event_type, EventType::SessionStart);
     }

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp032 — Mixed hardware substrate validation.
 //!
-//! Validates PCIe transfer cost modeling, mixed pipelines (CPU → GPU → CPU),
+//! Validates `PCIe` transfer cost modeling, mixed pipelines (CPU → GPU → CPU),
 //! NPU mock substrates, and substrate scoring for cross-system dispatch.
 //! Evolving locally for absorption into barraCuda/toadStool metalForge.
 //!
 //! Subcommands:
 //!   validate  — run all mixed hardware checks
-//!   pcie      — probe PCIe topology from sysfs
+//!   pcie      — probe `PCIe` topology from sysfs
 //!   demo      — run a mixed pipeline demonstration
 
 use std::process;
@@ -55,6 +56,10 @@ impl BandwidthTier {
     }
 
     /// Estimated one-way transfer time in microseconds for `bytes` of data.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "validation counts fit in f64 mantissa"
+    )]
     fn transfer_time_us(self, bytes: usize) -> f64 {
         let gb = bytes as f64 / 1e9;
         let seconds = gb / self.bandwidth_gbps();
@@ -141,7 +146,7 @@ fn score_substrate(
     compute_benefit - transfer_penalty
 }
 
-/// Detect PCIe link info from sysfs (best-effort).
+/// Detect `PCIe` link info from sysfs (best-effort).
 struct PcieLinkInfo {
     device: String,
     vendor: String,
@@ -185,7 +190,7 @@ fn detect_pcie_links() -> Vec<PcieLinkInfo> {
             4
         } else if link_speed.contains("32") {
             5
-        } else if link_speed.contains("8") {
+        } else if link_speed.contains('8') {
             3
         } else {
             0
@@ -212,6 +217,11 @@ fn detect_pcie_links() -> Vec<PcieLinkInfo> {
 // Validation
 // ---------------------------------------------------------------------------
 
+#[expect(
+    clippy::too_many_lines,
+    clippy::similar_names,
+    reason = "validation orchestrator — sequential check groups"
+)]
 fn cmd_validate() {
     println!("=== exp032: Mixed Hardware Validation ===\n");
 
@@ -291,7 +301,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "total_exceeds_compute",
-        if result.total_us > result.compute_us { 1.0 } else { 0.0 },
+        if result.total_us > result.compute_us {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));
@@ -311,18 +325,29 @@ fn cmd_validate() {
         supports_f64: true,
         flops_gflops: 200.0,
     };
-    let large_parallel_score_gpu = score_substrate(&gpu_profile, 10_000_000, 1000.0, BandwidthTier::PciE4x16);
-    let large_parallel_score_cpu = score_substrate(&cpu_profile, 10_000_000, 1000.0, BandwidthTier::SharedMemory);
+    let large_parallel_score_gpu =
+        score_substrate(&gpu_profile, 10_000_000, 1000.0, BandwidthTier::PciE4x16);
+    let large_parallel_score_cpu = score_substrate(
+        &cpu_profile,
+        10_000_000,
+        1000.0,
+        BandwidthTier::SharedMemory,
+    );
     results.push(ValidationResult::check(
         experiment,
         "gpu_preferred_large_parallel",
-        if large_parallel_score_gpu > large_parallel_score_cpu { 1.0 } else { 0.0 },
+        if large_parallel_score_gpu > large_parallel_score_cpu {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));
 
     // 8. Transfer cost dominance: massive data + zero parallelism → CPU wins
-    let massive_transfer_gpu = score_substrate(&gpu_profile, 10_000_000_000, 0.0, BandwidthTier::PciE3x16);
+    let massive_transfer_gpu =
+        score_substrate(&gpu_profile, 10_000_000_000, 0.0, BandwidthTier::PciE3x16);
     let zero_transfer_cpu = score_substrate(&cpu_profile, 0, 0.0, BandwidthTier::SharedMemory);
     let transfer_dominates = zero_transfer_cpu > massive_transfer_gpu;
     results.push(ValidationResult::check(
@@ -393,7 +418,9 @@ fn cmd_validate() {
         BandwidthTier::NvLink,
         BandwidthTier::SharedMemory,
     ];
-    let monotonic = tiers.windows(2).all(|w| w[0].bandwidth_gbps() < w[1].bandwidth_gbps());
+    let monotonic = tiers
+        .windows(2)
+        .all(|w| w[0].bandwidth_gbps() < w[1].bandwidth_gbps());
     results.push(ValidationResult::check(
         experiment,
         "bandwidth_tier_monotonic",

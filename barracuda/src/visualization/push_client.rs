@@ -4,6 +4,14 @@
 //! Follows the wetSpring `PetalTonguePushClient` pattern: discover by socket,
 //! push via `visualization.render`, fall back to JSON file export if the
 //! socket is not available.
+//!
+//! Evolution: use capability-based discovery via `ipc::discovery::discover_primals()`
+//! and `registry.find("visualization")` instead of searching for a specific primal
+//! name. This preserves the "primal code only has self-knowledge" principle.
+
+/// Socket prefix for visualization-capable primals when env/discovery unavailable.
+/// Capability-based discovery (ipc::discovery) should replace this name-based fallback.
+const VISUALIZATION_SOCKET_PREFIX: &str = "petaltongue";
 
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
@@ -152,7 +160,7 @@ impl PetalTonguePushClient {
         for entry in entries.flatten() {
             let path = entry.path();
             let name = path.file_name()?.to_str()?;
-            if name.starts_with("petaltongue")
+            if name.starts_with(VISUALIZATION_SOCKET_PREFIX)
                 && std::path::Path::new(name)
                     .extension()
                     .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))

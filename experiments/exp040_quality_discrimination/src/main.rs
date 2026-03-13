@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp040 — Game quality discrimination.
 //!
 //! The acid test for ludoSpring's metrics framework: can it discriminate
@@ -58,6 +59,10 @@ struct ArchetypeSession {
     completion_rate: f64,
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "archetype definitions — one per game type"
+)]
 fn generate_archetypes() -> Vec<ArchetypeSession> {
     vec![
         // --- IDLE / CLICKER ---
@@ -95,10 +100,10 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             quality: "good",
             session_duration_s: 2400.0, // 40 min
             action_count: 800,
-            exploration_breadth: 45,    // high exploration
+            exploration_breadth: 45, // high exploration
             challenge_seeking: 20,
-            retry_count: 8,            // deaths are expected
-            deliberate_pauses: 15,     // thinking between moves
+            retry_count: 8,        // deaths are expected
+            deliberate_pauses: 15, // thinking between moves
             challenge_level: 0.55,
             skill_level: 0.5,
             social_signal: 0.0,
@@ -111,9 +116,9 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             action_count: 200,
             exploration_breadth: 5,
             challenge_seeking: 3,
-            retry_count: 15,           // too many deaths = bad balance
+            retry_count: 15, // too many deaths = bad balance
             deliberate_pauses: 2,
-            challenge_level: 0.9,      // brutally hard
+            challenge_level: 0.9, // brutally hard
             skill_level: 0.2,
             social_signal: 0.0,
             completion_rate: 0.1,
@@ -127,7 +132,7 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             exploration_breadth: 8,
             challenge_seeking: 12,
             retry_count: 4,
-            deliberate_pauses: 40,      // lots of thinking
+            deliberate_pauses: 40, // lots of thinking
             challenge_level: 0.6,
             skill_level: 0.55,
             social_signal: 0.0,
@@ -140,9 +145,9 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             action_count: 50,
             exploration_breadth: 2,
             challenge_seeking: 3,
-            retry_count: 12,           // stuck, no progression
+            retry_count: 12, // stuck, no progression
             deliberate_pauses: 5,
-            challenge_level: 0.95,     // impossibly hard
+            challenge_level: 0.95, // impossibly hard
             skill_level: 0.15,
             social_signal: 0.0,
             completion_rate: 0.05,
@@ -152,14 +157,14 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             name: "fps",
             quality: "good",
             session_duration_s: 1800.0,
-            action_count: 3000,         // constant action
+            action_count: 3000, // constant action
             exploration_breadth: 25,
             challenge_seeking: 30,
             retry_count: 5,
-            deliberate_pauses: 3,       // not much thinking
+            deliberate_pauses: 3, // not much thinking
             challenge_level: 0.5,
             skill_level: 0.55,
-            social_signal: 0.3,         // multiplayer
+            social_signal: 0.3, // multiplayer
             completion_rate: 0.65,
         },
         ArchetypeSession {
@@ -169,7 +174,7 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             action_count: 1500,
             exploration_breadth: 4,
             challenge_seeking: 5,
-            retry_count: 25,           // spawn-killed repeatedly
+            retry_count: 25, // spawn-killed repeatedly
             deliberate_pauses: 0,
             challenge_level: 0.9,
             skill_level: 0.15,
@@ -184,7 +189,7 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             action_count: 600,          // deliberate combat
             exploration_breadth: 30,
             challenge_seeking: 25,
-            retry_count: 20,            // high retry is EXPECTED
+            retry_count: 20, // high retry is EXPECTED
             deliberate_pauses: 25,
             challenge_level: 0.7,
             skill_level: 0.6,
@@ -198,9 +203,9 @@ fn generate_archetypes() -> Vec<ArchetypeSession> {
             action_count: 100,
             exploration_breadth: 3,
             challenge_seeking: 5,
-            retry_count: 30,           // dying to the same boss
+            retry_count: 30, // dying to the same boss
             deliberate_pauses: 2,
-            challenge_level: 0.99,     // unfairly hard
+            challenge_level: 0.99, // unfairly hard
             skill_level: 0.1,
             social_signal: 0.0,
             completion_rate: 0.0,
@@ -218,6 +223,7 @@ struct SessionAnalysis {
     serious_fun: f64,
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn analyze_session(s: &ArchetypeSession) -> SessionAnalysis {
     let snap = EngagementSnapshot {
         session_duration_s: s.session_duration_s,
@@ -229,14 +235,18 @@ fn analyze_session(s: &ArchetypeSession) -> SessionAnalysis {
     };
     let eng = compute_engagement(&snap);
 
-    let flow = evaluate_flow(s.challenge_level, s.skill_level, tolerances::FLOW_CHANNEL_WIDTH);
+    let flow = evaluate_flow(
+        s.challenge_level,
+        s.skill_level,
+        tolerances::FLOW_CHANNEL_WIDTH,
+    );
 
     let fun = classify_fun(&FunSignals {
         challenge: s.skill_level,
         exploration: eng.exploration_rate,
         social: s.social_signal,
         completion: s.completion_rate,
-        retry_rate: f64::from(s.retry_count) / s.action_count.max(1) as f64,
+        retry_rate: f64::from(s.retry_count) / (s.action_count.max(1) as f64),
     });
 
     let mut perf = PerformanceWindow::new(20);
@@ -260,7 +270,14 @@ fn analyze_session(s: &ArchetypeSession) -> SessionAnalysis {
 // Validation
 // ---------------------------------------------------------------------------
 
-#[allow(clippy::too_many_lines)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn cmd_validate() {
     println!("=== exp040: Game Quality Discrimination ===\n");
     println!("  5 archetypes x 2 quality levels = 10 synthetic sessions");
@@ -270,16 +287,20 @@ fn cmd_validate() {
     let mut results = Vec::new();
     let sessions = generate_archetypes();
 
-    let analyses: Vec<(&ArchetypeSession, SessionAnalysis)> = sessions
-        .iter()
-        .map(|s| (s, analyze_session(s)))
-        .collect();
+    let analyses: Vec<(&ArchetypeSession, SessionAnalysis)> =
+        sessions.iter().map(|s| (s, analyze_session(s))).collect();
 
     // Print all results
     for (s, a) in &analyses {
-        println!("  {:12} ({:4}): eng={:.3} flow={:10} fun={:11} dda={:+.2}",
-            s.name, s.quality, a.engagement, a.flow.as_str(),
-            a.dominant_fun.as_str(), a.dda_adjustment);
+        println!(
+            "  {:12} ({:4}): eng={:.3} flow={:10} fun={:11} dda={:+.2}",
+            s.name,
+            s.quality,
+            a.engagement,
+            a.flow.as_str(),
+            a.dominant_fun.as_str(),
+            a.dda_adjustment
+        );
     }
     println!();
 
@@ -290,11 +311,13 @@ fn cmd_validate() {
     // genuine fun. The FLOW STATE is the quality signal — Csikszentmihalyi's
     // theory predicts exactly this: engagement measures activity, flow measures quality.
     // We validate that good games are in flow, bad games are NOT.
-    let good_in_flow = analyses.iter()
+    let good_in_flow = analyses
+        .iter()
         .filter(|(s, _)| s.quality == "good")
         .filter(|(_, a)| matches!(a.flow, FlowState::Flow | FlowState::Relaxation))
         .count();
-    let bad_not_in_flow = analyses.iter()
+    let bad_not_in_flow = analyses
+        .iter()
         .filter(|(s, _)| s.quality == "bad")
         .filter(|(_, a)| !matches!(a.flow, FlowState::Flow))
         .count();
@@ -308,31 +331,45 @@ fn cmd_validate() {
     println!("  [INFO] Good in flow: {good_in_flow}/5, Bad not in flow: {bad_not_in_flow}/5");
 
     // 2. Roguelike good → Easy Fun dominant (exploration-driven)
-    let rogue_good = analyses.iter().find(|(s, _)| s.name == "roguelike" && s.quality == "good");
+    let rogue_good = analyses
+        .iter()
+        .find(|(s, _)| s.name == "roguelike" && s.quality == "good");
     if let Some((_, a)) = rogue_good {
         results.push(ValidationResult::check(
             experiment,
             "roguelike_good_easy_fun",
-            if matches!(a.dominant_fun, FunKey::Easy) { 1.0 } else { 0.0 },
+            if matches!(a.dominant_fun, FunKey::Easy) {
+                1.0
+            } else {
+                0.0
+            },
             1.0,
             0.0,
         ));
     }
 
     // 3. Puzzle good → Serious Fun dominant (completion-driven)
-    let puzzle_good = analyses.iter().find(|(s, _)| s.name == "puzzle" && s.quality == "good");
+    let puzzle_good = analyses
+        .iter()
+        .find(|(s, _)| s.name == "puzzle" && s.quality == "good");
     if let Some((_, a)) = puzzle_good {
         results.push(ValidationResult::check(
             experiment,
             "puzzle_good_serious_fun",
-            if matches!(a.dominant_fun, FunKey::Serious) { 1.0 } else { 0.0 },
+            if matches!(a.dominant_fun, FunKey::Serious) {
+                1.0
+            } else {
+                0.0
+            },
             1.0,
             0.0,
         ));
     }
 
     // 4. FPS good → has social/people signal (multiplayer)
-    let fps_good = analyses.iter().find(|(s, _)| s.name == "fps" && s.quality == "good");
+    let fps_good = analyses
+        .iter()
+        .find(|(s, _)| s.name == "fps" && s.quality == "good");
     if let Some((s, _)) = fps_good {
         results.push(ValidationResult::check(
             experiment,
@@ -344,7 +381,9 @@ fn cmd_validate() {
     }
 
     // 5. Souls-like good → high hard fun score (challenge + retry)
-    let souls_good = analyses.iter().find(|(s, _)| s.name == "souls_like" && s.quality == "good");
+    let souls_good = analyses
+        .iter()
+        .find(|(s, _)| s.name == "souls_like" && s.quality == "good");
     if let Some((_, a)) = souls_good {
         results.push(ValidationResult::check(
             experiment,
@@ -356,19 +395,26 @@ fn cmd_validate() {
     }
 
     // 6. Idle clicker good → Easy Fun dominant (low challenge, high completion)
-    let idle_good = analyses.iter().find(|(s, _)| s.name == "idle_clicker" && s.quality == "good");
+    let idle_good = analyses
+        .iter()
+        .find(|(s, _)| s.name == "idle_clicker" && s.quality == "good");
     if let Some((_, a)) = idle_good {
         results.push(ValidationResult::check(
             experiment,
             "idle_easy_or_serious_fun",
-            if matches!(a.dominant_fun, FunKey::Easy | FunKey::Serious) { 1.0 } else { 0.0 },
+            if matches!(a.dominant_fun, FunKey::Easy | FunKey::Serious) {
+                1.0
+            } else {
+                0.0
+            },
             1.0,
             0.0,
         ));
     }
 
     // 7. Bad games trigger anxiety or boredom flow states
-    let bad_in_distress = analyses.iter()
+    let bad_in_distress = analyses
+        .iter()
         .filter(|(s, _)| s.quality == "bad")
         .filter(|(_, a)| matches!(a.flow, FlowState::Anxiety | FlowState::Boredom))
         .count();
@@ -382,7 +428,10 @@ fn cmd_validate() {
 
     // 8. Good roguelike is in or near flow
     if let Some((_, a)) = rogue_good {
-        let near_flow = matches!(a.flow, FlowState::Flow | FlowState::Relaxation | FlowState::Arousal);
+        let near_flow = matches!(
+            a.flow,
+            FlowState::Flow | FlowState::Relaxation | FlowState::Arousal
+        );
         results.push(ValidationResult::check(
             experiment,
             "roguelike_good_near_flow",
@@ -404,7 +453,9 @@ fn cmd_validate() {
     }
 
     // 10. DDA correctly recommends decreasing difficulty for too-hard games
-    let bad_puzzle = analyses.iter().find(|(s, _)| s.name == "puzzle" && s.quality == "bad");
+    let bad_puzzle = analyses
+        .iter()
+        .find(|(s, _)| s.name == "puzzle" && s.quality == "bad");
     if let Some((_, a)) = bad_puzzle {
         results.push(ValidationResult::check(
             experiment,
@@ -416,14 +467,18 @@ fn cmd_validate() {
     }
 
     // 11. All 5 archetypes produce distinct engagement profiles
-    let good_engagements: Vec<f64> = archetypes.iter()
+    let good_engagements: Vec<f64> = archetypes
+        .iter()
         .filter_map(|name| {
-            analyses.iter()
+            analyses
+                .iter()
                 .find(|(s, _)| s.name == *name && s.quality == "good")
                 .map(|(_, a)| a.engagement)
         })
         .collect();
-    let all_distinct = good_engagements.windows(2).all(|w| (w[0] - w[1]).abs() > 0.001);
+    let all_distinct = good_engagements
+        .windows(2)
+        .all(|w| (w[0] - w[1]).abs() > 0.001);
     results.push(ValidationResult::check(
         experiment,
         "archetypes_distinct_engagement",
@@ -433,7 +488,9 @@ fn cmd_validate() {
     ));
 
     // 12. Engagement scores are in valid range for all sessions
-    let all_valid = analyses.iter().all(|(_, a)| a.engagement >= 0.0 && a.engagement <= 1.0);
+    let all_valid = analyses
+        .iter()
+        .all(|(_, a)| a.engagement >= 0.0 && a.engagement <= 1.0);
     results.push(ValidationResult::check(
         experiment,
         "all_engagement_valid_range",
@@ -462,10 +519,19 @@ fn cmd_report() {
     for s in &sessions {
         let a = analyze_session(s);
         println!("--- {} ({}) ---", s.name, s.quality);
-        println!("  Duration: {:.0}s, Actions: {}, Exploration: {}", s.session_duration_s, s.action_count, s.exploration_breadth);
+        println!(
+            "  Duration: {:.0}s, Actions: {}, Exploration: {}",
+            s.session_duration_s, s.action_count, s.exploration_breadth
+        );
         println!("  Engagement:  {:.3}", a.engagement);
         println!("  Flow:        {}", a.flow.as_str());
-        println!("  Fun:         {} (hard={:.2}, easy={:.2}, serious={:.2})", a.dominant_fun.as_str(), a.hard_fun, a.easy_fun, a.serious_fun);
+        println!(
+            "  Fun:         {} (hard={:.2}, easy={:.2}, serious={:.2})",
+            a.dominant_fun.as_str(),
+            a.hard_fun,
+            a.easy_fun,
+            a.serious_fun
+        );
         println!("  DDA:         {:+.3}", a.dda_adjustment);
         println!();
     }

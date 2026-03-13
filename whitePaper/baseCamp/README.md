@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 11, 2026
+**Date:** March 13, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring — 44 experiments, 410 checks, 2 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring (NCBI, NUCLEUS, Anderson QS)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz — 54 experiments, 795 checks, 138 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 1 extraction shooter, 1 composable viz
 
 ---
 
@@ -38,6 +38,11 @@ validated HCI models benefit every primal in the ecosystem.
 | Benchmark Validation | Python parity, noise BM-002, raycaster BM-003, tick budget | 034–037 | 45 |
 | External Controls | External roguelike, 3-way noise, quality discrimination | 038–040 | 36 |
 | Cross-Spring | NCBI QS pipeline, Tower Atomic, QS gene dataset, Anderson QS explorer | 041–044 | 44 |
+| RPGPT Sovereign RPG | Ruleset control, text adventure DAG, MTG card provenance | 045–047 | 105 |
+| Games@Home | Stack resolution folding, novel data combinatorics, game tree metrics, distributed computation | 048–051 | 127 |
+| Provenance Trio | rhizoCrypt DAG + loamSpine certs + sweetGrass attribution wired into game sessions | 052 | 37 |
+| Extraction Shooter | 12 fraud types, zone topology, spatial cheats, consumable lifecycle, per-round provenance | 053 | 65 |
+| Composable Viz | biomeOS graph, songbird discovery, petalTongue DataBinding — zero chimeric deps | 054 | 40 |
 
 ### Cross-Spring Provenance
 
@@ -49,6 +54,9 @@ validated HCI models benefit every primal in the ecosystem.
 - **NCBI integration**: Direct E-utilities access (esearch, esummary) for QS gene data — nestgate provider documented but needs module wiring
 - **NUCLEUS atomics**: Tower Atomic (BearDog + Songbird) validated via JSON-RPC 2.0 over Unix sockets
 - **wetSpring cross-spring**: Anderson QS disorder model (W = 3.5H' + 8.0·O₂) with Perlin noise landscapes and game metrics
+- **Provenance trio**: rhizoCrypt DAG + loamSpine certificates + sweetGrass attribution directly imported as Cargo dependencies (data primals are direct deps, infrastructure primals are IPC-only)
+- **Extraction shooter**: 12 fraud types across 3 tiers — basic, consumable, spatial — zone topology model catches cheats structurally
+- **Composable architecture**: biomeOS `DeploymentGraph`, songbird discovery, petalTongue `DataBinding` — all via JSON-RPC 2.0 protocol types defined locally (zero chimeric dependencies)
 
 ### Connection to Constrained Evolution Thesis
 
@@ -95,6 +103,16 @@ that constrained evolution produces transferable specializations.
 | 042 | Tower Atomic Local | BearDog crypto.hash + Songbird IPC via JSON-RPC 2.0 Unix sockets | — |
 | 043 | QS Gene Dataset | 6 QS gene families × 20 gut genera — AI-2 dominant in gut | — |
 | 044 | Anderson QS Explorer | Cross-spring: Perlin disorder landscapes, QS propagation, game metrics | — |
+| 045 | Ruleset Control Systems | PF2e, FATE Core, Cairn ingested as loamSpine certs; action economy validated | — |
+| 046 | Text Adventure DAG | Session DAG with branching narrative, rhizoCrypt vertex tracking | — |
+| 047 | MTG Card Provenance | Card mint/trade/transform lifecycle with loamSpine certs + sweetGrass attribution | — |
+| 048 | Stack Resolution Folding | Card stack ≡ protein folding: same components, different order → different outcomes | — |
+| 049 | Novel Data Combinatorics | Game tree ~10^358 (MTG), birthday bound ~10^179 — every game is novel data | — |
+| 050 | Game Tree Design Metric | Tree complexity as measurable design metric; Commander hypothesis validated | — |
+| 051 | Games@Home | Folding@Home isomorphism: 12 concepts mapped 1:1, 7 cross-domain transfers (avg 76%) | — |
+| 052 | Provenance Trio Integration | rhizoCrypt DAG + loamSpine certs + sweetGrass braids wired into game sessions | — |
+| 053 | Extraction Shooter Provenance | 12 fraud types, zone topology, spatial detection, consumable lifecycle tracking | — |
+| 054 | Composable Raid Visualization | biomeOS graph + songbird discovery + petalTongue viz — zero chimeric deps | — |
 
 ### Barrier Removal Philosophy
 
@@ -115,7 +133,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc --lib --tests             # 144 Rust tests
+cargo test --features ipc --lib --tests             # 138 Rust tests
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike
@@ -138,8 +156,128 @@ cargo run --release -p ludospring-exp041 -- validate # NCBI QS integration: 12/1
 cargo run --release -p ludospring-exp042 -- validate # Tower Atomic local: 10/10 checks
 cargo run --release -p ludospring-exp043 -- validate # QS gene dataset: 10/10 checks
 cargo run --release -p ludospring-exp044 -- validate # Anderson QS explorer: 12/12 checks
+cargo run --release -p ludospring-exp045 -- validate # Ruleset control systems: 49/49 checks
+cargo run --release -p ludospring-exp046 -- validate # Text adventure DAG: 33/33 checks
+cargo run --release -p ludospring-exp047 -- validate # MTG card provenance: 23/23 checks
+cargo run --release -p ludospring-exp048 -- validate # Stack resolution folding: 36/36 checks
+cargo run --release -p ludospring-exp049 -- validate # Novel data combinatorics: 33/33 checks
+cargo run --release -p ludospring-exp050 -- validate # Game tree design metric: 30/30 checks
+cargo run --release -p ludospring-exp051 -- validate # Games@Home: 28/28 checks
+cargo run --release -p ludospring-exp052 -- validate # Provenance trio integration: 37/37 checks
+cargo run --release -p ludospring-exp053 -- validate # Extraction shooter provenance: 65/65 checks
+cargo run --release -p ludospring-exp054 -- validate # Composable raid visualization: 40/40 checks
 cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
 ```
+
+---
+
+## Paper 18: RPGPT — Sovereign RPG Engine with Ingestible Rulesets
+
+### Concept
+
+The provenance trio (rhizoCrypt, sweetGrass, loamSpine) serves as the state engine for a
+tabletop RPG system where any open ruleset can be ingested as a loamSpine certificate and
+combined with any world to produce a playable RPG. The player acts as their own DM —
+designing the world, quest hooks, NPC templates — then AI (Squirrel) assists with narration
+constrained by the provably anchored ruleset.
+
+### The Isomorphism
+
+Anti-cheat in games is chain-of-custody in science. Same DAG, same BLAKE3 Merkle integrity,
+same BearDog signing — different vocabulary:
+
+| DAG Operation | Extraction Shooter | Field Genomics | Tabletop RPG |
+|---------------|-------------------|----------------|-------------|
+| Object creation | Item spawns | Sample collected | Sword found in chest |
+| Object transform | Weapon modded | DNA amplified | Sword enchanted |
+| Object transfer | Item traded | Sample to lab tech | Sword gifted |
+| Audit | No item without loot vertex | No reads without sample vertex | No loot without roll vertex |
+
+### Ingestible Rulesets
+
+Any ORC/CC-BY licensed ruleset becomes a loamSpine certificate:
+
+| System | License | Structural Gift |
+|--------|---------|----------------|
+| Pathfinder 2e | ORC | 3-action economy, 4 degrees of success, conditions, proficiency |
+| FATE Core | CC-BY | Aspects (narrative tags → sweetGrass semantic entities), Fate Points |
+| Powered by the Apocalypse | CC-BY | Moves, partial success, GM principles |
+| Cypher System | Open License | Single target number, GM intrusions, effort/edge |
+
+Any world + any ruleset = playable RPG. Lord of the Rings + PF2e. Dune + FATE. Original world + Cypher.
+
+### Primal Roles
+
+| Primal | Role in RPGPT | Cross-Domain Benefit |
+|--------|--------------|---------------------|
+| rhizoCrypt | Session DAG (turns, rolls, branches) | Multi-day field campaigns |
+| loamSpine | Ruleset/character/NPC/world certs | Experimental protocol certs |
+| sweetGrass | Player/AI creative attribution | Multi-lab collaboration tracking |
+| Squirrel | AI narration constrained by ruleset cert | — |
+| BearDog | Anti-cheat action signing | Sample chain-of-custody |
+| ludoSpring | Flow/DDA/engagement session quality | Patient engagement metrics |
+
+### Build Phases
+
+1. Ruleset-as-certificate format (PF2e mechanics → loamSpine cert)
+2. Session DAG (turn structure, conditions, phases in rhizoCrypt)
+3. AI narration loop (Squirrel + ruleset cert + ludoSpring quality metrics)
+4. Attribution + economics (sweetGrass + sunCloud)
+
+**Full specification**: `ludoSpring/specs/RPGPT_ARCHITECTURE_SKETCH.md`
+**baseCamp paper**: `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`
+
+---
+
+## Paper 19: Games@Home — Distributed Human Computation via Interactive Systems
+
+### Concept
+
+Human gameplay is distributed computation. Folding@Home uses volunteer CPUs to explore protein conformational space. Games@Home uses volunteer humans to explore infinite game decision trees — and humans bring creativity, intuition, and cross-domain pattern recognition that CPUs cannot.
+
+### Stack Resolution as Folding (exp048 — 36/36)
+
+Card text is the genotype. Resolution order is the phenotype. The same two cards (Lightning Bolt + Giant Growth) produce opposite outcomes depending on stack position. This is structurally identical to protein folding: same amino acid sequence, different fold → different function. The stack creates a DAG — each cast is a vertex, each "in response to" is a parent edge.
+
+### Every Game is Novel Data (exp049 — 33/33)
+
+MTG's computed game tree (~10^358 conservatively, 2^ℵ₀ provably — Turing complete) means the birthday bound for any game repeat is ~10^179. Total games ever played: ~10^10.5. Every game session generates data that has literally never existed. The provenance trio tracks all of it.
+
+### Game Tree as Design Metric (exp050 — 30/30)
+
+Game tree complexity is measurable and correlates with game longevity. Go's game tree (~10^505) comes from huge board (361), massive branching (~250), and long games (~211 plies). MTG is categorically beyond all finite games — Turing complete, undecidable.
+
+**The Commander Hypothesis**: Format rules (singleton, 100-card, 4-player, 40 life) expand the tree ×216. Designed-for-commander cards (pre-built synergies, auto-includes, linear designs) contract it ×0.036 — destroying >96% of the format's branching.
+
+**The Enzymatic Shortcut Model**: Wild-type cards (high branching, high activation energy) vs enzymatic cards (low branching, low activation — play on sight) vs catalytic cards (high branching, LOW activation — the ideal design that opens paths while being accessible).
+
+### Games@Home (exp051 — 28/28)
+
+The Folding@Home isomorphism maps 1:1 across 12 concepts (compute unit, search space, trajectory, parameters, output, aggregation, work unit, novelty, quality signal, discovery, attribution, cross-domain value).
+
+Advantages: 200× more compute units (40M players vs 200K F@H CPUs), zero cost (entertainment is self-motivating), infinite search space, full creative attribution via sweetGrass.
+
+Seven cross-domain transfer paths validated (avg 76% similarity):
+- Game tree pruning → MCTS heuristics (90%)
+- MTG stack resolution → Protein folding (85%)
+- MTG meta evolution → Antibiotic resistance (80%)
+- Commander deckbuilding → Materials science composition (75%)
+- RPG narrative branching → Drug discovery pathways (70%)
+- Combo/synergy discovery → Catalyst design (70%)
+- Multiplayer politics → Multi-agent logistics (65%)
+
+### AR Card Gaming — Physical-Anchored Digital Enhancement
+
+AR assists physical card games without replacing them:
+- **Physical stays physical**: Cards, shuffling, drawing, social interaction, trading
+- **Digital overlay**: Life totals, counters, tokens, stack visualization, trigger management, phase tracking
+- **loamSpine 1:1 mirror**: Every physical card has a digital certificate (set, number, condition, ownership chain)
+- **Remote pod play**: A remote Commander player's physical cards on their table, AR captures board state, opponents see the digital mirror
+- **Stack visualization**: LIFO stack (exp048) rendered as visible overlay — reduces rules confusion
+
+**baseCamp paper**: `gen3/baseCamp/19_games_at_home_distributed_human_computation.md`
+
+---
 
 ### Cross-Engine Portability
 

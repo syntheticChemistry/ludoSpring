@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp018: Four Keys to Fun classification sweep — validation binary.
 //!
 //! Validates Lazzaro's (2004) fun taxonomy across game scenario archetypes.
@@ -186,7 +187,7 @@ fn validate_sensitivity(results: &mut Vec<ValidationResult>) {
     let boosted = FunSignals {
         challenge: 1.0,
         retry_rate: 1.0,
-        ..base.clone()
+        ..base
     };
     let result = classify_fun(&boosted);
     let r = ValidationResult::check(

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp012: Flow channel calibration — validation binary.
 //!
 //! Sweeps the flow channel width parameter to validate boundary transitions

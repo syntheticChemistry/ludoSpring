@@ -70,6 +70,8 @@ pub fn score_visual_accessibility(features: &VisualAccessibilityFeatures) -> Dim
     let mut issues = Vec::new();
     let mut strengths = Vec::new();
 
+    // Weights: audio/description (0.2 each, highest impact per IGDA Game Accessibility
+    // Guidelines 2012, §4.1) + braille/haptic/color/text (0.15 each, supporting modalities).
     let checks: &[(&str, &str, bool, f64)] = &[
         (
             "Audio cues for visual events",

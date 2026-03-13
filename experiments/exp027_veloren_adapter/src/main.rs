@@ -11,15 +11,15 @@
 //! and translating them into the ludoSpring telemetry protocol.
 //!
 //! Veloren (GPL-3.0, gitlab.com/veloren/veloren) uses:
-//! - SPECS ECS with EventBus for game events
+//! - SPECS ECS with `EventBus` for game events
 //! - tracing crate for structured logging
 //! - WASM plugin system for extensibility
 //!
 //! This adapter parses tracing-style log lines and maps:
-//! - HealthChangeEvent -> player_damage
-//! - Entity position ticks -> player_move
-//! - DeleteEvent (mob death) -> challenge_complete
-//! - Region enter events -> exploration_discover
+//! - `HealthChangeEvent` -> `player_damage`
+//! - Entity position ticks -> `player_move`
+//! - `DeleteEvent` (mob death) -> `challenge_complete`
+//! - Region enter events -> `exploration_discover`
 //!
 //! Future: WASM plugin for live in-game telemetry emission.
 
@@ -52,7 +52,7 @@ fn main() {
 }
 
 /// Synthetic Veloren server log lines (representative of real tracing output).
-fn synthetic_veloren_log() -> &'static str {
+const fn synthetic_veloren_log() -> &'static str {
     r#"2026-03-11T10:00:00.000Z INFO veloren_server::sys::entity: session_start player="Explorer" class="ranger"
 2026-03-11T10:00:01.000Z INFO veloren_server::sys::entity: player_pos x=100.5 y=200.3 z=50.0 player="Explorer"
 2026-03-11T10:00:02.000Z INFO veloren_server::sys::entity: player_pos x=102.1 y=201.7 z=50.0 player="Explorer"
@@ -75,6 +75,7 @@ fn synthetic_veloren_log() -> &'static str {
 }
 
 /// Parse a Veloren log line into a telemetry event.
+#[expect(clippy::too_many_lines, reason = "log parsing — regex and match arms")]
 fn parse_veloren_line(line: &str, sid: &str) -> Option<TelemetryEvent> {
     let ts_re = Regex::new(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:(\d{2})\.(\d{3}))").ok()?;
     let ts_cap = ts_re.captures(line)?;
@@ -118,15 +119,29 @@ fn parse_veloren_line(line: &str, sid: &str) -> Option<TelemetryEvent> {
         let x_re = Regex::new(r"x=([0-9.-]+)").ok()?;
         let y_re = Regex::new(r"y=([0-9.-]+)").ok()?;
         let z_re = Regex::new(r"z=([0-9.-]+)").ok()?;
-        let x = x_re.captures(line).and_then(|c| c.get(1)?.as_str().parse().ok()).unwrap_or(0.0);
-        let y = y_re.captures(line).and_then(|c| c.get(1)?.as_str().parse().ok()).unwrap_or(0.0);
-        let z = z_re.captures(line).and_then(|c| c.get(1)?.as_str().parse().ok()).unwrap_or(0.0);
+        let x = x_re
+            .captures(line)
+            .and_then(|c| c.get(1)?.as_str().parse().ok())
+            .unwrap_or(0.0);
+        let y = y_re
+            .captures(line)
+            .and_then(|c| c.get(1)?.as_str().parse().ok())
+            .unwrap_or(0.0);
+        let z = z_re
+            .captures(line)
+            .and_then(|c| c.get(1)?.as_str().parse().ok())
+            .unwrap_or(0.0);
         return Some(TelemetryEvent {
             timestamp_ms: ts_ms,
             session_id: sid.into(),
             event_type: EventType::PlayerMove,
-            payload: serde_json::to_value(PlayerMovePayload { x, y, z, ..Default::default() })
-                .unwrap_or_default(),
+            payload: serde_json::to_value(PlayerMovePayload {
+                x,
+                y,
+                z,
+                ..Default::default()
+            })
+            .unwrap_or_default(),
         });
     }
 
@@ -227,6 +242,10 @@ fn cmd_parse(args: &[String]) {
     eprintln!("Parsed {count} events from Veloren log");
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
 fn cmd_validate() {
     println!("=== exp027: Veloren Adapter Validation ===\n");
     let mut results = Vec::new();
@@ -238,50 +257,103 @@ fn cmd_validate() {
         .filter_map(|line| parse_veloren_line(line, sid))
         .collect();
 
-    results.push(ValidationResult::check("exp027", "parsed_events_count", events.len() as f64, 18.0, 0.0));
     results.push(ValidationResult::check(
-        "exp027", "has_session_start",
-        if events.iter().any(|e| e.event_type == EventType::SessionStart) { 1.0 } else { 0.0 },
-        1.0, 0.0,
+        "exp027",
+        "parsed_events_count",
+        events.len() as f64,
+        18.0,
+        0.0,
     ));
     results.push(ValidationResult::check(
-        "exp027", "has_session_end",
-        if events.iter().any(|e| e.event_type == EventType::SessionEnd) { 1.0 } else { 0.0 },
-        1.0, 0.0,
+        "exp027",
+        "has_session_start",
+        if events
+            .iter()
+            .any(|e| e.event_type == EventType::SessionStart)
+        {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
     ));
     results.push(ValidationResult::check(
-        "exp027", "has_player_moves",
-        events.iter().filter(|e| e.event_type == EventType::PlayerMove).count() as f64,
-        7.0, 0.0,
+        "exp027",
+        "has_session_end",
+        if events.iter().any(|e| e.event_type == EventType::SessionEnd) {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
     ));
     results.push(ValidationResult::check(
-        "exp027", "has_damage_events",
-        events.iter().filter(|e| e.event_type == EventType::PlayerDamage).count() as f64,
-        3.0, 0.0,
+        "exp027",
+        "has_player_moves",
+        events
+            .iter()
+            .filter(|e| e.event_type == EventType::PlayerMove)
+            .count() as f64,
+        7.0,
+        0.0,
     ));
     results.push(ValidationResult::check(
-        "exp027", "has_kills",
-        events.iter().filter(|e| e.event_type == EventType::ChallengeComplete).count() as f64,
-        3.0, 0.0,
+        "exp027",
+        "has_damage_events",
+        events
+            .iter()
+            .filter(|e| e.event_type == EventType::PlayerDamage)
+            .count() as f64,
+        3.0,
+        0.0,
     ));
     results.push(ValidationResult::check(
-        "exp027", "has_exploration",
-        events.iter().filter(|e| e.event_type == EventType::ExplorationDiscover).count() as f64,
-        3.0, 0.0,
+        "exp027",
+        "has_kills",
+        events
+            .iter()
+            .filter(|e| e.event_type == EventType::ChallengeComplete)
+            .count() as f64,
+        3.0,
+        0.0,
+    ));
+    results.push(ValidationResult::check(
+        "exp027",
+        "has_exploration",
+        events
+            .iter()
+            .filter(|e| e.event_type == EventType::ExplorationDiscover)
+            .count() as f64,
+        3.0,
+        0.0,
     ));
 
     let mut acc = SessionAccumulator::new();
     acc.ingest_all(&events);
     let report = generate_report(&acc);
     results.push(ValidationResult::check(
-        "exp027", "report_generates",
-        if serde_json::to_string(&report).is_ok() { 1.0 } else { 0.0 },
-        1.0, 0.0,
+        "exp027",
+        "report_generates",
+        if serde_json::to_string(&report).is_ok() {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
     ));
     results.push(ValidationResult::check(
-        "exp027", "engagement_positive",
-        if report.engagement.composite > 0.0 { 1.0 } else { 0.0 },
-        1.0, 0.0,
+        "exp027",
+        "engagement_positive",
+        if report.engagement.composite > 0.0 {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
     ));
 
     for r in &results {
@@ -290,7 +362,9 @@ fn cmd_validate() {
     }
     let pass = results.iter().filter(|r| r.passed).count();
     println!("\nResults: {pass}/{} passed", results.len());
-    if pass < results.len() { std::process::exit(1); }
+    if pass < results.len() {
+        std::process::exit(1);
+    }
 }
 
 fn cmd_demo() {
@@ -302,7 +376,10 @@ fn cmd_demo() {
         .filter_map(|line| parse_veloren_line(line, sid))
         .collect();
 
-    println!("Parsed {} events from synthetic Veloren log\n", events.len());
+    println!(
+        "Parsed {} events from synthetic Veloren log\n",
+        events.len()
+    );
 
     let mut acc = SessionAccumulator::new();
     acc.ingest_all(&events);

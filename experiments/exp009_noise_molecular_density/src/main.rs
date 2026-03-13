@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp009: Noise-driven molecular density field — validation binary.
 //!
 //! Uses Perlin noise and fBm to generate molecular density fields, then

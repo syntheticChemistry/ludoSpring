@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp031 — Dispatch routing validation with real hardware discovery.
 //!
 //! Validates that metalForge/forge dispatch recommendations are correct
@@ -71,6 +72,10 @@ fn has_any_gpu(substrates: &[SubstrateInfo]) -> bool {
     })
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
 fn cmd_validate() {
     println!("=== exp031: Dispatch Routing Validation ===\n");
 
@@ -106,7 +111,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "noise_routes_correctly",
-        if noise_sub == noise_expected { 1.0 } else { 0.0 },
+        if noise_sub == noise_expected {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));

@@ -58,10 +58,44 @@ pub fn parse_ndjson(input: &str) -> (Vec<events::TelemetryEvent>, usize) {
     (events, errors)
 }
 
-/// Parse NDJSON from a reader (file, stdin, etc.).
-pub fn parse_ndjson_reader<R: std::io::BufRead>(
+/// Streaming NDJSON parser — yields events one at a time without buffering.
+///
+/// Errors are silently skipped (same as `parse_ndjson_reader`). For error
+/// reporting, callers can chain `.inspect()` on the reader.
+#[must_use]
+pub const fn iter_ndjson<R: std::io::BufRead>(reader: R) -> NdjsonIter<R> {
+    NdjsonIter { reader }
+}
+
+/// Streaming iterator over NDJSON telemetry events.
+pub struct NdjsonIter<R> {
     reader: R,
-) -> (Vec<events::TelemetryEvent>, usize) {
+}
+
+impl<R: std::io::BufRead> Iterator for NdjsonIter<R> {
+    type Item = events::TelemetryEvent;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut line = String::new();
+        loop {
+            line.clear();
+            let bytes_read = self.reader.read_line(&mut line).ok()?;
+            if bytes_read == 0 {
+                return None; // EOF
+            }
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            if let Ok(evt) = serde_json::from_str::<events::TelemetryEvent>(trimmed) {
+                return Some(evt);
+            }
+        }
+    }
+}
+
+/// Parse NDJSON from a reader (file, stdin, etc.).
+pub fn parse_ndjson_reader<R: std::io::BufRead>(reader: R) -> (Vec<events::TelemetryEvent>, usize) {
     let mut events = Vec::new();
     let mut errors = 0;
     for line in reader.lines() {
@@ -96,6 +130,21 @@ this is not json
         let (events, errors) = parse_ndjson(input);
         assert_eq!(events.len(), 3);
         assert_eq!(errors, 1);
+    }
+
+    #[test]
+    fn iter_ndjson_streaming() {
+        let input = r#"{"timestamp_ms":0,"session_id":"s","event_type":"session_start","payload":{}}
+{"timestamp_ms":1000,"session_id":"s","event_type":"player_move","payload":{"x":1.0,"y":2.0}}
+bad line
+{"timestamp_ms":2000,"session_id":"s","event_type":"session_end","payload":{"duration_s":2.0}}
+"#;
+        let reader = std::io::Cursor::new(input);
+        let events: Vec<_> = iter_ndjson(reader).collect();
+        assert_eq!(events.len(), 3, "malformed line should be skipped");
+        assert_eq!(events[0].event_type, events::EventType::SessionStart);
+        assert_eq!(events[1].event_type, events::EventType::PlayerMove);
+        assert_eq!(events[2].event_type, events::EventType::SessionEnd);
     }
 
     #[test]

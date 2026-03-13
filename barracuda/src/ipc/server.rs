@@ -13,6 +13,7 @@ use std::time::Duration;
 
 use super::envelope::JsonRpcRequest;
 use super::handlers::dispatch;
+use crate::PRIMAL_NAME;
 
 /// Resolve the socket path using XDG-compliant priority:
 ///
@@ -26,17 +27,19 @@ fn resolve_socket_path() -> PathBuf {
     }
 
     if let Ok(biomeos_dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
-        return PathBuf::from(biomeos_dir).join("ludospring.sock");
+        // Socket name derived from PRIMAL_NAME — no hardcoded peer names.
+        return PathBuf::from(biomeos_dir).join(format!("{PRIMAL_NAME}.sock"));
     }
 
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
         let biomeos_path = PathBuf::from(xdg).join("biomeos");
         if biomeos_path.is_dir() || std::fs::create_dir_all(&biomeos_path).is_ok() {
-            return biomeos_path.join("ludospring.sock");
+            return biomeos_path.join(format!("{PRIMAL_NAME}.sock"));
         }
     }
 
-    PathBuf::from("/tmp/ludospring.sock")
+    // Socket name derived from PRIMAL_NAME — no hardcoded peer names.
+    PathBuf::from("/tmp").join(format!("{PRIMAL_NAME}.sock"))
 }
 
 /// IPC server state.

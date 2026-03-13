@@ -94,6 +94,11 @@ pub struct RayPlayer {
 }
 
 impl Default for RayPlayer {
+    /// Spawn position and viewing parameters for a classic FPS raycaster.
+    ///
+    /// Provenance: Doom/Wolfenstein-style defaults — centered in first cell (1.5, 1.5),
+    /// 60° `FoV` (`PI`/3), walk speed ~3 units/s, turn speed `PI` rad/s.
+    /// Source: Fabien Sanglard, "Game Engine Black Book: Wolfenstein 3D" (2017), Ch. 5.
     fn default() -> Self {
         Self {
             x: 1.5,

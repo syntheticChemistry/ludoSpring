@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp007: Steering law tunnel sweep — validation binary.
 //!
 //! Validates the steering law (Accot & Zhai 1997) across varying tunnel

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp015: Accessibility motor-limited Fitts — validation binary.
 //!
 //! Validates Fitts's law predictions for motor-limited input scenarios:

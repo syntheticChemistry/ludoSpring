@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp001: Doom raycaster analysis — validation binary.
 //!
 //! Validates the reference raycaster against known Doom geometry, Fitts's law

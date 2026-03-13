@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp010: Engagement curve validation — validation binary.
 //!
 //! Validates engagement scoring, flow state evaluation, and difficulty

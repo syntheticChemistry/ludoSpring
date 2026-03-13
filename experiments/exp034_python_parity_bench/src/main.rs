@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp034 — Python-vs-Rust parity and performance benchmarks.
 //!
 //! Proves two things:
@@ -43,20 +44,20 @@ fn python_sigmoid(x: f64) -> f64 {
 }
 
 fn python_fitts_mt(distance: f64, width: f64, a: f64, b: f64) -> f64 {
-    a + b * (2.0 * distance / width + 1.0).log2()
+    b.mul_add((2.0 * distance / width + 1.0).log2(), a)
 }
 
 fn python_hick_rt(n: u32, a: f64, b: f64) -> f64 {
-    a + b * (f64::from(n) + 1.0).log2()
+    b.mul_add((f64::from(n) + 1.0).log2(), a)
 }
 
 fn python_perlin_fade(t: f64) -> f64 {
-    t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+    t * t * t * t.mul_add(t.mul_add(6.0, -15.0), 10.0)
 }
 
 const LCG_MULT: u64 = 6_364_136_223_846_793_005;
 
-fn python_lcg_step(state: u64) -> u64 {
+const fn python_lcg_step(state: u64) -> u64 {
     state.wrapping_mul(LCG_MULT).wrapping_add(1)
 }
 
@@ -64,6 +65,10 @@ fn python_dot(a: &[f64], b: &[f64]) -> f64 {
     a.iter().zip(b.iter()).map(|(x, y)| x * y).sum()
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn python_mean(data: &[f64]) -> f64 {
     let sum: f64 = data.iter().sum();
     sum / data.len() as f64
@@ -77,6 +82,14 @@ fn python_l2_norm(data: &[f64]) -> f64 {
 // Validation
 // ---------------------------------------------------------------------------
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
+#[expect(
+    clippy::similar_names,
+    reason = "domain-specific naming: fitts_rs vs fitts_us (microseconds)"
+)]
 fn cmd_validate() {
     println!("=== exp034: Python-vs-Rust Parity & Performance ===\n");
 
@@ -181,7 +194,7 @@ fn cmd_validate() {
 
     // 9. Perlin fade function parity
     let fade_py = python_perlin_fade(0.3);
-    let fade_expected = 0.3_f64.powi(3) * (0.3 * (0.3 * 6.0 - 15.0) + 10.0);
+    let fade_expected = 0.3_f64.powi(3) * 0.3f64.mul_add(0.3f64.mul_add(6.0, -15.0), 10.0);
     results.push(ValidationResult::check(
         experiment,
         "perlin_fade_analytical",
@@ -195,7 +208,9 @@ fn cmd_validate() {
     // 10. Sigmoid batch: Rust must be fast (we time the Rust side)
     let n = 100_000;
     #[allow(clippy::cast_precision_loss)]
-    let input: Vec<f64> = (0..n).map(|i| (i as f64 / n as f64) * 10.0 - 5.0).collect();
+    let input: Vec<f64> = (0..n)
+        .map(|i| (f64::from(i) / f64::from(n)).mul_add(10.0, -5.0))
+        .collect();
 
     let t_rust = Instant::now();
     let _rust_out: Vec<f64> = input.iter().map(|&x| barcuda_math::sigmoid(x)).collect();
@@ -223,7 +238,7 @@ fn cmd_validate() {
     for y in 0..256 {
         for x in 0..256 {
             #[allow(clippy::cast_precision_loss)]
-            let v = noise::perlin_2d(x as f64 * 0.05, y as f64 * 0.05);
+            let v = noise::perlin_2d(f64::from(x) * 0.05, f64::from(y) * 0.05);
             noise_sum += v;
         }
     }
@@ -242,7 +257,7 @@ fn cmd_validate() {
     let mut fitts_sum = 0.0_f64;
     for i in 0..10_000 {
         #[allow(clippy::cast_precision_loss)]
-        let d = 50.0 + (i as f64) * 0.1;
+        let d = f64::from(i).mul_add(0.1, 50.0);
         fitts_sum += input_laws::fitts_movement_time(d, 20.0, 50.0, 150.0);
     }
     let fitts_us = t_fitts.elapsed().as_micros();
@@ -273,9 +288,9 @@ fn cmd_validate() {
 
     // 14. Dot product 10K elements
     #[allow(clippy::cast_precision_loss)]
-    let big_a: Vec<f64> = (0..10_000).map(|i| i as f64 * 0.001).collect();
+    let big_a: Vec<f64> = (0..10_000).map(|i| f64::from(i) * 0.001).collect();
     #[allow(clippy::cast_precision_loss)]
-    let big_b: Vec<f64> = (0..10_000).map(|i| (10_000 - i) as f64 * 0.001).collect();
+    let big_b: Vec<f64> = (0..10_000).map(|i| f64::from(10_000 - i) * 0.001).collect();
     let t_dot = Instant::now();
     let dot_result = barcuda_math::dot(&big_a, &big_b);
     let dot_us = t_dot.elapsed().as_micros();
@@ -294,7 +309,7 @@ fn cmd_validate() {
     for y in 0..128 {
         for x in 0..128 {
             #[allow(clippy::cast_precision_loss)]
-            let v = noise::fbm_2d(x as f64 * 0.05, y as f64 * 0.05, 4, 2.0, 0.5);
+            let v = noise::fbm_2d(f64::from(x) * 0.05, f64::from(y) * 0.05, 4, 2.0, 0.5);
             fbm_sum += v;
         }
     }
@@ -322,6 +337,7 @@ fn cmd_validate() {
     }
 }
 
+#[expect(clippy::cast_sign_loss, reason = "n is positive from size array")]
 fn cmd_bench() {
     println!("=== exp034: Rust Math Performance Benchmark ===\n");
 
@@ -331,7 +347,9 @@ fn cmd_bench() {
     println!("{:>10} {:>12}", "N", "Time (us)");
     for &n in &sizes {
         #[allow(clippy::cast_precision_loss)]
-        let input: Vec<f64> = (0..n).map(|i| (i as f64 / n as f64) * 10.0 - 5.0).collect();
+        let input: Vec<f64> = (0..n)
+            .map(|i| (f64::from(i) / f64::from(n)).mul_add(10.0, -5.0))
+            .collect();
         let t = Instant::now();
         let _out: Vec<f64> = input.iter().map(|&x| barcuda_math::sigmoid(x)).collect();
         println!("{n:>10} {:>12}", t.elapsed().as_micros());
@@ -345,7 +363,7 @@ fn cmd_bench() {
         for y in 0..n {
             for x in 0..n {
                 #[allow(clippy::cast_precision_loss)]
-                let v = noise::perlin_2d(x as f64 * 0.05, y as f64 * 0.05);
+                let v = noise::perlin_2d(f64::from(x) * 0.05, f64::from(y) * 0.05);
                 sum += v;
             }
         }

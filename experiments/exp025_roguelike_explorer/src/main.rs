@@ -166,7 +166,7 @@ fn run() -> io::Result<()> {
             f.render_widget(map_widget, chunks[0]);
 
             let flow = evaluate_flow(
-                0.5 + session.difficulty_mod * 0.3,
+                session.difficulty_mod.mul_add(0.3, 0.5),
                 session.perf.estimated_skill().max(0.1),
                 tolerances::FLOW_CHANNEL_WIDTH,
             );
@@ -207,21 +207,69 @@ fn run() -> io::Result<()> {
                             session.actions += 1;
                             session.pauses += 1;
                             messages.push("You wait...".into());
-                            emit_event(&mut tfile, ts_ms, &sid, EventType::PlayerAction, &PlayerActionPayload {
-                                action: "wait".into(), success: true, ..Default::default()
-                            });
+                            emit_event(
+                                &mut tfile,
+                                ts_ms,
+                                &sid,
+                                EventType::PlayerAction,
+                                &PlayerActionPayload {
+                                    action: "wait".into(),
+                                    success: true,
+                                    ..Default::default()
+                                },
+                            );
                         }
                         KeyCode::Char('w') | KeyCode::Up => {
-                            try_move(&map, &mut player, &mut session, &mut messages, &mut tfile, &sid, ts_ms, 0, -1);
+                            try_move(
+                                &map,
+                                &mut player,
+                                &mut session,
+                                &mut messages,
+                                &mut tfile,
+                                &sid,
+                                ts_ms,
+                                0,
+                                -1,
+                            );
                         }
                         KeyCode::Char('s') | KeyCode::Down => {
-                            try_move(&map, &mut player, &mut session, &mut messages, &mut tfile, &sid, ts_ms, 0, 1);
+                            try_move(
+                                &map,
+                                &mut player,
+                                &mut session,
+                                &mut messages,
+                                &mut tfile,
+                                &sid,
+                                ts_ms,
+                                0,
+                                1,
+                            );
                         }
                         KeyCode::Char('a') | KeyCode::Left => {
-                            try_move(&map, &mut player, &mut session, &mut messages, &mut tfile, &sid, ts_ms, -1, 0);
+                            try_move(
+                                &map,
+                                &mut player,
+                                &mut session,
+                                &mut messages,
+                                &mut tfile,
+                                &sid,
+                                ts_ms,
+                                -1,
+                                0,
+                            );
                         }
                         KeyCode::Char('d') | KeyCode::Right => {
-                            try_move(&map, &mut player, &mut session, &mut messages, &mut tfile, &sid, ts_ms, 1, 0);
+                            try_move(
+                                &map,
+                                &mut player,
+                                &mut session,
+                                &mut messages,
+                                &mut tfile,
+                                &sid,
+                                ts_ms,
+                                1,
+                                0,
+                            );
                         }
                         _ => {}
                     }
@@ -232,20 +280,33 @@ fn run() -> io::Result<()> {
                         session.difficulty_mod += adj * 0.3;
                         session.difficulty_mod = session.difficulty_mod.clamp(-1.0, 1.0);
 
-                        emit_event(&mut tfile, ts_ms, &sid, EventType::ChallengeComplete, &ChallengePayload {
-                            challenge_id: format!("floor_{}", player.floor),
-                            difficulty: 0.5 + session.difficulty_mod * 0.3,
-                            challenge_type: "floor_clear".into(),
-                        });
+                        emit_event(
+                            &mut tfile,
+                            ts_ms,
+                            &sid,
+                            EventType::ChallengeComplete,
+                            &ChallengePayload {
+                                challenge_id: format!("floor_{}", player.floor),
+                                difficulty: session.difficulty_mod.mul_add(0.3, 0.5),
+                                challenge_type: "floor_clear".into(),
+                            },
+                        );
 
                         player.floor += 1;
                         player.hp = (player.hp + 5).min(player.max_hp);
 
-                        emit_event(&mut tfile, ts_ms, &sid, EventType::ExplorationDiscover, &ExplorationPayload {
-                            discovery_id: format!("floor_{}", player.floor),
-                            category: "floor".into(),
-                            x: player.x as f64, y: player.y as f64,
-                        });
+                        emit_event(
+                            &mut tfile,
+                            ts_ms,
+                            &sid,
+                            EventType::ExplorationDiscover,
+                            &ExplorationPayload {
+                                discovery_id: format!("floor_{}", player.floor),
+                                category: "floor".into(),
+                                x: player.x as f64,
+                                y: player.y as f64,
+                            },
+                        );
 
                         session.explored = vec![false; MAP_W * MAP_H];
                         map = generate_floor(
@@ -267,9 +328,16 @@ fn run() -> io::Result<()> {
 
     let duration_s = session.start.elapsed().as_secs_f64();
     let final_ts = session.start.elapsed().as_millis() as u64;
-    emit_event(&mut tfile, final_ts, &sid, EventType::SessionEnd, &SessionEndPayload {
-        duration_s, reason: "quit".into(),
-    });
+    emit_event(
+        &mut tfile,
+        final_ts,
+        &sid,
+        EventType::SessionEnd,
+        &SessionEndPayload {
+            duration_s,
+            reason: "quit".into(),
+        },
+    );
 
     terminal::disable_raw_mode()?;
     execute!(term.backend_mut(), LeaveAlternateScreen, cursor::Show)?;
@@ -281,6 +349,7 @@ fn run() -> io::Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments, clippy::similar_names)]
 fn try_move(
     map: &[Tile],
     player: &mut Player,
@@ -307,11 +376,17 @@ fn try_move(
     if tile == Tile::Wall {
         messages.push("Bump! Wall blocks your path.".into());
         session.perf.record(0.0);
-        emit_event(tfile, ts_ms, sid, EventType::ChallengeFail, &ChallengePayload {
-            challenge_id: format!("wall_{nx}_{ny}"),
-            difficulty: 0.1,
-            challenge_type: "navigation".into(),
-        });
+        emit_event(
+            tfile,
+            ts_ms,
+            sid,
+            EventType::ChallengeFail,
+            &ChallengePayload {
+                challenge_id: format!("wall_{nx}_{ny}"),
+                difficulty: 0.1,
+                challenge_type: "navigation".into(),
+            },
+        );
         return;
     }
 
@@ -320,28 +395,56 @@ fn try_move(
     session.explored[ny * MAP_W + nx] = true;
     session.perf.record(1.0);
 
-    emit_event(tfile, ts_ms, sid, EventType::PlayerMove, &PlayerMovePayload {
-        x: nx as f64, y: ny as f64, ..Default::default()
-    });
+    emit_event(
+        tfile,
+        ts_ms,
+        sid,
+        EventType::PlayerMove,
+        &PlayerMovePayload {
+            x: nx as f64,
+            y: ny as f64,
+            ..Default::default()
+        },
+    );
 
     match tile {
         Tile::Item => {
             player.items += 1;
             session.challenges += 1;
             messages.push(format!("Found an item! ({} total)", player.items));
-            emit_event(tfile, ts_ms, sid, EventType::PlayerAction, &PlayerActionPayload {
-                action: "collect".into(), success: true, target: "item".into(),
-            });
-            emit_event(tfile, ts_ms, sid, EventType::ChallengeEncounter, &ChallengePayload {
-                challenge_id: format!("item_{nx}_{ny}"),
-                difficulty: 0.3,
-                challenge_type: "collection".into(),
-            });
-            emit_event(tfile, ts_ms, sid, EventType::ChallengeComplete, &ChallengePayload {
-                challenge_id: format!("item_{nx}_{ny}"),
-                difficulty: 0.3,
-                challenge_type: "collection".into(),
-            });
+            emit_event(
+                tfile,
+                ts_ms,
+                sid,
+                EventType::PlayerAction,
+                &PlayerActionPayload {
+                    action: "collect".into(),
+                    success: true,
+                    target: "item".into(),
+                },
+            );
+            emit_event(
+                tfile,
+                ts_ms,
+                sid,
+                EventType::ChallengeEncounter,
+                &ChallengePayload {
+                    challenge_id: format!("item_{nx}_{ny}"),
+                    difficulty: 0.3,
+                    challenge_type: "collection".into(),
+                },
+            );
+            emit_event(
+                tfile,
+                ts_ms,
+                sid,
+                EventType::ChallengeComplete,
+                &ChallengePayload {
+                    challenge_id: format!("item_{nx}_{ny}"),
+                    difficulty: 0.3,
+                    challenge_type: "collection".into(),
+                },
+            );
         }
         Tile::Stairs => {
             messages.push("You found the stairs! Descending...".into());
@@ -370,7 +473,7 @@ fn emit_event<P: serde::Serialize>(
 
 fn generate_floor(seed: u64, floor: u32, difficulty_mod: f64) -> Vec<Tile> {
     let bounds = Rect::new(1.0, 1.0, (MAP_W - 2) as f64, (MAP_H - 2) as f64);
-    let min_size = (10.0 - difficulty_mod * 2.0).max(5.0);
+    let min_size = difficulty_mod.mul_add(-2.0, 10.0).max(5.0);
     let tree = generate_bsp(bounds, min_size, seed);
     let leaves = tree.leaves();
 
@@ -407,13 +510,13 @@ fn generate_floor(seed: u64, floor: u32, difficulty_mod: f64) -> Vec<Tile> {
     }
 
     // Place items using Perlin noise density
-    let item_threshold = 0.3 - difficulty_mod * 0.1;
+    let item_threshold = difficulty_mod.mul_add(-0.1, 0.3);
     for y in 1..MAP_H - 1 {
         for x in 1..MAP_W - 1 {
             if tiles[y * MAP_W + x] == Tile::Floor {
                 let noise_val = perlin_2d(
-                    x as f64 * 0.3 + seed as f64 * 0.01,
-                    y as f64 * 0.3 + f64::from(floor) * 7.0,
+                    (x as f64).mul_add(0.3, seed as f64 * 0.01),
+                    (y as f64).mul_add(0.3, f64::from(floor) * 7.0),
                 );
                 if noise_val > item_threshold {
                     tiles[y * MAP_W + x] = Tile::Item;
@@ -529,7 +632,7 @@ const fn tile_glyph(tile: Tile, lit: bool) -> (char, Color) {
     }
 }
 
-fn flow_color(flow: &FlowState) -> Color {
+const fn flow_color(flow: &FlowState) -> Color {
     match flow {
         FlowState::Flow => Color::Green,
         FlowState::Relaxation => Color::Cyan,
@@ -604,7 +707,7 @@ fn print_session_summary(player: &Player, session: &Session) {
     );
 
     let flow = evaluate_flow(
-        0.5 + session.difficulty_mod * 0.3,
+        session.difficulty_mod.mul_add(0.3, 0.5),
         session.perf.estimated_skill().max(0.1),
         tolerances::FLOW_CHANNEL_WIDTH,
     );

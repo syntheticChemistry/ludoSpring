@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp030 — CPU-vs-GPU math parity validation.
 //!
 //! Validates that pure Rust CPU math (barraCuda) matches GPU shader output.
@@ -191,18 +192,16 @@ fn try_create_gpu() -> Option<GpuContext> {
     }))
     .ok()?;
 
-    let adapter_name = adapter.get_info().name.clone();
+    let adapter_name = adapter.get_info().name;
 
-    let (device, queue) = pollster::block_on(adapter.request_device(
-        &wgpu::DeviceDescriptor {
-            label: Some("exp030"),
-            required_features: wgpu::Features::empty(),
-            required_limits: wgpu::Limits::default(),
-            memory_hints: wgpu::MemoryHints::Performance,
-            experimental_features: Default::default(),
-            trace: Default::default(),
-        },
-    ))
+    let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+        label: Some("exp030"),
+        required_features: wgpu::Features::empty(),
+        required_limits: wgpu::Limits::default(),
+        memory_hints: wgpu::MemoryHints::Performance,
+        experimental_features: wgpu::ExperimentalFeatures::default(),
+        trace: wgpu::Trace::default(),
+    }))
     .ok()?;
 
     Some(GpuContext {
@@ -219,6 +218,10 @@ fn device_poll_wait(device: &wgpu::Device) {
     });
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "GPU pipeline setup — buffer, shader, bind group, dispatch"
+)]
 fn gpu_run_f32_unary(ctx: &GpuContext, shader_src: &str, input: &[f32]) -> Vec<f32> {
     let n = input.len();
     let input_bytes = bytemuck_cast_f32(input);
@@ -296,7 +299,7 @@ fn gpu_run_f32_unary(ctx: &GpuContext, shader_src: &str, input: &[f32]) -> Vec<f
             layout: Some(&pl),
             module: &shader_module,
             entry_point: Some("main"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -317,9 +320,7 @@ fn gpu_run_f32_unary(ctx: &GpuContext, shader_src: &str, input: &[f32]) -> Vec<f
 
     let mut encoder = ctx
         .device
-        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("enc"),
-        });
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("enc") });
 
     {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -329,7 +330,7 @@ fn gpu_run_f32_unary(ctx: &GpuContext, shader_src: &str, input: &[f32]) -> Vec<f
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bg, &[]);
         #[allow(clippy::cast_possible_truncation)]
-        let workgroups = ((n as u32) + 63) / 64;
+        let workgroups = (n as u32).div_ceil(64);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
 
@@ -342,7 +343,7 @@ fn gpu_run_f32_unary(ctx: &GpuContext, shader_src: &str, input: &[f32]) -> Vec<f
         let _ = tx.send(result);
     });
     device_poll_wait(&ctx.device);
-    if rx.recv().ok().and_then(|r| r.ok()).is_none() {
+    if rx.recv().ok().and_then(Result::ok).is_none() {
         return vec![0.0; n];
     }
 
@@ -356,6 +357,10 @@ fn gpu_run_f32_unary(ctx: &GpuContext, shader_src: &str, input: &[f32]) -> Vec<f
     result
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "GPU pipeline setup — buffer, shader, bind group, dispatch"
+)]
 fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> Vec<u32> {
     let n = input.len();
     let input_bytes = bytemuck_cast_u32(input);
@@ -433,7 +438,7 @@ fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> Vec<u
             layout: Some(&pl),
             module: &shader_module,
             entry_point: Some("main"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -454,9 +459,7 @@ fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> Vec<u
 
     let mut encoder = ctx
         .device
-        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("enc"),
-        });
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("enc") });
 
     {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -466,7 +469,7 @@ fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> Vec<u
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bg, &[]);
         #[allow(clippy::cast_possible_truncation)]
-        let workgroups = ((n as u32) + 63) / 64;
+        let workgroups = (n as u32).div_ceil(64);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
 
@@ -479,7 +482,7 @@ fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> Vec<u
         let _ = tx.send(result);
     });
     device_poll_wait(&ctx.device);
-    if rx.recv().ok().and_then(|r| r.ok()).is_none() {
+    if rx.recv().ok().and_then(Result::ok).is_none() {
         return vec![0; n];
     }
 
@@ -493,6 +496,10 @@ fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> Vec<u
     result
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "GPU pipeline setup — 3 buffers, shader, bind group, dispatch"
+)]
 fn gpu_run_f32_3buf(ctx: &GpuContext, shader_src: &str, a: &[f32], b: &[f32]) -> Vec<f32> {
     let n = a.len();
     let buf_size = (n * 4) as u64;
@@ -587,7 +594,7 @@ fn gpu_run_f32_3buf(ctx: &GpuContext, shader_src: &str, a: &[f32], b: &[f32]) ->
             layout: Some(&pl),
             module: &shader_module,
             entry_point: Some("main"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -612,9 +619,7 @@ fn gpu_run_f32_3buf(ctx: &GpuContext, shader_src: &str, a: &[f32], b: &[f32]) ->
 
     let mut encoder = ctx
         .device
-        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("enc"),
-        });
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("enc") });
 
     {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -624,7 +629,7 @@ fn gpu_run_f32_3buf(ctx: &GpuContext, shader_src: &str, a: &[f32], b: &[f32]) ->
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bg, &[]);
         #[allow(clippy::cast_possible_truncation)]
-        let wg = ((n as u32) + 255) / 256;
+        let wg = (n as u32).div_ceil(256);
         pass.dispatch_workgroups(wg, 1, 1);
     }
 
@@ -637,7 +642,7 @@ fn gpu_run_f32_3buf(ctx: &GpuContext, shader_src: &str, a: &[f32], b: &[f32]) ->
         let _ = tx.send(r);
     });
     device_poll_wait(&ctx.device);
-    if rx.recv().ok().and_then(|r| r.ok()).is_none() {
+    if rx.recv().ok().and_then(Result::ok).is_none() {
         return vec![0.0; n];
     }
 
@@ -652,24 +657,29 @@ fn gpu_run_f32_3buf(ctx: &GpuContext, shader_src: &str, a: &[f32], b: &[f32]) ->
 }
 
 fn bytemuck_cast_f32(data: &[f32]) -> &[u8] {
-    unsafe { std::slice::from_raw_parts(data.as_ptr().cast::<u8>(), data.len() * 4) }
+    bytemuck::cast_slice(data)
 }
 
 fn bytemuck_cast_u32(data: &[u32]) -> &[u8] {
-    unsafe { std::slice::from_raw_parts(data.as_ptr().cast::<u8>(), data.len() * 4) }
+    bytemuck::cast_slice(data)
 }
 
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
 
+#[expect(
+    clippy::too_many_lines,
+    clippy::cast_precision_loss,
+    reason = "validation orchestrator — sequential check groups"
+)]
 fn cmd_validate() {
     println!("=== exp030: CPU-vs-GPU Math Parity Validation ===\n");
 
     let gpu = try_create_gpu();
     let gpu_name = gpu
         .as_ref()
-        .map_or("none".to_string(), |g| g.adapter_name.clone());
+        .map_or_else(|| "none".to_string(), |g| g.adapter_name.clone());
     println!("GPU adapter: {gpu_name}\n");
 
     let mut results = Vec::new();
@@ -771,7 +781,10 @@ fn cmd_validate() {
     if let Some(ref ctx) = gpu {
         let sig_input: Vec<f32> = vec![-2.0, -1.0, 0.0, 1.0, 2.0];
         let gpu_sig = gpu_run_f32_unary(ctx, SIGMOID_WGSL, &sig_input);
-        let cpu_sig_f32: Vec<f32> = sig_input.iter().map(|&x| 1.0_f32 / (1.0 + (-x).exp())).collect();
+        let cpu_sig_f32: Vec<f32> = sig_input
+            .iter()
+            .map(|&x| 1.0_f32 / (1.0 + (-x).exp()))
+            .collect();
         let sig_max_err = gpu_sig
             .iter()
             .zip(cpu_sig_f32.iter())
@@ -809,9 +822,9 @@ fn cmd_validate() {
             1e-4,
         ));
 
-        let sm_input: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
-        let gpu_sm = gpu_run_f32_unary(ctx, SOFTMAX_WGSL, &sm_input);
-        let cpu_sm = cpu_softmax_f32(&sm_input);
+        let softmax_input: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
+        let gpu_sm = gpu_run_f32_unary(ctx, SOFTMAX_WGSL, &softmax_input);
+        let cpu_sm = cpu_softmax_f32(&softmax_input);
         let sm_max_err = gpu_sm
             .iter()
             .zip(cpu_sm.iter())
@@ -827,7 +840,7 @@ fn cmd_validate() {
 
         let scale_input: Vec<f32> = vec![0.0, 1.0, 2.0, 3.0, 4.0];
         let gpu_scale = gpu_run_f32_unary(ctx, SCALE_WGSL, &scale_input);
-        let cpu_scale: Vec<f32> = scale_input.iter().map(|&x| x * 2.0 + 1.0).collect();
+        let cpu_scale: Vec<f32> = scale_input.iter().map(|&x| x.mul_add(2.0, 1.0)).collect();
         let scale_exact = gpu_scale == cpu_scale;
         results.push(ValidationResult::check(
             experiment,
@@ -865,10 +878,10 @@ fn cmd_validate() {
         ));
 
         #[allow(clippy::cast_precision_loss)]
-        let sum_input: Vec<f32> = (0..256).map(|i| i as f32).collect();
-        let gpu_partial = gpu_run_f32_unary(ctx, REDUCE_SUM_WGSL, &sum_input);
+        let reduce_sum_input: Vec<f32> = (0..256).map(|i| i as f32).collect();
+        let gpu_partial = gpu_run_f32_unary(ctx, REDUCE_SUM_WGSL, &reduce_sum_input);
         let gpu_total: f32 = gpu_partial.iter().sum();
-        let cpu_total: f32 = sum_input.iter().sum();
+        let cpu_total: f32 = reduce_sum_input.iter().sum();
         results.push(ValidationResult::check(
             experiment,
             "reduce_sum_gpu_parity",
@@ -941,7 +954,7 @@ fn cmd_bench() {
     let gpu = try_create_gpu();
     let gpu_name = gpu
         .as_ref()
-        .map_or("none".to_string(), |g| g.adapter_name.clone());
+        .map_or_else(|| "none".to_string(), |g| g.adapter_name.clone());
     println!("GPU: {gpu_name}\n");
 
     let sizes = [64, 256, 1024, 4096, 16384, 65536];
@@ -954,7 +967,7 @@ fn cmd_bench() {
 
     for &n in &sizes {
         #[allow(clippy::cast_precision_loss)]
-        let input: Vec<f32> = (0..n).map(|i| (i as f32) * 0.001 - 0.5).collect();
+        let input: Vec<f32> = (0..n).map(|i| (i as f32).mul_add(0.001, -0.5)).collect();
 
         let cpu_start = std::time::Instant::now();
         let _cpu_out: Vec<f32> = input.iter().map(|&x| 1.0 / (1.0 + (-x).exp())).collect();
@@ -965,6 +978,7 @@ fn cmd_bench() {
             let _gpu_out = gpu_run_f32_unary(ctx, SIGMOID_WGSL, &input);
             let gpu_us = gpu_start.elapsed().as_micros();
 
+            #[allow(clippy::cast_precision_loss)]
             let speedup = if gpu_us > 0 {
                 cpu_us as f64 / gpu_us as f64
             } else {

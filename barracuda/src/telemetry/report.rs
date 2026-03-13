@@ -9,9 +9,9 @@ use serde::Serialize;
 use crate::interaction::difficulty::suggest_adjustment;
 use crate::interaction::flow::FlowState;
 use crate::interaction::input_laws;
-use crate::metrics::engagement::{compute_engagement, EngagementMetrics};
-use crate::metrics::fun_keys::{classify_fun, FunClassification};
-use crate::metrics::tufte_gaming::{analyze_game_ui, GameUiTufteReport};
+use crate::metrics::engagement::{EngagementMetrics, compute_engagement};
+use crate::metrics::fun_keys::{FunClassification, classify_fun};
+use crate::metrics::tufte_gaming::{GameUiTufteReport, analyze_game_ui};
 use crate::tolerances;
 
 use super::mapper::SessionAccumulator;
@@ -402,6 +402,7 @@ fn build_interaction_cost_report(acc: &SessionAccumulator) -> Option<Interaction
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::telemetry::events::{EventType, TelemetryEvent};

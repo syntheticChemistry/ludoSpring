@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp004: Folding adversarial — validation binary.
 //!
 //! Models the `Folding@Home` / `FoldIt` concept: protein folding as a puzzle

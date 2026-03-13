@@ -1,7 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
+
 use ludospring_barracuda::validation::ValidationResult;
 use serde::Deserialize;
-use std::time::{Duration, Instant};
 use std::thread;
+use std::time::{Duration, Instant};
 
 const NCBI_ESEARCH: &str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 const NCBI_ESUMMARY: &str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi";
@@ -45,10 +48,7 @@ fn ncbi_search(database: &str, query: &str, max_results: u32) -> Result<ESearchR
 }
 
 fn ncbi_summary(database: &str, id: &str) -> Result<serde_json::Value, String> {
-    let url = format!(
-        "{}?db={}&id={}&retmode=json",
-        NCBI_ESUMMARY, database, id
-    );
+    let url = format!("{NCBI_ESUMMARY}?db={database}&id={id}&retmode=json");
     let body: serde_json::Value = ureq::get(&url)
         .call()
         .map_err(|e| format!("HTTP error: {e}"))?
@@ -78,10 +78,15 @@ fn ncbi_rate_limit() {
     thread::sleep(Duration::from_millis(400));
 }
 
-fn bool_f64(b: bool) -> f64 {
+const fn bool_f64(b: bool) -> f64 {
     if b { 1.0 } else { 0.0 }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
+#[allow(clippy::similar_names)]
 fn cmd_validate() {
     println!("=== exp041: NCBI QS Gene Integration Test ===\n");
     let mut results = Vec::new();
@@ -90,7 +95,9 @@ fn cmd_validate() {
     let mut gene_results = Vec::new();
 
     for (i, gene) in qs_genes.iter().enumerate() {
-        if i > 0 { ncbi_rate_limit(); }
+        if i > 0 {
+            ncbi_rate_limit();
+        }
         match search_qs_gene(gene) {
             Ok(result) => {
                 println!(
@@ -102,7 +109,7 @@ fn cmd_validate() {
                 );
                 results.push(ValidationResult::check(
                     EXP,
-                    &format!("qs_gene_{}_found", gene),
+                    &format!("qs_gene_{gene}_found"),
                     bool_f64(result.count >= 1),
                     1.0,
                     0.0,
@@ -110,10 +117,10 @@ fn cmd_validate() {
                 gene_results.push(result);
             }
             Err(e) => {
-                println!("  {}: ERROR - {}", gene, e);
+                println!("  {gene}: ERROR - {e}");
                 results.push(ValidationResult::check(
                     EXP,
-                    &format!("qs_gene_{}_found", gene),
+                    &format!("qs_gene_{gene}_found"),
                     0.0,
                     1.0,
                     0.0,
@@ -133,6 +140,7 @@ fn cmd_validate() {
 
     if gene_results.len() == 3 {
         let luxs_count = gene_results[1].count;
+        #[allow(clippy::similar_names)]
         let luxi_count = gene_results[0].count;
         let agrb_count = gene_results[2].count;
         results.push(ValidationResult::check(
@@ -162,7 +170,11 @@ fn cmd_validate() {
                 println!(
                     "\n  ESummary for gene {}: {}",
                     first_id,
-                    if has_result { "valid response" } else { "no result field" }
+                    if has_result {
+                        "valid response"
+                    } else {
+                        "no result field"
+                    }
                 );
                 results.push(ValidationResult::check(
                     EXP,
@@ -173,9 +185,13 @@ fn cmd_validate() {
                 ));
             }
             Err(e) => {
-                println!("\n  ESummary error: {}", e);
+                println!("\n  ESummary error: {e}");
                 results.push(ValidationResult::check(
-                    EXP, "esummary_returns_data", 0.0, 1.0, 0.0,
+                    EXP,
+                    "esummary_returns_data",
+                    0.0,
+                    1.0,
+                    0.0,
                 ));
             }
         }
@@ -186,7 +202,7 @@ fn cmd_validate() {
     match ncbi_search("sra", "quorum sensing metagenome 16S", 5) {
         Ok(resp) => {
             let count: u64 = resp.esearchresult.count.parse().unwrap_or(0);
-            println!("  SRA metagenome search: {} results", count);
+            println!("  SRA metagenome search: {count} results");
             results.push(ValidationResult::check(
                 EXP,
                 "sra_qs_metagenomes_exist",
@@ -196,9 +212,13 @@ fn cmd_validate() {
             ));
         }
         Err(e) => {
-            println!("  SRA search error: {}", e);
+            println!("  SRA search error: {e}");
             results.push(ValidationResult::check(
-                EXP, "sra_qs_metagenomes_exist", 0.0, 1.0, 0.0,
+                EXP,
+                "sra_qs_metagenomes_exist",
+                0.0,
+                1.0,
+                0.0,
             ));
         }
     }
@@ -207,7 +227,7 @@ fn cmd_validate() {
     match ncbi_search("protein", "autoinducer synthase bacteria", 5) {
         Ok(resp) => {
             let count: u64 = resp.esearchresult.count.parse().unwrap_or(0);
-            println!("  Protein autoinducer synthase: {} results", count);
+            println!("  Protein autoinducer synthase: {count} results");
             results.push(ValidationResult::check(
                 EXP,
                 "protein_autoinducer_synthase_exists",
@@ -217,9 +237,13 @@ fn cmd_validate() {
             ));
         }
         Err(e) => {
-            println!("  Protein search error: {}", e);
+            println!("  Protein search error: {e}");
             results.push(ValidationResult::check(
-                EXP, "protein_autoinducer_synthase_exists", 0.0, 1.0, 0.0,
+                EXP,
+                "protein_autoinducer_synthase_exists",
+                0.0,
+                1.0,
+                0.0,
             ));
         }
     }
@@ -228,7 +252,7 @@ fn cmd_validate() {
     match ncbi_search("nucleotide", "Vibrio fischeri luxI", 3) {
         Ok(resp) => {
             let count: u64 = resp.esearchresult.count.parse().unwrap_or(0);
-            println!("  Nucleotide V. fischeri luxI: {} results", count);
+            println!("  Nucleotide V. fischeri luxI: {count} results");
             results.push(ValidationResult::check(
                 EXP,
                 "nucleotide_vfischeri_luxi",
@@ -238,9 +262,13 @@ fn cmd_validate() {
             ));
         }
         Err(e) => {
-            println!("  Nucleotide search error: {}", e);
+            println!("  Nucleotide search error: {e}");
             results.push(ValidationResult::check(
-                EXP, "nucleotide_vfischeri_luxi", 0.0, 1.0, 0.0,
+                EXP,
+                "nucleotide_vfischeri_luxi",
+                0.0,
+                1.0,
+                0.0,
             ));
         }
     }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp019: Composite interaction cost pipeline — validation binary.
 //!
 //! Chains Fitts + Hick + Steering + GOMS into a complete interaction
@@ -173,8 +174,10 @@ fn validate_analytical_decomposition(results: &mut Vec<ValidationResult>) {
         Operator::Keystroke,
     ];
     let goms_time = task_time(&goms_ops);
-    let expected_goms =
-        goms::times::MENTAL + 2.0 * goms::times::POINT + 2.0 * goms::times::KEYSTROKE_AVG;
+    let expected_goms = 2.0f64.mul_add(
+        goms::times::KEYSTROKE_AVG,
+        2.0f64.mul_add(goms::times::POINT, goms::times::MENTAL),
+    );
 
     let r = ValidationResult::check(
         "exp019_goms_exact",
@@ -188,7 +191,7 @@ fn validate_analytical_decomposition(results: &mut Vec<ValidationResult>) {
 
     // Verify Hick component is analytically correct
     let hick_12 = hick_reaction_time(12, tolerances::HICK_A_MS, tolerances::HICK_B_MS);
-    let expected_hick = tolerances::HICK_A_MS + tolerances::HICK_B_MS * (13.0_f64).log2();
+    let expected_hick = tolerances::HICK_B_MS.mul_add((13.0_f64).log2(), tolerances::HICK_A_MS);
 
     let r = ValidationResult::check(
         "exp019_hick_exact",

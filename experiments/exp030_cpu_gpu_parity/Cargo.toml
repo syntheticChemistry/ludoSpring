@@ -20,6 +20,7 @@ wgpu = { version = "28", default-features = false, features = [
     "vulkan-portability",
 ] }
 pollster = "0.4"
+bytemuck = { version = "1", features = ["derive"] }
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }

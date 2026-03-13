@@ -2,8 +2,8 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 11, 2026
-**Version:** V6 (44 experiments, 410 validation checks, 144 tests)
+**Date:** March 13, 2026
+**Version:** V10 (54 experiments, 795 validation checks, 138 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.3 (standalone, 150+ primitives)
@@ -136,6 +136,91 @@ Key results:
 - **Tower Atomic boot**: BearDog crypto.hash (Blake3, SHA3-256) validated via JSON-RPC over Unix sockets
 - **Anderson QS explorer**: Perlin noise as disorder landscape, QS propagation with localization transition, engagement/flow/fun/DDA metrics on microbial exploration. Diversity dominates O2 in the W model (wetSpring Exp356).
 
+## RPGPT — Sovereign RPG Engine (Paper 18)
+
+Architecture defined for a provenance-backed RPG system where **any open ruleset** (Pathfinder 2e, FATE Core, Cypher, PbtA) can be ingested as a loamSpine certificate and combined with **any world** to produce a playable RPG. The player designs the world and quest hooks; AI (Squirrel) narrates within provably anchored rules.
+
+The core insight: **anti-cheat is chain-of-custody**. The same rhizoCrypt DAG that tracks item lineage in extraction shooters tracks sample lineage in field genomics and loot lineage in tabletop RPGs. Same code path, different vocabulary.
+
+| Primal | RPGPT Role |
+|--------|-----------|
+| rhizoCrypt | Session DAG (turns, rolls, conditions, branches) |
+| loamSpine | Ruleset/character/NPC/world certificates |
+| sweetGrass | Player/AI creative attribution |
+| ludoSpring | Flow/DDA/engagement session quality |
+| BearDog | Anti-cheat action signing |
+| Squirrel | AI narration constrained by ruleset cert |
+
+See `specs/RPGPT_ARCHITECTURE_SKETCH.md` and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
+
+```bash
+cargo run --release -p ludospring-exp045 -- validate  # 49/49 Ruleset control systems (PF2e, FATE, Cairn)
+cargo run --release -p ludospring-exp046 -- validate  # 33/33 Text adventure DAG
+cargo run --release -p ludospring-exp047 -- validate  # 23/23 MTG card provenance
+```
+
+## Games@Home — Distributed Human Computation (Paper 19)
+
+Proves that human gameplay is distributed computation. Stack resolution is protein folding (same components, different order → different outcomes). Game tree complexity is a measurable design metric. Folding@Home isomorphism maps 1:1 across 12 concepts.
+
+```bash
+cargo run --release -p ludospring-exp048 -- validate  # 36/36 Stack resolution as folding
+cargo run --release -p ludospring-exp049 -- validate  # 33/33 Novel data combinatorics
+cargo run --release -p ludospring-exp050 -- validate  # 30/30 Game tree design metric
+cargo run --release -p ludospring-exp051 -- validate  # 28/28 Games@Home distributed human computation
+```
+
+## Provenance Trio Integration (Track 14)
+
+First direct import of the three provenance primals into ludoSpring. The trio lives
+among the biomeOS atomics — deployed via the rootpulse niche as a Continuous 60 Hz graph.
+
+```bash
+cargo run --release -p ludospring-exp052 -- validate  # 37/37 Trio integration
+```
+
+Key results:
+- **rhizoCrypt DAG wired**: game session as vertex graph, content-addressed (Blake3), frontier tracking
+- **loamSpine certificates wired**: ruleset (PF2e, FATE) and card (Grizzly Bears, Lightning Bolt) certificates mint correctly
+- **sweetGrass braids wired**: PROV-O attribution links game actions to player DIDs with source primal tagging
+- **biomeOS topology verified**: 4-node graph (ludoSpring → rhizoCrypt → loamSpine + sweetGrass) fits in 16.67ms tick at 60 Hz
+- **Cross-primal round-trip**: vertex hex → braid data hash → DID identity preserved across all three primals
+
+## Extraction Shooter Provenance + Fraud Detection (Track 15)
+
+Models extraction shooters (Tarkov, DMZ, The Cycle) as a provenance problem.
+Every raid action is a rhizoCrypt DAG vertex. Every item is a loamSpine certificate.
+Fraud detection reduces to checking provenance chain integrity.
+
+```bash
+cargo run --release -p ludospring-exp053 -- validate  # 65/65 Fraud detection + spatial cheats
+```
+
+Key results:
+- **12 fraud types across 3 tiers**: basic (orphan/dupe/speed/range/unattributed/aimbot), consumable (phantom rounds/overconsumption), spatial (identity spoof/ghost action/through-wall shot/teleport)
+- **Zone topology model**: adjacency + line-of-sight graph catches spatial fraud structurally
+- **Identity spoof**: DAG timeline mismatch between claimed shooter zone and actual zone at tick
+- **Ghost action**: kill/loot in a zone with no prior Spawn or Move vertex
+- **Through-wall shot**: shooter and target in zones with no `LoS` per map topology
+- **Teleport detection**: non-adjacent zone transitions with no intermediate Move vertices
+- **Per-round provenance**: every bullet is an individual cert — mint on spawn/loot, consume on fire
+- **Consumable lifecycle**: medical, food, and ammo tracked through full lifecycle with cert proof
+
+## Composable Raid Visualization (Track 16)
+
+Demonstrates the composable primal architecture. Infrastructure primals (biomeOS, songbird, petalTongue) are NOT Cargo dependencies — they are independent binaries that communicate via JSON-RPC 2.0 over Unix sockets. Data primals (trio) remain direct deps.
+
+```bash
+cargo run --release -p ludospring-exp054 -- validate  # 40/40 Composable architecture
+```
+
+Key results:
+- **Zero chimeric deps**: protocol types defined locally, matching wire format of 3 infrastructure primals
+- **biomeOS `DeploymentGraph`**: Continuous coordination at 20 Hz, 5-node topology with feedback edges
+- **songbird discovery**: 2 player agents + raid server discovered by capability (`game.player_input`)
+- **petalTongue `DataBinding`**: zone heatmap, health gauges, action timelines, fraud bar, inventory — all round-trip through JSON
+- **End-to-end**: simulation → snapshot → dashboard → JSON → deserialize preserves all bindings
+
 ## Specs Paper Validation + Performance Benchmarks
 
 Validates claims from the specs/ paper queue against live measurements:
@@ -232,11 +317,11 @@ ludoSpring/
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 44 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring)
+├── experiments/           # 54 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
-├── specs/                 # 4 domain specifications
+├── specs/                 # 5 domain specifications
 ├── whitePaper/            # Local paper staging
 └── wateringHole/          # Handoff documentation
 ```
@@ -256,7 +341,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (81 unit + 8 determinism + 22 parity + 12 validation)
+# All tests (138 total: 83 unit + 8 determinism + 22 parity + 12 validation + 8 forge + 4 exp + 1 doctest)
 cargo test --features ipc --lib --tests
 
 # Run a specific experiment
@@ -280,13 +365,28 @@ cargo doc --workspace --no-deps
 |-------|--------|
 | `cargo fmt --check` | Clean |
 | `cargo clippy --pedantic` | 0 warnings (new code) |
-| `cargo test` | 144 tests, 0 failures |
+| `cargo test` | 138 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
-| 45 validation binaries | 410 checks, 0 failures |
+| 55 validation binaries | 795 checks, 0 failures |
 | 7 Python baselines | All pass |
 | `#![forbid(unsafe_code)]` | All crate roots |
 | Files > 1000 LOC | None |
 | TODO/FIXME/HACK in source | None |
+
+## Benchmark Gaps (Documented)
+
+### Python Execution Timing
+Python baselines (baselines/python/) validate **correctness parity** only — they
+produce reference values that the Rust implementation must match. There are no
+timed benchmarks that execute Python and compare wall-clock performance against
+barracuda CPU. exp034 measures Rust-only throughput; the "inline-python" comparison
+is Rust code that mirrors Python logic, not actual Python execution.
+
+### Industry GPU Benchmarks
+GPU validation (exp030) confirms CPU-vs-GPU **correctness parity** via wgpu/WGSL.
+There are no benchmarks against industry GPU frameworks (Kokkos, CUDA, OpenCL,
+cuDNN, oneMKL, rocBLAS). GPU performance parity against industry standards is
+a toadStool/coralReef concern — ludoSpring validates the math, not the hardware.
 
 ## License
 

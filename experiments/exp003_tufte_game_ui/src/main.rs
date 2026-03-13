@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp003: Tufte analysis of game UIs across genres — validation binary.
 //!
 //! Compares information design of FPS, sandbox, and RTS HUDs through

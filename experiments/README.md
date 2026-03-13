@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
-**Date:** March 11, 2026
-**Total:** 44 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring), 410 checks, 0 failures
+**Date:** March 13, 2026
+**Total:** 54 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz), 795 checks, 0 failures
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -107,6 +107,86 @@
 | 043 | `exp043_qs_gene_fetch` | 10 | PASS | NCBI gene/protein databases | QS gene families (luxI/luxS/agrB/luxR/lasI/rhlI) × 20 gut genera |
 | 044 | `exp044_anderson_qs_explorer` | 12 | PASS | wetSpring Exp356 (W model) | `procedural::noise`, `interaction::flow`, `metrics::engagement`, `metrics::fun_keys`, `interaction::difficulty` |
 
+### Track 12: RPGPT — Sovereign RPG Engine (Paper 18, Architecture Defined)
+
+Paper 18 defines a sovereign RPG engine where any open ruleset (Pathfinder 2e under ORC,
+FATE Core under CC-BY, Cypher, PbtA) is ingested as a loamSpine certificate and combined
+with any world to produce a playable RPG. The anti-cheat = chain-of-custody isomorphism
+means the same rhizoCrypt DAG that tracks game item lineage tracks biological sample lineage.
+
+Build phases:
+1. Ruleset-as-certificate format (loamSpine)
+2. Turn-based session DAG (rhizoCrypt)
+3. AI narration loop (Squirrel + ludoSpring quality metrics)
+4. Creative attribution (sweetGrass + sunCloud)
+
+See `specs/RPGPT_ARCHITECTURE_SKETCH.md` and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
+
+| # | Package | Checks | Status | Reference | What it proves |
+|---|---------|--------|--------|-----------|----------------|
+| 045 | `ludospring-exp045` | 49 | PASS | PF2e (ORC), FATE (CC-BY), Cairn (CC-BY-SA) | Generic `Ruleset` trait abstracts 3 structurally different RPG systems |
+| 046 | `ludospring-exp046` | 33 | PASS | Classic text adventures | DAG-based text adventure eliminates "guess the verb"; item provenance tracked |
+| 047 | `ludospring-exp047` | 23 | PASS | MTG game rules | MTG game actions as DAG; physical card provenance via loamSpine cert pattern |
+
+### Track 13: Games@Home — Distributed Human Computation (Paper 19)
+
+Paper 19 proves that human gameplay is distributed computation. Stack resolution is protein folding (same components, different order → different outcomes). Every game produces novel data (game tree is provably infinite). Game tree complexity is a measurable design metric. The Folding@Home isomorphism maps 1:1 across 12 concepts. Seven cross-domain transfer paths validated. AR card gaming anchors digital in physical.
+
+| # | Package | Checks | Status | Reference | What it proves |
+|---|---------|--------|--------|-----------|----------------|
+| 048 | `ludospring-exp048` | 36 | PASS | MTG stack rules, protein folding | Same cards, different stack order → opposite outcomes. Card text = genotype, resolution order = phenotype. Stack as DAG. |
+| 049 | `ludospring-exp049` | 33 | PASS | Shannon (1950), Churchill et al. (2019) | Game tree ~10^358 (conservative). Birthday bound ~10^179. Every game is novel. 100B novel vertices/year. |
+| 050 | `ludospring-exp050` | 30 | PASS | Wikipedia Game Complexity, Churchill et al. (2019) | Go explained (10^505). MTG is 2^ℵ₀ (Turing complete). Commander hypothesis: format ×216, designed cards ×0.036. Enzymatic shortcut model. |
+| 051 | `ludospring-exp051` | 28 | PASS | Pande (F@H), von Ahn (2006) | F@H ↔ Games@Home isomorphism (12 concepts). 200× more compute units. Zero cost. 7 cross-domain transfers (avg 76%). Feedback loop model. |
+
+See `gen3/baseCamp/19_games_at_home_distributed_human_computation.md`.
+
+### Track 14: Provenance Trio Integration (rhizoCrypt + loamSpine + sweetGrass + biomeOS)
+
+First experiment to directly import and exercise the three provenance primals
+from ludoSpring. The trio lives among the biomeOS atomics — rhizoCrypt provides
+ephemeral DAG workspace, loamSpine anchors permanent certificates, sweetGrass
+attributes creative contributions. biomeOS deploys them as a Continuous 60 Hz
+graph via the rootpulse niche.
+
+| # | Package | Checks | Status | Reference | What it proves |
+|---|---------|--------|--------|-----------|----------------|
+| 052 | `ludospring-exp052` | 37 | PASS | rhizoCrypt v0.13, loamSpine v0.6, sweetGrass v0.1, biomeOS rootpulse niche | Cross-primal DAG+certificate+attribution round-trip; biomeOS graph topology fits 60 Hz tick |
+
+### Track 15: Extraction Shooter Provenance + Fraud Detection
+
+Models an extraction shooter (Tarkov/DMZ) where every bullet, loot pickup,
+kill, and extract is tracked as a rhizoCrypt DAG vertex. Every item (weapon,
+armor, key, barter) is a loamSpine certificate. Fraud detection reduces to
+provenance chain analysis: orphan items, duplicate certificates, speed hacks,
+impossible kills, unattributed container loot, and aimbot headshot anomalies.
+
+| # | Package | Checks | Status | Reference | What it proves |
+|---|---------|--------|--------|-----------|----------------|
+| 053 | `ludospring-exp053` | 65 | PASS | Extraction shooter (Tarkov model), rhizoCrypt, loamSpine | 12 fraud types, zone topology, spatial fraud (spoof/ghost/wallhack/teleport), per-round provenance, consumable lifecycle |
+| 054 | `ludospring-exp054` | 40 | PASS | petalTongue (viz IPC), biomeOS (graph), songbird (discovery) | Composable primal architecture: DataBinding JSON, DeploymentGraph TOML, 2-player coordination, zero chimeric deps |
+
+**Key results (exp053):**
+- Honest raid produces zero fraud detections across 13 DAG vertices
+- 12 fraud types across 3 tiers: basic (orphan/dupe/speed/range/unattributed/aimbot), consumable (phantom rounds/overconsumption), spatial (identity spoof/ghost action/through-wall shot/teleport)
+- Zone topology model with adjacency + line-of-sight enables spatial fraud without position telemetry
+- Identity spoof caught via zone/tick mismatch in the claimed shooter's DAG timeline
+- Ghost actions caught by comparing actor zone at action time vs Spawn/Move vertex history
+- Through-wall shots caught by shooter/target zone LoS check against map topology
+- Teleportation caught by non-adjacent zone transitions with no intermediate Move vertices
+- Every bullet individually tracked: 6 rounds spawn → 3 fired (consumed) → 3 intact → 4 found → loaded to magazine
+- Medical and food items have full consumption lifecycle — certs persist as proof even after use
+- Chain-of-custody isomorphism: same code path catches item duplication in games AND sample tampering in genomics
+
+**Key results (exp054):**
+- Zero chimeric dependencies — infrastructure primals (biomeOS, songbird, petalTongue) interact via JSON-RPC 2.0 protocol only
+- `DeploymentGraph` with `Continuous` coordination at 20 Hz: 5 nodes (2 inputs → raid server → fraud detect → viz push)
+- songbird registration/discovery protocol validated: 2 player agents + raid server + viz provider
+- biomeOS lifecycle messages: `lifecycle.register`, `capability.register` with correct JSON-RPC 2.0 envelopes
+- petalTongue `DataBinding` JSON: zone heatmap, player health gauges, action timelines, fraud bar chart, inventory bars
+- Streaming protocol: `append` (timeline) and `set_value` (gauge) operations round-trip through JSON
+- End-to-end: simulation → snapshot → dashboard → JSON → deserialize preserves all bindings
+
 ### metalForge Dispatch
 
 | Binary | Checks | Status | Modules Validated |
@@ -172,6 +252,24 @@ cargo run --release -p ludospring-exp041 -- validate      # NCBI QS integration 
 cargo run --release -p ludospring-exp042 -- validate      # Tower Atomic local (10 checks)
 cargo run --release -p ludospring-exp043 -- validate      # QS gene dataset (10 checks)
 cargo run --release -p ludospring-exp044 -- validate      # Anderson QS explorer (12 checks)
+
+# Run RPGPT experiments (Track 12)
+cargo run --release -p ludospring-exp045 -- validate      # Ruleset control systems (49 checks)
+cargo run --release -p ludospring-exp046 -- validate      # Text adventure DAG (33 checks)
+cargo run --release -p ludospring-exp047 -- validate      # MTG card provenance (23 checks)
+
+# Run Games@Home experiments (Track 13)
+cargo run --release -p ludospring-exp048 -- validate      # Stack resolution as folding (36 checks)
+cargo run --release -p ludospring-exp049 -- validate      # Novel data combinatorics (33 checks)
+cargo run --release -p ludospring-exp050 -- validate      # Game tree design metric (30 checks)
+cargo run --release -p ludospring-exp051 -- validate      # Games@Home distributed human computation (28 checks)
+
+# Run Provenance Trio integration (Track 14)
+cargo run --release -p ludospring-exp052 -- validate      # Trio integration (37 checks)
+
+# Run Extraction Shooter fraud detection (Track 15)
+cargo run --release -p ludospring-exp053 -- validate      # Extraction shooter provenance (65 checks)
+cargo run --release -p ludospring-exp054 -- validate      # Composable raid visualization (40 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

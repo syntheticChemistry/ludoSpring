@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp011: GOMS task completion time prediction — validation binary.
 //!
 //! Validates the Keystroke-Level Model (KLM) from Card, Moran & Newell
@@ -83,7 +84,10 @@ fn validate_menu_navigation(results: &mut Vec<ValidationResult>) {
         "exp011_drag_drop",
         "drag-drop = M + 2P + 2K",
         t2,
-        goms::times::MENTAL + 2.0 * goms::times::POINT + 2.0 * goms::times::KEYSTROKE_AVG,
+        2.0f64.mul_add(
+            goms::times::KEYSTROKE_AVG,
+            2.0f64.mul_add(goms::times::POINT, goms::times::MENTAL),
+        ),
         tolerances::ANALYTICAL_TOL,
     );
     report(&r);
@@ -104,7 +108,10 @@ fn validate_chat_input(results: &mut Vec<ValidationResult>) {
         Operator::Keystroke,
     ];
     let t = task_time(&chat);
-    let expected = goms::times::MENTAL + goms::times::HOME + 6.0 * goms::times::KEYSTROKE_AVG;
+    let expected = 6.0f64.mul_add(
+        goms::times::KEYSTROKE_AVG,
+        goms::times::MENTAL + goms::times::HOME,
+    );
     let r = ValidationResult::check(
         "exp011_chat",
         "typing 'gg wp' + enter = M + H + 6K",

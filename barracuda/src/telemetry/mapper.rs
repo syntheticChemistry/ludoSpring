@@ -95,6 +95,8 @@ impl SessionAccumulator {
             retry_count: 0,
             total_damage: 0.0,
             death_count: 0,
+            // 50-event sliding window balances responsiveness with stability.
+            // Typical action rate is ~1/s; 50 events ≈ ~50s of recent history.
             performance: PerformanceWindow::new(50),
             flow_samples: Vec::new(),
             ui_layouts: Vec::new(),
@@ -247,6 +249,10 @@ impl SessionAccumulator {
     }
 
     fn detect_pause(&mut self, timestamp_ms: u64) {
+        /// Milliseconds of inactivity before a pause is counted.
+        ///
+        /// Provenance: 3 seconds aligns with typical "deliberate pause" in game UX.
+        /// Source: Zhu & Fang (2012), "Visualizing Game Telemetry Data," GDC Vault.
         const PAUSE_THRESHOLD_MS: u64 = 3000;
         if let Some(prev) = self.positions.iter().rev().nth(1).map(|(t, _, _)| *t) {
             if timestamp_ms.saturating_sub(prev) > PAUSE_THRESHOLD_MS {
@@ -259,7 +265,10 @@ impl SessionAccumulator {
 
     /// Compute effective session duration (seconds).
     #[must_use]
-    #[expect(clippy::cast_precision_loss, reason = "timestamp deltas fit in f64 mantissa")]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "timestamp deltas fit in f64 mantissa"
+    )]
     pub fn effective_duration_s(&self) -> f64 {
         if self.duration_s > 0.0 {
             return self.duration_s;
@@ -272,7 +281,10 @@ impl SessionAccumulator {
 
     /// Build an `EngagementSnapshot` from accumulated events.
     #[must_use]
-    #[expect(clippy::cast_possible_truncation, reason = "discovery/action counts are small")]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "discovery/action counts are small"
+    )]
     pub fn to_engagement_snapshot(&self) -> EngagementSnapshot {
         EngagementSnapshot {
             session_duration_s: self.effective_duration_s(),
@@ -443,7 +455,11 @@ mod tests {
             ));
         }
         for _ in 0..2 {
-            acc.ingest(&make_event(0, EventType::ChallengeFail, serde_json::json!({})));
+            acc.ingest(&make_event(
+                0,
+                EventType::ChallengeFail,
+                serde_json::json!({}),
+            ));
         }
         let signals = acc.to_fun_signals();
         let classification = classify_fun(&signals);

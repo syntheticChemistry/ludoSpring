@@ -114,8 +114,8 @@ pub fn spawn_entities(count: usize) -> Vec<Entity> {
                 y: (1.0 - t) * 100.0,
                 vx: t.sin() * 2.0,
                 vy: t.cos() * 2.0,
-                challenge: 0.3 + t * 0.4,
-                skill: 0.4 + (1.0 - t) * 0.3,
+                challenge: t.mul_add(0.4, 0.3),
+                skill: (1.0 - t).mul_add(0.3, 0.4),
             }
         })
         .collect()

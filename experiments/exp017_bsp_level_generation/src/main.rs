@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp017: BSP Doom-style level partitioning — validation binary.
 //!
 //! Validates Binary Space Partitioning for level generation: area

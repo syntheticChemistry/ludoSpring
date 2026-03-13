@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp013: L-system protein backbone growth — validation binary.
 //!
 //! Validates Lindenmayer system implementations: algae growth (Fibonacci
@@ -143,7 +144,7 @@ fn validate_turtle_geometry(results: &mut Vec<ValidationResult>) {
     let r = ValidationResult::check(
         "exp013_square_closed",
         "F+F+F+F with 90° returns near origin",
-        (end.0 * end.0 + end.1 * end.1).sqrt(),
+        end.0.hypot(end.1),
         0.0,
         1e-8,
     );

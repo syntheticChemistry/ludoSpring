@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp016: Cognitive load Tufte sweep — validation binary.
 //!
 //! Sweeps UI configurations from minimal (racing game HUD) to maximal

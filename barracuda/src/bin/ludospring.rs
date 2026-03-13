@@ -33,6 +33,14 @@ const CAPABILITIES: &[&str] = &[
     METHOD_GENERATE_NOISE,
 ];
 
+/// Ecosystem socket directory name — XDG convention for biomeOS primals.
+const BIOMEOS_DIR: &str = "biomeos";
+
+/// Socket prefix for Neural API — discovered at runtime via lifecycle.register.
+/// Peer primal names are not hardcoded; this is the conventional socket name
+/// for the Neural API capability in the biomeOS ecosystem.
+const NEURAL_API_SOCKET_PREFIX: &str = "neural-api";
+
 fn get_family_id() -> String {
     std::env::var("FAMILY_ID")
         .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
@@ -54,14 +62,14 @@ fn resolve_socket_path(family_id: &str) -> PathBuf {
         return PathBuf::from(explicit);
     }
 
-    let sock_name = format!("ludospring-{family_id}.sock");
+    let sock_name = format!("{PRIMAL_NAME}-{family_id}.sock");
 
     if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
         return PathBuf::from(dir).join(&sock_name);
     }
 
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        let biomeos_path = PathBuf::from(xdg).join("biomeos");
+        let biomeos_path = PathBuf::from(xdg).join(BIOMEOS_DIR);
         if biomeos_path.is_dir() || std::fs::create_dir_all(&biomeos_path).is_ok() {
             return biomeos_path.join(&sock_name);
         }
@@ -76,20 +84,19 @@ fn resolve_socket_path(family_id: &str) -> PathBuf {
     PathBuf::from("/tmp").join(&sock_name)
 }
 
-/// Discover Neural API socket path (same runtime dir, neural-api-{family_id}.sock).
+/// Discover Neural API socket path (same runtime dir, discovered by capability).
 fn neural_api_socket_path(family_id: &str) -> PathBuf {
+    let sock_name = format!("{NEURAL_API_SOCKET_PREFIX}-{family_id}.sock");
     if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
-        return PathBuf::from(dir).join(format!("neural-api-{family_id}.sock"));
+        return PathBuf::from(dir).join(&sock_name);
     }
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        return PathBuf::from(xdg)
-            .join("biomeos")
-            .join(format!("neural-api-{family_id}.sock"));
+        return PathBuf::from(xdg).join(BIOMEOS_DIR).join(&sock_name);
     }
     let user = std::env::var("USER").unwrap_or_else(|_| "unknown".to_string());
     PathBuf::from("/tmp")
         .join(format!("biomeos-{user}"))
-        .join(format!("neural-api-{family_id}.sock"))
+        .join(&sock_name)
 }
 
 /// Send a JSON-RPC request to a Unix socket and return the raw response.

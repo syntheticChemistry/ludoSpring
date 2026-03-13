@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp033 — NUCLEUS atomic pipeline simulation.
 //!
 //! Validates the Tower → Node → Nest atomic deployment pattern locally,
 //! proving that ludoSpring game workloads can be composed through
 //! NUCLEUS-style coordination matching biomeOS graph topology.
 //!
-//! Topology (from gaming_niche_deploy.toml + nucleus_complete.toml):
-//!   Tower = BearDog + Songbird       (crypto + network)
-//!   Node  = Tower + ToadStool        (crypto + network + compute)
-//!   Nest  = Node + NestGate          (+ storage/provenance)
+//! Topology (from `gaming_niche_deploy.toml` + `nucleus_complete.toml)`:
+//!   Tower = `BearDog` + Songbird       (crypto + network)
+//!   Node  = Tower + `ToadStool`        (crypto + network + compute)
+//!   Nest  = Node + `NestGate`          (+ storage/provenance)
 //!   NUCLEUS = all 5 primals
 //!
 //! Subcommands:
@@ -73,14 +74,10 @@ impl TowerAtomic {
             "game.generate_noise".to_string(),
             "game.generate_noise".to_string(),
         );
-        self.capabilities.insert(
-            "game.engagement".to_string(),
-            "game.engagement".to_string(),
-        );
-        self.capabilities.insert(
-            "game.wfc_step".to_string(),
-            "game.wfc_step".to_string(),
-        );
+        self.capabilities
+            .insert("game.engagement".to_string(), "game.engagement".to_string());
+        self.capabilities
+            .insert("game.wfc_step".to_string(), "game.wfc_step".to_string());
         self.initialized = true;
     }
 
@@ -89,7 +86,7 @@ impl TowerAtomic {
     }
 }
 
-/// Node Atomic: Tower + compute dispatch via ToadStool substrate.
+/// Node Atomic: Tower + compute dispatch via `ToadStool` substrate.
 struct NodeAtomic {
     tower: TowerAtomic,
     gpu_available: bool,
@@ -109,8 +106,7 @@ impl NodeAtomic {
 
     fn dispatch(&mut self, workload: GameWorkload, label: &str) -> Substrate {
         let substrate = recommend_substrate(workload, self.gpu_available);
-        self.dispatch_log
-            .push((label.to_string(), substrate));
+        self.dispatch_log.push((label.to_string(), substrate));
         substrate
     }
 
@@ -162,13 +158,16 @@ struct NucleusPipelineResult {
 }
 
 /// Execute a game-science workload through the NUCLEUS atomic chain.
+#[expect(clippy::cast_possible_truncation, reason = "elapsed micros bounded")]
 fn run_nucleus_pipeline(gpu_available: bool) -> NucleusPipelineResult {
     let mut nest = NestAtomic::new(gpu_available);
     let mut stages = Vec::new();
 
     // Stage 1: Generate noise (Node dispatches to best substrate)
     let t0 = Instant::now();
-    let noise_sub = nest.node.dispatch(GameWorkload::NoiseGeneration, "noise_gen");
+    let noise_sub = nest
+        .node
+        .dispatch(GameWorkload::NoiseGeneration, "noise_gen");
     let noise_us = t0.elapsed().as_micros() as u64 + 100;
     nest.record("noise_gen", noise_sub, noise_us);
     stages.push(("noise_gen".to_string(), noise_sub, noise_us));
@@ -207,6 +206,11 @@ fn run_nucleus_pipeline(gpu_available: bool) -> NucleusPipelineResult {
 // Validation
 // ---------------------------------------------------------------------------
 
+#[expect(
+    clippy::too_many_lines,
+    clippy::cast_precision_loss,
+    reason = "validation orchestrator — sequential check groups"
+)]
 fn cmd_validate() {
     println!("=== exp033: NUCLEUS Atomic Pipeline Validation ===\n");
 
@@ -243,7 +247,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "node_noise_to_gpu",
-        if noise_sub == Substrate::Gpu { 1.0 } else { 0.0 },
+        if noise_sub == Substrate::Gpu {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));
@@ -253,7 +261,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "node_metrics_to_cpu",
-        if metrics_sub == Substrate::Cpu { 1.0 } else { 0.0 },
+        if metrics_sub == Substrate::Cpu {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));
@@ -331,7 +343,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "cpu_only_pipeline_works",
-        if all_cpu && cpu_pipeline.total_us > 0 { 1.0 } else { 0.0 },
+        if all_cpu && cpu_pipeline.total_us > 0 {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp005: Fitts's law device sweep — validation binary.
 //!
 //! Validates Fitts's law predictions across multiple input devices using

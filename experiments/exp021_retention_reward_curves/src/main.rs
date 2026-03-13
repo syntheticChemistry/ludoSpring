@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp021: Retention curves under reward structures — validation binary.
 //!
 //! Models player retention under different reward schedules: fixed-ratio,
@@ -28,7 +29,7 @@ fn report(r: &ValidationResult) {
 }
 
 /// Fixed-ratio: reward every N actions. Predictable, steady engagement.
-fn fixed_ratio_session() -> EngagementSnapshot {
+const fn fixed_ratio_session() -> EngagementSnapshot {
     EngagementSnapshot {
         session_duration_s: 600.0,
         action_count: 300,
@@ -40,7 +41,7 @@ fn fixed_ratio_session() -> EngagementSnapshot {
 }
 
 /// Variable-ratio: reward at random intervals. Compulsive, high action rate.
-fn variable_ratio_session() -> EngagementSnapshot {
+const fn variable_ratio_session() -> EngagementSnapshot {
     EngagementSnapshot {
         session_duration_s: 600.0,
         action_count: 800,
@@ -52,7 +53,7 @@ fn variable_ratio_session() -> EngagementSnapshot {
 }
 
 /// Intrinsic (flow-based): reward is the activity itself. Balanced metrics.
-fn intrinsic_session() -> EngagementSnapshot {
+const fn intrinsic_session() -> EngagementSnapshot {
     EngagementSnapshot {
         session_duration_s: 600.0,
         action_count: 200,

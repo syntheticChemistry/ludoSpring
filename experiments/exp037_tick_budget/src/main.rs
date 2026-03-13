@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp037 — Game engine tick budget validation.
 //!
-//! From GAME_ENGINE_NICHE_SPECIFICATION.md:
+//! From `GAME_ENGINE_NICHE_SPECIFICATION.md`:
 //!   "Target: 16.67ms per tick (60 Hz)"
-//!   "game_logic: 3ms, physics: 4ms, scene: 2ms, render: 6ms,
+//!   "`game_logic`: 3ms, physics: 4ms, scene: 2ms, render: 6ms,
 //!    audio: 2ms, metrics: 1ms, input: 1ms"
 //!
 //! Validates:
 //!   - 10K entities ticked at 60 Hz within budget
-//!   - game_logic node stays within 3ms allocation
+//!   - `game_logic` node stays within 3ms allocation
 //!   - metrics node stays within 1ms allocation
-//!   - Combined game_logic + metrics under 4ms
+//!   - Combined `game_logic` + metrics under 4ms
 //!   - Scales: 1K, 10K, 50K, 100K entities
 
 use std::process;
@@ -32,6 +33,10 @@ fn main() {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
 fn cmd_validate() {
     println!("=== exp037: Game Engine Tick Budget Validation ===\n");
     println!("  Spec: GAME_ENGINE_NICHE_SPECIFICATION.md");
@@ -93,7 +98,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "engagement_in_range",
-        if (0.0..=1.0).contains(&engagement) { 1.0 } else { 0.0 },
+        if (0.0..=1.0).contains(&engagement) {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));
@@ -177,6 +186,10 @@ fn cmd_validate() {
     }
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn cmd_bench() {
     println!("=== exp037: Tick Budget Benchmark ===\n");
 
@@ -184,7 +197,10 @@ fn cmd_bench() {
     let counts = [100, 1_000, 5_000, 10_000, 25_000, 50_000, 100_000];
 
     println!("game_logic tick (single tick, DDA + flow eval):");
-    println!("{:>8} {:>12} {:>10} {:>10}", "Entities", "Time (us)", "us/entity", "Est FPS");
+    println!(
+        "{:>8} {:>12} {:>10} {:>10}",
+        "Entities", "Time (us)", "us/entity", "Est FPS"
+    );
     for &n in &counts {
         let mut entities = spawn_entities(n);
         let t = Instant::now();
@@ -192,16 +208,15 @@ fn cmd_bench() {
         let us = t.elapsed().as_micros();
         #[allow(clippy::cast_precision_loss)]
         let per_entity = us as f64 / n as f64;
-        let fps = if us > 0 {
-            1_000_000.0 / us as f64
-        } else {
-            0.0
-        };
+        let fps = if us > 0 { 1_000_000.0 / us as f64 } else { 0.0 };
         println!("{n:>8} {us:>12} {per_entity:>10.3} {fps:>10.0}");
     }
 
     println!("\nSustained 60-tick (1 second simulation):");
-    println!("{:>8} {:>12} {:>10} {:>10}", "Entities", "Total (us)", "Avg/tick", "Headroom");
+    println!(
+        "{:>8} {:>12} {:>10} {:>10}",
+        "Entities", "Total (us)", "Avg/tick", "Headroom"
+    );
     for &n in &[1_000, 5_000, 10_000, 25_000] {
         let mut entities = spawn_entities(n);
         let t = Instant::now();

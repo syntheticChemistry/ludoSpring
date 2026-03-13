@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp036 — BM-003: Raycaster throughput benchmark.
 //!
-//! From OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md:
+//! From `OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md`:
 //!   "320-column screen cast at 60 Hz. Match C reference (Lodev DDA) within 1.5x."
 //!
 //! Validates:
@@ -28,6 +29,18 @@ fn main() {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
+#[expect(
+    clippy::similar_names,
+    reason = "domain-specific naming: cast64_us vs cast128_us"
+)]
 fn cmd_validate() {
     println!("=== exp036: BM-003 Raycaster Throughput Validation ===\n");
 
@@ -49,7 +62,7 @@ fn cmd_validate() {
     println!("  [INFO] 320-col 64x64: {cast64_us}us");
 
     // 2. All rays hit in closed arena
-    let all_hit = hits.iter().all(|h| h.is_some());
+    let all_hit = hits.iter().all(std::option::Option::is_some);
     results.push(ValidationResult::check(
         experiment,
         "all_rays_hit_64x64_arena",
@@ -173,6 +186,10 @@ fn cmd_validate() {
     }
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn cmd_bench() {
     println!("=== exp036: Raycaster Benchmark ===\n");
 

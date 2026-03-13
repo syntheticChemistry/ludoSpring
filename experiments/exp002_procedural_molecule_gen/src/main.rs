@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp002: Procedural molecule generation — validation binary.
 //!
 //! Uses noise fields to generate 3D molecular density distributions,

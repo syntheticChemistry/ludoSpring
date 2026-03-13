@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp014: Hybrid noise+WFC voxel world — validation binary.
 //!
 //! Combines Perlin noise density fields with Wave Function Collapse

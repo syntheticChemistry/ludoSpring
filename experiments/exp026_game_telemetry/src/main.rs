@@ -15,8 +15,7 @@ use std::path::PathBuf;
 
 use ludospring_barracuda::telemetry::events::{
     ChallengePayload, EventType, ExplorationPayload, PlayerActionPayload, PlayerDamagePayload,
-    PlayerDeathPayload, PlayerMovePayload, SessionEndPayload, SessionStartPayload,
-    TelemetryEvent,
+    PlayerDeathPayload, PlayerMovePayload, SessionEndPayload, SessionStartPayload, TelemetryEvent,
 };
 use ludospring_barracuda::telemetry::mapper::SessionAccumulator;
 use ludospring_barracuda::telemetry::report::generate_report;
@@ -111,6 +110,10 @@ fn cmd_generate(args: &[String]) {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "synthetic session builder — event sequence"
+)]
 fn generate_synthetic_session() -> Vec<TelemetryEvent> {
     let sid = "synthetic-001";
     let mut events = Vec::new();
@@ -210,7 +213,7 @@ fn generate_synthetic_session() -> Vec<TelemetryEvent> {
                     payload: serde_json::to_value(PlayerDamagePayload {
                         amount: 15.0,
                         source: "enemy".into(),
-                        health_remaining: 85.0 - (tick as f64 * 0.1),
+                        health_remaining: (tick as f64).mul_add(-0.1, 85.0),
                     })
                     .unwrap_or_default(),
                 });
@@ -273,7 +276,10 @@ fn cmd_validate() {
     println!();
     let pass = results.iter().filter(|r| r.passed).count();
     let fail = results.iter().filter(|r| !r.passed).count();
-    println!("Results: {pass} passed, {fail} failed out of {} checks", results.len());
+    println!(
+        "Results: {pass} passed, {fail} failed out of {} checks",
+        results.len()
+    );
 
     if fail > 0 {
         std::process::exit(1);
@@ -309,7 +315,13 @@ not json
 {"timestamp_ms":1000,"session_id":"s","event_type":"player_move","payload":{"x":1.0,"y":2.0}}
 "#;
     let (events, errors) = ludospring_barracuda::telemetry::parse_ndjson(input);
-    let r1 = ValidationResult::check("exp026", "ndjson_valid_count", events.len() as f64, 2.0, 0.0);
+    let r1 = ValidationResult::check(
+        "exp026",
+        "ndjson_valid_count",
+        events.len() as f64,
+        2.0,
+        0.0,
+    );
     let r2 = ValidationResult::check("exp026", "ndjson_error_count", errors as f64, 1.0, 0.0);
     print_result(&r1);
     print_result(&r2);
@@ -324,13 +336,61 @@ fn validate_synthetic_analysis(results: &mut Vec<ValidationResult>) {
     let report = generate_report(&acc);
 
     let checks = [
-        ("game_name_correct", if report.session.game_name == "synthetic_roguelike" { 1.0 } else { 0.0 }, 1.0),
-        ("engagement_positive", if report.engagement.composite > 0.0 { 1.0 } else { 0.0 }, 1.0),
-        ("has_flow_samples", if report.flow.timeline.is_empty() { 0.0 } else { 1.0 }, 1.0),
-        ("fun_classified", if report.fun.dominant.is_empty() { 0.0 } else { 1.0 }, 1.0),
+        (
+            "game_name_correct",
+            if report.session.game_name == "synthetic_roguelike" {
+                1.0
+            } else {
+                0.0
+            },
+            1.0,
+        ),
+        (
+            "engagement_positive",
+            if report.engagement.composite > 0.0 {
+                1.0
+            } else {
+                0.0
+            },
+            1.0,
+        ),
+        (
+            "has_flow_samples",
+            if report.flow.timeline.is_empty() {
+                0.0
+            } else {
+                1.0
+            },
+            1.0,
+        ),
+        (
+            "fun_classified",
+            if report.fun.dominant.is_empty() {
+                0.0
+            } else {
+                1.0
+            },
+            1.0,
+        ),
         ("deaths_counted", f64::from(report.session.deaths), 1.0),
-        ("discoveries_positive", if report.session.total_discoveries > 0 { 1.0 } else { 0.0 }, 1.0),
-        ("report_serializes", if serde_json::to_string(&report).is_ok() { 1.0 } else { 0.0 }, 1.0),
+        (
+            "discoveries_positive",
+            if report.session.total_discoveries > 0 {
+                1.0
+            } else {
+                0.0
+            },
+            1.0,
+        ),
+        (
+            "report_serializes",
+            if serde_json::to_string(&report).is_ok() {
+                1.0
+            } else {
+                0.0
+            },
+            1.0,
+        ),
     ];
 
     for (name, measured, expected) in &checks {
@@ -346,7 +406,11 @@ fn validate_empty_session(results: &mut Vec<ValidationResult>) {
     let r = ValidationResult::check(
         "exp026",
         "empty_session_no_panic",
-        if report.engagement.composite.is_finite() { 1.0 } else { 0.0 },
+        if report.engagement.composite.is_finite() {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     );

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp039 — Cross-implementation noise validation.
 //!
 //! Three independent Perlin noise implementations compared:
-//!   1. ludoSpring (barracuda::procedural::noise) — our pure Rust
+//!   1. ludoSpring (`barracuda::procedural::noise`) — our pure Rust
 //!   2. noise-rs (noise crate, MIT) — the standard Rust noise library
 //!   3. fastnoise-lite (C, MIT) — optimized C reference
 //!
@@ -33,6 +34,15 @@ fn main() {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
+#[expect(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    reason = "validation counts and scale fit"
+)]
 fn cmd_validate() {
     println!("=== exp039: Cross-Implementation Noise Validation ===\n");
     println!("  Impl 1: ludoSpring (barracuda::procedural::noise)");
@@ -81,10 +91,12 @@ fn cmd_validate() {
     }
     let fnl_us = t3.elapsed().as_micros();
 
-    println!("  [INFO] Timing {size}x{size}: ours={our_us}us, noise-rs={noisers_us}us, fastnoise={fnl_us}us");
+    println!(
+        "  [INFO] Timing {size}x{size}: ours={our_us}us, noise-rs={noisers_us}us, fastnoise={fnl_us}us"
+    );
 
     // 1. Our field bounded [-1, 1]
-    let our_bounded = our_field.iter().all(|&v| v >= -1.0 && v <= 1.0);
+    let our_bounded = our_field.iter().all(|&v| (-1.0..=1.0).contains(&v));
     results.push(ValidationResult::check(
         experiment,
         "our_noise_bounded",
@@ -94,7 +106,7 @@ fn cmd_validate() {
     ));
 
     // 2. noise-rs bounded [-1, 1]
-    let nrs_bounded = noisers_field.iter().all(|&v| v >= -1.0 && v <= 1.0);
+    let nrs_bounded = noisers_field.iter().all(|&v| (-1.0..=1.0).contains(&v));
     results.push(ValidationResult::check(
         experiment,
         "noisers_bounded",
@@ -104,7 +116,7 @@ fn cmd_validate() {
     ));
 
     // 3. fastnoise-lite bounded [-1, 1]
-    let fnl_bounded = fnl_field.iter().all(|&v| v >= -1.0 && v <= 1.0);
+    let fnl_bounded = fnl_field.iter().all(|&v| (-1.0..=1.0).contains(&v));
     results.push(ValidationResult::check(
         experiment,
         "fastnoise_bounded",
@@ -143,7 +155,11 @@ fn cmd_validate() {
     results.push(ValidationResult::check(
         experiment,
         "noisers_deterministic",
-        if noisers_field == nrs_field2 { 1.0 } else { 0.0 },
+        if noisers_field == nrs_field2 {
+            1.0
+        } else {
+            0.0
+        },
         1.0,
         0.0,
     ));
@@ -153,17 +169,22 @@ fn cmd_validate() {
     let nrs_stats = field_stats(&noisers_field);
     let fnl_stats = field_stats(&fnl_field);
 
-    println!("  [INFO] Stats — ours: mean={:.4}, std={:.4}, min={:.4}, max={:.4}",
-        our_stats.0, our_stats.1, our_stats.2, our_stats.3);
-    println!("  [INFO] Stats — noise-rs: mean={:.4}, std={:.4}, min={:.4}, max={:.4}",
-        nrs_stats.0, nrs_stats.1, nrs_stats.2, nrs_stats.3);
-    println!("  [INFO] Stats — fastnoise: mean={:.4}, std={:.4}, min={:.4}, max={:.4}",
-        fnl_stats.0, fnl_stats.1, fnl_stats.2, fnl_stats.3);
+    println!(
+        "  [INFO] Stats — ours: mean={:.4}, std={:.4}, min={:.4}, max={:.4}",
+        our_stats.0, our_stats.1, our_stats.2, our_stats.3
+    );
+    println!(
+        "  [INFO] Stats — noise-rs: mean={:.4}, std={:.4}, min={:.4}, max={:.4}",
+        nrs_stats.0, nrs_stats.1, nrs_stats.2, nrs_stats.3
+    );
+    println!(
+        "  [INFO] Stats — fastnoise: mean={:.4}, std={:.4}, min={:.4}, max={:.4}",
+        fnl_stats.0, fnl_stats.1, fnl_stats.2, fnl_stats.3
+    );
 
     // 6. All means near zero (Perlin noise has zero mean)
-    let means_near_zero = our_stats.0.abs() < 0.15
-        && nrs_stats.0.abs() < 0.15
-        && fnl_stats.0.abs() < 0.15;
+    let means_near_zero =
+        our_stats.0.abs() < 0.15 && nrs_stats.0.abs() < 0.15 && fnl_stats.0.abs() < 0.15;
     results.push(ValidationResult::check(
         experiment,
         "all_means_near_zero",
@@ -173,8 +194,8 @@ fn cmd_validate() {
     ));
 
     // 7. All have similar standard deviations (similar dynamic range)
-    let std_similar = (our_stats.1 - nrs_stats.1).abs() < 0.2
-        && (our_stats.1 - fnl_stats.1).abs() < 0.2;
+    let std_similar =
+        (our_stats.1 - nrs_stats.1).abs() < 0.2 && (our_stats.1 - fnl_stats.1).abs() < 0.2;
     results.push(ValidationResult::check(
         experiment,
         "std_devs_similar",
@@ -196,7 +217,9 @@ fn cmd_validate() {
         1.0,
         0.0,
     ));
-    println!("  [INFO] Floor % (threshold>0): ours={our_floor_pct:.1}%, noise-rs={nrs_floor_pct:.1}%, fastnoise={fnl_floor_pct:.1}%");
+    println!(
+        "  [INFO] Floor % (threshold>0): ours={our_floor_pct:.1}%, noise-rs={nrs_floor_pct:.1}%, fastnoise={fnl_floor_pct:.1}%"
+    );
 
     // 9. Smoothness: adjacent samples correlated (coherent noise, not white noise)
     let our_smooth = smoothness(&our_field, size);
@@ -210,7 +233,9 @@ fn cmd_validate() {
         1.0,
         0.0,
     ));
-    println!("  [INFO] Smoothness (avg abs diff): ours={our_smooth:.4}, noise-rs={nrs_smooth:.4}, fastnoise={fnl_smooth:.4}");
+    println!(
+        "  [INFO] Smoothness (avg abs diff): ours={our_smooth:.4}, noise-rs={nrs_smooth:.4}, fastnoise={fnl_smooth:.4}"
+    );
 
     // 10. Game metrics on noise-rs terrain match metrics on our terrain
     let our_game = terrain_to_game_metrics(&our_field, size);
@@ -223,8 +248,13 @@ fn cmd_validate() {
         1.0,
         0.0,
     ));
-    println!("  [INFO] Game metrics — ours: {:.1}% walkable, {} rooms | noise-rs: {:.1}% walkable, {} rooms",
-        our_game.walkable_pct, our_game.connected_regions, nrs_game.walkable_pct, nrs_game.connected_regions);
+    println!(
+        "  [INFO] Game metrics — ours: {:.1}% walkable, {} rooms | noise-rs: {:.1}% walkable, {} rooms",
+        our_game.walkable_pct,
+        our_game.connected_regions,
+        nrs_game.walkable_pct,
+        nrs_game.connected_regions
+    );
 
     // 11. Performance: all complete within 1 second for 256x256
     let all_fast = our_us < 1_000_000 && noisers_us < 1_000_000 && fnl_us < 1_000_000;
@@ -238,7 +268,11 @@ fn cmd_validate() {
 
     // 12. Our implementation competitive (within 3x of fastest)
     let fastest = our_us.min(noisers_us).min(fnl_us);
-    let ratio = if fastest > 0 { our_us as f64 / fastest as f64 } else { 1.0 };
+    let ratio = if fastest > 0 {
+        our_us as f64 / fastest as f64
+    } else {
+        1.0
+    };
     results.push(ValidationResult::check(
         experiment,
         "our_noise_within_3x_fastest",
@@ -261,6 +295,10 @@ fn cmd_validate() {
     }
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts and scale fit"
+)]
 fn cmd_bench() {
     println!("=== exp039: Noise Implementation Benchmark ===\n");
 
@@ -270,13 +308,16 @@ fn cmd_bench() {
     fnl.set_frequency(Some(0.05));
 
     let sizes = [64, 128, 256, 512];
-    println!("{:>6} {:>12} {:>12} {:>12}", "N", "Ours (us)", "noise-rs", "fastnoise");
+    println!(
+        "{:>6} {:>12} {:>12} {:>12}",
+        "N", "Ours (us)", "noise-rs", "fastnoise"
+    );
     for &n in &sizes {
         let t = Instant::now();
         for y in 0..n {
             for x in 0..n {
                 #[allow(clippy::cast_precision_loss)]
-                let _ = our_noise::perlin_2d(x as f64 * 0.05, y as f64 * 0.05);
+                let _ = our_noise::perlin_2d(f64::from(x) * 0.05, f64::from(y) * 0.05);
             }
         }
         let us1 = t.elapsed().as_micros();
@@ -285,7 +326,7 @@ fn cmd_bench() {
         for y in 0..n {
             for x in 0..n {
                 #[allow(clippy::cast_precision_loss)]
-                let _ = perlin_rs.get([x as f64 * 0.05, y as f64 * 0.05]);
+                let _ = perlin_rs.get([f64::from(x) * 0.05, f64::from(y) * 0.05]);
             }
         }
         let us2 = t.elapsed().as_micros();
@@ -306,6 +347,10 @@ fn cmd_bench() {
 // Helpers
 // ---------------------------------------------------------------------------
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn field_stats(field: &[f64]) -> (f64, f64, f64, f64) {
     let n = field.len() as f64;
     let mean = field.iter().sum::<f64>() / n;
@@ -315,11 +360,19 @@ fn field_stats(field: &[f64]) -> (f64, f64, f64, f64) {
     (mean, variance.sqrt(), min, max)
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn threshold_pct(field: &[f64], threshold: f64) -> f64 {
     let above = field.iter().filter(|&&v| v > threshold).count();
     above as f64 / field.len() as f64 * 100.0
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn smoothness(field: &[f64], width: usize) -> f64 {
     let mut total_diff = 0.0;
     let mut count = 0_usize;
@@ -330,7 +383,11 @@ fn smoothness(field: &[f64], width: usize) -> f64 {
             count += 1;
         }
     }
-    if count > 0 { total_diff / count as f64 } else { 0.0 }
+    if count > 0 {
+        total_diff / count as f64
+    } else {
+        0.0
+    }
 }
 
 struct TerrainGameMetrics {
@@ -338,9 +395,14 @@ struct TerrainGameMetrics {
     connected_regions: u32,
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn terrain_to_game_metrics(field: &[f64], width: usize) -> TerrainGameMetrics {
     let walkable: Vec<bool> = field.iter().map(|&v| v > 0.0).collect();
-    let walkable_pct = walkable.iter().filter(|&&w| w).count() as f64 / walkable.len() as f64 * 100.0;
+    let walkable_pct =
+        walkable.iter().filter(|&&w| w).count() as f64 / walkable.len() as f64 * 100.0;
 
     // Simple flood fill to count connected regions
     let mut visited = vec![false; field.len()];
@@ -350,17 +412,30 @@ fn terrain_to_game_metrics(field: &[f64], width: usize) -> TerrainGameMetrics {
             regions += 1;
             let mut stack = vec![i];
             while let Some(idx) = stack.pop() {
-                if visited[idx] { continue; }
+                if visited[idx] {
+                    continue;
+                }
                 visited[idx] = true;
                 let x = idx % width;
                 let y = idx / width;
-                if x > 0 && walkable[idx - 1] && !visited[idx - 1] { stack.push(idx - 1); }
-                if x + 1 < width && walkable[idx + 1] && !visited[idx + 1] { stack.push(idx + 1); }
-                if y > 0 && walkable[idx - width] && !visited[idx - width] { stack.push(idx - width); }
-                if y + 1 < width && walkable[idx + width] && !visited[idx + width] { stack.push(idx + width); }
+                if x > 0 && walkable[idx - 1] && !visited[idx - 1] {
+                    stack.push(idx - 1);
+                }
+                if x + 1 < width && walkable[idx + 1] && !visited[idx + 1] {
+                    stack.push(idx + 1);
+                }
+                if y > 0 && walkable[idx - width] && !visited[idx - width] {
+                    stack.push(idx - width);
+                }
+                if y + 1 < width && walkable[idx + width] && !visited[idx + width] {
+                    stack.push(idx + width);
+                }
             }
         }
     }
 
-    TerrainGameMetrics { walkable_pct, connected_regions: regions }
+    TerrainGameMetrics {
+        walkable_pct,
+        connected_regions: regions,
+    }
 }

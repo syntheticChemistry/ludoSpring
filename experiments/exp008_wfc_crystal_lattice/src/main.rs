@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! Exp008: WFC crystal lattice generation — validation binary.
 //!
 //! Uses Wave Function Collapse to generate chemically valid crystal lattice

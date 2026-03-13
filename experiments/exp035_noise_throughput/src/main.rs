@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! exp035 — BM-002: Noise field throughput benchmark.
 //!
-//! From OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md:
+//! From `OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md`:
 //!   "1024x1024 Perlin fBm generation time (CPU and GPU).
-//!    CPU within 2x of noise-rs; GPU within 1.5x of FastNoiseLite."
+//!    CPU within 2x of noise-rs; GPU within 1.5x of `FastNoiseLite`."
 //!
 //! Validates:
 //!   - ludoSpring Perlin 2D/3D vs fastnoise-lite at multiple field sizes
@@ -34,6 +35,14 @@ fn main() {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential check groups"
+)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn cmd_validate() {
     println!("=== exp035: BM-002 Noise Throughput Validation ===\n");
 
@@ -48,14 +57,16 @@ fn cmd_validate() {
         experiment,
         "perlin_2d_1024x1024_completes",
         field.len() as f64,
-        (1024 * 1024) as f64,
+        f64::from(1024 * 1024),
         0.0,
     ));
-    println!("  [INFO] Perlin 2D 1024x1024: {perlin_1024_us}us ({:.1}M samples/s)",
-        1_048_576.0 / perlin_1024_us as f64);
+    println!(
+        "  [INFO] Perlin 2D 1024x1024: {perlin_1024_us}us ({:.1}M samples/s)",
+        1_048_576.0 / perlin_1024_us as f64
+    );
 
     // 2. Perlin 2D values bounded [-1, 1]
-    let all_bounded = field.iter().all(|&v| v >= -1.0 && v <= 1.0);
+    let all_bounded = field.iter().all(|&v| (-1.0..=1.0).contains(&v));
     results.push(ValidationResult::check(
         experiment,
         "perlin_2d_values_bounded",
@@ -118,14 +129,18 @@ fn cmd_validate() {
     for y in 0..256 {
         for x in 0..256 {
             #[allow(clippy::cast_precision_loss)]
-            let v = noise::perlin_2d(x as f64 * 0.01, y as f64 * 0.01);
+            let v = noise::perlin_2d(f64::from(x) * 0.01, f64::from(y) * 0.01);
             our_sum += v;
         }
     }
     let our_us = t_ours.elapsed().as_micros();
     std::hint::black_box(our_sum);
 
-    let ratio = if fnl_us > 0 { our_us as f64 / fnl_us as f64 } else { 0.0 };
+    let ratio = if fnl_us > 0 {
+        our_us as f64 / fnl_us as f64
+    } else {
+        0.0
+    };
     // Spec target: CPU within 2x of noise-rs/fastnoise-lite
     results.push(ValidationResult::check(
         experiment,
@@ -144,10 +159,13 @@ fn cmd_validate() {
         experiment,
         "perlin_3d_64x64x64_completes",
         field_3d.len() as f64,
-        (64 * 64 * 64) as f64,
+        f64::from(64 * 64 * 64),
         0.0,
     ));
-    println!("  [INFO] Perlin 3D 64^3: {p3d_us}us ({} samples)", field_3d.len());
+    println!(
+        "  [INFO] Perlin 3D 64^3: {p3d_us}us ({} samples)",
+        field_3d.len()
+    );
 
     // 8. fBm 3D 32x32x32 with 4 octaves
     let t = Instant::now();
@@ -157,7 +175,7 @@ fn cmd_validate() {
         experiment,
         "fbm_3d_32x32x32_oct4_completes",
         fbm_3d.len() as f64,
-        (32 * 32 * 32) as f64,
+        f64::from(32 * 32 * 32),
         0.0,
     ));
     println!("  [INFO] fBm 3D 32^3 oct4: {fbm3d_us}us");
@@ -199,6 +217,10 @@ fn cmd_validate() {
     }
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn cmd_bench() {
     println!("=== exp035: Noise Throughput Benchmark ===\n");
 

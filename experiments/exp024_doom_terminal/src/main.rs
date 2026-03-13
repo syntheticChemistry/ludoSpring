@@ -45,6 +45,7 @@ const MAP_H: usize = 48;
 const MAX_DEPTH: f64 = 20.0;
 const TICK_HZ: u64 = 30;
 
+#[expect(clippy::too_many_lines, reason = "game loop — setup, run, teardown")]
 fn main() -> io::Result<()> {
     let seed: u64 = std::env::args()
         .nth(1)
@@ -140,7 +141,7 @@ fn main() -> io::Result<()> {
                 &sid,
                 EventType::ExplorationDiscover,
                 &ExplorationPayload {
-                    discovery_id: format!("cell_{}_{}",cell.0, cell.1),
+                    discovery_id: format!("cell_{}_{}", cell.0, cell.1),
                     category: "area".into(),
                     x: player.x,
                     y: player.y,
