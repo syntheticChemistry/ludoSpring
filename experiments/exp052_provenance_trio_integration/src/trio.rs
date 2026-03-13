@@ -64,7 +64,7 @@ impl GameSessionDag {
         }
 
         let vertex = builder.build();
-        let vertex_id = vertex.compute_id();
+        let vertex_id = vertex.compute_id().expect("vertex id computation");
 
         self.session.update_frontier(vertex_id, &self.frontier);
 

@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 13, 2026
-**Total:** 54 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz), 795 checks, 0 failures
+**Total:** 61 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting), 1121 checks, 0 failures
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -187,6 +187,36 @@ impossible kills, unattributed container loot, and aimbot headshot anomalies.
 - Streaming protocol: `append` (timeline) and `set_value` (gauge) operations round-trip through JSON
 - End-to-end: simulation → snapshot → dashboard → JSON → deserialize preserves all bindings
 
+### Track 17: Lysogeny — Open Recreation of Proprietary Game Mechanics
+
+| # | Package | Checks | Status | Target | Open Math |
+|---|---------|--------|--------|--------|-----------|
+| 055 | `ludospring-exp055` | 48 | PASS | Usurper (Nemesis System) | Replicator dynamics + spatial PD + Lotka-Volterra with memory |
+| 056 | `ludospring-exp056` | 47 | PASS | Integrase (Capture/Bonding) | Wright-Fisher fixation + QS threshold + Markov chains |
+| 057 | `ludospring-exp057` | 35 | PASS | Symbiont (Faction/Reputation) | Multi-species Lotka-Volterra + frequency-dependent fitness |
+| 058 | `ludospring-exp058` | 40 | PASS | Conjugant (Roguelite Meta-Progression) | HGT + Wright-Fisher + Price equation + Red Queen |
+| 059 | `ludospring-exp059` | 39 | PASS | Quorum (Emergent Narrative) | Agent-based + Markov + DAG causality + QS threshold |
+| 060 | `ludospring-exp060` | 28 | PASS | Pathogen (Gacha Anti-Pattern) | Operant conditioning + prospect theory + parasitism |
+
+**Strategy**: Identify proprietary game mechanics, trace the underlying math to published open research predating patents/trade secrets, recreate from first principles under AGPL-3.0, cross-validate in biology/ecology.
+
+### Track 18: Fermenting — Memory-Bound Digital Objects
+
+| # | Package | Checks | Status | Description |
+|---|---------|--------|--------|-------------|
+| 061 | `ludospring-exp061` | 89 | PASS | Full fermenting lifecycle: mint, trade, loan, return, consume, achievements, cosmetic schema, atomic swap, ownership enforcement, trio integration, composable IPC wire format |
+
+**Concept**: A "ferment" is a digital object whose value accumulates through use — NFT without crypto. loamSpine certificates provide ownership, rhizoCrypt DAGs track history, sweetGrass braids provide attribution. The fermenting system proves the full lifecycle works both as direct library integration and as composable IPC over JSON-RPC 2.0.
+
+**Key results:**
+- Every equation traces to published research predating proprietary implementations (Fisher 1930, Wright 1931, Gause 1934, Skinner 1938, Lotka 1925, Maynard Smith 1982, Nowak & May 1992)
+- Cross-domain mapping tables prove game mechanics are general population dynamics math
+- Usurper: orc captain ↔ antibiotic-resistant bacterial strain, 1:1 isomorphism
+- Integrase: capture probability ↔ phage lysogeny MOI, the enzyme name IS the proof
+- Pathogen: defensive anti-pattern study that MEASURES and EXPOSES gacha exploitation
+
+See `specs/LYSOGENY_CATALOG.md` for full citation tables.
+
 ### metalForge Dispatch
 
 | Binary | Checks | Status | Modules Validated |
@@ -270,6 +300,17 @@ cargo run --release -p ludospring-exp052 -- validate      # Trio integration (37
 # Run Extraction Shooter fraud detection (Track 15)
 cargo run --release -p ludospring-exp053 -- validate      # Extraction shooter provenance (65 checks)
 cargo run --release -p ludospring-exp054 -- validate      # Composable raid visualization (40 checks)
+
+# Run Lysogeny — Open recreation of proprietary game mechanics (Track 17)
+cargo run --release -p ludospring-exp055 -- validate      # Usurper: Nemesis system (48 checks)
+cargo run --release -p ludospring-exp056 -- validate      # Integrase: capture mechanics (47 checks)
+cargo run --release -p ludospring-exp057 -- validate      # Symbiont: faction reputation (35 checks)
+cargo run --release -p ludospring-exp058 -- validate      # Conjugant: roguelite meta-progression (40 checks)
+cargo run --release -p ludospring-exp059 -- validate      # Quorum: emergent narrative (39 checks)
+cargo run --release -p ludospring-exp060 -- validate      # Pathogen: gacha anti-pattern (28 checks)
+
+# Run Fermenting — Memory-bound digital objects (Track 18)
+cargo run --release -p ludospring-exp061 -- validate      # Fermenting: full lifecycle (89 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

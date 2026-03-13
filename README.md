@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 13, 2026
-**Version:** V10 (54 experiments, 795 validation checks, 138 tests)
+**Version:** V12 (61 experiments, 1121 validation checks, 138 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.3 (standalone, 150+ primitives)
@@ -221,6 +221,31 @@ Key results:
 - **petalTongue `DataBinding`**: zone heatmap, health gauges, action timelines, fraud bar, inventory — all round-trip through JSON
 - **End-to-end**: simulation → snapshot → dashboard → JSON → deserialize preserves all bindings
 
+## Lysogeny — Open Recreation of Proprietary Game Mechanics (Track 17)
+
+Recreates proprietary game mechanics from published scientific math, cross-validates
+across biology and ecology, releases under AGPL-3.0. Every equation traces to a
+published paper predating the proprietary implementation.
+
+```bash
+cargo run --release -p ludospring-exp055 -- validate  # 48/48 Usurper (Nemesis system)
+cargo run --release -p ludospring-exp056 -- validate  # 47/47 Integrase (capture mechanics)
+cargo run --release -p ludospring-exp057 -- validate  # 35/35 Symbiont (faction reputation)
+cargo run --release -p ludospring-exp058 -- validate  # 40/40 Conjugant (roguelite meta-progression)
+cargo run --release -p ludospring-exp059 -- validate  # 39/39 Quorum (emergent narrative)
+cargo run --release -p ludospring-exp060 -- validate  # 28/28 Pathogen (gacha anti-pattern)
+```
+
+Key results:
+- **Usurper**: persistent adaptive NPC hierarchy from replicator dynamics + spatial PD + Lotka-Volterra with memory. Maps 1:1 to antibiotic resistance populations.
+- **Integrase**: capture probability from Wright-Fisher fixation, QS bond threshold, Markov evolution chains. The enzyme that integrates phage DNA into a host IS the cross-domain proof.
+- **Symbiont**: multi-faction reputation from multi-species Lotka-Volterra competition coefficients. Factions = bacterial guilds, reputation = fitness contribution.
+- **Conjugant**: roguelite meta-progression from horizontal gene transfer + Price equation. Dead runs release genes; survivors conjugate.
+- **Quorum**: emergent procedural narrative from agent-based modeling + DAG causality. Quorum sensing threshold triggers collective phase transition = story event.
+- **Pathogen**: defensive anti-pattern study quantifying gacha exploitation using operant conditioning + prospect theory. Measures and exposes, does not implement.
+
+See `specs/LYSOGENY_CATALOG.md` for full citation tables and cross-domain mapping.
+
 ## Specs Paper Validation + Performance Benchmarks
 
 Validates claims from the specs/ paper queue against live measurements:
@@ -317,11 +342,11 @@ ludoSpring/
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 54 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz)
+├── experiments/           # 61 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Hardware dispatch validation (7 checks)
-├── specs/                 # 5 domain specifications
+├── specs/                 # 6 domain specifications
 ├── whitePaper/            # Local paper staging
 └── wateringHole/          # Handoff documentation
 ```
@@ -367,7 +392,7 @@ cargo doc --workspace --no-deps
 | `cargo clippy --pedantic` | 0 warnings (new code) |
 | `cargo test` | 138 tests, 0 failures |
 | `cargo doc --no-deps` | Clean |
-| 55 validation binaries | 795 checks, 0 failures |
+| 62 validation binaries | 1121 checks, 0 failures |
 | 7 Python baselines | All pass |
 | `#![forbid(unsafe_code)]` | All crate roots |
 | Files > 1000 LOC | None |

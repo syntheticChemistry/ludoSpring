@@ -67,6 +67,13 @@ members = [
     "experiments/exp052_provenance_trio_integration",
     "experiments/exp053_extraction_shooter_provenance",
     "experiments/exp054_composable_raid_visualization",
+    "experiments/exp055_usurper",
+    "experiments/exp056_integrase",
+    "experiments/exp057_symbiont",
+    "experiments/exp058_conjugant",
+    "experiments/exp059_quorum",
+    "experiments/exp060_pathogen",
+    "experiments/exp061_fermenting",
 ]
 
 [workspace.package]

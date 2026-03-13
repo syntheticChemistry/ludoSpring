@@ -100,7 +100,7 @@ fn validate_rhizocrypt_session_dag() -> Vec<ValidationResult> {
         let ids: Vec<_> = dag
             .vertices
             .iter()
-            .map(rhizo_crypt_core::Vertex::compute_id)
+            .filter_map(|v| v.compute_id().ok())
             .collect();
         let unique: std::collections::HashSet<_> = ids.iter().collect();
         unique.len() == ids.len()
@@ -273,7 +273,7 @@ fn validate_sweetgrass_attribution() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "sweet_braid_has_data_hash",
-        bool_f64(!braid.braid.data_hash.is_empty()),
+        bool_f64(!braid.braid.data_hash.as_str().is_empty()),
         1.0,
         0.0,
     ));
@@ -438,7 +438,7 @@ fn validate_cross_primal_roundtrip() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "roundtrip_braid_links_to_vertex",
-        bool_f64(action_braid.braid.data_hash.contains(&cast_hex[..16])),
+        bool_f64(action_braid.braid.data_hash.as_str().contains(&cast_hex[..16])),
         1.0,
         0.0,
     ));

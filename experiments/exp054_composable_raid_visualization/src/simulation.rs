@@ -128,7 +128,7 @@ impl TwoPlayerRaid {
         }
 
         let vertex = builder.build();
-        let vid = vertex.compute_id();
+        let vid = vertex.compute_id().expect("vertex id computation");
         self.rhizo_session
             .update_frontier(vid, &self.rhizo_frontier);
         self.rhizo_frontier = vec![vid];
