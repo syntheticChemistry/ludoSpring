@@ -1429,7 +1429,7 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 
 [[package]]
 name = "loam-spine-core"
-version = "0.8.0"
+version = "0.8.2"
 dependencies = [
  "bincode",
  "blake3",
@@ -1491,6 +1491,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
  "wgpu",
 ]
 
@@ -3001,7 +3002,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "sweet-grass-core"
-version = "0.7.4"
+version = "0.7.5"
 dependencies = [
  "base64",
  "chrono",

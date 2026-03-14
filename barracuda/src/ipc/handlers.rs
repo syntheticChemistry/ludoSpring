@@ -7,16 +7,19 @@
 
 use super::envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 use super::params::{
-    AccessibilityParams, AnalyzeUiParams, DifficultyAdjustmentParams, EngagementParams,
-    EvaluateFlowParams, FittsCostParams, GenerateNoiseParams, WfcStepParams,
+    AccessibilityParams, AnalyzeUiParams, BeginSessionParams, CompleteSessionParams,
+    DifficultyAdjustmentParams, EngagementParams, EvaluateFlowParams, FittsCostParams,
+    GenerateNoiseParams, RecordActionParams, WfcStepParams,
 };
 use super::results::{
     AccessibilityResult, DifficultyAdjustmentResult, EngagementResult, FittsCostResult, FlowResult,
     NoiseResult, UiAnalysisResult, WfcStepResult,
 };
+use super::provenance;
 use super::{
-    METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT,
-    METHOD_EVALUATE_FLOW, METHOD_FITTS_COST, METHOD_GENERATE_NOISE, METHOD_WFC_STEP,
+    METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
+    METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
+    METHOD_GENERATE_NOISE, METHOD_RECORD_ACTION, METHOD_WFC_STEP,
 };
 
 type HandlerResult = Result<serde_json::Value, JsonRpcError>;
@@ -37,6 +40,9 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         METHOD_ACCESSIBILITY => handle_accessibility(req),
         METHOD_WFC_STEP => handle_wfc_step(req),
         METHOD_DIFFICULTY_ADJUSTMENT => handle_difficulty_adjustment(req),
+        METHOD_BEGIN_SESSION => handle_begin_session(req),
+        METHOD_RECORD_ACTION => handle_record_action(req),
+        METHOD_COMPLETE_SESSION => handle_complete_session(req),
         _ => {
             return serialize_error(&JsonRpcError::method_not_found(req.id.clone(), &req.method));
         }
@@ -290,6 +296,41 @@ fn handle_difficulty_adjustment(req: &JsonRpcRequest) -> HandlerResult {
             trend: window.trend(),
         },
     )
+}
+
+fn handle_begin_session(req: &JsonRpcRequest) -> HandlerResult {
+    let p: BeginSessionParams = parse_params(req)?;
+    let result = provenance::begin_game_session(&p.session_name)
+        .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "session_id": result.id,
+            "provenance": if result.available { "available" } else { "unavailable" },
+            "data": result.data,
+        }),
+    )
+}
+
+fn handle_record_action(req: &JsonRpcRequest) -> HandlerResult {
+    let p: RecordActionParams = parse_params(req)?;
+    let result = provenance::record_game_action(&p.session_id, &p.action)
+        .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "vertex_id": result.id,
+            "provenance": if result.available { "available" } else { "unavailable" },
+            "data": result.data,
+        }),
+    )
+}
+
+fn handle_complete_session(req: &JsonRpcRequest) -> HandlerResult {
+    let p: CompleteSessionParams = parse_params(req)?;
+    let result = provenance::complete_game_session(&p.session_id)
+        .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
+    to_json(&req.id, result)
 }
 
 #[cfg(test)]

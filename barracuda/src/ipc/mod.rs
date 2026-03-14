@@ -28,6 +28,7 @@ mod results;
 mod server;
 
 pub mod discovery;
+pub mod provenance;
 
 pub use discovery::{PrimalEndpoint, PrimalRegistry, call_primal, discover_primals};
 pub use envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody};
@@ -52,3 +53,9 @@ pub const METHOD_WFC_STEP: &str = "game.wfc_step";
 pub const METHOD_ACCESSIBILITY: &str = "game.accessibility";
 /// Dynamic difficulty adjustment recommendation.
 pub const METHOD_DIFFICULTY_ADJUSTMENT: &str = "game.difficulty_adjustment";
+/// Begin game session (provenance trio).
+pub const METHOD_BEGIN_SESSION: &str = "game.begin_session";
+/// Record game action (provenance trio).
+pub const METHOD_RECORD_ACTION: &str = "game.record_action";
+/// Complete game session (provenance trio).
+pub const METHOD_COMPLETE_SESSION: &str = "game.complete_session";

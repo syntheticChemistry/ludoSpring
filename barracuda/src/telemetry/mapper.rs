@@ -23,6 +23,8 @@ use super::events::{
 /// Accumulated state from an event stream, ready for analysis.
 #[derive(Debug, Clone)]
 pub struct SessionAccumulator {
+    /// Session ID from the first telemetry event.
+    pub session_id: String,
     /// Game metadata from `session_start`.
     pub game_name: String,
     /// Genre hint.
@@ -82,6 +84,7 @@ impl SessionAccumulator {
     #[must_use]
     pub fn new() -> Self {
         Self {
+            session_id: String::new(),
             game_name: String::new(),
             genre: String::new(),
             duration_s: 0.0,
@@ -114,6 +117,7 @@ impl SessionAccumulator {
     pub fn ingest(&mut self, event: &TelemetryEvent) {
         if self.first_timestamp_ms.is_none() {
             self.first_timestamp_ms = Some(event.timestamp_ms);
+            self.session_id.clone_from(&event.session_id);
         }
         self.last_timestamp_ms = Some(event.timestamp_ms);
 
@@ -351,6 +355,19 @@ impl SessionAccumulator {
     #[must_use]
     pub const fn performance_window(&self) -> &PerformanceWindow {
         &self.performance
+    }
+
+    /// Complete the provenance trio workflow for this session.
+    ///
+    /// Triggers dehydration (rhizoCrypt), commit (LoamSpine), and attribution
+    /// (sweetGrass) via biomeOS capability routing. Returns `None` if the
+    /// session hasn't ended or the IPC feature is disabled.
+    #[cfg(feature = "ipc")]
+    pub fn complete_provenance(&self) -> Option<serde_json::Value> {
+        if !self.ended || self.session_id.is_empty() {
+            return None;
+        }
+        crate::ipc::provenance::complete_game_session(&self.session_id).ok()
     }
 }
 

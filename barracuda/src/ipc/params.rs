@@ -130,3 +130,26 @@ pub struct DifficultyAdjustmentParams {
     /// Target success rate (default: `DDA_TARGET_SUCCESS_RATE` from tolerances).
     pub target_success_rate: Option<f64>,
 }
+
+/// Parameters for `game.begin_session` (provenance trio).
+#[derive(Debug, Deserialize)]
+pub struct BeginSessionParams {
+    /// Human-readable session name.
+    pub session_name: String,
+}
+
+/// Parameters for `game.record_action` (provenance trio).
+#[derive(Debug, Deserialize)]
+pub struct RecordActionParams {
+    /// Session ID from `game.begin_session`.
+    pub session_id: String,
+    /// Game action as JSON (event type, metadata, etc.).
+    pub action: serde_json::Value,
+}
+
+/// Parameters for `game.complete_session` (provenance trio).
+#[derive(Debug, Deserialize)]
+pub struct CompleteSessionParams {
+    /// Session ID to dehydrate, commit, and attribute.
+    pub session_id: String,
+}
