@@ -59,3 +59,5 @@ pub const METHOD_BEGIN_SESSION: &str = "game.begin_session";
 pub const METHOD_RECORD_ACTION: &str = "game.record_action";
 /// Complete game session (provenance trio).
 pub const METHOD_COMPLETE_SESSION: &str = "game.complete_session";
+/// Poll telemetry events (continuous coordination).
+pub const METHOD_POLL_TELEMETRY: &str = "game.poll_telemetry";

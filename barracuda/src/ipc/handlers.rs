@@ -19,7 +19,7 @@ use super::provenance;
 use super::{
     METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
     METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
-    METHOD_GENERATE_NOISE, METHOD_RECORD_ACTION, METHOD_WFC_STEP,
+    METHOD_GENERATE_NOISE, METHOD_POLL_TELEMETRY, METHOD_RECORD_ACTION, METHOD_WFC_STEP,
 };
 
 type HandlerResult = Result<serde_json::Value, JsonRpcError>;
@@ -43,6 +43,7 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         METHOD_BEGIN_SESSION => handle_begin_session(req),
         METHOD_RECORD_ACTION => handle_record_action(req),
         METHOD_COMPLETE_SESSION => handle_complete_session(req),
+        METHOD_POLL_TELEMETRY => handle_poll_telemetry(req),
         _ => {
             return serialize_error(&JsonRpcError::method_not_found(req.id.clone(), &req.method));
         }
@@ -331,6 +332,19 @@ fn handle_complete_session(req: &JsonRpcRequest) -> HandlerResult {
     let result = provenance::complete_game_session(&p.session_id)
         .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
     to_json(&req.id, result)
+}
+
+fn handle_poll_telemetry(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "events": [],
+            "tick_ns": std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos()),
+            "status": "ready",
+        }),
+    )
 }
 
 #[cfg(test)]
