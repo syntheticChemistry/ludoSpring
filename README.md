@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 14, 2026
-**Version:** V14 (66 experiments, 1349 validation checks, 212 tests)
+**Version:** V15 (66 experiments, 1371 validation checks, 218 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives)
@@ -97,10 +97,10 @@ cargo run --bin exp023_open_systems_benchmark
 Validates the CPU → GPU evolution pipeline and NUCLEUS atomic coordination:
 
 ```bash
-cargo run --bin exp030_cpu_gpu_parity               # 16/16 CPU-vs-GPU parity checks
+cargo run --bin exp030_cpu_gpu_parity               # 24/24 CPU-vs-GPU parity (Tier A WGSL shaders)
 cargo run --bin exp031_dispatch_routing              # 10/10 real hardware discovery
-cargo run --bin exp032_mixed_hardware                # 12/12 PCIe + mixed pipelines
-cargo run --bin exp033_nucleus_pipeline              # 11/11 Tower/Node/Nest atomics
+cargo run --bin exp032_mixed_hardware                # 18/18 PCIe + mixed pipelines + NPU→GPU direct
+cargo run --bin exp033_nucleus_pipeline              # 19/19 NUCLEUS atomics + toadStool dispatch + biomeOS graph
 ```
 
 ## External Control Groups
@@ -366,7 +366,7 @@ ludoSpring/
 ├── experiments/           # 66 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting + 5 Cross-Spring Provenance)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
-├── metalForge/forge/      # Hardware dispatch validation (7 checks)
+├── metalForge/forge/      # Capability-based routing (9 tests, GPU>NPU>CPU)
 ├── specs/                 # 6 domain specifications
 ├── whitePaper/            # Local paper staging
 └── wateringHole/          # Handoff documentation
@@ -387,7 +387,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (212 total: unit + determinism + parity + validation + forge + exp)
+# All tests (218 total: unit + determinism + parity + validation + forge + exp)
 cargo test --features ipc --lib --tests
 
 # Run a specific experiment
@@ -411,9 +411,9 @@ cargo doc --workspace --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (workspace-wide) |
-| `cargo test --workspace` | 212 tests, 0 failures |
+| `cargo test --workspace` | 218 tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
-| 67 validation binaries | 1349 checks, 0 failures |
+| 67 validation binaries | 1371 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
 | `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |

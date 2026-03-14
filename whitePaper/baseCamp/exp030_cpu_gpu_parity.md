@@ -18,13 +18,13 @@ Paper → Python → barraCuda CPU → **barraCuda GPU** → toadStool → coral
 
 | Component | Purpose |
 |-----------|---------|
-| 8 inline WGSL shaders | Minimal GPU implementations of CPU primitives |
+| 11 inline WGSL shaders | GPU implementations of CPU primitives (V15: +Perlin, engagement, raycaster) |
 | GPU context helper | wgpu 28 device/queue/buffer management |
 | CPU-vs-GPU parity checks | Element-by-element comparison within tolerances |
 | Adapter probe | Enumerate all GPU/CPU adapters on the system |
 | Benchmark suite | CPU-vs-GPU timing across data sizes (64 to 65536) |
 
-### Parity Checks (16 total)
+### Parity Checks (24 total)
 
 | # | Check | CPU path | GPU path | Tolerance |
 |---|-------|----------|----------|-----------|
@@ -44,6 +44,14 @@ Paper → Python → barraCuda CPU → **barraCuda GPU** → toadStool → coral
 | 14 | lcg_gpu_exact | u32 LCG step | `lcg.wgsl` | exact |
 | 15 | abs_gpu_exact | f32 abs | `abs.wgsl` | exact |
 | 16 | reduce_sum_gpu_parity | f32 sum | `reduce_sum.wgsl` (workgroup) | 1.0 |
+| 17 | perlin_gpu_parity | f64 Perlin CPU → f32 GPU | `perlin_2d.wgsl` | 1e-3 |
+| 18 | perlin_gpu_range_bounded | GPU Perlin output range | `perlin_2d.wgsl` | exact |
+| 19 | perlin_gpu_deterministic | GPU determinism (rerun) | `perlin_2d.wgsl` | exact |
+| 20 | engagement_gpu_parity | Weighted dot product | `engagement_batch.wgsl` | 1e-4 |
+| 21 | fbm_gpu_parity | Multi-octave fBm via Perlin | `perlin_2d.wgsl` (multi-pass) | 0.01 |
+| 22 | raycaster_gpu_parity | DDA distance | `dda_raycast.wgsl` | 0.5 |
+| 23 | raycaster_gpu_hit_match | Wall hit/miss agreement | `dda_raycast.wgsl` | exact |
+| 24 | batch_speedup_nonnegative | GPU ≤ CPU + 10ms | `sigmoid.wgsl` (65536) | 10ms |
 
 ### Key Insight
 
@@ -54,7 +62,7 @@ This validates the portability thesis: pure math is substrate-independent.
 ### Reproducibility
 
 ```bash
-cargo run --bin exp030_cpu_gpu_parity               # validate (16 checks)
+cargo run --bin exp030_cpu_gpu_parity               # validate (24 checks)
 cargo run --bin exp030_cpu_gpu_parity -- probe       # enumerate adapters
 cargo run --bin exp030_cpu_gpu_parity -- bench       # CPU-vs-GPU timing
 ```

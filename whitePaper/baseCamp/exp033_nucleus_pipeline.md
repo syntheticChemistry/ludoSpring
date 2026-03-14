@@ -34,7 +34,7 @@ NUCLEUS = BearDog + Songbird + ToadStool + NestGate + Squirrel
 3. **Physics tick** (Node dispatches to GPU)
 4. **Provenance seal** (Nest records all stages)
 
-### Validation Checks (11 total)
+### Validation Checks (19 total)
 
 | # | Check | What it validates |
 |---|-------|-------------------|
@@ -49,6 +49,14 @@ NUCLEUS = BearDog + Songbird + ToadStool + NestGate + Squirrel
 | 9 | topology_matches_deploy_graph | Phase order matches gaming_niche_deploy.toml |
 | 10 | cpu_only_pipeline_works | Full pipeline works without GPU |
 | 11 | dispatch_log_complete | Dispatch log captures all operations |
+| 12 | node_routes_via_capability | NodeV2 routes noise to GPU via capability routing |
+| 13 | node_npu_routes_quantized | Quantized inference routes to NPU |
+| 14 | toadstool_dispatch_request_roundtrip | JSON-RPC 2.0 compute.submit serialize/deserialize |
+| 15 | toadstool_dispatch_response_roundtrip | Response wire format valid |
+| 16 | deployment_graph_5node_topology | 5-node graph: Tower→Node→Nest→Compute→Viz |
+| 17 | deployment_graph_60hz_budget | All stages fit in 16.67ms (60Hz) |
+| 18 | transfer_cost_in_pipeline | Dispatch log records routing reasoning |
+| 19 | nucleus_graceful_degradation | CPU-only NodeV2 still works |
 
 ### Connection to biomeOS
 
@@ -61,6 +69,6 @@ The simulated topology matches the real `gaming_niche_deploy.toml`:
 ### Reproducibility
 
 ```bash
-cargo run --bin exp033_nucleus_pipeline              # validate (11 checks)
+cargo run --bin exp033_nucleus_pipeline              # validate (19 checks)
 cargo run --bin exp033_nucleus_pipeline -- demo       # pipeline demonstration
 ```

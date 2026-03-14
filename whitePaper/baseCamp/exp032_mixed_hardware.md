@@ -30,7 +30,7 @@ metalForge/forge for absorption into barraCuda and toadStool.
 | NvLink | 300.00 | 3.3 |
 | Shared memory | 1000.00 | 1.0 |
 
-### Validation Checks (12 total)
+### Validation Checks (18 total)
 
 | # | Check | What it validates |
 |---|-------|-------------------|
@@ -42,10 +42,16 @@ metalForge/forge for absorption into barraCuda and toadStool.
 | 6 | total_exceeds_compute | Pipeline total > pure compute time |
 | 7 | gpu_preferred_large_parallel | GPU scores higher for large parallel work |
 | 8 | transfer_cost_dominance | Massive transfer + zero parallelism → CPU wins |
-| 9 | npu_mock_scores_positive | Simulated NPU substrate scores correctly |
+| 9 | npu_substrate_scores_positive | NPU substrate scores correctly |
 | 10 | pcie_detection_no_crash | sysfs probing completes gracefully |
 | 11 | cpu_only_no_transfer | CPU-only pipeline has zero transfer cost |
 | 12 | bandwidth_tier_monotonic | Tier ordering is consistent |
+| 13 | npu_to_gpu_direct_faster | Direct NPU→GPU PCIe P2P faster than via CPU |
+| 14 | direct_pcie_half_roundtrip | Direct transfer ≈ half of CPU-mediated roundtrip |
+| 15 | mixed_4stage_pipeline_completes | CPU→NPU→GPU→CPU with mixed TransferPaths |
+| 16 | npu_gpu_bypass_saves_time | Direct NPU→GPU pipeline faster than CPU roundtrip |
+| 17 | transfer_path_cost_ordering | Local < Direct < ViaCpu |
+| 18 | substrate_profile_npu_v2_scored | NPU scored with TransferPath-aware model |
 
 ### Key Insight: PCIe Transfer Costs Matter
 
@@ -56,7 +62,7 @@ is critical — keeping data on GPU eliminates the return trip.
 ### Reproducibility
 
 ```bash
-cargo run --bin exp032_mixed_hardware               # validate (12 checks)
+cargo run --bin exp032_mixed_hardware               # validate (18 checks)
 cargo run --bin exp032_mixed_hardware -- pcie        # probe PCIe topology
 cargo run --bin exp032_mixed_hardware -- demo        # mixed pipeline demo
 ```

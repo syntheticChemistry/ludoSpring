@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 14, 2026
-**Total:** 66 experiments, 1349 checks, 0 failures, 212 tests
+**Total:** 66 experiments, 1371 checks, 0 failures, 218 tests
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -76,10 +76,10 @@
 
 | # | Binary | Checks | Status | Reference | Modules Validated |
 |---|--------|--------|--------|-----------|-------------------|
-| 030 | `exp030_cpu_gpu_parity` | 16 | PASS | barraCuda CPU, WGSL shaders, wgpu 28 | CPU-vs-GPU parity (sigmoid, relu, dot, softmax, LCG, reduce) |
+| 030 | `exp030_cpu_gpu_parity` | 24 | PASS | barraCuda CPU, WGSL shaders, wgpu 28 | CPU-vs-GPU parity (sigmoid, relu, dot, softmax, LCG, reduce, Perlin, fBm, engagement, raycaster) |
 | 031 | `exp031_dispatch_routing` | 10 | PASS | toadStool substrate, wgpu adapter API | Hardware discovery, workload routing |
-| 032 | `exp032_mixed_hardware` | 12 | PASS | PCIe specs, barraCuda unified_hardware | Transfer cost, mixed pipelines, NPU mock, scoring |
-| 033 | `exp033_nucleus_pipeline` | 11 | PASS | biomeOS nucleus_complete.toml | Tower/Node/Nest atomic coordination |
+| 032 | `exp032_mixed_hardware` | 18 | PASS | PCIe specs, barraCuda unified_hardware | Transfer cost, mixed pipelines, NPU→GPU direct PCIe, 4-stage mixed pipeline |
+| 033 | `exp033_nucleus_pipeline` | 19 | PASS | biomeOS nucleus_complete.toml | Tower/Node/Nest atomics + capability routing + toadStool dispatch + biomeOS graph |
 
 ### Track 9: Specs Paper Validation + Performance Benchmarks
 
@@ -248,11 +248,13 @@ See `specs/LYSOGENY_CATALOG.md` for full citation tables.
 
 **Key insight**: The universality claim from Paper 18 (anti-cheat = chain-of-custody) is not just conceptual — it is the same code path. exp065 proves it with identical fraud detections across all 3 domain vocabularies.
 
-### metalForge Dispatch
+### metalForge Dispatch (Capability-Based Routing)
 
 | Binary | Checks | Status | Modules Validated |
 |--------|--------|--------|-------------------|
 | `validate_dispatch_routing` | 7 | PASS | GPU/CPU workload routing for noise, WFC, raycaster |
+
+metalForge forge library: 9 unit tests — `SubstrateKind` (Cpu/Gpu/Npu), `Capability` enum (F64/F32/Shader/SIMD/PCIe/QuantizedInference), `route()` with capability filtering, `fallback_chain()` (GPU>NPU>CPU).
 
 ### petalTongue Dashboards
 
@@ -288,10 +290,10 @@ cargo run --bin exp028_fishfolk_adapter -- validate  # Fish Folk adapter (7 chec
 cargo run --bin exp029_abstreet_adapter -- validate  # A/B Street adapter (8 checks)
 
 # Run compute dispatch experiments
-cargo run --bin exp030_cpu_gpu_parity                 # CPU-vs-GPU parity (16 checks)
+cargo run --bin exp030_cpu_gpu_parity                 # CPU-vs-GPU parity (24 checks)
 cargo run --bin exp031_dispatch_routing               # dispatch routing (10 checks)
-cargo run --bin exp032_mixed_hardware                 # mixed hardware (12 checks)
-cargo run --bin exp033_nucleus_pipeline               # NUCLEUS pipeline (11 checks)
+cargo run --bin exp032_mixed_hardware                 # mixed hardware (18 checks)
+cargo run --bin exp033_nucleus_pipeline               # NUCLEUS pipeline (19 checks)
 
 # Generate + analyze telemetry pipeline
 cargo run --bin exp026_game_telemetry -- generate session.ndjson

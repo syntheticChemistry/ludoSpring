@@ -24,13 +24,13 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V14** | `LUDOSPRING_V14_DEEP_AUDIT_BARRACUDA_TOADSTOOL_HANDOFF_MAR14_2026.md` | Mar 14 | Deep audit: +74 tests (212 total), all modules ≥ 90% coverage, 0 clippy/fmt/doc warnings, centralized tolerances, zero-copy telemetry, exp061 refactored, provenance embedded, dependency audit, GPU promotion + absorption action items |
-| V13 | `archive/LUDOSPRING_V13_BARRACUDA_TOADSTOOL_CROSS_SPRING_PROVENANCE_HANDOFF_MAR13_2026.md` | Mar 13 | Cross-spring provenance: exp062-066, BearDog signing, fraud unification |
+| **V15** | `LUDOSPRING_V15_GPU_DISPATCH_BUILDOUT_HANDOFF_MAR14_2026.md` | Mar 14 | GPU dispatch buildout: Tier A WGSL shaders (Perlin, raycaster, engagement), metalForge capability routing (SubstrateKind/Capability/route), NPU→GPU direct PCIe, toadStool JSON-RPC dispatch client, biomeOS DeploymentGraph, +22 checks (1371 total), +6 tests (218 total) |
+| V14 | `archive/LUDOSPRING_V14_DEEP_AUDIT_BARRACUDA_TOADSTOOL_HANDOFF_MAR14_2026.md` | Mar 14 | Deep audit: +74 tests (212 total), all modules ≥ 90% coverage |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 66 experiments, 1349 checks, 212 tests)
+ludoSpring (game science, 66 experiments, 1371 checks, 218 tests)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline)
@@ -81,6 +81,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V14 | `handoffs/archive/LUDOSPRING_V14_DEEP_AUDIT_BARRACUDA_TOADSTOOL_HANDOFF_MAR14_2026.md` | V15 GPU Dispatch |
 | V13 | `handoffs/archive/LUDOSPRING_V13_BARRACUDA_TOADSTOOL_CROSS_SPRING_PROVENANCE_HANDOFF_MAR13_2026.md` | V14 Deep Audit |
 
 Older handoffs (V1–V3) archived in shared `ecoPrimals/wateringHole/handoffs/archive/`.
