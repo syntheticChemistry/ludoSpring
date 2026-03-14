@@ -416,4 +416,136 @@ mod tests {
         assert_eq!(ae.actions, 3);
         assert_eq!(ae.reactions, 1);
     }
+
+    #[test]
+    fn action_economy_fate() {
+        let ae = ActionEconomy::FATE;
+        assert_eq!(ae.actions, 1);
+        assert_eq!(ae.reactions, 0);
+        assert_eq!(ae.free_actions, 255);
+    }
+
+    #[test]
+    fn action_economy_cairn() {
+        let ae = ActionEconomy::CAIRN;
+        assert_eq!(ae.actions, 1);
+        assert_eq!(ae.reactions, 0);
+        assert_eq!(ae.free_actions, 0);
+    }
+
+    #[test]
+    fn ability_score_direct_modifier_equals_value() {
+        let courage = AbilityScore::direct("Courage", 3);
+        assert_eq!(courage.modifier, 3);
+        assert_eq!(courage.value, 3);
+    }
+
+    #[test]
+    fn degree_of_success_as_i32() {
+        assert_eq!(DegreeOfSuccess::CriticalFailure.as_i32(), -2);
+        assert_eq!(DegreeOfSuccess::Failure.as_i32(), -1);
+        assert_eq!(DegreeOfSuccess::PartialSuccess.as_i32(), 0);
+        assert_eq!(DegreeOfSuccess::Success.as_i32(), 1);
+        assert_eq!(DegreeOfSuccess::CriticalSuccess.as_i32(), 2);
+    }
+
+    #[test]
+    fn proficiency_all_bonuses() {
+        assert_eq!(Proficiency::Untrained.bonus(), 0);
+        assert_eq!(Proficiency::Trained.bonus(), 2);
+        assert_eq!(Proficiency::Expert.bonus(), 4);
+        assert_eq!(Proficiency::Master.bonus(), 6);
+        assert_eq!(Proficiency::Legendary.bonus(), 8);
+    }
+
+    #[test]
+    fn resource_track_creation() {
+        let rt = ResourceTrack {
+            name: "Fate Points".into(),
+            current: 3,
+            max: 5,
+        };
+        assert_eq!(rt.current, 3);
+        assert_eq!(rt.max, 5);
+    }
+
+    #[test]
+    fn condition_no_decay_no_timer_stays_active() {
+        let mut persistent = Condition {
+            name: "Persistent Damage".into(),
+            value: 5,
+            decay_per_turn: 0,
+            turns_remaining: None,
+        };
+        assert!(persistent.tick());
+        assert_eq!(persistent.value, 5);
+    }
+
+    #[test]
+    fn dice_system_d6_pool() {
+        let ds = DiceSystem::D6Pool { threshold: 5 };
+        assert_eq!(format!("{ds:?}"), "D6Pool { threshold: 5 }");
+    }
+
+    #[test]
+    fn dice_system_d100() {
+        let ds = DiceSystem::D100;
+        assert_eq!(format!("{ds:?}"), "D100");
+    }
+
+    #[test]
+    fn ruleset_summary_struct_fields() {
+        let summary = RulesetSummary {
+            name: "Test System".into(),
+            dice_system: DiceSystem::D20,
+            action_economy: ActionEconomy::PF2E,
+            ability_count: 6,
+            has_proficiency: true,
+            has_aspects: false,
+            degree_count: 4,
+            license: "ORC".into(),
+        };
+        assert_eq!(summary.name, "Test System");
+        assert_eq!(summary.ability_count, 6);
+        assert!(summary.has_proficiency);
+        assert!(!summary.has_aspects);
+    }
+
+    #[test]
+    fn skill_creation() {
+        let skill = Skill {
+            name: "Athletics".into(),
+            proficiency: Proficiency::Expert,
+            rating: 4,
+            linked_ability: Some("Strength".into()),
+        };
+        assert_eq!(skill.proficiency.bonus(), 4);
+        assert_eq!(skill.rating, 4);
+    }
+
+    #[test]
+    fn character_creation() {
+        let mut c = Character {
+            name: "Valeros".into(),
+            level: 5,
+            abilities: vec![AbilityScore::pf2e("Strength", 18)],
+            skills: vec![],
+            conditions: vec![],
+            hp_current: 60,
+            hp_max: 60,
+            resource_tracks: HashMap::new(),
+            tags: vec!["Human".into(), "Fighter".into()],
+            metadata: HashMap::new(),
+        };
+        assert_eq!(c.abilities[0].modifier, 4);
+        c.resource_tracks.insert(
+            "focus".into(),
+            ResourceTrack {
+                name: "Focus Points".into(),
+                current: 2,
+                max: 3,
+            },
+        );
+        assert_eq!(c.resource_tracks["focus"].max, 3);
+    }
 }

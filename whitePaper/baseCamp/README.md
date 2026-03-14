@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 13, 2026
+**Date:** March 14, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance — 66 experiments, 1349 checks, 138 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 2 extraction shooter/viz, 6 lysogeny, 1 fermenting, 5 cross-spring provenance
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance — 66 experiments, 1349 checks, 212 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 2 extraction shooter/viz, 6 lysogeny, 1 fermenting, 5 cross-spring provenance
 
 ---
 
@@ -152,7 +152,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc --lib --tests             # 138 Rust tests
+cargo test --features ipc --lib --tests             # 212 Rust tests
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

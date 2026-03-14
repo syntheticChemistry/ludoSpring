@@ -4,11 +4,15 @@ Run all Python baselines and produce combined output.
 
 Provenance:
   Script: baselines/python/run_all_baselines.py
-  Date: 2026-03-11
+  Date: 2026-03-11 (initial), updated 2026-03-14
   Command: python3 baselines/python/run_all_baselines.py
+  Python: CPython 3.12 (stdlib only — no numpy/scipy)
+  Dependencies: math, json, subprocess, sys, pathlib, platform, datetime
 """
 
+import datetime
 import json
+import platform
 import subprocess
 import sys
 from pathlib import Path
@@ -53,7 +57,27 @@ def main():
             except json.JSONDecodeError:
                 results[script] = proc.stdout.strip()
 
-    # Write combined output
+    git_commit = "unknown"
+    try:
+        git_proc = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, cwd=str(base_dir),
+        )
+        if git_proc.returncode == 0:
+            git_commit = git_proc.stdout.strip()
+    except FileNotFoundError:
+        pass
+
+    results["_provenance"] = {
+        "script": "baselines/python/run_all_baselines.py",
+        "date": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "command": "python3 baselines/python/run_all_baselines.py",
+        "git_commit": git_commit,
+        "dependencies": "stdlib only (math, json)",
+    }
+
     output_path = base_dir / "combined_baselines.json"
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)

@@ -256,11 +256,7 @@ pub fn mint_ipc_sequence(
 }
 
 /// Build the JSON-RPC call for a trade operation.
-pub fn trade_ipc_sequence(
-    cert_id: &str,
-    from_did: &str,
-    to_did: &str,
-) -> Vec<JsonRpcRequest> {
+pub fn trade_ipc_sequence(cert_id: &str, from_did: &str, to_did: &str) -> Vec<JsonRpcRequest> {
     let mut calls = Vec::new();
 
     calls.push(JsonRpcRequest::new(
@@ -316,11 +312,7 @@ pub fn deployment_health_sequence() -> Vec<JsonRpcRequest> {
             serde_json::json!({"primal": "loamspine"}),
             1,
         ),
-        JsonRpcRequest::new(
-            "health",
-            serde_json::json!({"primal": "rhizocrypt"}),
-            2,
-        ),
+        JsonRpcRequest::new("health", serde_json::json!({"primal": "rhizocrypt"}), 2),
         JsonRpcRequest::new(
             "health.check",
             serde_json::json!({"primal": "sweetgrass"}),

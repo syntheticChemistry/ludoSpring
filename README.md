@@ -2,11 +2,11 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 13, 2026
-**Version:** V13 (66 experiments, 1349 validation checks, 138 tests)
+**Date:** March 14, 2026
+**Version:** V14 (66 experiments, 1349 validation checks, 212 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.3 (standalone, 150+ primitives)
+**barraCuda:** v0.3.5 (standalone, 150+ primitives)
 
 ---
 
@@ -265,7 +265,7 @@ Key results:
 - **Cross-domain fraud unification**: Same `GenericFraudDetector` catches fraud across gaming, science, and medical with >80% structural similarity.
 - **Radiating attribution**: sunCloud value distribution walks sweetGrass chains. Shares always sum to 1.0 (conservation). Decay models and role weighting.
 
-See `whitePaper/gen3/baseCamp/21_sovereign_sample_provenance.md` (Paper 21) and `whitePaper/gen3/baseCamp/22_zero_knowledge_medical_provenance.md` (Paper 22).
+Papers 21 (Sovereign Sample Provenance) and 22 (Zero-Knowledge Medical Provenance) are pending gen3 baseCamp write-up — the experimental validation is complete.
 
 ## Specs Paper Validation + Performance Benchmarks
 
@@ -387,7 +387,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (138 total: 83 unit + 8 determinism + 22 parity + 12 validation + 8 forge + 4 exp + 1 doctest)
+# All tests (212 total: unit + determinism + parity + validation + forge + exp)
 cargo test --features ipc --lib --tests
 
 # Run a specific experiment
@@ -409,15 +409,17 @@ cargo doc --workspace --no-deps
 
 | Check | Result |
 |-------|--------|
-| `cargo fmt --check` | Clean |
-| `cargo clippy --pedantic` | 0 warnings (new code) |
-| `cargo test` | 138 tests, 0 failures |
-| `cargo doc --no-deps` | Clean |
+| `cargo fmt --check` | 0 diffs |
+| `cargo clippy -W pedantic -W nursery` | 0 warnings (workspace-wide) |
+| `cargo test --workspace` | 212 tests, 0 failures |
+| `cargo doc --no-deps` | 0 warnings |
 | 67 validation binaries | 1349 checks, 0 failures |
-| 7 Python baselines | All pass |
-| `#![forbid(unsafe_code)]` | All crate roots |
-| Files > 1000 LOC | 1 (exp061 main.rs: 1227 — validation sections, candidate for split) |
-| TODO/FIXME/HACK in source | None |
+| 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
+| `#![forbid(unsafe_code)]` | All crate roots + all binaries |
+| `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
+| SPDX headers | All `.rs` + all `Cargo.toml` |
+| Files > 1000 LOC | 0 |
+| TODO/FIXME/HACK in source | 0 |
 
 ## Benchmark Gaps (Documented)
 

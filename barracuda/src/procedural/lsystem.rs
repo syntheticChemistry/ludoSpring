@@ -265,4 +265,70 @@ mod tests {
         let b = sys.generate(5);
         assert_eq!(a, b);
     }
+
+    #[test]
+    fn dragon_curve_grows() {
+        let sys = presets::dragon_curve();
+        let g0 = sys.symbol_count(0);
+        let g3 = sys.symbol_count(3);
+        assert!(g3 > g0, "dragon curve should grow");
+        let g3_str = sys.generate(3);
+        assert!(g3_str.contains('F'), "dragon curve should have F segments");
+    }
+
+    #[test]
+    fn turtle_push_pop_returns_to_origin() {
+        let points = turtle_interpret("F[+F]-F", 1.0, 90.0);
+        assert!(points.len() >= 4, "should have multiple points");
+    }
+
+    #[test]
+    fn turtle_half_turn_t_command() {
+        let points = turtle_interpret("FTF", 1.0, 90.0);
+        assert_eq!(points.len(), 3);
+        let (dx, dy) = (points[2].0 - points[1].0, points[2].1 - points[1].1);
+        let heading_45 = 45.0_f64.to_radians();
+        assert!((dx - heading_45.cos()).abs() < 1e-10);
+        assert!((dy - heading_45.sin()).abs() < 1e-10);
+    }
+
+    #[test]
+    fn turtle_unknown_chars_ignored() {
+        let points = turtle_interpret("FXYZ", 1.0, 90.0);
+        assert_eq!(points.len(), 2, "only F should produce movement");
+    }
+
+    #[test]
+    fn turtle_pop_empty_stack_no_panic() {
+        let points = turtle_interpret("]F", 1.0, 90.0);
+        assert_eq!(points.len(), 2);
+    }
+
+    #[test]
+    fn turtle_protein_backbone_generates_points() {
+        let sys = presets::protein_backbone();
+        let g2 = sys.generate(2);
+        let points = turtle_interpret(&g2, 1.0, 90.0);
+        assert!(
+            points.len() > 10,
+            "protein backbone should produce many points"
+        );
+    }
+
+    #[test]
+    fn production_rule_debug_and_fields() {
+        let rule = ProductionRule {
+            predecessor: 'A',
+            successor: "AB".into(),
+        };
+        assert_eq!(rule.predecessor, 'A');
+        assert_eq!(rule.successor, "AB");
+        assert!(format!("{rule:?}").contains("AB"));
+    }
+
+    #[test]
+    fn lsystem_zero_generations_returns_axiom() {
+        let sys = presets::algae();
+        assert_eq!(sys.generate(0), "A");
+    }
 }

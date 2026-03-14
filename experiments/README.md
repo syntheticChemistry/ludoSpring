@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
-**Date:** March 13, 2026
-**Total:** 66 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting + 1 BearDog Signing + 1 Field Sample + 1 Medical Access + 1 Cross-Domain Fraud + 1 Radiating Attribution), 1349 checks, 0 failures
+**Date:** March 14, 2026
+**Total:** 66 experiments, 1349 checks, 0 failures, 212 tests
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---

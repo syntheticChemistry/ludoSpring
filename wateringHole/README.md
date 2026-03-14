@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 13, 2026
+**Last Updated:** March 14, 2026
 
 ---
 
@@ -24,12 +24,13 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V13** | `LUDOSPRING_V13_BARRACUDA_TOADSTOOL_CROSS_SPRING_PROVENANCE_HANDOFF_MAR13_2026.md` | Mar 13 | Cross-spring provenance: exp062-066 (228 checks), BearDog signing, fraud unification, attribution, GPU promotion map, action items for barraCuda/toadStool/coralReef |
+| **V14** | `LUDOSPRING_V14_DEEP_AUDIT_BARRACUDA_TOADSTOOL_HANDOFF_MAR14_2026.md` | Mar 14 | Deep audit: +74 tests (212 total), all modules ≥ 90% coverage, 0 clippy/fmt/doc warnings, centralized tolerances, zero-copy telemetry, exp061 refactored, provenance embedded, dependency audit, GPU promotion + absorption action items |
+| V13 | `archive/LUDOSPRING_V13_BARRACUDA_TOADSTOOL_CROSS_SPRING_PROVENANCE_HANDOFF_MAR13_2026.md` | Mar 13 | Cross-spring provenance: exp062-066, BearDog signing, fraud unification |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 66 experiments, 1349 checks)
+ludoSpring (game science, 66 experiments, 1349 checks, 212 tests)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline)
@@ -80,11 +81,9 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
-| V3 | `handoffs/archive/LUDOSPRING_V3_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | V13 Cross-Spring Provenance |
-| V3 | `handoffs/archive/LUDOSPRING_V3_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | V13 Cross-Spring Provenance |
-| V2 | `handoffs/archive/LUDOSPRING_V2_FULL_VALIDATION_HANDOFF_MAR11_2026.md` | V3 Full Validation |
-| V2 | `handoffs/archive/LUDOSPRING_V2_BARRACUDA_TOADSTOOL_EVOLUTION_HANDOFF_MAR11_2026.md` | V3 GPU Evolution |
-| V1 | `handoffs/archive/LUDOSPRING_V1_SCAFFOLD_HANDOFF_MAR_2026.md` | V2 Full Validation |
+| V13 | `handoffs/archive/LUDOSPRING_V13_BARRACUDA_TOADSTOOL_CROSS_SPRING_PROVENANCE_HANDOFF_MAR13_2026.md` | V14 Deep Audit |
+
+Older handoffs (V1–V3) archived in shared `ecoPrimals/wateringHole/handoffs/archive/`.
 
 ## License
 

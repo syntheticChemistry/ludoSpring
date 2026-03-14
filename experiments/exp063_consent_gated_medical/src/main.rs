@@ -2,32 +2,26 @@
 #![forbid(unsafe_code)]
 //! exp063 — Consent-Gated Medical Access
 //!
-//! Scaffolds healthSpring's zero-knowledge medical data access using the
-//! provenance trio: loamSpine certificates, rhizoCrypt DAG, sweetGrass braids.
+//! Scaffolds `healthSpring`'s zero-knowledge medical data access using the
+//! provenance trio: `loamSpine` certificates, `rhizoCrypt` DAG, `sweetGrass` braids.
 //!
 //! This experiment validates:
 //!   1. Consent lifecycle: create record → grant consent → access → revoke → reject
 //!   2. Access control: scope enforcement, expiry, revocation, multi-provider
 //!   3. Fraud detection: all 5 fraud types
-//!   4. Audit trail: full reconstruction, PROV-O timeline
+//!   4. Audit trail: full reconstruction, `PROV-O` timeline
 //!   5. Access proof: generation, verification, determinism
 
 mod medical;
 
 use loam_spine_core::Did;
 use ludospring_barracuda::validation::ValidationResult;
-use medical::{
-    AccessEvent, ConsentScope, MedicalAccessSystem, MedicalFraudType, RecordType,
-};
+use medical::{AccessEvent, ConsentScope, MedicalAccessSystem, MedicalFraudType, RecordType};
 
 const EXP: &str = "exp063_consent_gated_medical";
 
 const fn bool_f64(b: bool) -> f64 {
-    if b {
-        1.0
-    } else {
-        0.0
-    }
+    if b { 1.0 } else { 0.0 }
 }
 
 // ===========================================================================
@@ -38,7 +32,6 @@ const fn bool_f64(b: bool) -> f64 {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_consent_lifecycle() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -109,7 +102,7 @@ fn validate_consent_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_consent_revoked",
-        bool_f64(system.consents.get(&consent_id).map_or(false, |c| c.revoked)),
+        bool_f64(system.consents.get(&consent_id).is_some_and(|c| c.revoked)),
         1.0,
         0.0,
     ));
@@ -135,7 +128,7 @@ fn validate_consent_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_braids_created",
-        bool_f64(system.braids.len() >= 1),
+        bool_f64(!system.braids.is_empty()),
         1.0,
         0.0,
     ));
@@ -147,11 +140,6 @@ fn validate_consent_lifecycle() -> Vec<ValidationResult> {
 // 2. Access Control
 // ===========================================================================
 
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
-)]
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_access_control() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -186,7 +174,8 @@ fn validate_access_control() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let a_access_imaging = system.access_record(&provider_a, imaging_id, "review", RecordType::Imaging);
+    let a_access_imaging =
+        system.access_record(&provider_a, imaging_id, "review", RecordType::Imaging);
     results.push(ValidationResult::check(
         EXP,
         "access_provider_a_cannot_access_imaging",
@@ -232,7 +221,9 @@ fn validate_access_control() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    system.revoke_consent(&patient, consent_short).expect("revoke");
+    system
+        .revoke_consent(&patient, consent_short)
+        .expect("revoke");
     let revoked_access = system.access_record(&provider_a, lab_id, "after_revoke", RecordType::Lab);
     results.push(ValidationResult::check(
         EXP,
@@ -268,10 +259,9 @@ fn validate_access_control() -> Vec<ValidationResult> {
 // ===========================================================================
 
 #[expect(
-    clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
+    clippy::too_many_lines,
+    reason = "validation section — sequential checks"
 )]
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_fraud_detection() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -289,7 +279,9 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    system.access_record(&provider, record_id, "legit", RecordType::Lab).expect("ok");
+    system
+        .access_record(&provider, record_id, "legit", RecordType::Lab)
+        .expect("ok");
 
     let fraud_clean = system.detect_fraud();
     results.push(ValidationResult::check(
@@ -315,9 +307,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_unauthorized_detected",
-        bool_f64(fraud_unauth
-            .iter()
-            .any(|r| r.fraud_type == MedicalFraudType::UnauthorizedAccess)),
+        bool_f64(
+            fraud_unauth
+                .iter()
+                .any(|r| r.fraud_type == MedicalFraudType::UnauthorizedAccess),
+        ),
         1.0,
         0.0,
     ));
@@ -346,9 +340,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_expired_detected",
-        bool_f64(fraud_expired
-            .iter()
-            .any(|r| r.fraud_type == MedicalFraudType::ExpiredConsent)),
+        bool_f64(
+            fraud_expired
+                .iter()
+                .any(|r| r.fraud_type == MedicalFraudType::ExpiredConsent),
+        ),
         1.0,
         0.0,
     ));
@@ -376,9 +372,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_scope_violation_detected",
-        bool_f64(fraud_scope
-            .iter()
-            .any(|r| r.fraud_type == MedicalFraudType::ScopeViolation)),
+        bool_f64(
+            fraud_scope
+                .iter()
+                .any(|r| r.fraud_type == MedicalFraudType::ScopeViolation),
+        ),
         1.0,
         0.0,
     ));
@@ -401,9 +399,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_phantom_detected",
-        bool_f64(fraud_phantom
-            .iter()
-            .any(|r| r.fraud_type == MedicalFraudType::PhantomAccess)),
+        bool_f64(
+            fraud_phantom
+                .iter()
+                .any(|r| r.fraud_type == MedicalFraudType::PhantomAccess),
+        ),
         1.0,
         0.0,
     ));
@@ -432,9 +432,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_consent_forgery_detected",
-        bool_f64(fraud_forgery
-            .iter()
-            .any(|r| r.fraud_type == MedicalFraudType::ConsentForgery)),
+        bool_f64(
+            fraud_forgery
+                .iter()
+                .any(|r| r.fraud_type == MedicalFraudType::ConsentForgery),
+        ),
         1.0,
         0.0,
     ));
@@ -474,11 +476,17 @@ fn validate_audit_trail() -> Vec<ValidationResult> {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    system.access_record(&provider, record_id, "initial", RecordType::Encounter).expect("ok");
+    system
+        .access_record(&provider, record_id, "initial", RecordType::Encounter)
+        .expect("ok");
     system.advance_tick();
-    system.access_record(&provider, record_id, "followup", RecordType::Encounter).expect("ok");
+    system
+        .access_record(&provider, record_id, "followup", RecordType::Encounter)
+        .expect("ok");
     system.advance_tick();
-    system.access_record(&provider, record_id, "discharge", RecordType::Encounter).expect("ok");
+    system
+        .access_record(&provider, record_id, "discharge", RecordType::Encounter)
+        .expect("ok");
 
     let audit = system.audit(record_id);
     results.push(ValidationResult::check(
@@ -501,11 +509,19 @@ fn validate_audit_trail() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "audit_prov_o_matches_log",
-        bool_f64(system.dag.vertices.iter().filter(|v| {
-            v.metadata.get("event").map_or(false, |m| {
+        bool_f64(
+            system
+                .dag
+                .vertices
+                .iter()
+                .filter(|v| {
+                    v.metadata.get("event").is_some_and(|m| {
                 matches!(m, rhizo_crypt_core::vertex::MetadataValue::String(s) if s == "access")
             })
-        }).count() >= 3),
+                })
+                .count()
+                >= 3,
+        ),
         1.0,
         0.0,
     ));

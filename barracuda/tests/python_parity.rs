@@ -7,11 +7,16 @@
 //!
 //! # Provenance
 //!
-//! Python baselines: `baselines/python/` (2026-03-11, stdlib only).
-//! Run: `python3 baselines/python/run_all_baselines.py`
-//! Output: `baselines/python/combined_baselines.json`
+//! - **Baselines**: `baselines/python/` (stdlib only, no numpy/scipy)
+//! - **`Date`**: 2026-03-11
+//! - **Python**: `CPython` 3.12 (math module only)
+//! - **Command**: `python3 baselines/python/run_all_baselines.py`
+//! - **Output**: `baselines/python/combined_baselines.json`
+//! - **Commit**: see `combined_baselines.json` `_provenance` block
 //!
 //! Values below are transcribed from the Python JSON output.
+//! Tolerance uses `tolerances::ANALYTICAL_TOL` (1e-10) — the only error
+//! source is IEEE 754 reassociation between Python and Rust f64.
 
 use ludospring_barracuda::interaction::goms::{
     self, Operator, task_time, task_time_with_keystroke,
@@ -25,8 +30,6 @@ use ludospring_barracuda::procedural::lsystem::presets;
 use ludospring_barracuda::procedural::noise::{fbm_2d, perlin_2d, perlin_3d};
 use ludospring_barracuda::tolerances;
 
-const PARITY_TOL: f64 = 1e-10;
-
 // ── Interaction Laws ───────────────────────────────────────────────
 
 #[test]
@@ -34,7 +37,7 @@ fn parity_fitts_mt_d100_w10() {
     let rust = fitts_movement_time(100.0, 10.0, 50.0, 150.0);
     let python = 708.847_613_416_814;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "Fitts MT: Rust={rust}, Python={python}"
     );
 }
@@ -44,7 +47,7 @@ fn parity_fitts_id_d100_w10() {
     let rust = fitts_index_of_difficulty(100.0, 10.0);
     let python = 4.392_317_422_778_761;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "Fitts ID: Rust={rust}, Python={python}"
     );
 }
@@ -54,7 +57,7 @@ fn parity_hick_rt_n7() {
     let rust = hick_reaction_time(7, tolerances::HICK_A_MS, tolerances::HICK_B_MS);
     let python = 650.0;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "Hick RT: Rust={rust}, Python={python}"
     );
 }
@@ -64,7 +67,7 @@ fn parity_steering_d100_w20() {
     let rust = steering_time(100.0, 20.0, 10.0, 5.0);
     let python = 35.0;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "Steering: Rust={rust}, Python={python}"
     );
 }
@@ -77,7 +80,7 @@ fn parity_perlin_2d_lattice_zeros() {
         for iy in 0..10_i32 {
             let v = perlin_2d(f64::from(ix), f64::from(iy));
             assert!(
-                v.abs() < PARITY_TOL,
+                v.abs() < tolerances::ANALYTICAL_TOL,
                 "perlin_2d({ix},{iy}) = {v}, Python = 0.0"
             );
         }
@@ -91,7 +94,7 @@ fn parity_perlin_3d_lattice_zeros() {
             for iz in 0..5_i32 {
                 let v = perlin_3d(f64::from(ix), f64::from(iy), f64::from(iz));
                 assert!(
-                    v.abs() < PARITY_TOL,
+                    v.abs() < tolerances::ANALYTICAL_TOL,
                     "perlin_3d({ix},{iy},{iz}) = {v}, Python = 0.0"
                 );
             }
@@ -130,7 +133,7 @@ fn parity_goms_empty() {
     let rust = task_time(&[]);
     let python = 0.0;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "GOMS empty: Rust={rust}, Python={python}"
     );
 }
@@ -140,7 +143,7 @@ fn parity_goms_single_key() {
     let rust = task_time(&[Operator::Keystroke]);
     let python = 0.2;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "GOMS single key: Rust={rust}, Python={python}"
     );
 }
@@ -151,7 +154,7 @@ fn parity_goms_menu_open() {
     let rust = task_time(&ops);
     let python = 2.65;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "GOMS menu open: Rust={rust}, Python={python}"
     );
 }
@@ -171,7 +174,7 @@ fn parity_goms_chat() {
     let rust = task_time(&ops);
     let python = 2.95;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "GOMS chat: Rust={rust}, Python={python}"
     );
 }
@@ -182,7 +185,7 @@ fn parity_goms_best_20k() {
     let rust = task_time_with_keystroke(&ops, goms::times::KEYSTROKE_BEST);
     let python = 1.6;
     assert!(
-        (rust - python).abs() < PARITY_TOL,
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "GOMS best 20K: Rust={rust}, Python={python}"
     );
 }

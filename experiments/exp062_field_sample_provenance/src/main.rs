@@ -10,11 +10,11 @@ mod sample;
 
 use loam_spine_core::Did;
 use ludospring_barracuda::validation::ValidationResult;
-use sample::{
-    detect_sample_fraud, SampleCondition, SampleEventType, SampleFraudType, SampleSystem,
-    SampleType,
-};
 use sample::ProcessingStep;
+use sample::{
+    SampleCondition, SampleEventType, SampleFraudType, SampleSystem, SampleType,
+    detect_sample_fraud,
+};
 
 const EXP: &str = "exp062_field_sample_provenance";
 
@@ -27,10 +27,13 @@ const fn bool_f64(b: bool) -> f64 {
 // ===========================================================================
 
 #[expect(
+    clippy::too_many_lines,
+    reason = "validation section — sequential checks"
+)]
+#[expect(
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -38,12 +41,7 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     let collector = Did::new("did:key:collector");
     let mut system = SampleSystem::new(&owner);
 
-    let cert_id = system.collect_sample(
-        &collector,
-        SampleType::Soil,
-        "Site-A",
-        "ACC-001",
-    );
+    let cert_id = system.collect_sample(&collector, SampleType::Soil, "Site-A", "ACC-001");
 
     results.push(ValidationResult::check(
         EXP,
@@ -55,15 +53,23 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
 
     system.advance_tick();
     let transporter = Did::new("did:key:transporter");
-    system.transport(cert_id, &collector, &transporter, SampleCondition::Refrigerated, Some(4.0));
+    system.transport(
+        cert_id,
+        &collector,
+        &transporter,
+        SampleCondition::Refrigerated,
+        Some(4.0),
+    );
 
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_transport_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Transport)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Transport),
+        ),
         1.0,
         0.0,
     ));
@@ -76,10 +82,12 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_store_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Store)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Store),
+        ),
         1.0,
         0.0,
     ));
@@ -90,10 +98,12 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_extract_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Extract)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Extract),
+        ),
         1.0,
         0.0,
     ));
@@ -104,10 +114,12 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_amplify_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Amplify)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Amplify),
+        ),
         1.0,
         0.0,
     ));
@@ -118,10 +130,12 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_sequence_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Sequence)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Sequence),
+        ),
         1.0,
         0.0,
     ));
@@ -134,10 +148,12 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_analyze_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Analyze)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Analyze),
+        ),
         1.0,
         0.0,
     ));
@@ -148,10 +164,12 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_publish_event",
-        bool_f64(system
-            .sample_timeline(cert_id)
-            .iter()
-            .any(|e| e.event_type == SampleEventType::Publish)),
+        bool_f64(
+            system
+                .sample_timeline(cert_id)
+                .iter()
+                .any(|e| e.event_type == SampleEventType::Publish),
+        ),
         1.0,
         0.0,
     ));
@@ -188,10 +206,13 @@ fn validate_sample_lifecycle() -> Vec<ValidationResult> {
 // ===========================================================================
 
 #[expect(
+    clippy::too_many_lines,
+    reason = "validation section — sequential checks"
+)]
+#[expect(
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_custody_chain() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -251,16 +272,24 @@ fn validate_custody_chain() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let all_actors = [collector.as_str(), transporter.as_str(), lab_tech.as_str(), analyst.as_str()];
+    let all_actors = [
+        collector.as_str(),
+        transporter.as_str(),
+        lab_tech.as_str(),
+        analyst.as_str(),
+    ];
     let timeline_actors: Vec<_> = system
         .sample_timeline(cert_id)
         .iter()
-        .filter(|e| e.event_type == SampleEventType::Collect || e.event_type == SampleEventType::CustodyTransfer)
+        .filter(|e| {
+            e.event_type == SampleEventType::Collect
+                || e.event_type == SampleEventType::CustodyTransfer
+        })
         .map(|e| e.actor_did.as_str())
         .collect();
-    let chain_has_all = all_actors.iter().all(|a| {
-        timeline_actors.contains(a) || system.samples_held_by(a).contains(&cert_id)
-    });
+    let chain_has_all = all_actors
+        .iter()
+        .all(|a| timeline_actors.contains(a) || system.samples_held_by(a).contains(&cert_id));
     results.push(ValidationResult::check(
         EXP,
         "custody_all_actors_in_chain",
@@ -305,10 +334,9 @@ fn validate_custody_chain() -> Vec<ValidationResult> {
 // ===========================================================================
 
 #[expect(
-    clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
+    clippy::too_many_lines,
+    reason = "validation section — sequential checks"
 )]
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_fraud_detection() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -362,17 +390,20 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         type_uri: "ecoPrimals:sample".into(),
         schema_version: 1,
     };
-    let (phantom_cert, _) = phantom_sys
+    phantom_sys
         .cert_manager
         .mint(phantom_cert_type, &alice, phantom_meta)
         .expect("mint");
-    let _phantom_cert_id = phantom_cert.id;
     // No collect event added - this is a phantom.
     let phantom_fraud = detect_sample_fraud(&phantom_sys);
     results.push(ValidationResult::check(
         EXP,
         "fraud_phantom_detected",
-        bool_f64(phantom_fraud.iter().any(|r| r.fraud_type == SampleFraudType::PhantomSample)),
+        bool_f64(
+            phantom_fraud
+                .iter()
+                .any(|r| r.fraud_type == SampleFraudType::PhantomSample),
+        ),
         1.0,
         0.0,
     ));
@@ -385,7 +416,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_duplicate_accession_detected",
-        bool_f64(dup_fraud.iter().any(|r| r.fraud_type == SampleFraudType::DuplicateAccession)),
+        bool_f64(
+            dup_fraud
+                .iter()
+                .any(|r| r.fraud_type == SampleFraudType::DuplicateAccession),
+        ),
         1.0,
         0.0,
     ));
@@ -401,7 +436,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_broken_cold_chain_detected",
-        bool_f64(cold_fraud.iter().any(|r| r.fraud_type == SampleFraudType::BrokenColdChain)),
+        bool_f64(
+            cold_fraud
+                .iter()
+                .any(|r| r.fraud_type == SampleFraudType::BrokenColdChain),
+        ),
         1.0,
         0.0,
     ));
@@ -415,7 +454,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_unauthorized_access_detected",
-        bool_f64(unauth_fraud.iter().any(|r| r.fraud_type == SampleFraudType::UnauthorizedAccess)),
+        bool_f64(
+            unauth_fraud
+                .iter()
+                .any(|r| r.fraud_type == SampleFraudType::UnauthorizedAccess),
+        ),
         1.0,
         0.0,
     ));
@@ -450,7 +493,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_mislabeled_specimen_detected",
-        bool_f64(mislabel_fraud.iter().any(|r| r.fraud_type == SampleFraudType::MislabeledSpecimen)),
+        bool_f64(
+            mislabel_fraud
+                .iter()
+                .any(|r| r.fraud_type == SampleFraudType::MislabeledSpecimen),
+        ),
         1.0,
         0.0,
     ));
@@ -470,7 +517,11 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "fraud_contamination_gap_detected",
-        bool_f64(contam_fraud.iter().any(|r| r.fraud_type == SampleFraudType::ContaminationGap)),
+        bool_f64(
+            contam_fraud
+                .iter()
+                .any(|r| r.fraud_type == SampleFraudType::ContaminationGap),
+        ),
         1.0,
         0.0,
     ));
@@ -491,10 +542,6 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
 // 4. DAG Isomorphism
 // ===========================================================================
 
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
-)]
 fn validate_dag_isomorphism() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -539,7 +586,12 @@ fn validate_dag_isomorphism() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let critical_ops = ["SampleCollect", "CustodyTransfer", "Process(Sequencing)", "Publish"];
+    let critical_ops = [
+        "SampleCollect",
+        "CustodyTransfer",
+        "Process(Sequencing)",
+        "Publish",
+    ];
     let mapping_covers = critical_ops.len() == 4;
     results.push(ValidationResult::check(
         EXP,
@@ -604,10 +656,6 @@ struct SampleDagAppendParams {
     metadata: std::collections::HashMap<String, String>,
 }
 
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
-)]
 fn validate_ipc_wire_format() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 

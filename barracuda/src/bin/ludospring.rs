@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! ludoSpring UniBin — game science primal for biomeOS deployment.
 //!
 //! Per Spring-as-Niche Deployment Standard: single binary with `server`, `status`, `version`.

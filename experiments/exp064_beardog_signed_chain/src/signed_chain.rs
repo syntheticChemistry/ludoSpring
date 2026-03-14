@@ -2,24 +2,24 @@
 //! BearDog-signed provenance chain — cryptographic binding for trio operations.
 //!
 //! Every operation on a Novel Ferment Transcript produces a signed artifact:
-//! - Vertex signatures (rhizoCrypt DAG)
-//! - Certificate signatures (loamSpine)
-//! - Braid signatures (sweetGrass)
+//! - Vertex signatures (`rhizoCrypt` DAG)
+//! - Certificate signatures (`loamSpine`)
+//! - Braid signatures (`sweetGrass`)
 //!
-//! BearDog's Ed25519 signatures bind the entire chain cryptographically.
-//! This module models the signing protocol without a live BearDog instance,
+//! `BearDog`'s Ed25519 signatures bind the entire chain cryptographically.
+//! This module models the signing protocol without a live `BearDog` instance,
 //! validating the wire format and verification logic.
 
 use std::collections::HashMap;
 
+use loam_spine_core::Did;
 use loam_spine_core::certificate::{CertificateMetadata, CertificateType};
 use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
-use loam_spine_core::Did;
 
-/// Ed25519 key pair (simplified model for validation — real signing via BearDog IPC).
+/// Ed25519 key pair (simplified model for validation — real signing via `BearDog` IPC).
 #[derive(Debug, Clone)]
 pub struct Ed25519KeyPair {
     pub public_key: [u8; 32],
@@ -51,7 +51,7 @@ impl Ed25519KeyPair {
             sig[i] = b ^ self.secret_seed[i % 32];
         }
         for (i, &b) in self.secret_seed.iter().enumerate() {
-            sig[32 + i] = b ^ message.first().copied().unwrap_or(0);
+            sig[32 + i] = b ^ message.first().map_or(0, |&x| x);
         }
         sig
     }
@@ -67,15 +67,18 @@ impl Ed25519KeyPair {
             expected[i] = b ^ secret_seed[i % 32];
         }
         for (i, &b) in secret_seed.iter().enumerate() {
-            expected[32 + i] = b ^ message.first().copied().unwrap_or(0);
+            expected[32 + i] = b ^ message.first().map_or(0, |&x| x);
         }
         *signature == expected
     }
 }
 
-/// A signed rhizoCrypt DAG vertex.
+/// A signed `rhizoCrypt` DAG vertex.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "domain model completeness — fields used for chain inspection")]
+#[expect(
+    dead_code,
+    reason = "domain model completeness — fields used for chain inspection"
+)]
 pub struct SignedVertex {
     pub vertex_id: rhizo_crypt_core::VertexId,
     pub event_type: String,
@@ -85,7 +88,7 @@ pub struct SignedVertex {
     pub signer_public_key: [u8; 32],
 }
 
-/// A signed loamSpine certificate operation.
+/// A signed `loamSpine` certificate operation.
 #[derive(Debug, Clone)]
 pub struct SignedCertOperation {
     pub cert_id: CertificateId,
@@ -95,7 +98,7 @@ pub struct SignedCertOperation {
     pub signer_public_key: [u8; 32],
 }
 
-/// A signed sweetGrass braid.
+/// A signed `sweetGrass` braid.
 #[derive(Debug, Clone)]
 pub struct SignedBraid {
     pub braid_description: String,
@@ -114,7 +117,7 @@ pub struct SignedProvenanceChain {
     pub signed_braids: Vec<SignedBraid>,
 }
 
-/// rhizoCrypt DAG wrapper (same pattern as exp061).
+/// `rhizoCrypt` DAG wrapper (same pattern as exp061).
 pub struct ProvDag {
     pub session: rhizo_crypt_core::Session,
     pub vertices: Vec<rhizo_crypt_core::Vertex>,
@@ -123,13 +126,12 @@ pub struct ProvDag {
 
 impl ProvDag {
     fn new(session_type: &str) -> Self {
-        let session = rhizo_crypt_core::SessionBuilder::new(
-            rhizo_crypt_core::session::SessionType::Gaming {
+        let session =
+            rhizo_crypt_core::SessionBuilder::new(rhizo_crypt_core::session::SessionType::Gaming {
                 game_id: session_type.into(),
-            },
-        )
-        .with_name("Signed Provenance Chain")
-        .build();
+            })
+            .with_name("Signed Provenance Chain")
+            .build();
 
         Self {
             session,
@@ -144,12 +146,11 @@ impl ProvDag {
         agent: &rhizo_crypt_core::Did,
         metadata: HashMap<String, rhizo_crypt_core::vertex::MetadataValue>,
     ) -> (rhizo_crypt_core::VertexId, Vec<u8>) {
-        let mut builder = rhizo_crypt_core::VertexBuilder::new(
-            rhizo_crypt_core::EventType::AgentAction {
+        let mut builder =
+            rhizo_crypt_core::VertexBuilder::new(rhizo_crypt_core::EventType::AgentAction {
                 action: event_type.into(),
-            },
-        )
-        .with_agent(agent.clone());
+            })
+            .with_agent(agent.clone());
 
         for &parent in &self.frontier {
             builder = builder.with_parent(parent);
@@ -173,8 +174,12 @@ impl ProvDag {
 impl SignedProvenanceChain {
     /// Create a new signed provenance chain.
     pub fn new(owner: &Did, key_seed: &str) -> Self {
-        let spine = Spine::new(owner.clone(), Some("SignedChain".into()), SpineConfig::default())
-            .expect("spine creation");
+        let spine = Spine::new(
+            owner.clone(),
+            Some("SignedChain".into()),
+            SpineConfig::default(),
+        )
+        .expect("spine creation");
         let cert_manager = CertificateManager::new(spine);
         let key_pair = Ed25519KeyPair::from_seed(key_seed);
 
@@ -285,7 +290,10 @@ impl SignedProvenanceChain {
         let content_hash = description.as_bytes().to_vec();
         let signature = self.key_pair.sign(&content_hash);
 
-        let data_hash = format!("sha256:{}", hex::encode(&self.key_pair.sign(&content_hash)[..16]));
+        let data_hash = format!(
+            "sha256:{}",
+            hex::encode(&self.key_pair.sign(&content_hash)[..16])
+        );
 
         self.signed_braids.push(SignedBraid {
             braid_description: description.into(),
@@ -332,7 +340,8 @@ impl SignedProvenanceChain {
             if Ed25519KeyPair::verify(&sv.signer_public_key, &sv.content_hash, &sv.signature) {
                 result.verified += 1;
             } else {
-                result.tampered.push(format!("vertex:{}", sv.event_type));
+                let event_type = &sv.event_type;
+                result.tampered.push(format!("vertex:{event_type}"));
             }
         }
 
@@ -341,7 +350,9 @@ impl SignedProvenanceChain {
             if Ed25519KeyPair::verify(&sc.signer_public_key, &sc.content_hash, &sc.signature) {
                 result.verified += 1;
             } else {
-                result.tampered.push(format!("cert:{}:{}", sc.operation, sc.cert_id));
+                let operation = &sc.operation;
+                let cert_id = sc.cert_id;
+                result.tampered.push(format!("cert:{operation}:{cert_id}"));
             }
         }
 
@@ -350,9 +361,8 @@ impl SignedProvenanceChain {
             if Ed25519KeyPair::verify(&sb.signer_public_key, &sb.content_hash, &sb.signature) {
                 result.verified += 1;
             } else {
-                result
-                    .tampered
-                    .push(format!("braid:{}", sb.braid_description));
+                let braid_description = &sb.braid_description;
+                result.tampered.push(format!("braid:{braid_description}"));
             }
         }
 
@@ -368,7 +378,7 @@ pub struct ChainVerification {
 }
 
 impl ChainVerification {
-    pub fn is_clean(&self) -> bool {
+    pub const fn is_clean(&self) -> bool {
         self.tampered.is_empty()
     }
 }
@@ -376,7 +386,11 @@ impl ChainVerification {
 /// hex encoding helper (no external dependency).
 mod hex {
     pub fn encode(bytes: &[u8]) -> String {
-        bytes.iter().map(|b| format!("{b:02x}")).collect()
+        bytes.iter().fold(String::new(), |mut s, b| {
+            use std::fmt::Write;
+            let _ = write!(s, "{b:02x}");
+            s
+        })
     }
 }
 
@@ -385,7 +399,10 @@ mod hex {
 // ============================================================================
 
 /// JSON-RPC request for `crypto.sign_ed25519`.
-#[expect(dead_code, reason = "wire format completeness — types used at runtime over IPC")]
+#[expect(
+    dead_code,
+    reason = "wire format completeness — types used at runtime over IPC"
+)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BearDogSignRequest {
     pub message: String,
@@ -393,7 +410,10 @@ pub struct BearDogSignRequest {
 }
 
 /// JSON-RPC response for `crypto.sign_ed25519`.
-#[expect(dead_code, reason = "wire format completeness — types used at runtime over IPC")]
+#[expect(
+    dead_code,
+    reason = "wire format completeness — types used at runtime over IPC"
+)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BearDogSignResponse {
     pub signature: String,
@@ -401,7 +421,10 @@ pub struct BearDogSignResponse {
 }
 
 /// JSON-RPC request for `crypto.verify_ed25519`.
-#[expect(dead_code, reason = "wire format completeness — types used at runtime over IPC")]
+#[expect(
+    dead_code,
+    reason = "wire format completeness — types used at runtime over IPC"
+)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BearDogVerifyRequest {
     pub message: String,
@@ -410,21 +433,30 @@ pub struct BearDogVerifyRequest {
 }
 
 /// JSON-RPC response for `crypto.verify_ed25519`.
-#[expect(dead_code, reason = "wire format completeness — types used at runtime over IPC")]
+#[expect(
+    dead_code,
+    reason = "wire format completeness — types used at runtime over IPC"
+)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BearDogVerifyResponse {
     pub valid: bool,
 }
 
 /// JSON-RPC request for `crypto.blake3_hash`.
-#[expect(dead_code, reason = "wire format completeness — types used at runtime over IPC")]
+#[expect(
+    dead_code,
+    reason = "wire format completeness — types used at runtime over IPC"
+)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BearDogHashRequest {
     pub data: String,
 }
 
 /// JSON-RPC response for `crypto.blake3_hash`.
-#[expect(dead_code, reason = "wire format completeness — types used at runtime over IPC")]
+#[expect(
+    dead_code,
+    reason = "wire format completeness — types used at runtime over IPC"
+)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BearDogHashResponse {
     pub hash: String,
@@ -444,11 +476,7 @@ pub fn sign_vertex_ipc(vertex_content: &str, key_id: &str) -> serde_json::Value 
 }
 
 /// Build the IPC sequence for verifying a signature.
-pub fn verify_signature_ipc(
-    message: &str,
-    signature: &str,
-    public_key: &str,
-) -> serde_json::Value {
+pub fn verify_signature_ipc(message: &str, signature: &str, public_key: &str) -> serde_json::Value {
     serde_json::json!({
         "jsonrpc": "2.0",
         "method": "crypto.verify_ed25519",

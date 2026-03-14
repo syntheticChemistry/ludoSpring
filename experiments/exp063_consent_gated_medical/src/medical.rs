@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! Consent-gated medical data access — healthSpring zero-knowledge provenance.
+//! Consent-gated medical data access — `healthSpring` zero-knowledge provenance.
 //!
-//! Scaffolds healthSpring's zero-knowledge medical data access using the
-//! provenance trio: loamSpine certificates, rhizoCrypt DAG, sweetGrass braids.
+//! Scaffolds `healthSpring`'s zero-knowledge medical data access using the
+//! provenance trio: `loamSpine` certificates, `rhizoCrypt` DAG, `sweetGrass` braids.
 //!
 //! Medical records are consent-gated: providers can only access patient data
 //! when the patient has granted explicit, scoped consent. All access is
@@ -10,12 +10,12 @@
 
 use std::collections::HashMap;
 
+use loam_spine_core::Did;
 use loam_spine_core::certificate::{CertificateMetadata, CertificateType};
 use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
-use loam_spine_core::Did;
 
 // ============================================================================
 // Domain Model
@@ -60,7 +60,7 @@ pub struct AccessEvent {
     pub purpose: String,
     pub record_type: RecordType,
     pub tick: u64,
-    /// Set when created via access_record; None when injected for fraud testing.
+    /// Set when created via `access_record`; `None` when injected for fraud testing.
     pub vertex_id: Option<rhizo_crypt_core::VertexId>,
 }
 
@@ -87,9 +87,15 @@ pub enum MedicalFraudType {
 #[derive(Debug, Clone)]
 pub struct MedicalFraudReport {
     pub fraud_type: MedicalFraudType,
-    #[expect(dead_code, reason = "domain model completeness — used for audit display")]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — used for audit display"
+    )]
     pub description: String,
-    #[expect(dead_code, reason = "domain model completeness — used for audit display")]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — used for audit display"
+    )]
     pub record_id: Option<CertificateId>,
 }
 
@@ -106,7 +112,7 @@ pub struct ConsentRecord {
 // Medical DAG — rhizoCrypt session + vertices + frontier
 // ============================================================================
 
-/// rhizoCrypt DAG for medical access provenance.
+/// `rhizoCrypt` DAG for medical access provenance.
 pub struct MedicalDag {
     pub session: rhizo_crypt_core::Session,
     pub vertices: Vec<rhizo_crypt_core::Vertex>,
@@ -115,13 +121,12 @@ pub struct MedicalDag {
 
 impl MedicalDag {
     fn new() -> Self {
-        let session = rhizo_crypt_core::SessionBuilder::new(
-            rhizo_crypt_core::SessionType::Gaming {
+        let session =
+            rhizo_crypt_core::SessionBuilder::new(rhizo_crypt_core::SessionType::Gaming {
                 game_id: "medical_access".into(),
-            },
-        )
-        .with_name("Medical Access Provenance")
-        .build();
+            })
+            .with_name("Medical Access Provenance")
+            .build();
 
         Self {
             session,
@@ -136,12 +141,11 @@ impl MedicalDag {
         agent: &rhizo_crypt_core::Did,
         metadata: HashMap<String, rhizo_crypt_core::vertex::MetadataValue>,
     ) -> rhizo_crypt_core::VertexId {
-        let mut builder = rhizo_crypt_core::VertexBuilder::new(
-            rhizo_crypt_core::EventType::AgentAction {
+        let mut builder =
+            rhizo_crypt_core::VertexBuilder::new(rhizo_crypt_core::EventType::AgentAction {
                 action: action.into(),
-            },
-        )
-        .with_agent(agent.clone());
+            })
+            .with_agent(agent.clone());
 
         for &parent in &self.frontier {
             builder = builder.with_parent(parent);
@@ -160,7 +164,7 @@ impl MedicalDag {
 }
 
 // ============================================================================
-// Access Proof — deterministic signature (BearDog model)
+// Access Proof — deterministic signature (`BearDog` model)
 // ============================================================================
 
 const PROOF_KEY: [u8; 32] = [0xec; 32]; // Fixed pattern for deterministic proof
@@ -180,7 +184,7 @@ fn compute_proof_signature(accessor_did: &str, record_id: &CertificateId, tick: 
 }
 
 // ============================================================================
-// sweetGrass Braid Helper
+// `sweetGrass` Braid Helper
 // ============================================================================
 
 fn create_medical_braid(
@@ -241,8 +245,12 @@ pub struct MedicalAccessSystem {
 impl MedicalAccessSystem {
     /// Create a new medical access system.
     pub fn new(owner: &Did) -> Self {
-        let spine = Spine::new(owner.clone(), Some("MedicalAccess".into()), SpineConfig::default())
-            .expect("spine creation");
+        let spine = Spine::new(
+            owner.clone(),
+            Some("MedicalAccess".into()),
+            SpineConfig::default(),
+        )
+        .expect("spine creation");
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -256,6 +264,7 @@ impl MedicalAccessSystem {
     }
 
     /// Advance the system tick.
+    #[allow(clippy::missing_const_for_fn)] // mutates self — cannot be const
     pub fn advance_tick(&mut self) {
         self.tick += 1;
     }
@@ -376,7 +385,7 @@ impl MedicalAccessSystem {
 
         let patient_did = record_cert.owner.as_str();
 
-        let _consent = self
+        let _ = self
             .consents
             .values()
             .find(|c| {
@@ -387,7 +396,6 @@ impl MedicalAccessSystem {
                     && c.scope.expiry_tick >= self.tick
             })
             .ok_or("no valid consent")?;
-        let _ = _consent;
 
         let rhizo_did = rhizo_crypt_core::Did::new(provider.as_str());
         self.dag.session.add_agent(rhizo_did.clone());
@@ -560,9 +568,11 @@ impl MedicalAccessSystem {
             }
 
             // ScopeViolation: record_type not in consent scope
-            if let Some(consent) = self.consents.values().find(|c| {
-                c.patient_did == record_owner && c.provider_did == event.accessor_did
-            }) {
+            if let Some(consent) = self
+                .consents
+                .values()
+                .find(|c| c.patient_did == record_owner && c.provider_did == event.accessor_did)
+            {
                 if !consent.scope.record_types.contains(&event.record_type) {
                     reports.push(MedicalFraudReport {
                         fraud_type: MedicalFraudType::ScopeViolation,
@@ -608,6 +618,7 @@ impl MedicalAccessSystem {
     }
 
     /// Verify an access proof (deterministic check).
+    #[allow(clippy::unused_self)] // method belongs to API for consistency with other systems
     pub fn verify_proof(&self, proof: &AccessProof) -> bool {
         let expected =
             compute_proof_signature(&proof.accessor_did, &proof.record_id, proof.timestamp_tick);

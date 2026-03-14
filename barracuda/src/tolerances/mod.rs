@@ -189,3 +189,31 @@ pub const RAYCASTER_DISTANCE_TOL: f64 = 0.5;
 /// Justification: Perlin noise gradient is bounded; for Δx = 0.01 the
 /// output difference is empirically < 0.01 (smooth C² interpolation).
 pub const NOISE_COHERENCE_TOL: f64 = 0.01;
+
+// ── Tufte / UI Validation ────────────────────────────────────────
+
+/// Tolerance for data-ink ratio validation (Tufte-based experiments).
+///
+/// Justification: UI element data-ink scoring involves proportional area
+/// estimates and label-counting heuristics. ±0.05 absorbs font-metric
+/// and rounding variance while remaining discriminating.
+///
+/// Source: exp001 validation against `analyze_game_ui` reference output.
+pub const UI_DATA_INK_TOL: f64 = 0.05;
+
+/// Tolerance for HUD screen-coverage validation.
+///
+/// Justification: Element coverage is computed as width × height / total
+/// area; ±0.02 absorbs rounding while remaining tight.
+///
+/// Source: exp001 validation against `analyze_game_ui` reference output.
+pub const UI_COVERAGE_TOL: f64 = 0.02;
+
+/// Tolerance for raycaster hit-rate validation (wall-hit percentage).
+///
+/// Justification: Ray hit rate varies with player position quantization
+/// and grid boundary conditions. ±20% accounts for discrete grid effects
+/// in small maps where single-ray misses shift the percentage significantly.
+///
+/// Source: exp001 raycaster validation against 5×5 room with central player.
+pub const RAYCASTER_HIT_RATE_TOL: f64 = 20.0;

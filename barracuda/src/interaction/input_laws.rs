@@ -133,4 +133,50 @@ mod tests {
         let expected = (2.0 * 100.0 / 10.0 + 1.0_f64).log2();
         assert!((id - expected).abs() < 1e-10);
     }
+
+    #[test]
+    fn fitts_zero_distance_returns_intercept() {
+        let mt = fitts_movement_time(0.0, 10.0, 50.0, 150.0);
+        assert!((mt - 50.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn fitts_zero_width_returns_intercept() {
+        let mt = fitts_movement_time(100.0, 0.0, 50.0, 150.0);
+        assert!((mt - 50.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn fitts_id_zero_distance_returns_zero() {
+        assert!(fitts_index_of_difficulty(0.0, 10.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn fitts_id_zero_width_returns_zero() {
+        assert!(fitts_index_of_difficulty(100.0, 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn hick_zero_choices_returns_base() {
+        let rt = hick_reaction_time(0, 200.0, 150.0);
+        assert!((rt - 200.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn steering_zero_width_returns_infinity() {
+        let t = steering_time(100.0, 0.0, 10.0, 5.0);
+        assert!(t.is_infinite());
+    }
+
+    #[test]
+    fn interaction_cost_combines_fitts_and_hick() {
+        let fitts_a = 50.0;
+        let fitts_b = 150.0;
+        let hick_a = 200.0;
+        let hick_b = 150.0;
+        let cost = interaction_cost(100.0, 20.0, 4, fitts_a, fitts_b, hick_a, hick_b);
+        let expected_fitts = fitts_movement_time(100.0, 20.0, fitts_a, fitts_b);
+        let expected_hick = hick_reaction_time(4, hick_a, hick_b);
+        assert!((cost - (expected_fitts + expected_hick)).abs() < 1e-10);
+    }
 }

@@ -6,6 +6,13 @@
 //! - Validation against Python baselines (different results each run)
 //! - Deterministic replay (game state diverges)
 //! - GPU promotion correctness (can't compare CPU vs GPU if CPU varies)
+//!
+//! # Provenance
+//!
+//! These are structural tests — they do not compare against external
+//! baselines. Pass criterion is bitwise identity (`to_bits()`) across
+//! consecutive calls with identical inputs. No tolerance is involved;
+//! any bit-level difference is a failure.
 
 use ludospring_barracuda::procedural::noise::{fbm_2d, fbm_3d, perlin_2d, perlin_3d};
 use ludospring_barracuda::procedural::wfc::{AdjacencyRules, WfcCell, WfcGrid};

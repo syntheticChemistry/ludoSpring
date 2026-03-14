@@ -369,6 +369,7 @@ fn is_completion_action(action: &str) -> bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::metrics::engagement::compute_engagement;
@@ -464,5 +465,192 @@ mod tests {
         let signals = acc.to_fun_signals();
         let classification = classify_fun(&signals);
         assert!(classification.scores.hard > 0.0);
+    }
+
+    #[test]
+    fn empty_events_ingest_no_op() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest_all(&[]);
+        assert_eq!(acc.action_count, 0);
+        assert!(acc.first_timestamp_ms.is_none());
+        assert!(acc.last_timestamp_ms.is_none());
+    }
+
+    #[test]
+    fn custom_event_type_ignored() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            1000,
+            EventType::Custom("unknown_event".into()),
+            serde_json::json!({}),
+        ));
+        assert_eq!(acc.action_count, 0);
+        assert_eq!(acc.first_timestamp_ms, Some(1000));
+        assert_eq!(acc.last_timestamp_ms, Some(1000));
+    }
+
+    #[test]
+    fn player_death_increments_count() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::PlayerDeath,
+            serde_json::json!({}),
+        ));
+        acc.ingest(&make_event(
+            1000,
+            EventType::PlayerDeath,
+            serde_json::json!({}),
+        ));
+        assert_eq!(acc.death_count, 2);
+        assert_eq!(acc.retry_count, 2);
+    }
+
+    #[test]
+    fn player_damage_accumulates() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::PlayerDamage,
+            serde_json::json!({"amount": 10.0}),
+        ));
+        acc.ingest(&make_event(
+            1000,
+            EventType::PlayerDamage,
+            serde_json::json!({"amount": 25.5}),
+        ));
+        assert!((acc.total_damage - 35.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn exploration_empty_discovery_id_uses_coords() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::ExplorationDiscover,
+            serde_json::json!({"x": 42.0, "y": 17.0}),
+        ));
+        assert!(acc.discoveries.contains("area_42_17"));
+    }
+
+    #[test]
+    fn exploration_parse_failure_uses_fallback_id() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::ExplorationDiscover,
+            serde_json::json!("invalid"),
+        ));
+        assert!(acc.discoveries.contains("discovery_0"));
+    }
+
+    #[test]
+    fn session_end_zero_duration_keeps_timestamp_delta() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            1000,
+            EventType::SessionStart,
+            serde_json::json!({"game_name": "x"}),
+        ));
+        acc.ingest(&make_event(
+            5000,
+            EventType::SessionEnd,
+            serde_json::json!({"duration_s": 0.0}),
+        ));
+        assert!(acc.ended);
+        assert!((acc.effective_duration_s() - 4.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn effective_duration_empty_returns_zero() {
+        let acc = SessionAccumulator::new();
+        assert!(acc.effective_duration_s().abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn ui_layout_and_interact_populate_report_inputs() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::UiLayout,
+            serde_json::json!({
+                "elements": [{"name": "btn", "bounds": [0.1, 0.1, 0.2, 0.1]}]
+            }),
+        ));
+        acc.ingest(&make_event(
+            1000,
+            EventType::UiInteract,
+            serde_json::json!({
+                "element": "btn",
+                "distance_px": 100.0,
+                "target_width_px": 50.0,
+                "n_options": 4
+            }),
+        ));
+        let elements = acc.to_ui_elements();
+        assert_eq!(elements.len(), 1);
+        assert_eq!(elements[0].name, "btn");
+        assert_eq!(acc.ui_interactions.len(), 1);
+    }
+
+    #[test]
+    fn input_raw_adds_keystroke() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(0, EventType::InputRaw, serde_json::json!({})));
+        assert_eq!(acc.input_actions.len(), 1);
+        assert_eq!(acc.input_actions[0].1, "keystroke");
+    }
+
+    #[test]
+    fn social_and_completion_actions_counted() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::PlayerAction,
+            serde_json::json!({"action": "chat"}),
+        ));
+        acc.ingest(&make_event(
+            1000,
+            EventType::PlayerAction,
+            serde_json::json!({"action": "collect"}),
+        ));
+        assert_eq!(acc.social_actions, 1);
+        assert_eq!(acc.completion_actions, 1);
+    }
+
+    #[test]
+    fn detect_pause_on_gap() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::PlayerMove,
+            serde_json::json!({"x": 1.0, "y": 1.0}),
+        ));
+        acc.ingest(&make_event(
+            5000,
+            EventType::PlayerMove,
+            serde_json::json!({"x": 2.0, "y": 2.0}),
+        ));
+        assert_eq!(acc.deliberate_pauses, 1);
+    }
+
+    #[test]
+    fn to_ui_elements_empty_when_no_layout() {
+        let acc = SessionAccumulator::new();
+        assert!(acc.to_ui_elements().is_empty());
+    }
+
+    #[test]
+    fn performance_window_accessible() {
+        let acc = SessionAccumulator::new();
+        let _ = acc.performance_window();
+    }
+
+    #[test]
+    fn default_accumulator_matches_new() {
+        let def: SessionAccumulator = SessionAccumulator::default();
+        let new = SessionAccumulator::new();
+        assert_eq!(def.action_count, new.action_count);
+        assert_eq!(def.ended, new.ended);
     }
 }

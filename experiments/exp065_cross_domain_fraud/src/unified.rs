@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 // Domain vocabulary and generic operations
 // =============================================================================
 
-/// Generic operation types — domain-agnostic.
+/// Generic operation types — domain-agnostic (`GenericOp`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GenericOp {
     CreateObject,
@@ -20,7 +20,7 @@ pub enum GenericOp {
     RevokeAccess,
 }
 
-/// Maps generic operations to domain-specific names.
+/// Maps `GenericOp` to domain-specific names.
 #[derive(Debug, Clone)]
 pub struct DomainVocabulary {
     pub domain_name: String,
@@ -28,7 +28,7 @@ pub struct DomainVocabulary {
     pub fraud_labels: HashMap<GenericFraudType, String>,
 }
 
-/// Generic event in the provenance DAG.
+/// Generic event in the provenance DAG (`GenericEvent`).
 #[derive(Debug, Clone)]
 pub struct GenericEvent {
     pub op: GenericOp,
@@ -38,8 +38,7 @@ pub struct GenericEvent {
     pub metadata: HashMap<String, String>,
 }
 
-
-/// Generic fraud types — structural patterns that indicate fraud.
+/// Generic fraud types — structural patterns that indicate fraud (`GenericFraudType`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GenericFraudType {
     OrphanObject,
@@ -49,7 +48,7 @@ pub enum GenericFraudType {
     BrokenChain,
 }
 
-/// Fraud report with generic type and domain-specific labeling.
+/// Fraud report with generic type and domain-specific labeling (`GenericFraudReport`).
 #[derive(Debug, Clone)]
 pub struct GenericFraudReport {
     pub fraud_type: GenericFraudType,
@@ -75,10 +74,22 @@ pub fn gaming_vocabulary() -> DomainVocabulary {
 
     let mut fraud_labels = HashMap::new();
     fraud_labels.insert(GenericFraudType::OrphanObject, "OrphanItem".to_string());
-    fraud_labels.insert(GenericFraudType::DuplicateIdentity, "DuplicateItem".to_string());
-    fraud_labels.insert(GenericFraudType::UnauthorizedAction, "UnauthorizedModify".to_string());
-    fraud_labels.insert(GenericFraudType::ScopeViolation, "ScopeViolation".to_string());
-    fraud_labels.insert(GenericFraudType::BrokenChain, "BrokenTradeChain".to_string());
+    fraud_labels.insert(
+        GenericFraudType::DuplicateIdentity,
+        "DuplicateItem".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::UnauthorizedAction,
+        "UnauthorizedModify".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::ScopeViolation,
+        "ScopeViolation".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::BrokenChain,
+        "BrokenTradeChain".to_string(),
+    );
 
     DomainVocabulary {
         domain_name: "gaming".to_string(),
@@ -101,10 +112,22 @@ pub fn science_vocabulary() -> DomainVocabulary {
 
     let mut fraud_labels = HashMap::new();
     fraud_labels.insert(GenericFraudType::OrphanObject, "PhantomSample".to_string());
-    fraud_labels.insert(GenericFraudType::DuplicateIdentity, "DuplicateSample".to_string());
-    fraud_labels.insert(GenericFraudType::UnauthorizedAction, "UnauthorizedProcessing".to_string());
-    fraud_labels.insert(GenericFraudType::ScopeViolation, "ScopeViolation".to_string());
-    fraud_labels.insert(GenericFraudType::BrokenChain, "BrokenCustodyChain".to_string());
+    fraud_labels.insert(
+        GenericFraudType::DuplicateIdentity,
+        "DuplicateSample".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::UnauthorizedAction,
+        "UnauthorizedProcessing".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::ScopeViolation,
+        "ScopeViolation".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::BrokenChain,
+        "BrokenCustodyChain".to_string(),
+    );
 
     DomainVocabulary {
         domain_name: "science".to_string(),
@@ -127,10 +150,22 @@ pub fn medical_vocabulary() -> DomainVocabulary {
 
     let mut fraud_labels = HashMap::new();
     fraud_labels.insert(GenericFraudType::OrphanObject, "PhantomAccess".to_string());
-    fraud_labels.insert(GenericFraudType::DuplicateIdentity, "DuplicateRecord".to_string());
-    fraud_labels.insert(GenericFraudType::UnauthorizedAction, "UnauthorizedUpdate".to_string());
-    fraud_labels.insert(GenericFraudType::ScopeViolation, "ScopeViolation".to_string());
-    fraud_labels.insert(GenericFraudType::BrokenChain, "BrokenReferralChain".to_string());
+    fraud_labels.insert(
+        GenericFraudType::DuplicateIdentity,
+        "DuplicateRecord".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::UnauthorizedAction,
+        "UnauthorizedUpdate".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::ScopeViolation,
+        "ScopeViolation".to_string(),
+    );
+    fraud_labels.insert(
+        GenericFraudType::BrokenChain,
+        "BrokenReferralChain".to_string(),
+    );
 
     DomainVocabulary {
         domain_name: "medical".to_string(),
@@ -143,7 +178,7 @@ pub fn medical_vocabulary() -> DomainVocabulary {
 // Generic fraud detector
 // =============================================================================
 
-/// Domain-agnostic fraud detector.
+/// Domain-agnostic fraud detector (`GenericFraudDetector`).
 pub struct GenericFraudDetector {
     pub events: Vec<GenericEvent>,
     pub vocabulary: DomainVocabulary,
@@ -151,6 +186,7 @@ pub struct GenericFraudDetector {
 
 impl GenericFraudDetector {
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn new(vocabulary: DomainVocabulary) -> Self {
         Self {
             events: Vec::new(),
@@ -164,6 +200,10 @@ impl GenericFraudDetector {
 
     /// Run all five generic fraud checks.
     #[must_use]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "fraud detection requires sequential rule checks"
+    )]
     pub fn detect(&self) -> Vec<GenericFraudReport> {
         let mut reports = Vec::new();
 
@@ -171,9 +211,7 @@ impl GenericFraudDetector {
         for ev in &self.events {
             if matches!(ev.op, GenericOp::TransformObject | GenericOp::ConsumeObject) {
                 let has_create = self.events.iter().any(|e| {
-                    e.tick < ev.tick
-                        && e.op == GenericOp::CreateObject
-                        && e.target == ev.target
+                    e.tick < ev.tick && e.op == GenericOp::CreateObject && e.target == ev.target
                 });
                 if !has_create {
                     reports.push(GenericFraudReport {
@@ -202,7 +240,7 @@ impl GenericFraudDetector {
             if !seen.insert(*t) && reported.insert(*t) {
                 reports.push(GenericFraudReport {
                     fraud_type: GenericFraudType::DuplicateIdentity,
-                    description: format!("Duplicate CreateObject for target {}", t),
+                    description: format!("Duplicate CreateObject for target {t}"),
                     domain_label: String::new(),
                 });
             }
@@ -287,21 +325,24 @@ impl GenericFraudDetector {
         reports
     }
 
-    /// Relabel a report using the detector's vocabulary.
+    /// Relabel a report using the detector's vocabulary (`GenericFraudReport`).
     #[must_use]
     pub fn relabel_report(&self, report: &GenericFraudReport) -> GenericFraudReport {
         relabel_report(report, &self.vocabulary)
     }
 }
 
-/// Apply domain vocabulary to a report's description and domain label.
+/// Apply `DomainVocabulary` to a report's description and domain label.
 #[must_use]
-pub fn relabel_report(report: &GenericFraudReport, vocabulary: &DomainVocabulary) -> GenericFraudReport {
+#[allow(clippy::missing_const_for_fn)]
+pub fn relabel_report(
+    report: &GenericFraudReport,
+    vocabulary: &DomainVocabulary,
+) -> GenericFraudReport {
     let domain_label = vocabulary
         .fraud_labels
         .get(&report.fraud_type)
-        .cloned()
-        .unwrap_or_else(|| format!("{:?}", report.fraud_type));
+        .map_or_else(|| format!("{:?}", report.fraud_type), Clone::clone);
 
     GenericFraudReport {
         fraud_type: report.fraud_type,
@@ -310,7 +351,7 @@ pub fn relabel_report(report: &GenericFraudReport, vocabulary: &DomainVocabulary
     }
 }
 
-fn op_name(op: GenericOp) -> &'static str {
+const fn op_name(op: GenericOp) -> &'static str {
     match op {
         GenericOp::CreateObject => "CreateObject",
         GenericOp::TransferObject => "TransferObject",
@@ -326,8 +367,12 @@ fn op_name(op: GenericOp) -> &'static str {
 // Cross-domain structural similarity
 // =============================================================================
 
-/// Compute Jaccard similarity of detected fraud types between two domains.
+/// Compute Jaccard similarity of detected fraud types between two domains (`GenericFraudReport`).
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 pub fn compute_structural_similarity(
     reports_a: &[GenericFraudReport],
     reports_b: &[GenericFraudReport],

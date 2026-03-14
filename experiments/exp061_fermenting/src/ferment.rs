@@ -13,12 +13,12 @@
 
 use std::collections::HashMap;
 
+use loam_spine_core::Did;
 use loam_spine_core::certificate::{CertificateMetadata, CertificateType, LoanTerms};
 use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
-use loam_spine_core::Did;
 
 // ============================================================================
 // Cosmetic Schema
@@ -97,7 +97,10 @@ impl CosmeticSchema {
 ///
 /// The certificate IS the persistent identity. The DAG records every action.
 /// The braids provide semantic attribution. The cosmetics are visual metadata.
-#[expect(dead_code, reason = "domain model completeness — fields used for inspection/queries")]
+#[expect(
+    dead_code,
+    reason = "domain model completeness — fields used for inspection/queries"
+)]
 pub struct FermentingObject {
     pub cert_id: CertificateId,
     pub item_name: String,
@@ -108,7 +111,10 @@ pub struct FermentingObject {
 
 /// An event in the life of a fermenting object.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "domain model completeness — fields available for timeline queries")]
+#[expect(
+    dead_code,
+    reason = "domain model completeness — fields available for timeline queries"
+)]
 pub struct FermentEvent {
     pub event_type: FermentEventType,
     pub actor_did: String,
@@ -125,13 +131,19 @@ pub enum FermentEventType {
     Loan,
     LoanReturn,
     Consume,
-    #[expect(dead_code, reason = "domain model completeness — variant for future cosmetic updates")]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — variant for future cosmetic updates"
+    )]
     CosmeticChange,
     Achievement,
 }
 
 impl FermentEventType {
-    #[expect(dead_code, reason = "domain model completeness — used for serialization/display")]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — used for serialization/display"
+    )]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Mint => "mint",
@@ -172,13 +184,12 @@ pub struct FermentDag {
 
 impl FermentDag {
     fn new() -> Self {
-        let session = rhizo_crypt_core::SessionBuilder::new(
-            rhizo_crypt_core::session::SessionType::Gaming {
+        let session =
+            rhizo_crypt_core::SessionBuilder::new(rhizo_crypt_core::session::SessionType::Gaming {
                 game_id: "fermenting".into(),
-            },
-        )
-        .with_name("Fermenting Object History")
-        .build();
+            })
+            .with_name("Fermenting Object History")
+            .build();
 
         Self {
             session,
@@ -193,12 +204,11 @@ impl FermentDag {
         agent: &rhizo_crypt_core::Did,
         metadata: HashMap<String, rhizo_crypt_core::vertex::MetadataValue>,
     ) -> rhizo_crypt_core::VertexId {
-        let mut builder = rhizo_crypt_core::VertexBuilder::new(
-            rhizo_crypt_core::EventType::AgentAction {
+        let mut builder =
+            rhizo_crypt_core::VertexBuilder::new(rhizo_crypt_core::EventType::AgentAction {
                 action: event_type.into(),
-            },
-        )
-        .with_agent(agent.clone());
+            })
+            .with_agent(agent.clone());
 
         for &parent in &self.frontier {
             builder = builder.with_parent(parent);
@@ -219,8 +229,12 @@ impl FermentDag {
 impl FermentingSystem {
     /// Create a new fermenting system.
     pub fn new(owner: &Did) -> Self {
-        let spine = Spine::new(owner.clone(), Some("Fermenting".into()), SpineConfig::default())
-            .expect("spine creation");
+        let spine = Spine::new(
+            owner.clone(),
+            Some("Fermenting".into()),
+            SpineConfig::default(),
+        )
+        .expect("spine creation");
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -524,12 +538,7 @@ impl FermentingSystem {
     }
 
     /// Record an achievement for a fermenting object (e.g. "killed 100 enemies").
-    pub fn record_achievement(
-        &mut self,
-        cert_id: CertificateId,
-        actor: &Did,
-        achievement: &str,
-    ) {
+    pub fn record_achievement(&mut self, cert_id: CertificateId, actor: &Did, achievement: &str) {
         let rhizo_did = rhizo_crypt_core::Did::new(actor.as_str());
         let mut meta = HashMap::new();
         meta.insert(
@@ -664,18 +673,11 @@ pub struct TradingProtocol {
 
 impl TradingProtocol {
     pub const fn new() -> Self {
-        Self {
-            offers: Vec::new(),
-        }
+        Self { offers: Vec::new() }
     }
 
     /// Create a new trade offer (one-sided: I give you my item).
-    pub fn offer(
-        &mut self,
-        from: &str,
-        to: &str,
-        offered_cert: CertificateId,
-    ) -> uuid::Uuid {
+    pub fn offer(&mut self, from: &str, to: &str, offered_cert: CertificateId) -> uuid::Uuid {
         let offer_id = uuid::Uuid::now_v7();
         self.offers.push(TradeOffer {
             offer_id,
@@ -761,8 +763,8 @@ impl TradingProtocol {
             return Err("offer not accepted".into());
         }
 
-        let from_did = Did::new(&offer.from);
-        let to_did = Did::new(&offer.to);
+        let from_did = Did::new(offer.from.as_str());
+        let to_did = Did::new(offer.to.as_str());
 
         system
             .trade(offer.offered_cert, &from_did, &to_did)

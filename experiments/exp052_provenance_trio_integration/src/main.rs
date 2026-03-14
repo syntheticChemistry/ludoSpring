@@ -438,7 +438,13 @@ fn validate_cross_primal_roundtrip() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "roundtrip_braid_links_to_vertex",
-        bool_f64(action_braid.braid.data_hash.as_str().contains(&cast_hex[..16])),
+        bool_f64(
+            action_braid
+                .braid
+                .data_hash
+                .as_str()
+                .contains(&cast_hex[..16]),
+        ),
         1.0,
         0.0,
     ));

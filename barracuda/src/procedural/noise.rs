@@ -246,4 +246,97 @@ mod tests {
             "perlin at integer coords should be ~0, got {v}"
         );
     }
+
+    #[test]
+    fn perlin_3d_at_integer_coords_is_zero() {
+        let v = perlin_3d(1.0, 2.0, 3.0);
+        assert!(v.abs() < 1e-10, "3D perlin at integers should be ~0");
+    }
+
+    #[test]
+    fn fbm_3d_in_range() {
+        let v = fbm_3d(0.5, 0.7, 0.3, 4, 2.0, 0.5);
+        assert!(v.is_finite());
+        assert!(v.abs() <= 2.0);
+    }
+
+    #[test]
+    fn fbm_3d_is_coherent() {
+        let a = fbm_3d(1.0, 1.0, 1.0, 4, 2.0, 0.5);
+        let b = fbm_3d(1.001, 1.001, 1.001, 4, 2.0, 0.5);
+        assert!((a - b).abs() < 0.1, "nearby 3D samples should be similar");
+    }
+
+    #[test]
+    fn fbm_2d_single_octave_equals_perlin() {
+        let fbm_val = fbm_2d(0.5, 0.7, 1, 2.0, 0.5);
+        let perlin_val = perlin_2d(0.5, 0.7);
+        assert!((fbm_val - perlin_val).abs() < 1e-10);
+    }
+
+    #[test]
+    fn perlin_2d_negative_coords() {
+        let v = perlin_2d(-5.5, -3.7);
+        assert!(v.is_finite());
+        assert!(v.abs() <= 2.0);
+    }
+
+    #[test]
+    fn perlin_3d_negative_coords() {
+        let v = perlin_3d(-2.3, -4.7, -1.1);
+        assert!(v.is_finite());
+        assert!(v.abs() <= 2.0);
+    }
+
+    #[test]
+    fn grad2_all_branches() {
+        assert!((grad2(0, 1.0, 2.0) - 3.0).abs() < f64::EPSILON);
+        assert!((grad2(1, 1.0, 2.0) - 1.0).abs() < f64::EPSILON);
+        assert!((grad2(2, 1.0, 2.0) - (-1.0)).abs() < f64::EPSILON);
+        assert!((grad2(3, 1.0, 2.0) - (-3.0)).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn grad3_all_branches() {
+        let (x, y, z) = (1.0, 2.0, 3.0);
+        let expected = [
+            x + y,
+            -x + y,
+            x - y,
+            -x - y,
+            x + z,
+            -x + z,
+            x - z,
+            -x - z,
+            y + z,
+            -y + z,
+            y - z,
+            -y - z,
+            y + x,
+            -y + z,
+            y - x,
+            -y - z,
+        ];
+        for (i, &exp) in expected.iter().enumerate() {
+            #[expect(clippy::cast_possible_truncation)]
+            let val = grad3(i as u8, x, y, z);
+            assert!(
+                (val - exp).abs() < f64::EPSILON,
+                "grad3 arm {i}: got {val}, expected {exp}"
+            );
+        }
+    }
+
+    #[test]
+    fn fade_boundaries() {
+        assert!(fade(0.0).abs() < f64::EPSILON);
+        assert!((fade(1.0) - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn lerp_boundaries() {
+        assert!((lerp(10.0, 20.0, 0.0) - 10.0).abs() < f64::EPSILON);
+        assert!((lerp(10.0, 20.0, 1.0) - 20.0).abs() < f64::EPSILON);
+        assert!((lerp(10.0, 20.0, 0.5) - 15.0).abs() < f64::EPSILON);
+    }
 }

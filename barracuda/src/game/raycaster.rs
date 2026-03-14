@@ -260,6 +260,7 @@ pub fn cast_screen(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -308,5 +309,134 @@ mod tests {
         let map = test_map();
         let hits = cast_screen(&player, 320, &map, 20.0);
         assert_eq!(hits.len(), 320);
+    }
+
+    #[test]
+    fn ray_hits_nothing_in_empty_region() {
+        let empty_map = GridMap::new(5, 5, vec![false; 25]);
+        let player = RayPlayer {
+            x: 2.5,
+            y: 2.5,
+            angle: 0.0,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, 0.0, &empty_map, 20.0);
+        assert!(hit.is_none());
+    }
+
+    #[test]
+    fn ray_north_small_map_hits_wall() {
+        let map = GridMap::from_nested(&[
+            vec![true, false, true],
+            vec![true, false, true],
+            vec![true, true, true],
+        ]);
+        let player = RayPlayer {
+            x: 1.5,
+            y: 1.5,
+            angle: std::f64::consts::PI / 2.0,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, std::f64::consts::PI / 2.0, &map, 20.0);
+        assert!(hit.is_some());
+        let hit = hit.unwrap();
+        assert_eq!(hit.cell_y, 2);
+    }
+
+    #[test]
+    fn ray_north_hits_wall() {
+        let map = test_map();
+        let player = RayPlayer {
+            x: 2.5,
+            y: 2.5,
+            angle: std::f64::consts::PI / 2.0,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, std::f64::consts::PI / 2.0, &map, 20.0);
+        assert!(hit.is_some());
+        let hit = hit.unwrap();
+        assert_eq!(hit.cell_y, 4);
+        assert!(hit.distance > 1.0);
+    }
+
+    #[test]
+    fn ray_south_hits_wall() {
+        let map = test_map();
+        let player = RayPlayer {
+            x: 2.5,
+            y: 2.5,
+            angle: -std::f64::consts::PI / 2.0,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, -std::f64::consts::PI / 2.0, &map, 20.0);
+        assert!(hit.is_some());
+        let hit = hit.unwrap();
+        assert_eq!(hit.cell_y, 0);
+    }
+
+    #[test]
+    fn ray_west_hits_wall() {
+        let map = test_map();
+        let player = RayPlayer {
+            x: 2.5,
+            y: 2.5,
+            angle: std::f64::consts::PI,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, std::f64::consts::PI, &map, 20.0);
+        assert!(hit.is_some());
+        let hit = hit.unwrap();
+        assert_eq!(hit.cell_x, 0);
+    }
+
+    #[test]
+    fn max_depth_returns_none() {
+        let map = test_map();
+        let player = RayPlayer {
+            x: 2.5,
+            y: 2.5,
+            angle: 0.0,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, 0.0, &map, 0.5);
+        assert!(hit.is_none());
+    }
+
+    #[test]
+    fn zero_width_map_returns_none() {
+        let map = GridMap::new(0, 5, vec![]);
+        let player = RayPlayer::default();
+        let hit = cast_ray(&player, 0.0, &map, 20.0);
+        assert!(hit.is_none());
+    }
+
+    #[test]
+    fn player_at_boundary_still_casts() {
+        let map = test_map();
+        let player = RayPlayer {
+            x: 0.5,
+            y: 2.5,
+            angle: 0.0,
+            ..Default::default()
+        };
+        let hit = cast_ray(&player, 0.0, &map, 20.0);
+        assert!(hit.is_some());
+    }
+
+    #[test]
+    fn strafe_and_rotate() {
+        let mut player = RayPlayer::default();
+        let y0 = player.y;
+        player.strafe(1.0, 1.0);
+        assert!((player.y - y0).abs() > 0.01, "strafe at angle 0 moves in y");
+        player.rotate(1.0, 1.0);
+        assert!((player.angle - std::f64::consts::PI).abs() < 0.01);
+    }
+
+    #[test]
+    fn grid_get_out_of_bounds() {
+        let map = test_map();
+        assert!(!map.get(10, 10));
+        assert!(!map.get(5, 0));
     }
 }

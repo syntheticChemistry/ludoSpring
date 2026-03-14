@@ -11,26 +11,21 @@ use std::collections::HashMap;
 
 use ludospring_barracuda::validation::ValidationResult;
 use unified::{
-    compute_structural_similarity, gaming_vocabulary, medical_vocabulary, science_vocabulary,
-    relabel_report, DomainVocabulary, GenericEvent, GenericFraudDetector, GenericFraudReport,
-    GenericFraudType, GenericOp,
+    DomainVocabulary, GenericEvent, GenericFraudDetector, GenericFraudReport, GenericFraudType,
+    GenericOp, compute_structural_similarity, gaming_vocabulary, medical_vocabulary,
+    relabel_report, science_vocabulary,
 };
 
 const EXP: &str = "exp065_cross_domain_fraud";
 
 const fn bool_f64(b: bool) -> f64 {
-    if b {
-        1.0
-    } else {
-        0.0
-    }
+    if b { 1.0 } else { 0.0 }
 }
 
 // =============================================================================
 // 1. Vocabulary mapping validation
 // =============================================================================
 
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
 fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -48,7 +43,7 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
     for op in all_ops {
         results.push(ValidationResult::check(
             EXP,
-            &format!("gaming_covers_{:?}", op),
+            &format!("gaming_covers_{op:?}"),
             bool_f64(gaming.op_labels.contains_key(&op)),
             1.0,
             0.0,
@@ -65,7 +60,9 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
     results.push(ValidationResult::check(
         EXP,
         "gaming_transfer_maps_to_item_trade",
-        bool_f64(gaming.op_labels.get(&GenericOp::TransferObject) == Some(&"ItemTrade".to_string())),
+        bool_f64(
+            gaming.op_labels.get(&GenericOp::TransferObject) == Some(&"ItemTrade".to_string()),
+        ),
         1.0,
         0.0,
     ));
@@ -73,9 +70,7 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
         EXP,
         "gaming_consume_maps_to_item_consume_fire",
         bool_f64(
-            gaming
-                .op_labels
-                .get(&GenericOp::ConsumeObject)
+            gaming.op_labels.get(&GenericOp::ConsumeObject)
                 == Some(&"ItemConsume/Fire".to_string()),
         ),
         1.0,
@@ -86,7 +81,7 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
     for op in all_ops {
         results.push(ValidationResult::check(
             EXP,
-            &format!("science_covers_{:?}", op),
+            &format!("science_covers_{op:?}"),
             bool_f64(science.op_labels.contains_key(&op)),
             1.0,
             0.0,
@@ -96,10 +91,7 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
         EXP,
         "science_create_maps_to_sample_collect",
         bool_f64(
-            science
-                .op_labels
-                .get(&GenericOp::CreateObject)
-                == Some(&"SampleCollect".to_string()),
+            science.op_labels.get(&GenericOp::CreateObject) == Some(&"SampleCollect".to_string()),
         ),
         1.0,
         0.0,
@@ -109,7 +101,7 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
     for op in all_ops {
         results.push(ValidationResult::check(
             EXP,
-            &format!("medical_covers_{:?}", op),
+            &format!("medical_covers_{op:?}"),
             bool_f64(medical.op_labels.contains_key(&op)),
             1.0,
             0.0,
@@ -119,10 +111,7 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
         EXP,
         "medical_create_maps_to_record_creation",
         bool_f64(
-            medical
-                .op_labels
-                .get(&GenericOp::CreateObject)
-                == Some(&"RecordCreation".to_string()),
+            medical.op_labels.get(&GenericOp::CreateObject) == Some(&"RecordCreation".to_string()),
         ),
         1.0,
         0.0,
@@ -130,10 +119,10 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
 
     for v in [&gaming, &science, &medical] {
         for op in all_ops {
-            let label = v.op_labels.get(&op).map(|s| s.as_str()).unwrap_or("");
+            let label = v.op_labels.get(&op).map_or("", |s| s.as_str());
             results.push(ValidationResult::check(
                 EXP,
-                &format!("{}_no_empty_{:?}", v.domain_name, op),
+                &format!("{}_no_empty_{op:?}", v.domain_name),
                 bool_f64(!label.is_empty()),
                 1.0,
                 0.0,
@@ -158,7 +147,13 @@ fn event(op: GenericOp, actor: &str, target: &str, tick: u64) -> GenericEvent {
     }
 }
 
-fn event_with_meta(op: GenericOp, actor: &str, target: &str, tick: u64, scope: &str) -> GenericEvent {
+fn event_with_meta(
+    op: GenericOp,
+    actor: &str,
+    target: &str,
+    tick: u64,
+    scope: &str,
+) -> GenericEvent {
     let mut metadata = HashMap::new();
     metadata.insert("scope".to_string(), scope.to_string());
     GenericEvent {
@@ -170,7 +165,14 @@ fn event_with_meta(op: GenericOp, actor: &str, target: &str, tick: u64, scope: &
     }
 }
 
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation section — sequential checks"
+)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation counts fit in f64 mantissa"
+)]
 fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let mut results = Vec::new();
     let vocab = gaming_vocabulary();
@@ -179,7 +181,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let mut det = GenericFraudDetector::new(vocab.clone());
     det.add_event(event(GenericOp::TransformObject, "alice", "item_x", 10));
     let reports = det.detect();
-    let has_orphan = reports.iter().any(|r| r.fraud_type == GenericFraudType::OrphanObject);
+    let has_orphan = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::OrphanObject);
     results.push(ValidationResult::check(
         EXP,
         "orphan_object_detected",
@@ -192,7 +196,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let mut det = GenericFraudDetector::new(vocab.clone());
     det.add_event(event(GenericOp::ConsumeObject, "bob", "item_y", 5));
     let reports = det.detect();
-    let has_orphan = reports.iter().any(|r| r.fraud_type == GenericFraudType::OrphanObject);
+    let has_orphan = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::OrphanObject);
     results.push(ValidationResult::check(
         EXP,
         "orphan_consume_detected",
@@ -206,7 +212,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     det.add_event(event(GenericOp::CreateObject, "alice", "item_z", 1));
     det.add_event(event(GenericOp::CreateObject, "bob", "item_z", 2));
     let reports = det.detect();
-    let has_dup = reports.iter().any(|r| r.fraud_type == GenericFraudType::DuplicateIdentity);
+    let has_dup = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::DuplicateIdentity);
     results.push(ValidationResult::check(
         EXP,
         "duplicate_identity_detected",
@@ -220,7 +228,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     det.add_event(event(GenericOp::CreateObject, "alice", "item_a", 1));
     det.add_event(event(GenericOp::TransformObject, "bob", "item_a", 2)); // bob never had access
     let reports = det.detect();
-    let has_unauth = reports.iter().any(|r| r.fraud_type == GenericFraudType::UnauthorizedAction);
+    let has_unauth = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::UnauthorizedAction);
     results.push(ValidationResult::check(
         EXP,
         "unauthorized_action_detected",
@@ -240,7 +250,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
         "item_b,item_d",
     )); // scope has item_b, item_d but not item_c
     let reports = det.detect();
-    let has_scope = reports.iter().any(|r| r.fraud_type == GenericFraudType::ScopeViolation);
+    let has_scope = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::ScopeViolation);
     results.push(ValidationResult::check(
         EXP,
         "scope_violation_detected",
@@ -254,7 +266,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     det.add_event(event(GenericOp::CreateObject, "alice", "item_e", 1));
     det.add_event(event(GenericOp::TransferObject, "bob", "item_e", 2)); // bob doesn't hold item_e
     let reports = det.detect();
-    let has_broken = reports.iter().any(|r| r.fraud_type == GenericFraudType::BrokenChain);
+    let has_broken = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::BrokenChain);
     results.push(ValidationResult::check(
         EXP,
         "broken_chain_detected",
@@ -282,7 +296,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     det.add_event(event(GenericOp::CreateObject, "alice", "item_g", 1));
     det.add_event(event(GenericOp::TransferObject, "alice", "item_g", 2));
     let reports = det.detect();
-    let has_broken = reports.iter().any(|r| r.fraud_type == GenericFraudType::BrokenChain);
+    let has_broken = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::BrokenChain);
     results.push(ValidationResult::check(
         EXP,
         "valid_transfer_no_broken_chain",
@@ -292,7 +308,7 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     ));
 
     // Clean: CreateObject -> ConsumeObject with scope including target
-    let mut det = GenericFraudDetector::new(vocab.clone());
+    let mut det = GenericFraudDetector::new(vocab);
     det.add_event(event(GenericOp::CreateObject, "alice", "item_h", 1));
     det.add_event(event_with_meta(
         GenericOp::ConsumeObject,
@@ -302,7 +318,9 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
         "item_h",
     ));
     let reports = det.detect();
-    let has_scope = reports.iter().any(|r| r.fraud_type == GenericFraudType::ScopeViolation);
+    let has_scope = reports
+        .iter()
+        .any(|r| r.fraud_type == GenericFraudType::ScopeViolation);
     results.push(ValidationResult::check(
         EXP,
         "valid_consume_in_scope",
@@ -330,7 +348,10 @@ fn build_same_dag(vocab: &DomainVocabulary) -> GenericFraudDetector {
     det
 }
 
-#[expect(clippy::too_many_lines, reason = "validation section — sequential checks")]
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation section — sequential checks"
+)]
 fn validate_cross_domain_equivalence() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -415,12 +436,9 @@ fn validate_cross_domain_equivalence() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let sim_gaming_science =
-        compute_structural_similarity(&gaming_reports, &science_reports);
-    let sim_gaming_medical =
-        compute_structural_similarity(&gaming_reports, &medical_reports);
-    let sim_science_medical =
-        compute_structural_similarity(&science_reports, &medical_reports);
+    let sim_gaming_science = compute_structural_similarity(&gaming_reports, &science_reports);
+    let sim_gaming_medical = compute_structural_similarity(&gaming_reports, &medical_reports);
+    let sim_science_medical = compute_structural_similarity(&science_reports, &medical_reports);
 
     // Similarity >= 0.8: use expected=1.0, tolerance=0.2 so [0.8, 1.2] passes
     results.push(ValidationResult::check(

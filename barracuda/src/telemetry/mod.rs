@@ -98,14 +98,18 @@ impl<R: std::io::BufRead> Iterator for NdjsonIter<R> {
 pub fn parse_ndjson_reader<R: std::io::BufRead>(reader: R) -> (Vec<events::TelemetryEvent>, usize) {
     let mut events = Vec::new();
     let mut errors = 0;
-    for line in reader.lines() {
-        match line {
-            Ok(l) => {
-                let trimmed = l.trim().to_string();
+    let mut buf = String::new();
+    let mut reader = reader;
+    loop {
+        buf.clear();
+        match reader.read_line(&mut buf) {
+            Ok(0) => break,
+            Ok(_) => {
+                let trimmed = buf.trim();
                 if trimmed.is_empty() {
                     continue;
                 }
-                match serde_json::from_str::<events::TelemetryEvent>(&trimmed) {
+                match serde_json::from_str::<events::TelemetryEvent>(trimmed) {
                     Ok(evt) => events.push(evt),
                     Err(_) => errors += 1,
                 }
@@ -144,6 +148,22 @@ bad line
         assert_eq!(events.len(), 3, "malformed line should be skipped");
         assert_eq!(events[0].event_type, events::EventType::SessionStart);
         assert_eq!(events[1].event_type, events::EventType::PlayerMove);
+        assert_eq!(events[2].event_type, events::EventType::SessionEnd);
+    }
+
+    #[test]
+    fn parse_ndjson_reader_with_bufreader() {
+        let input = r#"{"timestamp_ms":0,"session_id":"s","event_type":"session_start","payload":{"game_name":"reader_test"}}
+{"timestamp_ms":1000,"session_id":"s","event_type":"player_action","payload":{"action":"jump"}}
+invalid json line
+{"timestamp_ms":2000,"session_id":"s","event_type":"session_end","payload":{"duration_s":2.0}}
+"#;
+        let reader = std::io::BufReader::new(std::io::Cursor::new(input));
+        let (events, errors) = parse_ndjson_reader(reader);
+        assert_eq!(events.len(), 3);
+        assert_eq!(errors, 1);
+        assert_eq!(events[0].event_type, events::EventType::SessionStart);
+        assert_eq!(events[1].event_type, events::EventType::PlayerAction);
         assert_eq!(events[2].event_type, events::EventType::SessionEnd);
     }
 

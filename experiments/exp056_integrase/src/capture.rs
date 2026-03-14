@@ -46,7 +46,7 @@ impl EntityType {
 /// Gause, G.F. (1934). *The Struggle for Existence*. Williams & Wilkins.
 #[derive(Debug, Clone)]
 pub struct TypeMatchup {
-    /// 5x5 matrix: effectiveness[attacker][defender].
+    /// 5x5 matrix: `effectiveness[attacker][defender]`.
     /// 2.0 = super effective, 1.0 = neutral, 0.5 = not very effective.
     matrix: [[f64; 5]; 5],
 }

@@ -472,4 +472,77 @@ mod tests {
         assert!(json.contains("flow"));
         assert!(json.contains("difficulty"));
     }
+
+    #[test]
+    fn report_from_empty_accumulator() {
+        let acc = SessionAccumulator::new();
+        let report = generate_report(&acc);
+        assert!(report.session.game_name.is_empty());
+        assert_eq!(report.session.total_actions, 0);
+        assert!(report.session.challenge_success_rate.abs() < f64::EPSILON);
+        assert!(report.engagement.interpretation.contains("Minimal"));
+        assert!(report.ui_tufte.is_none());
+        assert!(report.interaction_costs.is_none());
+    }
+
+    #[test]
+    fn report_from_single_event_session() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::SessionStart,
+            serde_json::json!({"game_name": "solo", "genre": "puzzle"}),
+        ));
+        let report = generate_report(&acc);
+        assert_eq!(report.session.game_name, "solo");
+        assert_eq!(report.session.total_actions, 0);
+    }
+
+    #[test]
+    fn report_includes_tufte_when_ui_layout_present() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::SessionStart,
+            serde_json::json!({"game_name": "ui_game"}),
+        ));
+        acc.ingest(&make_event(
+            1000,
+            EventType::UiLayout,
+            serde_json::json!({
+                "elements": [
+                    {"name": "health_bar", "bounds": [0.0, 0.0, 0.3, 0.05], "data_values": 1}
+                ]
+            }),
+        ));
+        let report = generate_report(&acc);
+        let tufte = report.ui_tufte.expect("tufte report when UI present");
+        assert_eq!(tufte.elements_analyzed, 1);
+    }
+
+    #[test]
+    fn report_includes_interaction_costs_when_ui_interactions_present() {
+        let mut acc = SessionAccumulator::new();
+        acc.ingest(&make_event(
+            0,
+            EventType::SessionStart,
+            serde_json::json!({"game_name": "ui_game"}),
+        ));
+        acc.ingest(&make_event(
+            1000,
+            EventType::UiInteract,
+            serde_json::json!({
+                "element": "menu_btn",
+                "distance_px": 200.0,
+                "target_width_px": 40.0,
+                "n_options": 8
+            }),
+        ));
+        let report = generate_report(&acc);
+        let costs = report
+            .interaction_costs
+            .expect("interaction costs when UI interactions present");
+        assert_eq!(costs.interactions_analyzed, 1);
+        assert_eq!(costs.costliest_element, "menu_btn");
+    }
 }

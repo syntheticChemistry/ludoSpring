@@ -17,8 +17,8 @@ pub enum AgentRole {
     Host,
 }
 
-/// Configurable weights per role. Default: Creator=1.0, Contributor=0.7,
-/// Validator=0.5, Observer=0.2, Curator=0.6, Host=0.4.
+/// Configurable weights per role. Default: `Creator`=1.0, `Contributor`=0.7,
+/// `Validator`=0.5, `Observer`=0.2, `Curator`=0.6, `Host`=0.4.
 #[derive(Debug, Clone)]
 pub struct RoleWeighting {
     pub weights: HashMap<AgentRole, f64>,
@@ -38,10 +38,10 @@ impl Default for RoleWeighting {
 }
 
 impl RoleWeighting {
-    /// Returns the weight for the given role.
+    /// Returns the weight for the given `AgentRole`.
     #[must_use]
     pub fn weight(&self, role: AgentRole) -> f64 {
-        self.weights.get(&role).copied().unwrap_or(0.0)
+        self.weights.get(&role).map_or(0.0, |v| *v)
     }
 }
 
@@ -54,8 +54,9 @@ pub enum DecayModel {
 }
 
 impl DecayModel {
-    /// Applies decay to base_weight given ticks_elapsed.
+    /// Applies decay to `base_weight` given `ticks_elapsed`.
     #[must_use]
+    #[expect(clippy::cast_precision_loss, reason = "ticks fit in f64 mantissa")]
     pub fn apply(&self, base_weight: f64, ticks_elapsed: u64) -> f64 {
         match self {
             Self::None => base_weight,
@@ -70,7 +71,7 @@ impl DecayModel {
     }
 }
 
-/// A single contribution record in the chain.
+/// A single contribution record in the chain (`ContributionRecord`).
 #[derive(Debug, Clone)]
 pub struct ContributionRecord {
     pub agent_did: String,
@@ -80,7 +81,7 @@ pub struct ContributionRecord {
     pub description: String,
 }
 
-/// Attribution chain: ordered list of contributions.
+/// Attribution chain: ordered list of contributions (`AttributionChain`).
 #[derive(Debug, Clone, Default)]
 pub struct AttributionChain {
     pub contributions: Vec<ContributionRecord>,
@@ -91,7 +92,13 @@ impl AttributionChain {
         Self::default()
     }
 
-    pub fn add(&mut self, agent_did: impl Into<String>, role: AgentRole, tick: u64, description: impl Into<String>) {
+    pub fn add(
+        &mut self,
+        agent_did: impl Into<String>,
+        role: AgentRole,
+        tick: u64,
+        description: impl Into<String>,
+    ) {
         self.contributions.push(ContributionRecord {
             agent_did: agent_did.into(),
             role,
@@ -102,7 +109,7 @@ impl AttributionChain {
 
     #[expect(dead_code, reason = "domain model completeness")]
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.contributions.len()
     }
 }
@@ -148,7 +155,7 @@ pub struct RadiatingDistribution {
     pub total_raw_weight: f64,
 }
 
-/// Computes the proportional distribution of value across contributors.
+/// Computes the proportional distribution of value across contributors (`RadiatingDistribution`).
 #[must_use]
 pub fn compute_distribution(
     chain: &AttributionChain,
@@ -200,7 +207,7 @@ pub fn compute_distribution(
     }
 }
 
-/// Verifies that a distribution is valid: non-negative shares summing to 1.0.
+/// Verifies that a `RadiatingDistribution` is valid: non-negative shares summing to 1.0.
 #[must_use]
 pub fn verify_distribution(dist: &RadiatingDistribution) -> bool {
     const EPSILON: f64 = 1e-10;
@@ -210,7 +217,7 @@ pub fn verify_distribution(dist: &RadiatingDistribution) -> bool {
     all_non_negative && sums_to_one
 }
 
-/// Simulates a cascade of value events, accumulating earnings per agent.
+/// Simulates a cascade of `ValueEvent`s, accumulating earnings per agent.
 #[must_use]
 pub fn simulate_cascade(
     chain: &AttributionChain,

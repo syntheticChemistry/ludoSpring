@@ -261,4 +261,83 @@ mod tests {
         assert!(right.options.contains(&1));
         assert!(!right.options.contains(&2));
     }
+
+    #[test]
+    fn larger_grid_entropy() {
+        let grid = WfcGrid::new(16, 16, 8);
+        assert_eq!(grid.width, 16);
+        assert_eq!(grid.height, 16);
+        assert_eq!(grid.cells.len(), 256);
+        assert_eq!(grid.get(8, 8).map(WfcCell::entropy), Some(8));
+    }
+
+    #[test]
+    fn min_entropy_none_when_all_collapsed() {
+        let mut grid = WfcGrid::new(3, 3, 2);
+        for y in 0..3 {
+            for x in 0..3 {
+                grid.collapse(x, y, 0);
+            }
+        }
+        assert!(grid.min_entropy_cell().is_none());
+        assert!(grid.is_fully_collapsed());
+    }
+
+    #[test]
+    fn has_contradiction() {
+        let mut grid = WfcGrid::new(2, 2, 2);
+        grid.cells[0].options = BTreeSet::new();
+        assert!(grid.has_contradiction());
+    }
+
+    #[test]
+    fn wfc_cell_entropy_and_collapsed_tile() {
+        let cell = WfcCell {
+            options: BTreeSet::from([1u16, 2, 3]),
+        };
+        assert_eq!(cell.entropy(), 3);
+        assert!(!cell.is_collapsed());
+        assert!(!cell.is_contradiction());
+        assert!(cell.collapsed_tile().is_none());
+
+        let collapsed = WfcCell {
+            options: BTreeSet::from([5u16]),
+        };
+        assert_eq!(collapsed.entropy(), 1);
+        assert!(collapsed.is_collapsed());
+        assert_eq!(collapsed.collapsed_tile(), Some(5));
+    }
+
+    #[test]
+    fn propagate_up_constraints() {
+        let mut rules = AdjacencyRules::unconstrained(3);
+        rules.up[0] = BTreeSet::from([0, 1]);
+        rules.up[1] = BTreeSet::from([1, 2]);
+        rules.up[2] = BTreeSet::from([0]);
+
+        let mut grid = WfcGrid::new(1, 3, 3);
+        grid.collapse(0, 0, 0);
+        let removed = grid.propagate(&rules);
+        assert!(removed > 0);
+        let Some(up) = grid.get(0, 1) else {
+            panic!("cell (0,1) must exist");
+        };
+        assert!(up.options.contains(&0));
+        assert!(up.options.contains(&1));
+        assert!(!up.options.contains(&2));
+    }
+
+    #[test]
+    fn get_out_of_bounds() {
+        let grid = WfcGrid::new(4, 4, 3);
+        assert!(grid.get(10, 0).is_none());
+        assert!(grid.get(0, 10).is_none());
+    }
+
+    #[test]
+    fn collapse_out_of_bounds_no_panic() {
+        let mut grid = WfcGrid::new(2, 2, 2);
+        grid.collapse(5, 5, 0);
+        assert!(!grid.is_fully_collapsed());
+    }
 }

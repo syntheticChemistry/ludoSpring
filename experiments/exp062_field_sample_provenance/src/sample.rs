@@ -7,19 +7,21 @@
 
 use std::collections::{HashMap, HashSet};
 
+use loam_spine_core::Did;
 use loam_spine_core::certificate::{CertificateMetadata, CertificateType};
 use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
-use loam_spine_core::Did;
 
 use rhizo_crypt_core::session::SessionType;
 use rhizo_crypt_core::vertex::MetadataValue;
-use rhizo_crypt_core::{Did as RhizoDid, EventType, Session, SessionBuilder, Vertex, VertexBuilder, VertexId};
+use rhizo_crypt_core::{
+    Did as RhizoDid, EventType, Session, SessionBuilder, Vertex, VertexBuilder, VertexId,
+};
 
 use sweet_grass_core::activity::{ActivityEcoPrimals, ActivityMetadata};
-use sweet_grass_core::braid::{current_timestamp_nanos, EcoPrimalsAttributes};
+use sweet_grass_core::braid::{EcoPrimalsAttributes, current_timestamp_nanos};
 use sweet_grass_core::{Activity, ActivityId, ActivityType, AgentAssociation, AgentRole, Braid};
 
 // ============================================================================
@@ -125,7 +127,10 @@ pub enum SampleEventType {
 }
 
 impl SampleEventType {
-    #[expect(dead_code, reason = "domain model completeness — used for serialization/display")]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — used for serialization/display"
+    )]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Collect => "collect",
@@ -144,7 +149,10 @@ impl SampleEventType {
 
 /// Sample event.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "domain model completeness — tick used for timeline ordering")]
+#[expect(
+    dead_code,
+    reason = "domain model completeness — tick used for timeline ordering"
+)]
 pub struct SampleEvent {
     pub event_type: SampleEventType,
     pub actor_did: String,
@@ -216,21 +224,25 @@ pub struct SampleSystem {
     pub braids: Vec<Braid>,
     pub events: Vec<(CertificateId, SampleEvent)>,
     pub tick: u64,
-    /// Current holder DID per cert (from collect + custody_transfer chain).
+    /// Current holder DID per `cert` (from `collect` + `custody_transfer` chain).
     current_holder: HashMap<CertificateId, String>,
-    /// Last recorded condition per cert (for cold chain).
+    /// Last recorded condition per `cert` (for cold chain).
     last_condition: HashMap<CertificateId, SampleCondition>,
-    /// Custody chain: (cert_id, from, to) for each transfer.
+    /// Custody chain: (`cert_id`, `from`, `to`) for each transfer.
     custody_transfers: Vec<(CertificateId, String, String)>,
-    /// Condition history for cold chain: (cert_id, tick, condition).
+    /// Condition history for cold chain: (`cert_id`, `tick`, `condition`).
     condition_history: Vec<(CertificateId, u64, SampleCondition)>,
 }
 
 impl SampleSystem {
     /// Create a new sample system.
     pub fn new(owner: &Did) -> Self {
-        let spine = Spine::new(owner.clone(), Some("FieldSample".into()), SpineConfig::default())
-            .expect("spine creation");
+        let spine = Spine::new(
+            owner.clone(),
+            Some("FieldSample".into()),
+            SpineConfig::default(),
+        )
+        .expect("spine creation");
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -246,12 +258,13 @@ impl SampleSystem {
         }
     }
 
-    /// Advance the system tick.
+    /// Advance the system `tick`.
+    #[allow(clippy::missing_const_for_fn)] // cannot be const: mutates self.tick
     pub fn advance_tick(&mut self) {
         self.tick += 1;
     }
 
-    /// Collect a new sample (creates cert, DAG vertex, braid, event).
+    /// Collect a new sample (creates `cert`, DAG vertex, braid, event).
     pub fn collect_sample(
         &mut self,
         collector: &Did,
@@ -284,7 +297,10 @@ impl SampleSystem {
 
         let mut meta = HashMap::new();
         meta.insert("event".into(), MetadataValue::String("collect".into()));
-        meta.insert("sample_type".into(), MetadataValue::String(sample_type.as_str().into()));
+        meta.insert(
+            "sample_type".into(),
+            MetadataValue::String(sample_type.as_str().into()),
+        );
         meta.insert("location".into(), MetadataValue::String(location.into()));
         meta.insert("accession".into(), MetadataValue::String(accession.into()));
         meta.insert("cert_id".into(), MetadataValue::String(cert_id.to_string()));
@@ -300,9 +316,11 @@ impl SampleSystem {
             self.braids.push(braid);
         }
 
-        self.current_holder.insert(cert_id, collector.as_str().into());
+        self.current_holder
+            .insert(cert_id, collector.as_str().into());
         self.last_condition.insert(cert_id, SampleCondition::Fresh);
-        self.condition_history.push((cert_id, self.tick, SampleCondition::Fresh));
+        self.condition_history
+            .push((cert_id, self.tick, SampleCondition::Fresh));
 
         self.events.push((
             cert_id,
@@ -333,7 +351,10 @@ impl SampleSystem {
         meta.insert("event".into(), MetadataValue::String("transport".into()));
         meta.insert("from".into(), MetadataValue::String(from.as_str().into()));
         meta.insert("to".into(), MetadataValue::String(to.as_str().into()));
-        meta.insert("condition".into(), MetadataValue::String(condition.as_str().into()));
+        meta.insert(
+            "condition".into(),
+            MetadataValue::String(condition.as_str().into()),
+        );
         if let Some(t) = temp {
             meta.insert("temperature_c".into(), MetadataValue::Float(t));
         }
@@ -365,7 +386,7 @@ impl SampleSystem {
         ));
     }
 
-    /// Store sample (condition + temp).
+    /// Store sample (`condition` + `temp`).
     pub fn store(
         &mut self,
         cert_id: CertificateId,
@@ -376,7 +397,10 @@ impl SampleSystem {
         let rhizo_did = RhizoDid::new(actor.as_str());
         let mut meta = HashMap::new();
         meta.insert("event".into(), MetadataValue::String("store".into()));
-        meta.insert("condition".into(), MetadataValue::String(condition.as_str().into()));
+        meta.insert(
+            "condition".into(),
+            MetadataValue::String(condition.as_str().into()),
+        );
         if let Some(t) = temp {
             meta.insert("temperature_c".into(), MetadataValue::Float(t));
         }
@@ -408,17 +432,14 @@ impl SampleSystem {
     }
 
     /// Process sample (extraction, amplification, sequencing, etc.).
-    pub fn process(
-        &mut self,
-        cert_id: CertificateId,
-        actor: &Did,
-        step: ProcessingStep,
-    ) {
+    pub fn process(&mut self, cert_id: CertificateId, actor: &Did, step: ProcessingStep) {
         let rhizo_did = RhizoDid::new(actor.as_str());
         let mut meta = HashMap::new();
         meta.insert("event".into(), MetadataValue::String(step.as_str().into()));
         meta.insert("cert_id".into(), MetadataValue::String(cert_id.to_string()));
-        let vertex_id = self.dag.append(&format!("sample_{}", step.as_str()), &rhizo_did, meta);
+        let vertex_id = self
+            .dag
+            .append(&format!("sample_{}", step.as_str()), &rhizo_did, meta);
 
         let sweet_did = sweet_grass_core::Did::new(actor.as_str());
         if let Ok(braid) = create_sample_braid(
@@ -449,7 +470,7 @@ impl SampleSystem {
         ));
     }
 
-    /// Publish sample results (DOI).
+    /// Publish sample results (`DOI`).
     pub fn publish(&mut self, cert_id: CertificateId, actor: &Did, doi: &str) {
         let rhizo_did = RhizoDid::new(actor.as_str());
         let mut meta = HashMap::new();
@@ -479,7 +500,7 @@ impl SampleSystem {
         ));
     }
 
-    /// Custody transfer (from -> to).
+    /// Custody transfer (`from` -> `to`).
     pub fn custody_transfer(
         &mut self,
         cert_id: CertificateId,
@@ -490,14 +511,24 @@ impl SampleSystem {
         let rhizo_did = RhizoDid::new(from.as_str());
         self.dag.session.add_agent(RhizoDid::new(to.as_str()));
 
-        let condition = self.last_condition.get(&cert_id).copied().unwrap_or(SampleCondition::Fresh);
+        let condition = self
+            .last_condition
+            .get(&cert_id)
+            .copied()
+            .unwrap_or(SampleCondition::Fresh);
 
         let mut meta = HashMap::new();
-        meta.insert("event".into(), MetadataValue::String("custody_transfer".into()));
+        meta.insert(
+            "event".into(),
+            MetadataValue::String("custody_transfer".into()),
+        );
         meta.insert("from".into(), MetadataValue::String(from.as_str().into()));
         meta.insert("to".into(), MetadataValue::String(to.as_str().into()));
         meta.insert("location".into(), MetadataValue::String(location.into()));
-        meta.insert("condition".into(), MetadataValue::String(condition.as_str().into()));
+        meta.insert(
+            "condition".into(),
+            MetadataValue::String(condition.as_str().into()),
+        );
         meta.insert("cert_id".into(), MetadataValue::String(cert_id.to_string()));
         let vertex_id = self.dag.append("sample_custody", &rhizo_did, meta);
 
@@ -512,7 +543,8 @@ impl SampleSystem {
         }
 
         self.current_holder.insert(cert_id, to.as_str().into());
-        self.custody_transfers.push((cert_id, from.as_str().into(), to.as_str().into()));
+        self.custody_transfers
+            .push((cert_id, from.as_str().into(), to.as_str().into()));
 
         self.events.push((
             cert_id,
@@ -525,7 +557,7 @@ impl SampleSystem {
         ));
     }
 
-    /// Get sample timeline for a cert.
+    /// Get sample timeline for a `cert`.
     pub fn sample_timeline(&self, cert_id: CertificateId) -> Vec<&SampleEvent> {
         self.events
             .iter()
@@ -534,7 +566,7 @@ impl SampleSystem {
             .collect()
     }
 
-    /// Get cert IDs held by a DID (current holder).
+    /// Get cert IDs held by a `DID` (current holder).
     pub fn samples_held_by(&self, did: &str) -> Vec<CertificateId> {
         self.current_holder
             .iter()
@@ -543,14 +575,14 @@ impl SampleSystem {
             .collect()
     }
 
-    /// Get cert attributes (sample_type, location, accession, condition).
+    /// Get cert attributes (`sample_type`, `location`, `accession`, `condition`).
     pub fn cert_attributes(&self, cert_id: CertificateId) -> Option<&HashMap<String, String>> {
         self.cert_manager
             .get_certificate(&cert_id)
             .map(|c| &c.metadata.attributes)
     }
 
-    /// Get authorized actors for a cert (collector + anyone who received custody).
+    /// Get authorized actors for a `cert` (collector + anyone who received custody).
     fn authorized_actors_for_cert(&self, cert_id: CertificateId) -> HashSet<String> {
         let mut authorized = HashSet::new();
         for (cid, event) in &self.events {
@@ -589,10 +621,11 @@ impl SampleSystem {
         ));
         self.current_holder.insert(cert_id, actor_did.into());
         self.last_condition.insert(cert_id, SampleCondition::Fresh);
-        self.condition_history.push((cert_id, tick, SampleCondition::Fresh));
+        self.condition_history
+            .push((cert_id, tick, SampleCondition::Fresh));
     }
 
-    /// Get condition history for cold chain (ordered by tick).
+    /// Get condition history for cold chain (ordered by `tick`).
     fn condition_history_for_cert(&self, cert_id: CertificateId) -> Vec<(u64, SampleCondition)> {
         self.condition_history
             .iter()
@@ -608,7 +641,10 @@ impl SampleSystem {
 
 /// Fraud report.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "domain model completeness — fields used for reporting")]
+#[expect(
+    dead_code,
+    reason = "domain model completeness — fields used for reporting"
+)]
 pub struct FraudReport {
     pub fraud_type: SampleFraudType,
     pub description: String,
@@ -627,6 +663,10 @@ pub enum SampleFraudType {
 }
 
 /// Detect sample fraud by analyzing the DAG and certificates.
+#[expect(
+    clippy::too_many_lines,
+    reason = "fraud detection requires sequential rule checks"
+)]
 pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
     let mut reports = Vec::new();
 
@@ -682,7 +722,8 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
                 if p == SampleCondition::Frozen && cond == SampleCondition::Fresh {
                     reports.push(FraudReport {
                         fraud_type: SampleFraudType::BrokenColdChain,
-                        description: "Sample went from Frozen to Fresh without documented thaw".into(),
+                        description: "Sample went from Frozen to Fresh without documented thaw"
+                            .into(),
                         cert_id: Some(cert_id),
                     });
                     break;
@@ -794,8 +835,8 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
                     if prev != cert_id && !had_qc_since {
                         reports.push(FraudReport {
                             fraud_type: SampleFraudType::ContaminationGap,
-                            description: "Same actor processed different samples without QC between"
-                                .into(),
+                            description:
+                                "Same actor processed different samples without QC between".into(),
                             cert_id: Some(cert_id),
                         });
                     }

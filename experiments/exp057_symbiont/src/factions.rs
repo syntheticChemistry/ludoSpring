@@ -73,7 +73,7 @@ impl Relationship {
 pub struct FactionNetwork {
     /// Ordered list of factions (index = FactionId.0 as usize when contiguous).
     pub factions: Vec<Faction>,
-    /// Competition coefficient matrix: alphas[i][j] = effect of j on i.
+    /// Competition coefficient matrix: `alphas[i][j]` = effect of j on i.
     pub alphas: Vec<Vec<f64>>,
 }
 
