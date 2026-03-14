@@ -120,7 +120,9 @@ fn capability_call(
 
     let mut reader = BufReader::new(stream);
     let mut line = String::new();
-    reader.read_line(&mut line).map_err(|e| format!("read: {e}"))?;
+    reader
+        .read_line(&mut line)
+        .map_err(|e| format!("read: {e}"))?;
 
     let parsed: serde_json::Value =
         serde_json::from_str(line.trim()).map_err(|e| format!("parse: {e}"))?;

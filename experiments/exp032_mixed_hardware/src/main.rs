@@ -67,6 +67,27 @@ impl BandwidthTier {
     }
 }
 
+/// Transfer path between two substrates.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum TransferPath {
+    /// Direct `PCIe` peer-to-peer (one hop, e.g. NPU→GPU via `PCIe` switch).
+    Direct(BandwidthTier),
+    /// Via CPU staging (two hops: device→CPU→device).
+    ViaCpu(BandwidthTier, BandwidthTier),
+    /// Same device (zero cost).
+    Local,
+}
+
+fn transfer_path_time_us(path: TransferPath, bytes: usize) -> f64 {
+    match path {
+        TransferPath::Direct(bw) => bw.transfer_time_us(bytes),
+        TransferPath::ViaCpu(bw_in, bw_out) => {
+            bw_in.transfer_time_us(bytes) + bw_out.transfer_time_us(bytes)
+        }
+        TransferPath::Local => 0.0,
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SubstrateType {
@@ -91,6 +112,14 @@ struct MixedPipelineStage {
     target: SubstrateType,
     compute_us: f64,
     data_bytes: usize,
+}
+
+struct MixedPipelineStageV2 {
+    name: String,
+    target: SubstrateType,
+    compute_us: f64,
+    data_bytes: usize,
+    transfer_path: Option<TransferPath>,
 }
 
 struct MixedPipelineResult {
@@ -134,6 +163,42 @@ fn run_mixed_pipeline(
     }
 }
 
+fn run_mixed_pipeline_v2(
+    stages: &[MixedPipelineStageV2],
+    default_bandwidth: BandwidthTier,
+) -> MixedPipelineResult {
+    let mut total_us = 0.0;
+    let mut total_transfer = 0.0;
+    let mut total_compute = 0.0;
+    let mut stage_timings = Vec::new();
+    let mut prev_substrate = SubstrateType::Cpu;
+
+    for stage in stages {
+        let mut stage_time = stage.compute_us;
+
+        if stage.target != prev_substrate {
+            let transfer = stage.transfer_path.map_or_else(
+                || default_bandwidth.transfer_time_us(stage.data_bytes),
+                |path| transfer_path_time_us(path, stage.data_bytes),
+            );
+            stage_time += transfer;
+            total_transfer += transfer;
+        }
+
+        total_compute += stage.compute_us;
+        total_us += stage_time;
+        stage_timings.push((stage.name.clone(), stage_time));
+        prev_substrate = stage.target;
+    }
+
+    MixedPipelineResult {
+        total_us,
+        transfer_us: total_transfer,
+        compute_us: total_compute,
+        stages: stage_timings,
+    }
+}
+
 /// Score a substrate for a workload. Higher is better.
 fn score_substrate(
     substrate: &SubstrateProfile,
@@ -143,6 +208,17 @@ fn score_substrate(
 ) -> f64 {
     let compute_benefit = substrate.flops_gflops * parallel_factor;
     let transfer_penalty = bandwidth.transfer_time_us(data_bytes) * 0.001;
+    compute_benefit - transfer_penalty
+}
+
+fn score_substrate_v2(
+    substrate: &SubstrateProfile,
+    data_bytes: usize,
+    parallel_factor: f64,
+    transfer_path: TransferPath,
+) -> f64 {
+    let compute_benefit = substrate.flops_gflops * parallel_factor;
+    let transfer_penalty = transfer_path_time_us(transfer_path, data_bytes) * 0.001;
     compute_benefit - transfer_penalty
 }
 
@@ -432,6 +508,157 @@ fn cmd_validate() {
         0.0,
     ));
 
+    // 13. Direct NPU→GPU is faster than via CPU
+    let direct_npu_gpu =
+        transfer_path_time_us(TransferPath::Direct(BandwidthTier::PciE4x16), 4_000_000);
+    let via_cpu_npu_gpu = transfer_path_time_us(
+        TransferPath::ViaCpu(BandwidthTier::PciE4x16, BandwidthTier::PciE4x16),
+        4_000_000,
+    );
+    results.push(ValidationResult::check(
+        experiment,
+        "npu_to_gpu_direct_faster",
+        if direct_npu_gpu < via_cpu_npu_gpu {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 14. Direct ≈ half of via-CPU (same bandwidth on both legs)
+    let ratio = direct_npu_gpu / via_cpu_npu_gpu;
+    results.push(ValidationResult::check(
+        experiment,
+        "direct_pcie_half_roundtrip",
+        ratio,
+        0.5,
+        0.01,
+    ));
+
+    // 15. CPU→NPU→GPU→CPU with mixed transfers
+    let v2_stages = vec![
+        MixedPipelineStageV2 {
+            name: "preprocess".to_string(),
+            target: SubstrateType::Cpu,
+            compute_us: 100.0,
+            data_bytes: 1_000_000,
+            transfer_path: Some(TransferPath::Local),
+        },
+        MixedPipelineStageV2 {
+            name: "npu_inference".to_string(),
+            target: SubstrateType::Npu,
+            compute_us: 20.0,
+            data_bytes: 1_000_000,
+            transfer_path: None,
+        },
+        MixedPipelineStageV2 {
+            name: "gpu_compute".to_string(),
+            target: SubstrateType::NvidiaGpu,
+            compute_us: 30.0,
+            data_bytes: 2_000_000,
+            transfer_path: Some(TransferPath::Direct(BandwidthTier::PciE4x16)),
+        },
+        MixedPipelineStageV2 {
+            name: "postprocess".to_string(),
+            target: SubstrateType::Cpu,
+            compute_us: 50.0,
+            data_bytes: 2_000_000,
+            transfer_path: None,
+        },
+    ];
+    let v2_result = run_mixed_pipeline_v2(&v2_stages, BandwidthTier::PciE4x16);
+    results.push(ValidationResult::check(
+        experiment,
+        "mixed_4stage_pipeline_completes",
+        if v2_result.total_us > 0.0 { 1.0 } else { 0.0 },
+        1.0,
+        0.0,
+    ));
+
+    // 16. Pipeline with direct NPU→GPU is faster than pipeline with CPU roundtrip
+    let v2_via_cpu_stages = vec![
+        MixedPipelineStageV2 {
+            name: "preprocess".to_string(),
+            target: SubstrateType::Cpu,
+            compute_us: 100.0,
+            data_bytes: 1_000_000,
+            transfer_path: Some(TransferPath::Local),
+        },
+        MixedPipelineStageV2 {
+            name: "npu_inference".to_string(),
+            target: SubstrateType::Npu,
+            compute_us: 20.0,
+            data_bytes: 1_000_000,
+            transfer_path: None,
+        },
+        MixedPipelineStageV2 {
+            name: "gpu_compute".to_string(),
+            target: SubstrateType::NvidiaGpu,
+            compute_us: 30.0,
+            data_bytes: 2_000_000,
+            transfer_path: Some(TransferPath::ViaCpu(
+                BandwidthTier::PciE4x16,
+                BandwidthTier::PciE4x16,
+            )),
+        },
+        MixedPipelineStageV2 {
+            name: "postprocess".to_string(),
+            target: SubstrateType::Cpu,
+            compute_us: 50.0,
+            data_bytes: 2_000_000,
+            transfer_path: None,
+        },
+    ];
+    let v2_via_cpu_result = run_mixed_pipeline_v2(&v2_via_cpu_stages, BandwidthTier::PciE4x16);
+    results.push(ValidationResult::check(
+        experiment,
+        "npu_gpu_bypass_saves_time",
+        if v2_result.total_us < v2_via_cpu_result.total_us {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 17. Direct < ViaCpu for same bandwidth
+    let direct_cost =
+        transfer_path_time_us(TransferPath::Direct(BandwidthTier::PciE5x16), 10_000_000);
+    let via_cpu_cost = transfer_path_time_us(
+        TransferPath::ViaCpu(BandwidthTier::PciE5x16, BandwidthTier::PciE5x16),
+        10_000_000,
+    );
+    let local_cost = transfer_path_time_us(TransferPath::Local, 10_000_000);
+    results.push(ValidationResult::check(
+        experiment,
+        "transfer_path_cost_ordering",
+        if local_cost < direct_cost && direct_cost < via_cpu_cost {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 18. NPU profile can be constructed and scored with v2
+    let npu_v2_score = score_substrate_v2(
+        &npu_profile,
+        1_000,
+        100.0,
+        TransferPath::Direct(BandwidthTier::PciE3x16),
+    );
+    results.push(ValidationResult::check(
+        experiment,
+        "substrate_profile_npu_v2_scored",
+        if npu_v2_score > 0.0 { 1.0 } else { 0.0 },
+        1.0,
+        0.0,
+    ));
+
     // Print results
     let passed = results.iter().filter(|r| r.passed).count();
     let total = results.len();
@@ -518,5 +745,50 @@ fn cmd_demo() {
     println!(
         "  Overhead:  {:.1}%",
         result.transfer_us / result.total_us * 100.0
+    );
+
+    println!("\n  --- V2: NPU→GPU Direct Transfer Pipeline ---");
+    let v2_stages = vec![
+        MixedPipelineStageV2 {
+            name: "preprocess".to_string(),
+            target: SubstrateType::Cpu,
+            compute_us: 100.0,
+            data_bytes: 1_000_000,
+            transfer_path: Some(TransferPath::Local),
+        },
+        MixedPipelineStageV2 {
+            name: "npu_inference".to_string(),
+            target: SubstrateType::Npu,
+            compute_us: 20.0,
+            data_bytes: 1_000_000,
+            transfer_path: None,
+        },
+        MixedPipelineStageV2 {
+            name: "gpu_compute".to_string(),
+            target: SubstrateType::NvidiaGpu,
+            compute_us: 30.0,
+            data_bytes: 2_000_000,
+            transfer_path: Some(TransferPath::Direct(BandwidthTier::PciE4x16)),
+        },
+        MixedPipelineStageV2 {
+            name: "postprocess".to_string(),
+            target: SubstrateType::Cpu,
+            compute_us: 50.0,
+            data_bytes: 2_000_000,
+            transfer_path: None,
+        },
+    ];
+    let v2_result = run_mixed_pipeline_v2(&v2_stages, BandwidthTier::PciE4x16);
+    println!("  Pipeline stages:");
+    for (name, time) in &v2_result.stages {
+        println!("    {name}: {time:.1} us");
+    }
+    println!();
+    println!("  Total:     {:.1} us", v2_result.total_us);
+    println!("  Compute:   {:.1} us", v2_result.compute_us);
+    println!("  Transfer:  {:.1} us", v2_result.transfer_us);
+    println!(
+        "  Overhead:  {:.1}%",
+        v2_result.transfer_us / v2_result.total_us * 100.0
     );
 }

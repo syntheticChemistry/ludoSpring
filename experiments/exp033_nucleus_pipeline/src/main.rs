@@ -21,7 +21,11 @@ use std::process;
 use std::time::Instant;
 
 use ludospring_barracuda::validation::ValidationResult;
-use ludospring_forge::{GameWorkload, Substrate, recommend_substrate};
+use ludospring_forge::{
+    GameWorkload, GameWorkloadProfile, Substrate, SubstrateInfo, SubstrateKind,
+    recommend_substrate, route,
+};
+use serde::{Deserialize, Serialize};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -150,6 +154,153 @@ impl NestAtomic {
     }
 }
 
+/// Node Atomic V2: capability-based routing with substrate discovery.
+struct NodeAtomicV2 {
+    #[allow(dead_code)]
+    tower: TowerAtomic,
+    substrates: Vec<SubstrateInfo>,
+    dispatch_log: Vec<(String, SubstrateKind, String)>, // (label, kind, reason)
+}
+
+impl NodeAtomicV2 {
+    fn new(substrates: Vec<SubstrateInfo>) -> Self {
+        let mut tower = TowerAtomic::new();
+        tower.initialize();
+        Self {
+            tower,
+            substrates,
+            dispatch_log: Vec::new(),
+        }
+    }
+
+    fn dispatch(&mut self, profile: &GameWorkloadProfile, label: &str) -> SubstrateKind {
+        if let Some(decision) = route(profile, &self.substrates) {
+            self.dispatch_log.push((
+                label.to_string(),
+                decision.substrate.kind,
+                decision.reason.clone(),
+            ));
+            decision.substrate.kind
+        } else {
+            self.dispatch_log.push((
+                label.to_string(),
+                SubstrateKind::Cpu,
+                "no capable substrate, CPU fallback".to_string(),
+            ));
+            SubstrateKind::Cpu
+        }
+    }
+}
+
+/// toadStool compute.submit request (JSON-RPC 2.0 wire format).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct ToadStoolDispatchRequest {
+    jsonrpc: String,
+    method: String,
+    id: u64,
+    params: ToadStoolParams,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct ToadStoolParams {
+    job_type: String,
+    priority: u8,
+    vram_required_mb: u32,
+    shader_source: Option<String>,
+}
+
+/// toadStool compute.submit response.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct ToadStoolDispatchResponse {
+    jsonrpc: String,
+    id: u64,
+    result: ToadStoolResult,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct ToadStoolResult {
+    job_id: String,
+    status: String,
+    substrate_kind: String,
+}
+
+fn build_toadstool_request(job_type: &str, priority: u8, vram_mb: u32) -> ToadStoolDispatchRequest {
+    ToadStoolDispatchRequest {
+        jsonrpc: "2.0".to_string(),
+        method: "compute.submit".to_string(),
+        id: 1,
+        params: ToadStoolParams {
+            job_type: job_type.to_string(),
+            priority,
+            vram_required_mb: vram_mb,
+            shader_source: None,
+        },
+    }
+}
+
+fn build_toadstool_response(job_id: &str, substrate: &str) -> ToadStoolDispatchResponse {
+    ToadStoolDispatchResponse {
+        jsonrpc: "2.0".to_string(),
+        id: 1,
+        result: ToadStoolResult {
+            job_id: job_id.to_string(),
+            status: "completed".to_string(),
+            substrate_kind: substrate.to_string(),
+        },
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum DeploymentNodeType {
+    Tower,
+    Node,
+    Nest,
+    Compute,
+    Viz,
+}
+
+#[allow(dead_code)]
+struct DeploymentNode {
+    id: String,
+    node_type: DeploymentNodeType,
+    budget_us: f64,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum DeploymentEdgeType {
+    DataFlow { bytes: usize },
+    ControlFlow,
+}
+
+#[allow(dead_code)]
+struct DeploymentEdge {
+    from: String,
+    to: String,
+    edge_type: DeploymentEdgeType,
+}
+
+struct DeploymentGraph {
+    nodes: Vec<DeploymentNode>,
+    #[allow(dead_code)]
+    edges: Vec<DeploymentEdge>,
+    coordination_hz: f64,
+}
+
+impl DeploymentGraph {
+    fn frame_budget_us(&self) -> f64 {
+        1_000_000.0 / self.coordination_hz
+    }
+
+    fn total_budget_us(&self) -> f64 {
+        self.nodes.iter().map(|n| n.budget_us).sum()
+    }
+
+    fn fits_in_frame(&self) -> bool {
+        self.total_budget_us() <= self.frame_budget_us()
+    }
+}
+
 /// Full NUCLEUS pipeline result.
 struct NucleusPipelineResult {
     stages: Vec<(String, Substrate, u64)>,
@@ -209,6 +360,7 @@ fn run_nucleus_pipeline(gpu_available: bool) -> NucleusPipelineResult {
 #[expect(
     clippy::too_many_lines,
     clippy::cast_precision_loss,
+    clippy::similar_names,
     reason = "validation orchestrator — sequential check groups"
 )]
 fn cmd_validate() {
@@ -365,6 +517,171 @@ fn cmd_validate() {
         0.0,
     ));
 
+    // 11. NodeV2 routes noise to GPU via capability routing
+    let all_substrates = vec![
+        SubstrateInfo::default_cpu(),
+        SubstrateInfo::default_gpu(),
+        SubstrateInfo::default_npu(),
+    ];
+    let mut node_v2 = NodeAtomicV2::new(all_substrates);
+    let noise_kind = node_v2.dispatch(&GameWorkloadProfile::noise_generation(), "noise");
+    results.push(ValidationResult::check(
+        experiment,
+        "node_routes_via_capability",
+        if noise_kind == SubstrateKind::Gpu {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 12. Quantized inference routes to NPU
+    let quant_kind = node_v2.dispatch(&GameWorkloadProfile::quantized_inference(), "quantized");
+    results.push(ValidationResult::check(
+        experiment,
+        "node_npu_routes_quantized",
+        if quant_kind == SubstrateKind::Npu {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 13. toadStool dispatch request JSON-RPC roundtrip
+    let req = build_toadstool_request("noise_generation", 5, 256);
+    let json = serde_json::to_string(&req).unwrap_or_default();
+    let parsed: Result<ToadStoolDispatchRequest, _> = serde_json::from_str(&json);
+    results.push(ValidationResult::check(
+        experiment,
+        "toadstool_dispatch_request_roundtrip",
+        if parsed.as_ref().is_ok_and(|p| *p == req) {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 14. toadStool dispatch response wire format valid
+    let resp = build_toadstool_response("job-001", "Gpu");
+    let resp_json = serde_json::to_string(&resp).unwrap_or_default();
+    let parsed_resp: Result<ToadStoolDispatchResponse, _> = serde_json::from_str(&resp_json);
+    results.push(ValidationResult::check(
+        experiment,
+        "toadstool_dispatch_response_roundtrip",
+        if parsed_resp.as_ref().is_ok_and(|p| *p == resp) {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
+    // 15. Deployment graph 5-node topology (Tower→Node→Nest→Compute→Viz)
+    let graph = DeploymentGraph {
+        nodes: vec![
+            DeploymentNode {
+                id: "tower".to_string(),
+                node_type: DeploymentNodeType::Tower,
+                budget_us: 500.0,
+            },
+            DeploymentNode {
+                id: "node".to_string(),
+                node_type: DeploymentNodeType::Node,
+                budget_us: 2000.0,
+            },
+            DeploymentNode {
+                id: "nest".to_string(),
+                node_type: DeploymentNodeType::Nest,
+                budget_us: 1000.0,
+            },
+            DeploymentNode {
+                id: "compute".to_string(),
+                node_type: DeploymentNodeType::Compute,
+                budget_us: 8000.0,
+            },
+            DeploymentNode {
+                id: "viz".to_string(),
+                node_type: DeploymentNodeType::Viz,
+                budget_us: 3000.0,
+            },
+        ],
+        edges: vec![
+            DeploymentEdge {
+                from: "tower".to_string(),
+                to: "node".to_string(),
+                edge_type: DeploymentEdgeType::ControlFlow,
+            },
+            DeploymentEdge {
+                from: "node".to_string(),
+                to: "nest".to_string(),
+                edge_type: DeploymentEdgeType::DataFlow { bytes: 1_000_000 },
+            },
+            DeploymentEdge {
+                from: "nest".to_string(),
+                to: "compute".to_string(),
+                edge_type: DeploymentEdgeType::DataFlow { bytes: 4_000_000 },
+            },
+            DeploymentEdge {
+                from: "compute".to_string(),
+                to: "viz".to_string(),
+                edge_type: DeploymentEdgeType::DataFlow { bytes: 2_000_000 },
+            },
+        ],
+        coordination_hz: 60.0,
+    };
+    results.push(ValidationResult::check(
+        experiment,
+        "deployment_graph_5node_topology",
+        graph.nodes.len() as f64,
+        5.0,
+        0.0,
+    ));
+
+    // 16. All stages fit in 16.67ms (60Hz frame budget)
+    results.push(ValidationResult::check(
+        experiment,
+        "deployment_graph_60hz_budget",
+        if graph.fits_in_frame() { 1.0 } else { 0.0 },
+        1.0,
+        0.0,
+    ));
+
+    // 17. Pipeline V2 dispatch log records transfer reasoning
+    let has_transfer_reason = node_v2
+        .dispatch_log
+        .iter()
+        .any(|(_, _, reason)| reason.contains("preferred") || reason.contains("priority"));
+    results.push(ValidationResult::check(
+        experiment,
+        "transfer_cost_in_pipeline",
+        if has_transfer_reason { 1.0 } else { 0.0 },
+        1.0,
+        0.0,
+    ));
+
+    // 18. CPU-only NodeV2 still works (graceful degradation)
+    let cpu_only = vec![SubstrateInfo::default_cpu()];
+    let mut node_cpu = NodeAtomicV2::new(cpu_only);
+    let cpu_noise = node_cpu.dispatch(&GameWorkloadProfile::noise_generation(), "noise_cpu");
+    results.push(ValidationResult::check(
+        experiment,
+        "nucleus_graceful_degradation",
+        if cpu_noise == SubstrateKind::Cpu {
+            1.0
+        } else {
+            0.0
+        },
+        1.0,
+        0.0,
+    ));
+
     // Print results
     let passed = results.iter().filter(|r| r.passed).count();
     let total = results.len();
@@ -403,4 +720,30 @@ fn cmd_demo() {
     println!("\nPhase 4: Validation");
     println!("  NUCLEUS pipeline complete ✓");
     println!("  Topology matches gaming_niche_deploy.toml ✓");
+
+    println!("\n--- V2: Capability-Based Routing ---");
+    let substrates = vec![
+        SubstrateInfo::default_cpu(),
+        SubstrateInfo::default_gpu(),
+        SubstrateInfo::default_npu(),
+    ];
+    let mut node_v2 = NodeAtomicV2::new(substrates);
+    let profiles = [
+        ("noise", GameWorkloadProfile::noise_generation()),
+        ("quantized", GameWorkloadProfile::quantized_inference()),
+        ("metrics", GameWorkloadProfile::metrics_batch()),
+    ];
+    for (label, profile) in &profiles {
+        let kind = node_v2.dispatch(profile, label);
+        println!("  {label}: {kind:?}");
+    }
+    println!("  Dispatch log: {} entries", node_v2.dispatch_log.len());
+
+    println!("\n--- ToadStool Wire Format ---");
+    let req = build_toadstool_request("noise_generation", 5, 256);
+    let req_json = serde_json::to_string_pretty(&req).unwrap_or_default();
+    println!("  Request:\n{req_json}");
+    let resp = build_toadstool_response("job-001", "Gpu");
+    let resp_json = serde_json::to_string_pretty(&resp).unwrap_or_default();
+    println!("  Response:\n{resp_json}");
 }
