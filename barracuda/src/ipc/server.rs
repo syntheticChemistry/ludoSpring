@@ -15,6 +15,8 @@ use super::envelope::JsonRpcRequest;
 use super::handlers::dispatch;
 use crate::PRIMAL_NAME;
 
+use tracing::{error, info, warn};
+
 /// Resolve the socket path using XDG-compliant priority:
 ///
 /// 1. `LUDOSPRING_SOCK` — explicit override
@@ -82,16 +84,16 @@ impl IpcServer {
         }
 
         let listener = UnixListener::bind(&self.socket_path)?;
-        eprintln!("ludospring IPC listening on {}", self.socket_path.display());
+        info!(path = %self.socket_path.display(), "IPC listening");
 
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
                     if let Err(e) = Self::handle_connection(&stream) {
-                        eprintln!("ludospring IPC connection error: {e}");
+                        warn!(error = %e, "IPC connection error");
                     }
                 }
-                Err(e) => eprintln!("ludospring IPC accept error: {e}"),
+                Err(e) => error!(error = %e, "IPC accept error"),
             }
         }
         Ok(())
@@ -117,13 +119,13 @@ impl IpcServer {
             match listener.accept() {
                 Ok((stream, _)) => {
                     if let Err(e) = Self::handle_connection(&stream) {
-                        eprintln!("ludospring IPC connection error: {e}");
+                        warn!(error = %e, "IPC connection error");
                     }
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                     std::thread::sleep(Duration::from_millis(50));
                 }
-                Err(e) => eprintln!("ludospring IPC accept error: {e}"),
+                Err(e) => error!(error = %e, "IPC accept error"),
             }
         }
         Ok(())

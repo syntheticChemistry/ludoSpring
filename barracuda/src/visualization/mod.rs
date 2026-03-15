@@ -10,7 +10,7 @@
 pub mod push_client;
 
 #[cfg(feature = "ipc")]
-pub use push_client::PetalTonguePushClient;
+pub use push_client::{PetalTonguePushClient, VisualizationPushClient};
 
 /// A data channel for visualization consumers.
 #[derive(Debug, Clone)]

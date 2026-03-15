@@ -359,10 +359,11 @@ impl SessionAccumulator {
 
     /// Complete the provenance trio workflow for this session.
     ///
-    /// Triggers dehydration (rhizoCrypt), commit (LoamSpine), and attribution
-    /// (sweetGrass) via biomeOS capability routing. Returns `None` if the
-    /// session hasn't ended or the IPC feature is disabled.
+    /// Triggers dehydration (`rhizoCrypt`), commit (`LoamSpine`), and
+    /// attribution (`sweetGrass`) via biomeOS capability routing. Returns
+    /// `None` if the session hasn't ended or the IPC feature is disabled.
     #[cfg(feature = "ipc")]
+    #[must_use]
     pub fn complete_provenance(&self) -> Option<serde_json::Value> {
         if !self.ended || self.session_id.is_empty() {
             return None;

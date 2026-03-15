@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
-#![cfg_attr(not(test), deny(clippy::expect_used, clippy::unwrap_used))]
 #![deny(missing_docs)]
-#![warn(clippy::pedantic, clippy::nursery)]
-#![allow(clippy::module_name_repetitions)]
 //! ludoSpring — The Science of Play, Interaction, and Game Design (via `barraCuda`)
 //!
 //! Ludology (from Latin *ludus*: play, game) is the study of games and play as

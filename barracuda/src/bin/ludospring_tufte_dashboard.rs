@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
-#![deny(clippy::expect_used, clippy::unwrap_used)]
-#![warn(clippy::pedantic)]
-#![allow(clippy::doc_markdown)]
 //! ludoSpring Tufte Validation Dashboard — what does good game UI look like?
 //!
 //! Three analyses that use Tufte's principles and petalTongue's Grammar of

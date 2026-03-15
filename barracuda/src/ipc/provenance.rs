@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Provenance trio integration for ludoSpring IPC.
 //!
-//! Wires game session lifecycle to the provenance trio (rhizoCrypt, LoamSpine,
-//! sweetGrass) via capability-based discovery. Uses JSON-RPC over Unix socket,
-//! either through Neural API `capability.call` or direct primal calls.
+//! Wires game session lifecycle to the provenance trio (`rhizoCrypt`,
+//! `LoamSpine`, `sweetGrass`) via capability-based discovery. Uses JSON-RPC
+//! over Unix socket, either through Neural API `capability.call` or direct
+//! primal calls.
 //!
 //! ## Approach
 //!
 //! 1. **Discovery**: Resolve the Neural API socket via XDG-compliant paths
-//!    (BIOMEOS_SOCKET_DIR, XDG_RUNTIME_DIR/biomeos, /tmp fallback). No
+//!    (`BIOMEOS_SOCKET_DIR`, `XDG_RUNTIME_DIR/biomeos`, `/tmp` fallback). No
 //!    hardcoded primal names — capability routing is delegated to the
 //!    ecosystem.
 //!
 //! 2. **Protocol**: `capability.call` with `{ capability, operation, args }`
-//!    routes to the appropriate primal (dag → rhizoCrypt, commit → LoamSpine,
-//!    provenance → sweetGrass).
+//!    routes to the appropriate primal (dag → `rhizoCrypt`, commit →
+//!    `LoamSpine`, provenance → `sweetGrass`).
 //!
 //! 3. **Graceful degradation**: If the trio is unavailable (socket missing,
 //!    connection refused, RPC error), handlers return success with
@@ -31,7 +32,7 @@ pub struct ProvenanceResult {
     pub id: String,
     /// Whether the trio was available and the operation succeeded.
     pub available: bool,
-    /// Additional data (e.g. merkle_root, commit_id, braid_id).
+    /// Additional data (e.g. `merkle_root`, `commit_id`, `braid_id`).
     pub data: serde_json::Value,
 }
 
@@ -152,25 +153,27 @@ pub fn has_active_session() -> bool {
 
 /// Begin a game session in the provenance trio.
 ///
-/// Creates a rhizoCrypt session via `dag.create_session`. Returns the session
-/// ID or a fallback note if the trio is unavailable.
+/// Creates a `rhizoCrypt` session via `dag.create_session`. Returns the
+/// session ID or a fallback note if the trio is unavailable.
+///
+/// # Errors
+///
+/// Returns an error string if the `capability.call` RPC fails in a way
+/// that cannot be gracefully degraded (serialization error, etc.).
 pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String> {
     let Some(socket) = neural_api_socket_path() else {
-        return Ok(ProvenanceResult {
-            id: format!("local-{}", uuid::Uuid::now_v7()),
-            available: false,
-            data: serde_json::json!({ "provenance": "unavailable" }),
-        });
+        return Ok(unavailable_result());
     };
 
     let args = serde_json::json!({
         "metadata": { "type": "game_session", "name": session_name },
-        "session_type": { "Gaming": { "game_id": "ludospring" } },
+        "session_type": { "Gaming": { "game_id": crate::PRIMAL_NAME } },
         "description": session_name,
     });
 
-    match capability_call(&socket, "dag", "create_session", &args) {
-        Ok(result) => {
+    capability_call(&socket, "dag", "create_session", &args).map_or_else(
+        |_| Ok(unavailable_result()),
+        |result| {
             let session_id = result
                 .get("session_id")
                 .and_then(|v| v.as_str())
@@ -181,29 +184,25 @@ pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String
                 available: true,
                 data: serde_json::json!({ "session_id": session_id }),
             })
-        }
-        Err(_) => Ok(ProvenanceResult {
-            id: format!("local-{}", uuid::Uuid::now_v7()),
-            available: false,
-            data: serde_json::json!({ "provenance": "unavailable" }),
-        }),
-    }
+        },
+    )
 }
 
 /// Record a game action in the provenance trio.
 ///
 /// Appends a vertex via `dag.append_event`. Returns the vertex ID or a note
 /// if unavailable.
+///
+/// # Errors
+///
+/// Returns an error string if the `capability.call` RPC fails in a way
+/// that cannot be gracefully degraded.
 pub fn record_game_action(
     session_id: &str,
     action: &serde_json::Value,
 ) -> Result<ProvenanceResult, String> {
     let Some(socket) = neural_api_socket_path() else {
-        return Ok(ProvenanceResult {
-            id: "unavailable".to_string(),
-            available: false,
-            data: serde_json::json!({ "provenance": "unavailable" }),
-        });
+        return Ok(unavailable_result());
     };
 
     let args = serde_json::json!({
@@ -211,8 +210,9 @@ pub fn record_game_action(
         "event": action,
     });
 
-    match capability_call(&socket, "dag", "append_event", &args) {
-        Ok(result) => {
+    capability_call(&socket, "dag", "append_event", &args).map_or_else(
+        |_| Ok(unavailable_result()),
+        |result| {
             let vertex_id = result
                 .get("vertex_id")
                 .or_else(|| result.get("id"))
@@ -224,20 +224,21 @@ pub fn record_game_action(
                 available: true,
                 data: serde_json::json!({ "vertex_id": vertex_id }),
             })
-        }
-        Err(_) => Ok(ProvenanceResult {
-            id: "unavailable".to_string(),
-            available: false,
-            data: serde_json::json!({ "provenance": "unavailable" }),
-        }),
-    }
+        },
+    )
 }
 
 /// Complete a game session: dehydrate, commit, and attribute.
 ///
 /// 1. `dag.dehydrate` — compute Merkle root and frontier
-/// 2. `commit.session` — anchor to LoamSpine
-/// 3. `provenance.create_braid` — attribute via sweetGrass
+/// 2. `commit.session` — anchor to `LoamSpine`
+/// 3. `provenance.create_braid` — attribute via `sweetGrass`
+///
+/// # Errors
+///
+/// Returns an error string only on non-recoverable failures. Partial
+/// completion (e.g. dehydration succeeded but commit failed) returns `Ok`
+/// with a status field describing how far the pipeline progressed.
 pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, String> {
     let Some(socket) = neural_api_socket_path() else {
         return Ok(serde_json::json!({
@@ -246,16 +247,12 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         }));
     };
 
-    // Step 1: Dehydrate
     let dehydrate_args = serde_json::json!({ "session_id": session_id });
-    let dehydration = match capability_call(&socket, "dag", "dehydrate", &dehydrate_args) {
-        Ok(r) => r,
-        Err(_) => {
-            return Ok(serde_json::json!({
-                "provenance": "unavailable",
-                "session_id": session_id,
-            }));
-        }
+    let Ok(dehydration) = capability_call(&socket, "dag", "dehydrate", &dehydrate_args) else {
+        return Ok(serde_json::json!({
+            "provenance": "unavailable",
+            "session_id": session_id,
+        }));
     };
 
     let merkle_root = dehydration
@@ -264,21 +261,17 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         .unwrap_or("")
         .to_string();
 
-    // Step 2: Commit
     let commit_args = serde_json::json!({
         "summary": dehydration,
         "content_hash": merkle_root,
     });
-    let commit_result = match capability_call(&socket, "commit", "session", &commit_args) {
-        Ok(r) => r,
-        Err(_) => {
-            return Ok(serde_json::json!({
-                "provenance": "partial",
-                "session_id": session_id,
-                "dehydrated": true,
-                "committed": false,
-            }));
-        }
+    let Ok(commit_result) = capability_call(&socket, "commit", "session", &commit_args) else {
+        return Ok(serde_json::json!({
+            "provenance": "partial",
+            "session_id": session_id,
+            "dehydrated": true,
+            "committed": false,
+        }));
     };
 
     let commit_id = commit_result
@@ -288,11 +281,10 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         .unwrap_or("")
         .to_string();
 
-    // Step 3: Create braid (best-effort)
     let braid_args = serde_json::json!({
         "commit_ref": commit_id,
         "agents": [{
-            "did": "did:key:ludospring-game",
+            "did": format!("did:key:{}", crate::PRIMAL_NAME),
             "role": "author",
             "contribution": 1.0
         }],
@@ -303,7 +295,7 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         .ok()
         .and_then(|r| {
             r.get("braid_id")
-                .or(r.get("id"))
+                .or_else(|| r.get("id"))
                 .and_then(|v| v.as_str())
                 .map(str::to_string)
         })
@@ -316,4 +308,12 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         "commit_id": commit_id,
         "braid_id": braid_id,
     }))
+}
+
+fn unavailable_result() -> ProvenanceResult {
+    ProvenanceResult {
+        id: format!("local-{}", uuid::Uuid::now_v7()),
+        available: false,
+        data: serde_json::json!({ "provenance": "unavailable" }),
+    }
 }

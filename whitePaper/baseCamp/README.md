@@ -2,7 +2,7 @@
 
 **Date:** March 15, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + **Niche Deployment** — 66 experiments, 1371 checks, 240 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 2 extraction shooter/viz, 6 lysogeny, 1 fermenting, 5 cross-spring provenance, niche-deployable (V16)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + **Niche Deployment** + **Deep Audit** — 66 experiments, 1371 checks, 234 tests + 12 proptest, 0 clippy warnings, niche-deployable, structured tracing, capability-based discovery (V17)
 
 ---
 
@@ -53,9 +53,13 @@ validated HCI models benefit every primal in the ecosystem.
 
 ### Cross-Spring Provenance
 
-- **Python baselines** (7 scripts, stdlib only) → `barracuda/tests/python_parity.rs` (22 tests)
+- **Python baselines** (7 scripts, stdlib only) → `barracuda/tests/python_parity.rs` (22 tests) + `check_drift.py` (automated drift detection)
 - **barraCuda primitives** consumed: `sigmoid`, `dot`, `lcg_step`, `state_to_f64`
-- **Tolerances** centralized with citations in `tolerances/mod.rs`
+- **Tolerances** centralized with citations in `tolerances/mod.rs` (20 named constants, `RAYCASTER_HIT_RATE_TOL` tightened 20→5)
+- **Proptest invariants** (12 tests): BSP area conservation, WFC entropy monotonicity, noise boundedness, engagement normalization, Fitts/Hick monotonicity, flow exhaustive partition
+- **Structured tracing**: all library IPC/biomeOS uses `tracing` (no `eprintln!` in production)
+- **Zero `#[allow()]`** in production — all clippy lints centralized in `Cargo.toml`
+- **WGSL shaders extracted**: 11 standalone `.wgsl` files in `exp030/shaders/` for toadStool absorption
 - **petalTongue** integration: 3 dashboard binaries, all 7 `GameChannelType` channels wired
 - **GPU promotion**: 8 modules Tier A (pure math, embarrassingly parallel). Tier A WGSL shaders validated in exp030 (Perlin 2D, fBm, engagement batch, DDA raycaster — 24/24 GPU parity checks). metalForge evolved to capability-based routing (SubstrateKind, Capability, route(), fallback_chain). NPU→GPU direct PCIe transfer model validated. toadStool JSON-RPC 2.0 dispatch client wire format validated. biomeOS DeploymentGraph (5-node, 60Hz budget) validated.
 - **NCBI integration**: Direct E-utilities access (esearch, esummary) for QS gene data — nestgate provider documented but needs module wiring
@@ -152,7 +156,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc --lib --tests             # 218 Rust tests
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # 234 tests + 12 proptest
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

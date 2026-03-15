@@ -5,6 +5,8 @@
 //! returns a serialized result. No handler has side-effects beyond its
 //! return value — ludoSpring is a pure-function primal.
 
+use tracing::info;
+
 use super::envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 use super::params::{
     AccessibilityParams, AnalyzeUiParams, BeginSessionParams, CompleteSessionParams,
@@ -73,10 +75,12 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
     {
         let latency_us = start.elapsed().as_micros();
         let success = result.is_ok();
-        // Passive metrics: biomeOS Pathway Learner scrapes structured logs.
-        eprintln!(
-            "{{\"primal\":\"ludospring\",\"op\":\"{}\",\"latency_us\":{latency_us},\"ok\":{success}}}",
-            req.method
+        info!(
+            primal = crate::PRIMAL_NAME,
+            op = %req.method,
+            latency_us = latency_us,
+            ok = success,
+            "dispatch"
         );
     }
     #[cfg(not(feature = "ipc"))]

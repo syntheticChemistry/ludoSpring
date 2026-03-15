@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
-#![deny(clippy::expect_used, clippy::unwrap_used)]
-#![warn(clippy::pedantic)]
-#![allow(clippy::doc_markdown)]
 //! ludoSpring Live Game Session — streaming demo for petalTongue.
 //!
 //! Simulates a 120-tick game session and pushes incremental updates

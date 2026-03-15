@@ -211,9 +211,10 @@ pub const UI_COVERAGE_TOL: f64 = 0.02;
 
 /// Tolerance for raycaster hit-rate validation (wall-hit percentage).
 ///
-/// Justification: Ray hit rate varies with player position quantization
-/// and grid boundary conditions. ±20% accounts for discrete grid effects
-/// in small maps where single-ray misses shift the percentage significantly.
+/// Justification: DDA ray-wall intersection in an 8×8 room with central
+/// player and 64-ray FOV sweep. f32 GPU vs f64 CPU step accumulation
+/// produces ±5% hit-rate delta on boundary rays where fractional grid
+/// offsets determine hit/miss. Validated in exp030 GPU parity checks.
 ///
-/// Source: exp001 raycaster validation against 5×5 room with central player.
-pub const RAYCASTER_HIT_RATE_TOL: f64 = 20.0;
+/// Source: exp001 + exp030 raycaster CPU/GPU parity (8×8 room, 64 rays).
+pub const RAYCASTER_HIT_RATE_TOL: f64 = 5.0;

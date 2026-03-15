@@ -1,7 +1,7 @@
 # Expedition 030: CPU-vs-GPU Math Parity
 
-**Date:** 2026-03-11
-**Status:** Active
+**Date:** 2026-03-15 (V17 refactor)
+**Status:** Active — refactored V17
 **Reference:** barraCuda CPU primitives, WGSL compute shaders, wgpu 28
 
 ## What We Built
@@ -18,11 +18,17 @@ Paper → Python → barraCuda CPU → **barraCuda GPU** → toadStool → coral
 
 | Component | Purpose |
 |-----------|---------|
-| 11 inline WGSL shaders | GPU implementations of CPU primitives (V15: +Perlin, engagement, raycaster) |
-| GPU context helper | wgpu 28 device/queue/buffer management |
-| CPU-vs-GPU parity checks | Element-by-element comparison within tolerances |
-| Adapter probe | Enumerate all GPU/CPU adapters on the system |
-| Benchmark suite | CPU-vs-GPU timing across data sizes (64 to 65536) |
+| 11 standalone `.wgsl` shaders | GPU implementations of CPU primitives (extracted V17) |
+| `gpu.rs` module (413 LOC) | wgpu 28 device/queue/buffer/pipeline with shared helpers |
+| `validate.rs` module (503 LOC) | CPU-vs-GPU parity checks with named tolerances |
+| `shaders.rs` module (42 LOC) | `include_str!` shader loading + perm table |
+| `main.rs` orchestrator (96 LOC) | Entry point: validate, probe, bench subcommands |
+
+**V17 evolution:** Original 1949 LOC single file refactored into 4 focused modules.
+GPU boilerplate consolidated from ~1032 LOC into 413 LOC via shared helpers
+(`build_pipeline`, `dispatch_and_read_f32`, `create_storage_buf`). All 11 WGSL
+shaders extracted to `shaders/` directory as standalone files ready for toadStool
+absorption.
 
 ### Parity Checks (24 total)
 

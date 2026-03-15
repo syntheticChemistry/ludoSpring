@@ -9,10 +9,11 @@
 //! ludoSpring is a sovereign primal that exposes capabilities via JSON-RPC
 //! over Unix sockets. biomeOS composes it into niches via deploy graphs.
 //! This module never hardcodes peer primal names.
-#![allow(clippy::doc_markdown)]
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
+
+use tracing::{info, warn};
 
 /// Capability domain for ludoSpring.
 pub const GAME_DOMAIN: &str = "game";
@@ -127,9 +128,7 @@ fn rpc_call(
 /// Non-fatal if Neural API is unavailable — ludoSpring runs standalone.
 pub fn register_domain(socket_path: &std::path::Path) {
     let Some(neural) = neural_api_socket() else {
-        eprintln!(
-            "[biomeos] Neural API not found — running standalone (domain registration skipped)"
-        );
+        info!("Neural API not found — running standalone (domain registration skipped)");
         return;
     };
 
@@ -153,13 +152,13 @@ pub fn register_domain(socket_path: &std::path::Path) {
     });
 
     if rpc_call(&neural, "capability.register", &params).is_some() {
-        eprintln!(
-            "[biomeos] Registered domain '{}' with {} capabilities",
-            GAME_DOMAIN,
-            GAME_CAPABILITIES.len()
+        info!(
+            domain = GAME_DOMAIN,
+            capabilities = GAME_CAPABILITIES.len(),
+            "registered domain"
         );
     } else {
-        eprintln!("[biomeos] capability.register failed (non-fatal)");
+        warn!("capability.register failed (non-fatal)");
     }
 }
 
@@ -177,7 +176,7 @@ pub fn deregister_domain() {
     });
 
     let _ = rpc_call(&neural, "capability.deregister", &params);
-    eprintln!("[biomeos] Deregistered domain '{GAME_DOMAIN}'");
+    info!(domain = GAME_DOMAIN, "deregistered domain");
 }
 
 #[cfg(test)]

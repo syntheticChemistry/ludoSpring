@@ -3,11 +3,12 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 15, 2026
-**Version:** V16 (66 experiments, 1371 validation checks, 240 tests)
+**Version:** V17 (66 experiments, 1371 validation checks, 234 tests + 12 proptest)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives)
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration
+**Audit Status:** Deep audit complete — 0 clippy warnings, 0 `#[allow()]` in production, structured tracing, capability-based discovery
 
 ---
 
@@ -397,11 +398,11 @@ ludoSpring/
 │   │   ├── tolerances/    # All constants with provenance (no magic numbers)
 │   │   ├── validation/    # ValidationResult harness
 │   │   ├── telemetry/     # Portable event protocol + analysis pipeline
-│   │   ├── visualization/ # Data channels + PetalTonguePushClient
-│   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
+│   │   ├── visualization/ # Data channels + VisualizationPushClient (capability-based)
+│   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery, tracing)
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
-│   └── tests/             # python_parity.rs, validation.rs, determinism.rs
+│   └── tests/             # python_parity, validation, determinism, proptest_invariants
 ├── experiments/           # 66 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
@@ -428,22 +429,23 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (240 total: unit + determinism + parity + validation + forge + benchmarks + doctest)
-cargo test --features ipc --lib --tests
+# All tests (234 total: 180 unit + 8 determinism + 12 proptest + 22 parity + 12 validation)
+cargo test --features ipc -p ludospring-barracuda --lib --tests
 
 # Run a specific experiment
 cargo run --bin exp017_bsp_level_generation
 
-# Python baselines
+# Python baselines + drift check
 python3 baselines/python/run_all_baselines.py
+python3 baselines/python/check_drift.py
 
 # UniBin server (biomeOS niche deployment)
 cargo run --features ipc --bin ludospring -- server
 
 # Quality checks
 cargo fmt --check
-cargo clippy --features ipc -p ludospring-barracuda -- -W clippy::pedantic
-cargo doc --workspace --no-deps
+cargo clippy --features ipc -p ludospring-barracuda
+cargo doc --features ipc -p ludospring-barracuda --no-deps
 ```
 
 ## Quality
@@ -451,31 +453,48 @@ cargo doc --workspace --no-deps
 | Check | Result |
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
-| `cargo clippy -W pedantic -W nursery` | 0 warnings (workspace-wide) |
-| `cargo test --workspace` | 240 tests, 0 failures |
+| `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
+| `cargo test` (barracuda) | 234 tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
 | 67 validation binaries | 1371 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
+| Baseline drift check | 0 drift (automated via `check_drift.py`) |
+| `proptest` invariants | 12 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
+| `#[allow()]` in production | 0 — all lints configured in `Cargo.toml` |
 | `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
 | SPDX headers | All `.rs` + all `Cargo.toml` |
-| Files > 1000 LOC | 1 (`exp030_cpu_gpu_parity` — 1949 LOC, inline WGSL shaders inflate count) |
+| Files > 1000 LOC | 0 — exp030 refactored into 4 modules (was 1949 LOC) |
 | TODO/FIXME/HACK in source | 0 |
+| Structured logging | `tracing` for all library IPC/biomeOS (no `eprintln!`) |
+| Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery |
+
+## V17 Audit Evolution (March 15, 2026)
+
+This version reflects a deep audit and evolution pass:
+
+- **Zero clippy warnings** under pedantic + nursery lints
+- **Zero `#[allow()]`** in production code — all lints centralized in `Cargo.toml`
+- **`eprintln!` → `tracing`** — structured logging in IPC server, biomeOS, handlers
+- **exp030 smart refactor** — 1949 LOC → 4 modules (gpu.rs 413, validate.rs 503, shaders.rs 42, main.rs 96)
+- **11 WGSL shaders extracted** to standalone `.wgsl` files — ready for toadStool absorption
+- **12 proptest invariants** — BSP area conservation, WFC entropy, noise bounds, engagement normalization
+- **Baseline drift checker** — automated Python baseline re-run and diff
+- **Capability-based viz discovery** — `VisualizationPushClient` finds any viz primal by capability
+- **Raycaster tolerance tightened** — `RAYCASTER_HIT_RATE_TOL` 20.0 → 5.0 with GPU parity justification
+- **`missing_errors_doc`/`missing_panics_doc`** lints now enforced (were previously allowed)
 
 ## Benchmark Gaps (Documented)
 
 ### Python Execution Timing
-Python baselines (baselines/python/) validate **correctness parity** only — they
-produce reference values that the Rust implementation must match. There are no
-timed benchmarks that execute Python and compare wall-clock performance against
-barracuda CPU. exp034 measures Rust-only throughput; the "inline-python" comparison
-is Rust code that mirrors Python logic, not actual Python execution.
+Python baselines validate **correctness parity** only — they produce reference
+values that the Rust implementation must match. exp034 measures Rust-only
+throughput; the "inline-python" comparison is Rust code that mirrors Python logic.
 
 ### Industry GPU Benchmarks
 GPU validation (exp030) confirms CPU-vs-GPU **correctness parity** via wgpu/WGSL.
-There are no benchmarks against industry GPU frameworks (Kokkos, CUDA, OpenCL,
-cuDNN, oneMKL, rocBLAS). GPU performance parity against industry standards is
-a toadStool/coralReef concern — ludoSpring validates the math, not the hardware.
+There are no benchmarks against industry GPU frameworks (Kokkos, CUDA, OpenCL).
+GPU performance parity against industry standards is a toadStool/coralReef concern.
 
 ## License
 

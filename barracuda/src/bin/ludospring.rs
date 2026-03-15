@@ -4,9 +4,6 @@
 //! Per Spring-as-Niche Deployment Standard: single binary with `server`, `status`, `version`.
 //! Socket: `$XDG_RUNTIME_DIR/biomeos/ludospring-${FAMILY_ID}.sock` (overridable via env).
 #![forbid(unsafe_code)]
-#![deny(clippy::expect_used, clippy::unwrap_used)]
-#![warn(clippy::pedantic)]
-#![allow(clippy::doc_markdown, clippy::module_name_repetitions)]
 
 use std::path::PathBuf;
 use std::sync::Arc;
