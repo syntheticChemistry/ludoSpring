@@ -25,13 +25,13 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 | Version | File | Date | Scope |
 |---------|------|------|-------|
 | **V16** | `LUDOSPRING_V16_NICHE_DEPLOYMENT_HANDOFF_MAR15_2026.md` | Mar 15 | Niche deployment: UniBin `lifecycle.status`, `game` domain (12 caps, semantic mappings), Neural API registration/deregistration, deploy graphs (ludospring + gaming niche), niche YAML, Provenance Trio at graph level, dispatch metrics, operation dependencies + cost estimates |
-| V15 | `LUDOSPRING_V15_GPU_DISPATCH_BUILDOUT_HANDOFF_MAR14_2026.md` | Mar 14 | GPU dispatch buildout: Tier A WGSL shaders, metalForge capability routing, NPU→GPU PCIe, toadStool dispatch, biomeOS DeploymentGraph |
+| V15 | `archive/LUDOSPRING_V15_GPU_DISPATCH_BUILDOUT_HANDOFF_MAR14_2026.md` | Mar 14 | GPU dispatch buildout: Tier A WGSL shaders, metalForge capability routing, NPU→GPU PCIe, toadStool dispatch, biomeOS DeploymentGraph |
 | V14 | `archive/LUDOSPRING_V14_DEEP_AUDIT_BARRACUDA_TOADSTOOL_HANDOFF_MAR14_2026.md` | Mar 14 | Deep audit: +74 tests (212 total), all modules ≥ 90% coverage |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 66 experiments, 1371 checks, 224 tests, niche-deployable)
+ludoSpring (game science, 66 experiments, 1371 checks, 240 tests, niche-deployable V16)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline)
@@ -82,7 +82,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
-| V15 | `handoffs/LUDOSPRING_V15_GPU_DISPATCH_BUILDOUT_HANDOFF_MAR14_2026.md` | V16 Niche Deployment |
+| V15 | `handoffs/archive/LUDOSPRING_V15_GPU_DISPATCH_BUILDOUT_HANDOFF_MAR14_2026.md` | V16 Niche Deployment |
 | V14 | `handoffs/archive/LUDOSPRING_V14_DEEP_AUDIT_BARRACUDA_TOADSTOOL_HANDOFF_MAR14_2026.md` | V15 GPU Dispatch |
 | V13 | `handoffs/archive/LUDOSPRING_V13_BARRACUDA_TOADSTOOL_CROSS_SPRING_PROVENANCE_HANDOFF_MAR13_2026.md` | V14 Deep Audit |
 

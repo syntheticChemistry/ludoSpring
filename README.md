@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 15, 2026
-**Version:** V16 (66 experiments, 1371 validation checks, 218 tests)
+**Version:** V16 (66 experiments, 1371 validation checks, 240 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives)
@@ -428,7 +428,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (224 total: unit + determinism + parity + validation + forge + exp + biomeos)
+# All tests (240 total: unit + determinism + parity + validation + forge + benchmarks + doctest)
 cargo test --features ipc --lib --tests
 
 # Run a specific experiment
@@ -452,14 +452,14 @@ cargo doc --workspace --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (workspace-wide) |
-| `cargo test --workspace` | 218 tests, 0 failures |
+| `cargo test --workspace` | 240 tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
 | 67 validation binaries | 1371 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
 | `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
 | SPDX headers | All `.rs` + all `Cargo.toml` |
-| Files > 1000 LOC | 0 |
+| Files > 1000 LOC | 1 (`exp030_cpu_gpu_parity` — 1949 LOC, inline WGSL shaders inflate count) |
 | TODO/FIXME/HACK in source | 0 |
 
 ## Benchmark Gaps (Documented)
