@@ -2,11 +2,12 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 14, 2026
-**Version:** V15 (66 experiments, 1371 validation checks, 218 tests)
+**Date:** March 15, 2026
+**Version:** V16 (66 experiments, 1371 validation checks, 218 tests)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives)
+**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration
 
 ---
 
@@ -346,6 +347,43 @@ cargo run --features ipc --bin ludospring_tufte_dashboard
 
 All binaries discover petalTongue automatically via Unix socket. If petalTongue is not running, scenarios are saved as JSON to `sandbox/`.
 
+## Niche Deployment (biomeOS)
+
+ludoSpring is a first-class biomeOS niche citizen — discoverable, composable, and
+orchestratable via Neural API graphs.
+
+```bash
+# UniBin server (germination mode)
+cargo run --features ipc --bin ludospring -- server
+
+# Health check
+cargo run --features ipc --bin ludospring -- status
+
+# Version and capabilities
+cargo run --features ipc --bin ludospring -- version
+```
+
+**Niche artifacts:**
+
+| Artifact | Path | Purpose |
+|----------|------|---------|
+| UniBin binary | `barracuda/src/bin/ludospring.rs` | `server`, `status`, `version` subcommands |
+| Deploy graph | `graphs/ludospring_deploy.toml` | 5-phase deploy: Tower → ToadStool → ludoSpring → Validate → Provenance |
+| Gaming niche graph | `graphs/ludospring_gaming_niche.toml` | Composes ludoSpring + petalTongue into gaming niche |
+| Niche YAML | `niches/ludospring-game.yaml` | BYOB definition with organisms and customization |
+| Capability domain | `barracuda/src/biomeos/mod.rs` | `game` domain, 12 capabilities, semantic mappings |
+
+**Compliance with Spring-as-Niche Deployment Standard:**
+
+- UniBin binary with `server`, `status`, `version`
+- JSON-RPC 2.0 over Unix socket (`$XDG_RUNTIME_DIR/biomeos/ludospring-${FAMILY_ID}.sock`)
+- `health.check`, `lifecycle.status`, and `capability.list` with domain, dependencies, cost estimates
+- Capability domain registration with semantic mappings via Neural API
+- Clean SIGTERM shutdown with `capability.deregister`
+- Provenance Trio wired at graph level (all nodes `fallback = "skip"`)
+- No hardcoded primal names — capability-based discovery only
+- `#![forbid(unsafe_code)]` and AGPL-3.0-or-later
+
 ## Architecture
 
 ```
@@ -361,12 +399,15 @@ ludoSpring/
 │   │   ├── telemetry/     # Portable event protocol + analysis pipeline
 │   │   ├── visualization/ # Data channels + PetalTonguePushClient
 │   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery)
+│   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity.rs, validation.rs, determinism.rs
-├── experiments/           # 66 experiments (22 validation + 3 playable + 4 telemetry + 4 compute + 4 benchmark + 3 control + 4 cross-spring + 3 RPGPT + 4 Games@Home + 1 Trio + 1 Extraction Shooter + 1 Composable Viz + 6 Lysogeny + 1 Fermenting + 5 Cross-Spring Provenance)
+├── experiments/           # 66 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Capability-based routing (9 tests, GPU>NPU>CPU)
+├── graphs/                # Deploy graphs (ludospring_deploy.toml, gaming_niche.toml)
+├── niches/                # Niche YAML (ludospring-game.yaml)
 ├── specs/                 # 6 domain specifications
 ├── whitePaper/            # Local paper staging
 └── wateringHole/          # Handoff documentation
@@ -387,7 +428,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (218 total: unit + determinism + parity + validation + forge + exp)
+# All tests (224 total: unit + determinism + parity + validation + forge + exp + biomeos)
 cargo test --features ipc --lib --tests
 
 # Run a specific experiment
@@ -396,7 +437,7 @@ cargo run --bin exp017_bsp_level_generation
 # Python baselines
 python3 baselines/python/run_all_baselines.py
 
-# UniBin server (biomeOS deployment)
+# UniBin server (biomeOS niche deployment)
 cargo run --features ipc --bin ludospring -- server
 
 # Quality checks

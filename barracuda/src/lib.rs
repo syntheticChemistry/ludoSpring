@@ -109,6 +109,10 @@ pub mod visualization;
 #[cfg(feature = "ipc")]
 pub mod ipc;
 
+/// biomeOS niche deployment: domain registration, semantic mappings, Neural API.
+#[cfg(feature = "ipc")]
+pub mod biomeos;
+
 /// Re-exported barraCuda CPU primitives.
 ///
 /// These are the shared math operations from the barraCuda primal.

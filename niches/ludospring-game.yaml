@@ -1,0 +1,130 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# ludoSpring Game Science Niche — BYOB Definition
+#
+# Per Spring-as-Niche Deployment Standard: defines organisms, interactions,
+# and customization options for biomeOS niche composition.
+#
+# Deploy graph: graphs/ludospring_deploy.toml
+# Gaming niche: graphs/ludospring_gaming_niche.toml
+#
+# Date: March 15, 2026
+# Version: V16 (niche deployment)
+
+niche:
+  id: "ludospring-game"
+  name: "ludoSpring Game Science Niche"
+  version: "1.0.0"
+  description: "Game science, interaction design, procedural generation, and play mechanics"
+  category: "game"
+  difficulty: "beginner"
+  author: "ecoPrimals/ludoSpring"
+  deploy_graph: "graphs/ludospring_deploy.toml"
+
+  features:
+    - "Flow state evaluation (Csikszentmihalyi)"
+    - "Input cost modeling (Fitts/Hick laws)"
+    - "Engagement metrics (action density, exploration, persistence)"
+    - "UI analysis (Tufte data-ink, information density)"
+    - "Accessibility scoring (visual, auditory, motor, cognitive)"
+    - "Procedural generation (Perlin noise, wave function collapse)"
+    - "Dynamic difficulty adjustment"
+    - "Provenance trio integration (game session lifecycle)"
+
+organisms:
+  primals:
+    ludospring:
+      type: "ludospring"
+      required: true
+      role: "science"
+      capabilities:
+        - "game.evaluate_flow"
+        - "game.fitts_cost"
+        - "game.engagement"
+        - "game.analyze_ui"
+        - "game.accessibility"
+        - "game.wfc_step"
+        - "game.difficulty_adjustment"
+        - "game.generate_noise"
+        - "game.begin_session"
+        - "game.record_action"
+        - "game.complete_session"
+        - "game.poll_telemetry"
+      config:
+        mode: "server"
+        domain: "game"
+
+    beardog:
+      type: "beardog"
+      required: true
+      role: "security"
+      capabilities:
+        - "crypto.sign"
+        - "crypto.encrypt"
+        - "crypto.hash"
+
+    songbird:
+      type: "songbird"
+      required: true
+      role: "discovery"
+      capabilities:
+        - "discovery.query"
+        - "discovery.announce"
+
+    toadstool:
+      type: "toadstool"
+      required: false
+      role: "compute"
+      capabilities:
+        - "compute.execute"
+        - "compute.capabilities"
+
+  chimeras: {}
+
+interactions:
+  - from: "ludospring"
+    to: "beardog"
+    type: "capability_call"
+    config:
+      capabilities: ["crypto.sign", "crypto.hash"]
+      description: "Session signing and data integrity"
+
+  - from: "ludospring"
+    to: "songbird"
+    type: "capability_call"
+    config:
+      capabilities: ["discovery.query"]
+      description: "Peer primal discovery by capability"
+
+  - from: "ludospring"
+    to: "toadstool"
+    type: "capability_call"
+    config:
+      capabilities: ["compute.execute"]
+      description: "GPU-accelerated noise generation and raycasting"
+      optional: true
+
+customization:
+  options:
+    gpu_enabled:
+      type: boolean
+      default: false
+      description: "Enable GPU-accelerated noise and raycasting via ToadStool"
+      affects: ["toadstool"]
+
+    provenance_enabled:
+      type: boolean
+      default: true
+      description: "Enable Provenance Trio for game session lifecycle tracking"
+
+    continuous_mode:
+      type: boolean
+      default: false
+      description: "Enable continuous (60 Hz) coordination for game engine niche"
+      affects: ["ludospring"]
+
+    genre:
+      type: string
+      default: "sandbox"
+      description: "Game genre template (sandbox, first_person_spatial, top_down_command)"
+      enum: ["sandbox", "first_person_spatial", "top_down_command"]

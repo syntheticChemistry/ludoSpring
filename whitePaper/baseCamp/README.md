@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 14, 2026
+**Date:** March 15, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance — 66 experiments, 1371 checks, 218 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 2 extraction shooter/viz, 6 lysogeny, 1 fermenting, 5 cross-spring provenance
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + **Niche Deployment** — 66 experiments, 1371 checks, 224 tests, 3 playable prototypes, 3 game adapters, 3 external control groups, 4 cross-spring, 3 RPGPT, 4 Games@Home, 1 trio integration, 2 extraction shooter/viz, 6 lysogeny, 1 fermenting, 5 cross-spring provenance, niche-deployable (V16)
 
 ---
 

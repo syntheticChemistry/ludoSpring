@@ -14,27 +14,9 @@ use std::sync::atomic::AtomicBool;
 
 use clap::{Parser, Subcommand};
 use ludospring_barracuda::PRIMAL_NAME;
-use ludospring_barracuda::ipc::{
-    IpcServer, METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION,
-    METHOD_COMPLETE_SESSION, METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW,
-    METHOD_FITTS_COST, METHOD_GENERATE_NOISE, METHOD_RECORD_ACTION, METHOD_WFC_STEP,
-};
+use ludospring_barracuda::biomeos::{GAME_CAPABILITIES, GAME_DOMAIN};
+use ludospring_barracuda::ipc::IpcServer;
 use tracing::info;
-
-/// Capabilities exposed by ludoSpring (capability-based, no hardcoded primal names).
-const CAPABILITIES: &[&str] = &[
-    METHOD_EVALUATE_FLOW,
-    METHOD_FITTS_COST,
-    METHOD_ENGAGEMENT,
-    METHOD_ANALYZE_UI,
-    METHOD_ACCESSIBILITY,
-    METHOD_WFC_STEP,
-    METHOD_DIFFICULTY_ADJUSTMENT,
-    METHOD_GENERATE_NOISE,
-    METHOD_BEGIN_SESSION,
-    METHOD_RECORD_ACTION,
-    METHOD_COMPLETE_SESSION,
-];
 
 /// Ecosystem socket directory name — XDG convention for biomeOS primals.
 const BIOMEOS_DIR: &str = "biomeos";
@@ -143,15 +125,17 @@ fn register_with_neural_api(socket_path: &std::path::Path, family_id: &str) {
 
     let params = serde_json::json!({
         "name": PRIMAL_NAME,
+        "domain": GAME_DOMAIN,
         "socket_path": socket_path.to_string_lossy(),
         "pid": std::process::id(),
-        "capabilities": CAPABILITIES,
+        "capabilities": GAME_CAPABILITIES,
     });
 
     if json_rpc_call(&neural_path, "lifecycle.register", &params).is_some() {
         info!(
-            "Registered with Neural API: {} capabilities",
-            CAPABILITIES.len()
+            "Registered with Neural API: domain '{}', {} capabilities",
+            GAME_DOMAIN,
+            GAME_CAPABILITIES.len()
         );
     } else {
         tracing::warn!("lifecycle.register failed (non-fatal) — Neural API unreachable");
@@ -171,13 +155,15 @@ fn cmd_server() -> Result<(), String> {
 
     info!("ludospring IPC listening on {}", socket_path.display());
     info!("  Family ID: {family_id}");
+    info!("  Domain: {GAME_DOMAIN}");
     info!("  Version: {}", env!("CARGO_PKG_VERSION"));
-    info!("  Capabilities ({}):", CAPABILITIES.len());
-    for cap in CAPABILITIES {
+    info!("  Capabilities ({}):", GAME_CAPABILITIES.len());
+    for cap in GAME_CAPABILITIES {
         info!("    - {cap}");
     }
 
     register_with_neural_api(&socket_path, &family_id);
+    ludospring_barracuda::biomeos::register_domain(&socket_path);
 
     let shutdown = Arc::new(AtomicBool::new(false));
     signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&shutdown))
@@ -186,6 +172,8 @@ fn cmd_server() -> Result<(), String> {
     server
         .run_until(shutdown.as_ref())
         .map_err(|e| format!("Server error: {e}"))?;
+
+    ludospring_barracuda::biomeos::deregister_domain();
     info!("Shutdown complete");
     Ok(())
 }
@@ -223,7 +211,12 @@ fn cmd_status() {
 fn cmd_version() {
     println!("ludospring {}", env!("CARGO_PKG_VERSION"));
     println!("  Primal: {PRIMAL_NAME}");
-    println!("  Capabilities: {}", CAPABILITIES.join(", "));
+    println!("  Domain: {GAME_DOMAIN}");
+    println!("  License: AGPL-3.0-or-later");
+    println!("  Capabilities ({}):", GAME_CAPABILITIES.len());
+    for cap in GAME_CAPABILITIES {
+        println!("    - {cap}");
+    }
 }
 
 #[derive(Parser)]

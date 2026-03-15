@@ -142,6 +142,14 @@ fn capability_call(
         .ok_or_else(|| "no result in response".to_string())
 }
 
+/// Whether any provenance session is currently active (trio reachable).
+///
+/// Used by `game.poll_telemetry` to report streaming vs idle status.
+#[must_use]
+pub fn has_active_session() -> bool {
+    neural_api_socket_path().is_some()
+}
+
 /// Begin a game session in the provenance trio.
 ///
 /// Creates a rhizoCrypt session via `dag.create_session`. Returns the session

@@ -24,13 +24,33 @@ use super::{
 
 type HandlerResult = Result<serde_json::Value, JsonRpcError>;
 
+/// All capabilities this primal exposes (game science + provenance + telemetry).
+const ALL_CAPABILITIES: &[&str] = &[
+    METHOD_EVALUATE_FLOW,
+    METHOD_FITTS_COST,
+    METHOD_ENGAGEMENT,
+    METHOD_ANALYZE_UI,
+    METHOD_ACCESSIBILITY,
+    METHOD_WFC_STEP,
+    METHOD_DIFFICULTY_ADJUSTMENT,
+    METHOD_GENERATE_NOISE,
+    METHOD_BEGIN_SESSION,
+    METHOD_RECORD_ACTION,
+    METHOD_COMPLETE_SESSION,
+    METHOD_POLL_TELEMETRY,
+];
+
 /// Dispatch a JSON-RPC request to the appropriate handler.
 ///
 /// Returns a serialized JSON-RPC response (success or error).
+/// Emits structured metrics for Neural API Pathway Learner (passive).
 #[must_use]
 pub fn dispatch(req: &JsonRpcRequest) -> String {
+    let start = std::time::Instant::now();
+
     let result = match req.method.as_str() {
         "health.check" | "lifecycle.health" | "health" => handle_health(req),
+        "lifecycle.status" => handle_lifecycle_status(req),
         "capability.list" => handle_capability_list(req),
         METHOD_EVALUATE_FLOW => handle_evaluate_flow(req),
         METHOD_FITTS_COST => handle_fitts_cost(req),
@@ -48,6 +68,19 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
             return serialize_error(&JsonRpcError::method_not_found(req.id.clone(), &req.method));
         }
     };
+
+    #[cfg(feature = "ipc")]
+    {
+        let latency_us = start.elapsed().as_micros();
+        let success = result.is_ok();
+        // Passive metrics: biomeOS Pathway Learner scrapes structured logs.
+        eprintln!(
+            "{{\"primal\":\"ludospring\",\"op\":\"{}\",\"latency_us\":{latency_us},\"ok\":{success}}}",
+            req.method
+        );
+    }
+    #[cfg(not(feature = "ipc"))]
+    let _ = start;
 
     match result {
         Ok(value) => serialize_response(&JsonRpcResponse::ok(req.id.clone(), value)),
@@ -89,18 +122,28 @@ fn handle_health(req: &JsonRpcRequest) -> HandlerResult {
         &req.id,
         serde_json::json!({
             "status": "healthy",
+            "name": crate::PRIMAL_NAME,
             "primal": crate::PRIMAL_NAME,
+            "domain": "game",
             "version": env!("CARGO_PKG_VERSION"),
-            "capabilities": [
-                METHOD_EVALUATE_FLOW,
-                METHOD_FITTS_COST,
-                METHOD_ENGAGEMENT,
-                METHOD_ANALYZE_UI,
-                METHOD_ACCESSIBILITY,
-                METHOD_WFC_STEP,
-                METHOD_DIFFICULTY_ADJUSTMENT,
-                METHOD_GENERATE_NOISE,
-            ],
+            "capabilities": ALL_CAPABILITIES,
+        }),
+    )
+}
+
+/// `lifecycle.status` — discovery probe response (per Universal IPC Standard V3).
+///
+/// Returns `name`, `version`, `domain`, `capabilities`, and `status` so that
+/// `probe_socket()` in the discovery module can identify this primal by capability.
+fn handle_lifecycle_status(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "name": crate::PRIMAL_NAME,
+            "version": env!("CARGO_PKG_VERSION"),
+            "domain": "game",
+            "status": "running",
+            "capabilities": ALL_CAPABILITIES,
         }),
     )
 }
@@ -109,18 +152,48 @@ fn handle_capability_list(req: &JsonRpcRequest) -> HandlerResult {
     to_json(
         &req.id,
         serde_json::json!({
-            "capabilities": [
-                METHOD_EVALUATE_FLOW,
-                METHOD_FITTS_COST,
-                METHOD_ENGAGEMENT,
-                METHOD_ANALYZE_UI,
-                METHOD_ACCESSIBILITY,
-                METHOD_WFC_STEP,
-                METHOD_DIFFICULTY_ADJUSTMENT,
-                METHOD_GENERATE_NOISE,
-            ],
+            "domain": "game",
+            "capabilities": ALL_CAPABILITIES,
+            "operation_dependencies": operation_dependencies(),
+            "cost_estimates": cost_estimates(),
         }),
     )
+}
+
+/// Neural API Enhancement 2: dependency hints for the Pathway Learner.
+fn operation_dependencies() -> serde_json::Value {
+    serde_json::json!({
+        "game.evaluate_flow": { "requires": ["challenge", "skill"] },
+        "game.fitts_cost": { "requires": ["distance", "target_width"] },
+        "game.engagement": { "requires": ["session_duration_s", "action_count"] },
+        "game.analyze_ui": { "requires": ["elements"] },
+        "game.accessibility": { "requires": ["feature_flags"] },
+        "game.wfc_step": { "requires": ["grid_dimensions", "n_tiles"] },
+        "game.difficulty_adjustment": { "requires": ["outcomes"] },
+        "game.generate_noise": { "requires": ["coordinates"] },
+        "game.begin_session": { "requires": ["session_name"] },
+        "game.record_action": { "requires": ["session_id", "action"] },
+        "game.complete_session": { "requires": ["session_id"], "depends_on": ["game.begin_session"] },
+        "game.poll_telemetry": { "requires": [] },
+    })
+}
+
+/// Neural API Enhancement 3: cost estimates for scheduling and resource allocation.
+fn cost_estimates() -> serde_json::Value {
+    serde_json::json!({
+        "game.evaluate_flow": { "typical_latency_us": 5, "cpu_intensity": "low", "memory_bytes": 128 },
+        "game.fitts_cost": { "typical_latency_us": 3, "cpu_intensity": "low", "memory_bytes": 64 },
+        "game.engagement": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 256 },
+        "game.analyze_ui": { "typical_latency_us": 50, "cpu_intensity": "medium", "memory_bytes": 4096 },
+        "game.accessibility": { "typical_latency_us": 8, "cpu_intensity": "low", "memory_bytes": 128 },
+        "game.wfc_step": { "typical_latency_us": 200, "cpu_intensity": "medium", "memory_bytes": 16384 },
+        "game.difficulty_adjustment": { "typical_latency_us": 15, "cpu_intensity": "low", "memory_bytes": 512 },
+        "game.generate_noise": { "typical_latency_us": 100, "cpu_intensity": "medium", "memory_bytes": 1024 },
+        "game.begin_session": { "typical_latency_us": 500, "cpu_intensity": "low", "memory_bytes": 1024 },
+        "game.record_action": { "typical_latency_us": 200, "cpu_intensity": "low", "memory_bytes": 512 },
+        "game.complete_session": { "typical_latency_us": 1000, "cpu_intensity": "low", "memory_bytes": 2048 },
+        "game.poll_telemetry": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 256 },
+    })
 }
 
 fn handle_evaluate_flow(req: &JsonRpcRequest) -> HandlerResult {
@@ -335,14 +408,27 @@ fn handle_complete_session(req: &JsonRpcRequest) -> HandlerResult {
 }
 
 fn handle_poll_telemetry(req: &JsonRpcRequest) -> HandlerResult {
+    let tick_ns = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+
+    // When provenance sessions are active, report engagement snapshots.
+    // When idle, return empty events with "idle" status for biomeOS budgeting.
+    let has_active_session = provenance::has_active_session();
+    let status = if has_active_session {
+        "streaming"
+    } else {
+        "idle"
+    };
+
     to_json(
         &req.id,
         serde_json::json!({
             "events": [],
-            "tick_ns": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_nanos()),
-            "status": "ready",
+            "tick_ns": tick_ns,
+            "status": status,
+            "domain": "game",
+            "frame_budget_ms": 16.67,
         }),
     )
 }
@@ -484,5 +570,81 @@ mod tests {
         );
         let resp = dispatch(&req);
         assert!(resp.contains("fully_collapsed"));
+    }
+
+    #[test]
+    fn lifecycle_status_returns_name_and_capabilities() {
+        let req = JsonRpcRequest {
+            jsonrpc: "2.0".into(),
+            method: "lifecycle.status".into(),
+            params: None,
+            id: serde_json::json!(1),
+        };
+        let resp = dispatch(&req);
+        assert!(
+            resp.contains("ludospring"),
+            "expected primal name in: {resp}"
+        );
+        assert!(
+            resp.contains("game.evaluate_flow"),
+            "expected capabilities in: {resp}"
+        );
+        assert!(
+            resp.contains("\"domain\":\"game\""),
+            "expected domain in: {resp}"
+        );
+    }
+
+    #[test]
+    fn health_includes_name_field() {
+        let req = JsonRpcRequest {
+            jsonrpc: "2.0".into(),
+            method: "health.check".into(),
+            params: None,
+            id: serde_json::json!(1),
+        };
+        let resp = dispatch(&req);
+        assert!(
+            resp.contains("\"name\":\"ludospring\""),
+            "expected name field in: {resp}"
+        );
+        assert!(
+            resp.contains("game.begin_session"),
+            "expected provenance caps in: {resp}"
+        );
+    }
+
+    #[test]
+    fn capability_list_includes_domain_and_dependencies() {
+        let req = JsonRpcRequest {
+            jsonrpc: "2.0".into(),
+            method: "capability.list".into(),
+            params: None,
+            id: serde_json::json!(1),
+        };
+        let resp = dispatch(&req);
+        assert!(
+            resp.contains("\"domain\":\"game\""),
+            "expected domain in: {resp}"
+        );
+        assert!(
+            resp.contains("operation_dependencies"),
+            "expected deps in: {resp}"
+        );
+        assert!(resp.contains("cost_estimates"), "expected costs in: {resp}");
+    }
+
+    #[test]
+    fn poll_telemetry_includes_domain() {
+        let req = make_request("game.poll_telemetry", serde_json::json!({}));
+        let resp = dispatch(&req);
+        assert!(
+            resp.contains("\"domain\":\"game\""),
+            "expected domain in: {resp}"
+        );
+        assert!(
+            resp.contains("frame_budget_ms"),
+            "expected budget in: {resp}"
+        );
     }
 }
