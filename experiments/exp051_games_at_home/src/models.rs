@@ -182,7 +182,7 @@ pub struct FeedbackCycle {
 
 /// Simulate the feedback loop over N cycles.
 /// Each cycle: humans play → model learns → model suggests → humans play deeper
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 pub fn simulate_feedback_loop(
     players: &[HumanComputeUnit],
     cycles: u32,
@@ -244,7 +244,7 @@ pub fn simulate_feedback_loop(
 // ===========================================================================
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 pub struct DomainTransfer {
     pub source_domain: &'static str,
     pub target_domain: &'static str,
@@ -320,7 +320,7 @@ pub fn cross_domain_transfers() -> Vec<DomainTransfer> {
 // ===========================================================================
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 pub struct ProvenanceRequirement {
     pub data_element: &'static str,
     pub primal: &'static str,

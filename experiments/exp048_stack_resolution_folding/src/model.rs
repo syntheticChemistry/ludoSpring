@@ -9,7 +9,7 @@
 // ===========================================================================
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(clippy::struct_field_names)]
+#[expect(clippy::struct_field_names, reason = "domain naming")]
 pub struct Card {
     pub name: &'static str,
     pub card_type: SpellType,

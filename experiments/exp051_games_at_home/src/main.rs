@@ -59,7 +59,7 @@ const fn bool_f64(b: bool) -> f64 {
 // Validation
 // ===========================================================================
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_isomorphism() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -96,7 +96,6 @@ fn validate_isomorphism() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
 fn validate_human_compute() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -179,7 +178,7 @@ fn validate_human_compute() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_feedback_loop() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -256,7 +255,7 @@ fn validate_feedback_loop() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_cross_domain() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 

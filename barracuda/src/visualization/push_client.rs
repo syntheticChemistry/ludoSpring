@@ -61,7 +61,7 @@ impl VisualizationPushClient {
             }
         }
 
-        if let Some(sock) = Self::find_viz_sock_in(&PathBuf::from("/tmp")) {
+        if let Some(sock) = Self::find_viz_sock_in(&std::env::temp_dir()) {
             return Ok(Self { socket: sock });
         }
 
@@ -85,7 +85,7 @@ impl VisualizationPushClient {
             "params": {
                 "session_id": session_id,
                 "title": title,
-                "domain": "game",
+                "domain": crate::niche::NICHE_DOMAIN,
                 "data": payload,
             },
             "id": 1

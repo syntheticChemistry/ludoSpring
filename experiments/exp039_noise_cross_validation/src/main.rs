@@ -60,7 +60,7 @@ fn cmd_validate() {
     let mut our_field = Vec::with_capacity(size * size);
     for y in 0..size {
         for x in 0..size {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
             let v = our_noise::perlin_2d(x as f64 * scale, y as f64 * scale);
             our_field.push(v);
         }
@@ -72,7 +72,7 @@ fn cmd_validate() {
     let mut noisers_field = Vec::with_capacity(size * size);
     for y in 0..size {
         for x in 0..size {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
             let v = perlin_rs.get([x as f64 * scale, y as f64 * scale]);
             noisers_field.push(v);
         }
@@ -129,7 +129,7 @@ fn cmd_validate() {
     let mut our_field2 = Vec::with_capacity(size * size);
     for y in 0..size {
         for x in 0..size {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
             let v = our_noise::perlin_2d(x as f64 * scale, y as f64 * scale);
             our_field2.push(v);
         }
@@ -147,7 +147,7 @@ fn cmd_validate() {
     let mut nrs_field2 = Vec::with_capacity(size * size);
     for y in 0..size {
         for x in 0..size {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
             let v = perlin_rs2.get([x as f64 * scale, y as f64 * scale]);
             nrs_field2.push(v);
         }
@@ -316,7 +316,6 @@ fn cmd_bench() {
         let t = Instant::now();
         for y in 0..n {
             for x in 0..n {
-                #[allow(clippy::cast_precision_loss)]
                 let _ = our_noise::perlin_2d(f64::from(x) * 0.05, f64::from(y) * 0.05);
             }
         }
@@ -325,7 +324,6 @@ fn cmd_bench() {
         let t = Instant::now();
         for y in 0..n {
             for x in 0..n {
-                #[allow(clippy::cast_precision_loss)]
                 let _ = perlin_rs.get([f64::from(x) * 0.05, f64::from(y) * 0.05]);
             }
         }

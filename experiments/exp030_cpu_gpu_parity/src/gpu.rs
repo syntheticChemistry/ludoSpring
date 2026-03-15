@@ -150,7 +150,7 @@ fn dispatch_and_read_f32(
         });
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, bg, &[]);
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
         let workgroups = (n as u32).div_ceil(workgroup_size);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
@@ -273,7 +273,7 @@ pub fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> V
         });
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bg, &[]);
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
         let workgroups = (n as u32).div_ceil(64);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
@@ -398,7 +398,7 @@ pub fn gpu_run_engagement_batch(ctx: &GpuContext, components: &[f32], weights: &
     dispatch_and_read_f32(ctx, &pipeline, &bg, &output_buf, n, 64, 0.0)
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 pub fn gpu_run_raycaster(
     ctx: &GpuContext,
     map_data: &[u32],

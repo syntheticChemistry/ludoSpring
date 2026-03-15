@@ -77,30 +77,15 @@ impl PrimalRegistry {
 
 /// Resolve the socket directories to search for primals.
 ///
-/// Returns directories in XDG-compliant priority order:
-/// 1. `BIOMEOS_SOCKET_DIR` — explicit ecosystem override
-/// 2. `$XDG_RUNTIME_DIR/biomeos/` — standard location
-/// 3. `/tmp/` — development fallback (only if no standard dirs resolve)
+/// Delegates to [`crate::niche::socket_dirs`] for the XDG-compliant
+/// directory chain. Filters to directories that actually exist on disk
+/// to avoid wasted probing.
 #[must_use]
 pub fn discovery_dirs() -> Vec<PathBuf> {
-    let mut dirs = Vec::new();
-
-    if let Ok(biomeos_dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
-        dirs.push(PathBuf::from(biomeos_dir));
-    }
-
-    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        let biomeos_path = PathBuf::from(xdg).join("biomeos");
-        if biomeos_path.is_dir() {
-            dirs.push(biomeos_path);
-        }
-    }
-
-    if dirs.is_empty() {
-        dirs.push(PathBuf::from("/tmp"));
-    }
-
-    dirs
+    crate::niche::socket_dirs()
+        .into_iter()
+        .filter(|d| d.is_dir())
+        .collect()
 }
 
 /// Probe a Unix socket to check if it hosts a JSON-RPC primal.

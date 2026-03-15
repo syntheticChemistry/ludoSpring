@@ -45,7 +45,7 @@ pub struct Event {
     #[expect(dead_code, reason = "domain model: tick used for narrative ordering")]
     pub tick: u64,
     pub agents_involved: Vec<AgentId>,
-    #[allow(clippy::struct_field_names)]
+    #[expect(clippy::struct_field_names, reason = "domain naming")]
     pub event_type: EventType,
     pub parent_events: Vec<u64>,
 }
@@ -86,7 +86,7 @@ pub struct NarrativeWorld {
 }
 
 impl NarrativeWorld {
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     pub fn new(quorum_threshold: f64) -> Self {
         Self {
             agents: Vec::new(),
@@ -98,13 +98,13 @@ impl NarrativeWorld {
     }
 
     pub fn add_agent(&mut self, name: impl Into<String>) -> AgentId {
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
         let id = AgentId(self.agents.len() as u32);
         self.agents.push(Agent::new(id.0, name));
         id
     }
 
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     fn alloc_event_id(&mut self) -> u64 {
         let id = self.next_event_id;
         self.next_event_id += 1;
@@ -195,7 +195,7 @@ impl NarrativeWorld {
     /// # Reference
     /// Markov, A. A. (1906). Extension of the law of large numbers.
     #[must_use]
-    #[allow(clippy::unused_self)]
+    #[expect(clippy::unused_self, reason = "API consistency")]
     pub fn markov_next_event(&self, agent: &Agent, rng_state: u64) -> EventType {
         let (enc, conf, all, disc, bet, _phase) = match agent.state {
             AgentState::Idle => (0.5, 0.1, 0.1, 0.2, 0.05, 0.05),
@@ -211,7 +211,7 @@ impl NarrativeWorld {
             enc + conf + all + disc + bet,
             1.0,
         ];
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
         let u = (rng_state % 1000) as f64 / 1000.0;
         if u < cumul[0] {
             EventType::Encounter
@@ -241,7 +241,7 @@ pub struct SchellingSegreg {
 }
 
 impl SchellingSegreg {
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     pub fn new(size: usize, tolerance: f64) -> Self {
         let mut cells = vec![0u8; size];
         for (i, c) in cells.iter_mut().enumerate() {
@@ -281,17 +281,17 @@ impl SchellingSegreg {
         let mut swapped = false;
         for i in 0..n {
             let (same, total) = self.same_neighbors(i);
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
             let frac = same as f64 / total as f64;
             if frac < self.tolerance {
                 *rng_state = rng_state
                     .wrapping_mul(6_364_136_223_846_793_005)
                     .wrapping_add(1);
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
                 let j = (*rng_state as usize) % n;
                 if j != i && self.cells[j] != self.cells[i] {
                     let (same_j, total_j) = self.same_neighbors(j);
-                    #[allow(clippy::cast_precision_loss)]
+                    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
                     let frac_j = same_j as f64 / total_j as f64;
                     if frac_j < self.tolerance {
                         self.cells.swap(i, j);

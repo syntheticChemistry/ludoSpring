@@ -206,7 +206,7 @@ fn cmd_bench() {
         let t = Instant::now();
         tick_game_logic(&mut entities, dt);
         let us = t.elapsed().as_micros();
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
         let per_entity = us as f64 / n as f64;
         let fps = if us > 0 { 1_000_000.0 / us as f64 } else { 0.0 };
         println!("{n:>8} {us:>12} {per_entity:>10.3} {fps:>10.0}");

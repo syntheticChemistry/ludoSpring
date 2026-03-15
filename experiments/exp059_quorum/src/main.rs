@@ -368,7 +368,7 @@ fn validate_markov_event(pass: &mut u32, fail: &mut u32) {
         signal_level: 0.0,
         memory: Vec::new(),
     };
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     let idle_enc: u32 = (0..500)
         .map(|s| world.markov_next_event(&idle_agent, s))
         .filter(|e| *e == EventType::Encounter)
@@ -388,7 +388,7 @@ fn validate_markov_event(pass: &mut u32, fail: &mut u32) {
         signal_level: 0.5,
         memory: Vec::new(),
     };
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     let active_conf: u32 = (0..500)
         .map(|s| world.markov_next_event(&active_agent, s))
         .filter(|e| *e == EventType::Conflict)
@@ -408,7 +408,7 @@ fn validate_markov_event(pass: &mut u32, fail: &mut u32) {
         signal_level: 0.8,
         memory: Vec::new(),
     };
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     let sig_all: u32 = (0..500)
         .map(|s| world.markov_next_event(&sig_agent, s))
         .filter(|e| *e == EventType::Alliance)
@@ -428,7 +428,7 @@ fn validate_markov_event(pass: &mut u32, fail: &mut u32) {
         signal_level: 1.0,
         memory: Vec::new(),
     };
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     let committed_bet: u32 = (0..500)
         .map(|s| world.markov_next_event(&committed_agent, s + 500))
         .filter(|e| *e == EventType::Betrayal)
@@ -487,9 +487,9 @@ fn validate_full_narrative(pass: &mut u32, fail: &mut u32) {
     for _ in 0..20 {
         world.step();
         if ids.len() >= 2 {
-            #[allow(clippy::cast_possible_truncation)]
+            #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
             let a = ids[world.tick as usize % ids.len()];
-            #[allow(clippy::cast_possible_truncation)]
+            #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
             let b = ids[(world.tick as usize + 1) % ids.len()];
             if a != b {
                 world.agent_encounter(a, b);

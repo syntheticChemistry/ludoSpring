@@ -9,7 +9,7 @@
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
 # Date: March 15, 2026
-# Version: V16 (niche deployment)
+# Version: V18 (niche self-knowledge + NeuralBridge)
 
 niche:
   id: "ludospring-game"

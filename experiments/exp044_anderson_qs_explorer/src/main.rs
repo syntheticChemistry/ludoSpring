@@ -14,7 +14,7 @@ const fn bool_f64(b: bool) -> f64 {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 struct MicrobialCommunity {
     name: String,
     diversity_h: f64,

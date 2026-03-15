@@ -147,7 +147,7 @@ pub struct CapturedEntity {
 impl CapturedEntity {
     /// Create from a wild entity (fresh capture).
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     pub fn from_wild(entity: WildEntity) -> Self {
         Self {
             entity,
@@ -326,7 +326,7 @@ impl EvolutionChain {
 
     /// Create with custom thresholds.
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     pub fn with_thresholds(exp_thresholds: Vec<u64>) -> Self {
         let is_absorbing = exp_thresholds.is_empty();
         Self {

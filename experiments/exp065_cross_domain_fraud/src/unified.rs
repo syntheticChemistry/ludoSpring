@@ -186,7 +186,7 @@ pub struct GenericFraudDetector {
 
 impl GenericFraudDetector {
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     pub fn new(vocabulary: DomainVocabulary) -> Self {
         Self {
             events: Vec::new(),
@@ -334,7 +334,6 @@ impl GenericFraudDetector {
 
 /// Apply `DomainVocabulary` to a report's description and domain label.
 #[must_use]
-#[allow(clippy::missing_const_for_fn)]
 pub fn relabel_report(
     report: &GenericFraudReport,
     vocabulary: &DomainVocabulary,

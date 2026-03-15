@@ -328,7 +328,7 @@ fn main() {
     }
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines, reason = "validation orchestrator")]
 #[expect(
     clippy::cast_possible_truncation,
     reason = "exploration count bounded by MAP_TILES"
@@ -403,7 +403,7 @@ fn cmd_validate() {
 
     // 5. Engagement metrics produce valid output on foreign content
     let explored_count = player.explored.iter().filter(|&&e| e).count();
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let snap = EngagementSnapshot {
         session_duration_s: player.actions as f64 * 0.5, // ~0.5s per action
         action_count: player.actions,
@@ -464,7 +464,7 @@ fn cmd_validate() {
     );
 
     // 8. Fun classification works on external session data
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let fun = classify_fun(&FunSignals {
         challenge: skill,
         exploration: eng.exploration_rate,
@@ -516,7 +516,7 @@ fn cmd_validate() {
 
     // 11. Metrics on second map also valid
     let player2 = simulate_session(&map2, 500);
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let snap2 = EngagementSnapshot {
         session_duration_s: player2.actions as f64 * 0.5,
         action_count: player2.actions,

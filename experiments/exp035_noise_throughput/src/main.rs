@@ -128,7 +128,6 @@ fn cmd_validate() {
     let mut our_sum = 0.0_f64;
     for y in 0..256 {
         for x in 0..256 {
-            #[allow(clippy::cast_precision_loss)]
             let v = noise::perlin_2d(f64::from(x) * 0.01, f64::from(y) * 0.01);
             our_sum += v;
         }

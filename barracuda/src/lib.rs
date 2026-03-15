@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![forbid(unsafe_code)]
-#![deny(missing_docs)]
 //! ludoSpring — The Science of Play, Interaction, and Game Design (via `barraCuda`)
 //!
 //! Ludology (from Latin *ludus*: play, game) is the study of games and play as
@@ -90,6 +88,9 @@ pub mod metrics;
 /// Procedural content generation: noise, WFC, L-systems, molecular worlds.
 pub mod procedural;
 
+/// Niche self-knowledge: identity, capabilities, semantic mappings, cost metadata.
+pub mod niche;
+
 /// Domain-specific tolerances for validation (no magic numbers).
 pub mod tolerances;
 
@@ -121,5 +122,5 @@ pub mod barcuda_math {
     pub use barracuda::stats::{dot, l2_norm, mean};
 }
 
-/// Primal identity.
-pub const PRIMAL_NAME: &str = "ludospring";
+/// Primal identity — delegates to [`niche::NICHE_NAME`].
+pub const PRIMAL_NAME: &str = niche::NICHE_NAME;

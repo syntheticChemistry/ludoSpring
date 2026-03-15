@@ -1,29 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Provenance trio integration for ludoSpring IPC.
 //!
-//! Wires game session lifecycle to the provenance trio (`rhizoCrypt`,
-//! `LoamSpine`, `sweetGrass`) via capability-based discovery. Uses JSON-RPC
-//! over Unix socket, either through Neural API `capability.call` or direct
-//! primal calls.
+//! Wires game session lifecycle to the provenance trio via capability-based
+//! discovery through [`NeuralBridge`]. Uses `capability.call` routing:
 //!
-//! ## Approach
+//! - `dag.create_session` / `dag.append_event` / `dag.dehydrate` → rhizoCrypt
+//! - `commit.session` → LoamSpine
+//! - `provenance.create_braid` → sweetGrass
 //!
-//! 1. **Discovery**: Resolve the Neural API socket via XDG-compliant paths
-//!    (`BIOMEOS_SOCKET_DIR`, `XDG_RUNTIME_DIR/biomeos`, `/tmp` fallback). No
-//!    hardcoded primal names — capability routing is delegated to the
-//!    ecosystem.
-//!
-//! 2. **Protocol**: `capability.call` with `{ capability, operation, args }`
-//!    routes to the appropriate primal (dag → `rhizoCrypt`, commit →
-//!    `LoamSpine`, provenance → `sweetGrass`).
-//!
-//! 3. **Graceful degradation**: If the trio is unavailable (socket missing,
-//!    connection refused, RPC error), handlers return success with
-//!    `"provenance": "unavailable"` — game logic never fails for missing
-//!    provenance.
+//! No hardcoded primal names — capability routing is delegated to biomeOS.
+//! Graceful degradation: if the trio is unavailable, handlers return success
+//! with `"provenance": "unavailable"`.
 
-use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use super::neural_bridge::NeuralBridge;
 
 /// Result of a provenance operation; includes availability status.
 #[derive(Debug)]
@@ -36,132 +25,24 @@ pub struct ProvenanceResult {
     pub data: serde_json::Value,
 }
 
-/// Resolve the Neural API socket path (XDG-compliant, no hardcoded primal names).
-#[must_use]
-fn neural_api_socket_path() -> Option<PathBuf> {
-    let family_id = std::env::var("FAMILY_ID")
-        .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
-        .unwrap_or_else(|_| "default".to_string());
-
-    let sock_name = format!("neural-api-{family_id}.sock");
-
-    if let Ok(dir) = std::env::var("NEURAL_API_SOCKET") {
-        let p = PathBuf::from(&dir);
-        if p.exists() {
-            return Some(p);
-        }
-    }
-
-    if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
-        let p = PathBuf::from(dir).join(&sock_name);
-        if p.exists() {
-            return Some(p);
-        }
-    }
-
-    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        let p = PathBuf::from(xdg).join("biomeos").join(&sock_name);
-        if p.exists() {
-            return Some(p);
-        }
-    }
-
-    let user = std::env::var("USER").unwrap_or_else(|_| "unknown".to_string());
-    let fallback = PathBuf::from("/tmp").join(format!("biomeos-{user}"));
-    let p = fallback.join(&sock_name);
-    if p.exists() {
-        return Some(p);
-    }
-
-    let p = PathBuf::from("/tmp").join(&sock_name);
-    if p.exists() {
-        return Some(p);
-    }
-
-    None
-}
-
-/// Send a capability.call request to the Neural API.
-fn capability_call(
-    socket_path: &std::path::Path,
-    capability: &str,
-    operation: &str,
-    args: &serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    use std::os::unix::net::UnixStream;
-
-    let request = serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": "capability.call",
-        "params": {
-            "capability": capability,
-            "operation": operation,
-            "args": args,
-        },
-        "id": 1
-    });
-
-    let request_str = serde_json::to_string(&request).map_err(|e| format!("serialize: {e}"))?;
-    let mut stream = UnixStream::connect(socket_path).map_err(|e| format!("connect: {e}"))?;
-    stream
-        .set_read_timeout(Some(std::time::Duration::from_secs(10)))
-        .map_err(|e| format!("timeout: {e}"))?;
-    stream
-        .set_write_timeout(Some(std::time::Duration::from_secs(10)))
-        .map_err(|e| format!("timeout: {e}"))?;
-
-    stream
-        .write_all(request_str.as_bytes())
-        .map_err(|e| format!("write: {e}"))?;
-    stream.write_all(b"\n").map_err(|e| format!("write: {e}"))?;
-    stream.flush().map_err(|e| format!("flush: {e}"))?;
-    stream
-        .shutdown(std::net::Shutdown::Write)
-        .map_err(|e| format!("shutdown: {e}"))?;
-
-    let mut reader = BufReader::new(stream);
-    let mut line = String::new();
-    reader
-        .read_line(&mut line)
-        .map_err(|e| format!("read: {e}"))?;
-
-    let parsed: serde_json::Value =
-        serde_json::from_str(line.trim()).map_err(|e| format!("parse: {e}"))?;
-
-    if let Some(err) = parsed.get("error") {
-        return Err(format!(
-            "rpc error: {}",
-            err.get("message")
-                .and_then(|m| m.as_str())
-                .unwrap_or("unknown")
-        ));
-    }
-
-    parsed
-        .get("result")
-        .cloned()
-        .ok_or_else(|| "no result in response".to_string())
-}
-
-/// Whether any provenance session is currently active (trio reachable).
+/// Whether the Neural API is discoverable (trio might be reachable).
 ///
 /// Used by `game.poll_telemetry` to report streaming vs idle status.
 #[must_use]
 pub fn has_active_session() -> bool {
-    neural_api_socket_path().is_some()
+    crate::niche::resolve_neural_api_socket().is_some()
 }
 
 /// Begin a game session in the provenance trio.
 ///
-/// Creates a `rhizoCrypt` session via `dag.create_session`. Returns the
-/// session ID or a fallback note if the trio is unavailable.
+/// Creates a session via `dag.create_session`. Returns the session ID or
+/// a fallback note if the trio is unavailable.
 ///
 /// # Errors
 ///
-/// Returns an error string if the `capability.call` RPC fails in a way
-/// that cannot be gracefully degraded (serialization error, etc.).
+/// Returns an error string only on non-recoverable failures.
 pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String> {
-    let Some(socket) = neural_api_socket_path() else {
+    let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
 
@@ -171,21 +52,23 @@ pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String
         "description": session_name,
     });
 
-    capability_call(&socket, "dag", "create_session", &args).map_or_else(
-        |_| Ok(unavailable_result()),
-        |result| {
-            let session_id = result
-                .get("session_id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            Ok(ProvenanceResult {
-                id: session_id.clone(),
-                available: true,
-                data: serde_json::json!({ "session_id": session_id }),
-            })
-        },
-    )
+    bridge
+        .capability_call("dag", "create_session", &args)
+        .map_or_else(
+            |_| Ok(unavailable_result()),
+            |result| {
+                let session_id = result
+                    .get("session_id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+                Ok(ProvenanceResult {
+                    id: session_id.clone(),
+                    available: true,
+                    data: serde_json::json!({ "session_id": session_id }),
+                })
+            },
+        )
 }
 
 /// Record a game action in the provenance trio.
@@ -195,13 +78,12 @@ pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String
 ///
 /// # Errors
 ///
-/// Returns an error string if the `capability.call` RPC fails in a way
-/// that cannot be gracefully degraded.
+/// Returns an error string only on non-recoverable failures.
 pub fn record_game_action(
     session_id: &str,
     action: &serde_json::Value,
 ) -> Result<ProvenanceResult, String> {
-    let Some(socket) = neural_api_socket_path() else {
+    let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
 
@@ -210,29 +92,31 @@ pub fn record_game_action(
         "event": action,
     });
 
-    capability_call(&socket, "dag", "append_event", &args).map_or_else(
-        |_| Ok(unavailable_result()),
-        |result| {
-            let vertex_id = result
-                .get("vertex_id")
-                .or_else(|| result.get("id"))
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            Ok(ProvenanceResult {
-                id: vertex_id.clone(),
-                available: true,
-                data: serde_json::json!({ "vertex_id": vertex_id }),
-            })
-        },
-    )
+    bridge
+        .capability_call("dag", "append_event", &args)
+        .map_or_else(
+            |_| Ok(unavailable_result()),
+            |result| {
+                let vertex_id = result
+                    .get("vertex_id")
+                    .or_else(|| result.get("id"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+                Ok(ProvenanceResult {
+                    id: vertex_id.clone(),
+                    available: true,
+                    data: serde_json::json!({ "vertex_id": vertex_id }),
+                })
+            },
+        )
 }
 
 /// Complete a game session: dehydrate, commit, and attribute.
 ///
 /// 1. `dag.dehydrate` — compute Merkle root and frontier
-/// 2. `commit.session` — anchor to `LoamSpine`
-/// 3. `provenance.create_braid` — attribute via `sweetGrass`
+/// 2. `commit.session` — anchor to LoamSpine
+/// 3. `provenance.create_braid` — attribute via sweetGrass
 ///
 /// # Errors
 ///
@@ -240,7 +124,7 @@ pub fn record_game_action(
 /// completion (e.g. dehydration succeeded but commit failed) returns `Ok`
 /// with a status field describing how far the pipeline progressed.
 pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, String> {
-    let Some(socket) = neural_api_socket_path() else {
+    let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(serde_json::json!({
             "provenance": "unavailable",
             "session_id": session_id,
@@ -248,7 +132,7 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
     };
 
     let dehydrate_args = serde_json::json!({ "session_id": session_id });
-    let Ok(dehydration) = capability_call(&socket, "dag", "dehydrate", &dehydrate_args) else {
+    let Ok(dehydration) = bridge.capability_call("dag", "dehydrate", &dehydrate_args) else {
         return Ok(serde_json::json!({
             "provenance": "unavailable",
             "session_id": session_id,
@@ -265,7 +149,7 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         "summary": dehydration,
         "content_hash": merkle_root,
     });
-    let Ok(commit_result) = capability_call(&socket, "commit", "session", &commit_args) else {
+    let Ok(commit_result) = bridge.capability_call("commit", "session", &commit_args) else {
         return Ok(serde_json::json!({
             "provenance": "partial",
             "session_id": session_id,
@@ -289,7 +173,7 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
             "contribution": 1.0
         }],
     });
-    let braid_result = capability_call(&socket, "provenance", "create_braid", &braid_args);
+    let braid_result = bridge.capability_call("provenance", "create_braid", &braid_args);
 
     let braid_id = braid_result
         .ok()

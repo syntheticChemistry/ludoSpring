@@ -206,7 +206,7 @@ fn validate_pf2e() -> Vec<ValidationResult> {
     clippy::too_many_lines,
     reason = "FATE validation — summary, character, resolution checks"
 )]
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_fate() -> Vec<ValidationResult> {
     let fate = FateCore;
     let summary = fate.summary();
@@ -361,7 +361,7 @@ fn cairn_damage_overflow_str_value(character: &mut Character, damage: i32) -> i3
         .value
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_cairn() -> Vec<ValidationResult> {
     let cairn = Cairn;
     let summary = cairn.summary();

@@ -114,7 +114,7 @@ impl NodeAtomic {
         substrate
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "domain model completeness")]
     fn resolve_capability(&self, cap: &str) -> Option<&str> {
         self.tower.resolve(cap)
     }
@@ -126,7 +126,7 @@ struct NestAtomic {
     provenance: Vec<ProvenanceRecord>,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 #[derive(Debug, Clone)]
 struct ProvenanceRecord {
     stage: String,
@@ -156,7 +156,7 @@ impl NestAtomic {
 
 /// Node Atomic V2: capability-based routing with substrate discovery.
 struct NodeAtomicV2 {
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "domain model completeness")]
     tower: TowerAtomic,
     substrates: Vec<SubstrateInfo>,
     dispatch_log: Vec<(String, SubstrateKind, String)>, // (label, kind, reason)
@@ -259,21 +259,21 @@ enum DeploymentNodeType {
     Viz,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 struct DeploymentNode {
     id: String,
     node_type: DeploymentNodeType,
     budget_us: f64,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 #[derive(Debug, Clone)]
 enum DeploymentEdgeType {
     DataFlow { bytes: usize },
     ControlFlow,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 struct DeploymentEdge {
     from: String,
     to: String,
@@ -282,7 +282,7 @@ struct DeploymentEdge {
 
 struct DeploymentGraph {
     nodes: Vec<DeploymentNode>,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "domain model completeness")]
     edges: Vec<DeploymentEdge>,
     coordination_hz: f64,
 }

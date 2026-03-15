@@ -264,7 +264,10 @@ impl MedicalAccessSystem {
     }
 
     /// Advance the system tick.
-    #[allow(clippy::missing_const_for_fn)] // mutates self — cannot be const
+    #[expect(
+        clippy::missing_const_for_fn,
+        reason = "mutates self — cannot be const"
+    )]
     pub fn advance_tick(&mut self) {
         self.tick += 1;
     }
@@ -618,7 +621,10 @@ impl MedicalAccessSystem {
     }
 
     /// Verify an access proof (deterministic check).
-    #[allow(clippy::unused_self)] // method belongs to API for consistency with other systems
+    #[expect(
+        clippy::unused_self,
+        reason = "method belongs to API for consistency with other systems"
+    )]
     pub fn verify_proof(&self, proof: &AccessProof) -> bool {
         let expected =
             compute_proof_signature(&proof.accessor_did, &proof.record_id, proof.timestamp_tick);

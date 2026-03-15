@@ -31,7 +31,11 @@ const fn bool_f64(b: bool) -> f64 {
     if b { 1.0 } else { 0.0 }
 }
 
-#[allow(clippy::cast_precision_loss, clippy::vec_init_then_push)]
+#[expect(
+    clippy::cast_precision_loss,
+    clippy::vec_init_then_push,
+    reason = "counts fit in f64 mantissa; sequential initialization clarity"
+)]
 fn validate_world_structure() -> Vec<ValidationResult> {
     let game = GameState::build_world();
     let mut results = Vec::new();

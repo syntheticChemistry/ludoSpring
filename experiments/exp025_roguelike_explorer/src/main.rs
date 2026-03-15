@@ -86,7 +86,7 @@ fn main() -> io::Result<()> {
     run()
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines, reason = "validation orchestrator")]
 fn run() -> io::Result<()> {
     let seed: u64 = std::env::args()
         .nth(1)
@@ -349,7 +349,11 @@ fn run() -> io::Result<()> {
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments, clippy::similar_names)]
+#[expect(
+    clippy::too_many_arguments,
+    clippy::similar_names,
+    reason = "domain nomenclature"
+)]
 fn try_move(
     map: &[Tile],
     player: &mut Player,

@@ -77,7 +77,7 @@ pub fn cmd_validate() {
 
     let seed: u64 = 42;
     let next = barcuda_math::lcg_step(seed);
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let expected_lcg = 42_u64
         .wrapping_mul(6_364_136_223_846_793_005)
         .wrapping_add(1) as f64;
@@ -226,7 +226,7 @@ pub fn cmd_validate() {
             0.0,
         ));
 
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
         let reduce_sum_input: Vec<f32> = (0..256).map(|i| i as f32).collect();
         let gpu_partial = gpu_run_f32_unary(ctx, REDUCE_SUM_WGSL, &reduce_sum_input);
         let gpu_total: f32 = gpu_partial.iter().sum();
@@ -250,7 +250,11 @@ pub fn cmd_validate() {
             noise_coords.push(y);
         }
         let gpu_noise = gpu_run_perlin(ctx, &perm_u32, &noise_coords);
-        #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
+        #[expect(
+            clippy::cast_precision_loss,
+            clippy::cast_possible_truncation,
+            reason = "counts fit in f64 mantissa; value bounded"
+        )]
         let cpu_noise: Vec<f32> = (0..n_noise)
             .map(|i| {
                 let x = (i as f64) * 0.1;
@@ -330,7 +334,11 @@ pub fn cmd_validate() {
         let octaves = 4u32;
         let lacunarity: f32 = 2.0;
         let persistence: f32 = 0.5;
-        #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
+        #[expect(
+            clippy::cast_precision_loss,
+            clippy::cast_possible_truncation,
+            reason = "counts fit in f64 mantissa; value bounded"
+        )]
         let fbm_cpu: Vec<f32> = (0..n_fbm)
             .map(|i| {
                 let x = (i as f64) * 0.05;
@@ -413,7 +421,7 @@ pub fn cmd_validate() {
             .iter()
             .map(|&a| {
                 let hit = raycaster::cast_ray(&ray_player, f64::from(a), &grid_map, 20.0);
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
                 hit.map_or(20.0_f32, |h| h.distance as f32)
             })
             .collect();

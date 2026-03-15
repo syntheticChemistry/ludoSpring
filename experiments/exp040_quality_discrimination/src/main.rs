@@ -223,7 +223,7 @@ struct SessionAnalysis {
     serious_fun: f64,
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn analyze_session(s: &ArchetypeSession) -> SessionAnalysis {
     let snap = EngagementSnapshot {
         session_duration_s: s.session_duration_s,

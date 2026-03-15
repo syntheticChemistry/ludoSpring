@@ -44,6 +44,19 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
     t.mul_add(b - a, a)
 }
 
+/// Map a floored coordinate to a permutation-table index \[0, 255\].
+///
+/// Uses `i32` intermediate to get two's-complement wrapping for negative
+/// coordinates, matching the Python reference `int(math.floor(x)) & 255`.
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "f64 floor → i32 → usize & 255: truncation safe for practical coords; sign loss is intentional two's-complement wrap"
+)]
+const fn perm_index(floored: f64) -> usize {
+    (floored as i32 as usize) & 255
+}
+
 fn grad2(hash: u8, x: f64, y: f64) -> f64 {
     match hash & 3 {
         0 => x + y,
@@ -80,14 +93,9 @@ fn grad3(hash: u8, x: f64, y: f64, z: f64) -> f64 {
 
 /// 2D Perlin noise. Returns value in approximately \[-1, 1\].
 #[must_use]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    reason = "Perlin noise: floor + mask to 0..255 guarantees safe usize"
-)]
 pub fn perlin_2d(x: f64, y: f64) -> f64 {
-    let xi = x.floor() as usize & 255;
-    let yi = y.floor() as usize & 255;
+    let xi = perm_index(x.floor());
+    let yi = perm_index(y.floor());
     let xf = x - x.floor();
     let yf = y - y.floor();
 
@@ -110,14 +118,12 @@ pub fn perlin_2d(x: f64, y: f64) -> f64 {
 #[must_use]
 #[expect(
     clippy::many_single_char_names,
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    reason = "Perlin noise: u/v/w/a/b are standard names; floor + mask to 0..255 guarantees safe usize"
+    reason = "u/v/w/a/b are standard Perlin noise variable names (Perlin 2002)"
 )]
 pub fn perlin_3d(x: f64, y: f64, z: f64) -> f64 {
-    let xi = x.floor() as usize & 255;
-    let yi = y.floor() as usize & 255;
-    let zi = z.floor() as usize & 255;
+    let xi = perm_index(x.floor());
+    let yi = perm_index(y.floor());
+    let zi = perm_index(z.floor());
     let xf = x - x.floor();
     let yf = y - y.floor();
     let zf = z - z.floor();

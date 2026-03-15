@@ -117,7 +117,7 @@ enum Zone {
     Graveyard,
     Exile,
     Stack,
-    #[allow(clippy::enum_variant_names)]
+    #[expect(clippy::enum_variant_names, reason = "domain nomenclature")]
     CmdZone,
 }
 
@@ -126,7 +126,7 @@ enum Zone {
 // ===========================================================================
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 struct GameVertex {
     id: usize,
     parent: Option<usize>,

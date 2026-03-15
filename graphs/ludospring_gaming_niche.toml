@@ -20,7 +20,7 @@
 #   Once biomeOS supports Continuous coordination mode, this graph evolves
 #   from Sequential deploy to Continuous tick execution.
 #
-# STATUS: Active (Mar 15, 2026) — niche deployment V16
+# STATUS: Active (Mar 15, 2026) — niche self-knowledge V18
 #
 # Usage:
 #   biomeos deploy graphs/ludospring_gaming_niche.toml
@@ -232,7 +232,7 @@ name = "capability_call"
 
 [nodes.operation.params]
 capability = "provenance.session_create"
-params = { agent = "gaming-niche", experiment_id = "deploy", version = "V16" }
+params = { agent = "gaming-niche", experiment_id = "deploy", version = "V18" }
 
 [nodes.constraints]
 timeout_ms = 10000

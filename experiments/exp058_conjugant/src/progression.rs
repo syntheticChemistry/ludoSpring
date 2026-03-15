@@ -25,7 +25,6 @@ pub struct Gene {
     /// Fitness contribution when active (additive).
     pub fitness_bonus: f64,
     /// Generation when this gene was first discovered.
-    #[allow(dead_code)]
     pub generation_discovered: u32,
 }
 
@@ -34,7 +33,7 @@ pub struct Gene {
 /// When a run ends (death or timeout), it may release genes into the
 /// environment. This models horizontal gene transfer: dead cells release
 /// DNA that living cells can conjugate (Lederberg & Tatum 1946).
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 #[derive(Debug, Clone)]
 pub struct RunResult {
     /// Generation index of this run.
@@ -175,7 +174,7 @@ pub struct RunState {
 
 impl RunState {
     /// Create a new run state.
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     #[must_use]
     pub fn new(
         generation: u32,
@@ -222,7 +221,7 @@ impl RunState {
     }
 
     /// Whether the run is still alive.
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     #[must_use]
     pub fn is_alive(&self) -> bool {
         self.alive
@@ -247,7 +246,7 @@ impl RunState {
     }
 
     /// Ticks survived so far.
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     #[must_use]
     pub fn ticks_survived(&self) -> u32 {
         self.ticks_survived
@@ -271,7 +270,7 @@ pub struct DifficultyScaling {
 
 impl DifficultyScaling {
     /// Create a new difficulty scaler.
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     #[must_use]
     pub fn new(base_difficulty: f64, scale: f64) -> Self {
         Self {
@@ -294,7 +293,7 @@ impl DifficultyScaling {
     }
 
     /// Accumulated fitness (for validation).
-    #[allow(clippy::missing_const_for_fn)]
+    #[expect(clippy::missing_const_for_fn, reason = "mutates self")]
     #[must_use]
     pub fn accumulated_fitness(&self) -> f64 {
         self.accumulated_fitness
@@ -310,7 +309,7 @@ pub fn price_equation(trait_values: &[f64], fitness_values: &[f64]) -> (f64, f64
     if trait_values.len() != fitness_values.len() || trait_values.is_empty() {
         return (0.0, 0.0);
     }
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let n = trait_values.len() as f64;
     let w_bar: f64 = fitness_values.iter().sum::<f64>() / n;
     let z_bar: f64 = trait_values.iter().sum::<f64>() / n;

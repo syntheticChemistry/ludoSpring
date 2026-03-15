@@ -88,7 +88,7 @@ fn transfer_path_time_us(path: TransferPath, bytes: usize) -> f64 {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SubstrateType {
     Cpu,
@@ -98,7 +98,7 @@ enum SubstrateType {
     Npu,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 struct SubstrateProfile {
     substrate_type: SubstrateType,
     name: String,

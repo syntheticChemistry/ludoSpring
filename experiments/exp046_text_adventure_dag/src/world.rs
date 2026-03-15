@@ -32,7 +32,7 @@ pub struct Exit {
 }
 
 /// An item that can be picked up.
-#[allow(dead_code)]
+#[expect(dead_code, reason = "domain model completeness")]
 #[derive(Debug, Clone)]
 pub struct Item {
     pub id: ItemId,

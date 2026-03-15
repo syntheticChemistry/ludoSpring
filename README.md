@@ -3,12 +3,12 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 15, 2026
-**Version:** V17 (66 experiments, 1371 validation checks, 234 tests + 12 proptest)
+**Version:** V18 (66 experiments, 1371 validation checks, 244 tests + 12 proptest)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives)
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration
-**Audit Status:** Deep audit complete — 0 clippy warnings, 0 `#[allow()]` in production, structured tracing, capability-based discovery
+**Audit Status:** Deep audit + niche evolution — 0 clippy warnings, 0 `#[allow()]` in production, `niche.rs` self-knowledge, `NeuralBridge` typed IPC, platform-agnostic paths, zero `/tmp` hardcoding
 
 ---
 
@@ -372,7 +372,9 @@ cargo run --features ipc --bin ludospring -- version
 | Deploy graph | `graphs/ludospring_deploy.toml` | 5-phase deploy: Tower → ToadStool → ludoSpring → Validate → Provenance |
 | Gaming niche graph | `graphs/ludospring_gaming_niche.toml` | Composes ludoSpring + petalTongue into gaming niche |
 | Niche YAML | `niches/ludospring-game.yaml` | BYOB definition with organisms and customization |
-| Capability domain | `barracuda/src/biomeos/mod.rs` | `game` domain, 12 capabilities, semantic mappings |
+| Self-knowledge | `barracuda/src/niche.rs` | Identity, capabilities, semantic mappings, cost estimates, socket resolution |
+| Neural bridge | `barracuda/src/ipc/neural_bridge.rs` | Typed IPC client for biomeOS Neural API |
+| Capability domain | `barracuda/src/biomeos/mod.rs` | `game` domain registration via NeuralBridge |
 
 **Compliance with Spring-as-Niche Deployment Standard:**
 
@@ -383,6 +385,9 @@ cargo run --features ipc --bin ludospring -- version
 - Clean SIGTERM shutdown with `capability.deregister`
 - Provenance Trio wired at graph level (all nodes `fallback = "skip"`)
 - No hardcoded primal names — capability-based discovery only
+- `niche.rs` single source of truth — all identity, capabilities, and metadata centralized
+- `NeuralBridge` typed client — `capability.call`, `discover_capability`, `register`, `deregister`
+- Platform-agnostic paths — `temp_dir()` instead of `/tmp`, XDG-compliant socket chain
 - `#![forbid(unsafe_code)]` and AGPL-3.0-or-later
 
 ## Architecture
@@ -454,7 +459,7 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
-| `cargo test` (barracuda) | 234 tests, 0 failures |
+| `cargo test` (barracuda) | 244 tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
 | 67 validation binaries | 1371 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
@@ -469,20 +474,26 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Structured logging | `tracing` for all library IPC/biomeOS (no `eprintln!`) |
 | Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery |
 
-## V17 Audit Evolution (March 15, 2026)
+## V18 Niche Self-Knowledge Evolution (March 15, 2026)
 
-This version reflects a deep audit and evolution pass:
+This version adds deep architectural evolution on the V17 foundation:
 
-- **Zero clippy warnings** under pedantic + nursery lints
-- **Zero `#[allow()]`** in production code — all lints centralized in `Cargo.toml`
-- **`eprintln!` → `tracing`** — structured logging in IPC server, biomeOS, handlers
-- **exp030 smart refactor** — 1949 LOC → 4 modules (gpu.rs 413, validate.rs 503, shaders.rs 42, main.rs 96)
-- **11 WGSL shaders extracted** to standalone `.wgsl` files — ready for toadStool absorption
-- **12 proptest invariants** — BSP area conservation, WFC entropy, noise bounds, engagement normalization
-- **Baseline drift checker** — automated Python baseline re-run and diff
-- **Capability-based viz discovery** — `VisualizationPushClient` finds any viz primal by capability
-- **Raycaster tolerance tightened** — `RAYCASTER_HIT_RATE_TOL` 20.0 → 5.0 with GPU parity justification
-- **`missing_errors_doc`/`missing_panics_doc`** lints now enforced (were previously allowed)
+- **`niche.rs` single source of truth** — all primal identity, capabilities, semantic mappings, operation dependencies, cost estimates, and socket resolution centralized in one module
+- **`NeuralBridge` typed IPC client** — `discover()`, `capability_call()`, `discover_capability()`, `register()`, `deregister()` — replaces scattered RPC helpers across biomeos, provenance, and binaries
+- **Platform-agnostic paths** — all `/tmp` hardcoding replaced with `std::env::temp_dir()` through centralized `niche::socket_dirs()` XDG-compliant chain
+- **Socket resolution centralized** — `niche::resolve_server_socket()` and `niche::resolve_neural_api_socket()` used by all IPC code (server, discovery, provenance, biomeos, binaries)
+- **Capability deduplication** — `handlers.rs`, `biomeos/mod.rs`, and `bin/ludospring.rs` all delegate to `niche::CAPABILITIES` instead of maintaining independent lists
+- **Zero production mocks** confirmed — no mocks outside `#[cfg(test)]`
+- **All deps pure Rust** — ecoBin compliant, zero C build dependencies
+
+### V17 Foundation (preserved)
+
+- Zero clippy warnings under pedantic + nursery lints
+- Zero `#[allow()]` in production code
+- 11 WGSL shaders extracted for toadStool absorption
+- 12 proptest invariants
+- Structured `tracing` in all IPC/biomeOS code
+- Capability-based viz discovery
 
 ## Benchmark Gaps (Documented)
 

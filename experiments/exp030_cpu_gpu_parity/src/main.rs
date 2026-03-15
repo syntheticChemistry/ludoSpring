@@ -70,7 +70,7 @@ fn cmd_bench() {
     println!("{}", "-".repeat(48));
 
     for &n in &sizes {
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
         let input: Vec<f32> = (0..n).map(|i| (i as f32).mul_add(0.001, -0.5)).collect();
 
         let cpu_start = std::time::Instant::now();
@@ -82,7 +82,7 @@ fn cmd_bench() {
             let _gpu_out = gpu::gpu_run_f32_unary(ctx, shaders::SIGMOID_WGSL, &input);
             let gpu_us = gpu_start.elapsed().as_micros();
 
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
             let speedup = if gpu_us > 0 {
                 cpu_us as f64 / gpu_us as f64
             } else {

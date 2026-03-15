@@ -26,22 +26,6 @@ use super::{
 
 type HandlerResult = Result<serde_json::Value, JsonRpcError>;
 
-/// All capabilities this primal exposes (game science + provenance + telemetry).
-const ALL_CAPABILITIES: &[&str] = &[
-    METHOD_EVALUATE_FLOW,
-    METHOD_FITTS_COST,
-    METHOD_ENGAGEMENT,
-    METHOD_ANALYZE_UI,
-    METHOD_ACCESSIBILITY,
-    METHOD_WFC_STEP,
-    METHOD_DIFFICULTY_ADJUSTMENT,
-    METHOD_GENERATE_NOISE,
-    METHOD_BEGIN_SESSION,
-    METHOD_RECORD_ACTION,
-    METHOD_COMPLETE_SESSION,
-    METHOD_POLL_TELEMETRY,
-];
-
 /// Dispatch a JSON-RPC request to the appropriate handler.
 ///
 /// Returns a serialized JSON-RPC response (success or error).
@@ -128,9 +112,9 @@ fn handle_health(req: &JsonRpcRequest) -> HandlerResult {
             "status": "healthy",
             "name": crate::PRIMAL_NAME,
             "primal": crate::PRIMAL_NAME,
-            "domain": "game",
+            "domain": crate::niche::NICHE_DOMAIN,
             "version": env!("CARGO_PKG_VERSION"),
-            "capabilities": ALL_CAPABILITIES,
+            "capabilities": crate::niche::CAPABILITIES,
         }),
     )
 }
@@ -145,9 +129,9 @@ fn handle_lifecycle_status(req: &JsonRpcRequest) -> HandlerResult {
         serde_json::json!({
             "name": crate::PRIMAL_NAME,
             "version": env!("CARGO_PKG_VERSION"),
-            "domain": "game",
+            "domain": crate::niche::NICHE_DOMAIN,
             "status": "running",
-            "capabilities": ALL_CAPABILITIES,
+            "capabilities": crate::niche::CAPABILITIES,
         }),
     )
 }
@@ -156,48 +140,12 @@ fn handle_capability_list(req: &JsonRpcRequest) -> HandlerResult {
     to_json(
         &req.id,
         serde_json::json!({
-            "domain": "game",
-            "capabilities": ALL_CAPABILITIES,
-            "operation_dependencies": operation_dependencies(),
-            "cost_estimates": cost_estimates(),
+            "domain": crate::niche::NICHE_DOMAIN,
+            "capabilities": crate::niche::CAPABILITIES,
+            "operation_dependencies": crate::niche::operation_dependencies(),
+            "cost_estimates": crate::niche::cost_estimates(),
         }),
     )
-}
-
-/// Neural API Enhancement 2: dependency hints for the Pathway Learner.
-fn operation_dependencies() -> serde_json::Value {
-    serde_json::json!({
-        "game.evaluate_flow": { "requires": ["challenge", "skill"] },
-        "game.fitts_cost": { "requires": ["distance", "target_width"] },
-        "game.engagement": { "requires": ["session_duration_s", "action_count"] },
-        "game.analyze_ui": { "requires": ["elements"] },
-        "game.accessibility": { "requires": ["feature_flags"] },
-        "game.wfc_step": { "requires": ["grid_dimensions", "n_tiles"] },
-        "game.difficulty_adjustment": { "requires": ["outcomes"] },
-        "game.generate_noise": { "requires": ["coordinates"] },
-        "game.begin_session": { "requires": ["session_name"] },
-        "game.record_action": { "requires": ["session_id", "action"] },
-        "game.complete_session": { "requires": ["session_id"], "depends_on": ["game.begin_session"] },
-        "game.poll_telemetry": { "requires": [] },
-    })
-}
-
-/// Neural API Enhancement 3: cost estimates for scheduling and resource allocation.
-fn cost_estimates() -> serde_json::Value {
-    serde_json::json!({
-        "game.evaluate_flow": { "typical_latency_us": 5, "cpu_intensity": "low", "memory_bytes": 128 },
-        "game.fitts_cost": { "typical_latency_us": 3, "cpu_intensity": "low", "memory_bytes": 64 },
-        "game.engagement": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 256 },
-        "game.analyze_ui": { "typical_latency_us": 50, "cpu_intensity": "medium", "memory_bytes": 4096 },
-        "game.accessibility": { "typical_latency_us": 8, "cpu_intensity": "low", "memory_bytes": 128 },
-        "game.wfc_step": { "typical_latency_us": 200, "cpu_intensity": "medium", "memory_bytes": 16384 },
-        "game.difficulty_adjustment": { "typical_latency_us": 15, "cpu_intensity": "low", "memory_bytes": 512 },
-        "game.generate_noise": { "typical_latency_us": 100, "cpu_intensity": "medium", "memory_bytes": 1024 },
-        "game.begin_session": { "typical_latency_us": 500, "cpu_intensity": "low", "memory_bytes": 1024 },
-        "game.record_action": { "typical_latency_us": 200, "cpu_intensity": "low", "memory_bytes": 512 },
-        "game.complete_session": { "typical_latency_us": 1000, "cpu_intensity": "low", "memory_bytes": 2048 },
-        "game.poll_telemetry": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 256 },
-    })
 }
 
 fn handle_evaluate_flow(req: &JsonRpcRequest) -> HandlerResult {
@@ -431,7 +379,7 @@ fn handle_poll_telemetry(req: &JsonRpcRequest) -> HandlerResult {
             "events": [],
             "tick_ns": tick_ns,
             "status": status,
-            "domain": "game",
+            "domain": crate::niche::NICHE_DOMAIN,
             "frame_budget_ms": 16.67,
         }),
     )

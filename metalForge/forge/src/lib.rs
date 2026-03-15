@@ -45,28 +45,44 @@ pub enum Substrate {
 /// Substrate kind for capability-based routing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SubstrateKind {
+    /// CPU substrate (general-purpose, SIMD).
     Cpu,
+    /// GPU substrate (shader dispatch, high throughput).
     Gpu,
+    /// NPU substrate (quantized inference).
     Npu,
 }
 
 /// Hardware capability flags for substrate matching.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Capability {
+    /// Double-precision floating-point compute.
     F64Compute,
+    /// Single-precision floating-point compute.
     F32Compute,
+    /// GPU shader dispatch (compute/vertex/fragment).
     ShaderDispatch,
+    /// SIMD vector operations.
     SimdVector,
+    /// PCIe host-device transfer.
     PcieTransfer,
-    QuantizedInference { bits: u8 },
+    /// Quantized integer inference.
+    QuantizedInference {
+        /// Bit width for quantized weights/activations (e.g. 8 for int8).
+        bits: u8,
+    },
 }
 
 /// Rich substrate descriptor with capabilities and performance hints.
 #[derive(Debug, Clone)]
 pub struct SubstrateInfo {
+    /// Substrate type (CPU, GPU, NPU).
     pub kind: SubstrateKind,
+    /// Human-readable device name.
     pub name: String,
+    /// Supported hardware capabilities.
     pub capabilities: Vec<Capability>,
+    /// Peak throughput in GFLOPS.
     pub flops_gflops: f64,
 }
 
@@ -120,8 +136,11 @@ impl SubstrateInfo {
 /// Workload profile describing required capabilities and substrate preference.
 #[derive(Debug, Clone)]
 pub struct GameWorkloadProfile {
+    /// Profile identifier (e.g. `"noise_generation"`).
     pub name: String,
+    /// Capabilities the substrate must provide.
     pub required: Vec<Capability>,
+    /// Preferred substrate kind when multiple are capable.
     pub preferred_substrate: Option<SubstrateKind>,
 }
 
@@ -213,7 +232,9 @@ impl GameWorkloadProfile {
 /// Routing decision with substrate and reason.
 #[derive(Debug, Clone)]
 pub struct Decision<'a> {
+    /// Selected substrate for the workload.
     pub substrate: &'a SubstrateInfo,
+    /// Human-readable selection rationale.
     pub reason: String,
 }
 
@@ -302,6 +323,7 @@ pub fn recommend_substrate(workload: GameWorkload, gpu_available: bool) -> Subst
 }
 
 #[cfg(test)]
+#[expect(clippy::expect_used, reason = "test assertions use expect for clarity")]
 mod tests {
     use super::*;
 
@@ -337,9 +359,7 @@ mod tests {
     fn route_noise_to_gpu() {
         let profile = GameWorkloadProfile::noise_generation();
         let substrates = vec![SubstrateInfo::default_cpu(), SubstrateInfo::default_gpu()];
-        let decision = route(&profile, &substrates);
-        assert!(decision.is_some());
-        let d = decision.unwrap();
+        let d = route(&profile, &substrates).expect("should route noise");
         assert_eq!(d.substrate.kind, SubstrateKind::Gpu);
     }
 
@@ -347,9 +367,7 @@ mod tests {
     fn route_wfc_to_cpu() {
         let profile = GameWorkloadProfile::wfc_step();
         let substrates = vec![SubstrateInfo::default_cpu(), SubstrateInfo::default_gpu()];
-        let decision = route(&profile, &substrates);
-        assert!(decision.is_some());
-        let d = decision.unwrap();
+        let d = route(&profile, &substrates).expect("should route WFC");
         assert_eq!(d.substrate.kind, SubstrateKind::Cpu);
     }
 
@@ -361,9 +379,7 @@ mod tests {
             SubstrateInfo::default_gpu(),
             SubstrateInfo::default_npu(),
         ];
-        let decision = route(&profile, &substrates);
-        assert!(decision.is_some());
-        let d = decision.unwrap();
+        let d = route(&profile, &substrates).expect("should route NPU inference");
         assert_eq!(d.substrate.kind, SubstrateKind::Npu);
     }
 
@@ -397,9 +413,7 @@ mod tests {
             SubstrateInfo::default_gpu(),
             SubstrateInfo::default_npu(),
         ];
-        let decision = route(&profile, &substrates);
-        assert!(decision.is_some());
-        let d = decision.unwrap();
+        let d = route(&profile, &substrates).expect("should route with preference");
         assert_eq!(d.substrate.kind, SubstrateKind::Gpu);
         assert_eq!(d.reason, "preferred substrate");
     }

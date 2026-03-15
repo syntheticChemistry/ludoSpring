@@ -221,7 +221,6 @@ fn validate_mtg_infinite() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
 fn validate_commander_hypothesis() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -299,7 +298,7 @@ fn validate_commander_hypothesis() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_enzymatic_model() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
@@ -439,14 +438,17 @@ fn validate_enzymatic_model() -> Vec<ValidationResult> {
 // Design metric: game longevity correlates with tree complexity
 // ===========================================================================
 
-#[allow(clippy::items_after_statements)]
+#[expect(
+    clippy::items_after_statements,
+    reason = "helper defined near use site"
+)]
 fn validate_longevity_correlation() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
     // Games that endure have larger trees. Games that die have smaller ones.
     // This isn't coincidence — it's because players exhaust small trees.
 
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "domain model completeness")]
     struct GameLongevity {
         name: &'static str,
         game_tree_log10: f64,

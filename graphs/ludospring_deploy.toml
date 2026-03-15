@@ -29,7 +29,7 @@
 #   max_accumulator_ms = 250
 #   budget_warning_ms = 14
 #
-# STATUS: Active (Mar 15, 2026) — niche deployment V16
+# STATUS: Active (Mar 15, 2026) — niche self-knowledge V18
 # Requires: Tower Atomic (BearDog + Songbird)
 # Optional: ToadStool (GPU), Provenance Trio (rhizoCrypt, LoamSpine, sweetGrass)
 #
@@ -210,7 +210,7 @@ name = "capability_call"
 
 [nodes.operation.params]
 capability = "provenance.session_create"
-params = { agent = "ludospring", experiment_id = "deploy", version = "V16" }
+params = { agent = "ludospring", experiment_id = "deploy", version = "V18" }
 
 [nodes.constraints]
 timeout_ms = 10000

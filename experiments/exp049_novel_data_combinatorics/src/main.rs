@@ -137,7 +137,11 @@ struct DeckProfile {
 }
 
 impl DeckProfile {
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "value bounded; sign known from context"
+    )]
     fn instant_count(&self) -> u32 {
         (f64::from(self.avg_hand_size) * self.instant_ratio).ceil() as u32
     }
@@ -273,7 +277,7 @@ fn two_player_turn_factor(active: &TurnPhases, reactive: &TurnPhases) -> u128 {
 
 /// Game-tree size estimate over N turns (log10).
 /// Works in log-space to avoid f64 overflow for astronomically large trees.
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn game_tree_log10(per_turn_factor: u128, turns: u32) -> f64 {
     (per_turn_factor as f64).log10() * f64::from(turns)
 }
@@ -355,7 +359,7 @@ fn validate_solo_branching() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_stack_factorial() -> Vec<ValidationResult> {
     vec![
         ValidationResult::check(
@@ -530,7 +534,7 @@ fn validate_game_tree_scale() -> Vec<ValidationResult> {
     results
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 fn validate_data_generation_rate() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 

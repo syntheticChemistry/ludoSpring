@@ -23,6 +23,7 @@
 
 mod envelope;
 mod handlers;
+mod neural_bridge;
 mod params;
 mod results;
 mod server;
@@ -33,6 +34,7 @@ pub mod provenance;
 pub use discovery::{PrimalEndpoint, PrimalRegistry, call_primal, discover_primals};
 pub use envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody};
 pub use handlers::dispatch;
+pub use neural_bridge::NeuralBridge;
 pub use params::*;
 pub use results::*;
 pub use server::IpcServer;

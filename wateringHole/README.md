@@ -24,12 +24,13 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V17** | `LUDOSPRING_V17_BARRACUDA_TOADSTOOL_DEEP_EVOLUTION_HANDOFF_MAR15_2026.md` | Mar 15 | Deep evolution: 11 WGSL shaders extracted, GPU helpers consolidated, 12 proptest invariants, structured tracing, capability-based discovery, tolerance tightening, zero `#[allow()]` |
+| **V18** | `LUDOSPRING_V18_NICHE_SELF_KNOWLEDGE_NEURALBRIDGE_HANDOFF_MAR15_2026.md` | Mar 15 | Niche self-knowledge: `niche.rs` single source of truth, `NeuralBridge` typed IPC client, platform-agnostic paths, socket centralization, capability deduplication |
+| **V18** | `LUDOSPRING_V18_BARRACUDA_TOADSTOOL_NICHE_ABSORPTION_HANDOFF_MAR15_2026.md` | Mar 15 | barraCuda + toadStool absorption: 11 WGSL shaders, 4 PCG absorption targets, NeuralBridge pattern, GPU pipeline builder |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 66 experiments, 1371 checks, 234 tests + 12 proptest, niche-deployable V17)
+ludoSpring (game science, 66 experiments, 1371 checks, 244 tests + 12 proptest, niche self-knowledge V18)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline)
@@ -80,6 +81,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V17 | `handoffs/archive/LUDOSPRING_V17_BARRACUDA_TOADSTOOL_DEEP_EVOLUTION_HANDOFF_MAR15_2026.md` | V18 Niche Self-Knowledge |
 | V16 | `handoffs/archive/LUDOSPRING_V16_BARRACUDA_TOADSTOOL_ABSORPTION_HANDOFF_MAR15_2026.md` | V17 Deep Evolution |
 | V16 | `handoffs/archive/LUDOSPRING_V16_NICHE_DEPLOYMENT_HANDOFF_MAR15_2026.md` | V17 Deep Evolution |
 | V15 | `handoffs/archive/LUDOSPRING_V15_GPU_DISPATCH_BUILDOUT_HANDOFF_MAR14_2026.md` | V16 Niche Deployment |

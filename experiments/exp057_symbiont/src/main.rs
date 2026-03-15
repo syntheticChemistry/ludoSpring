@@ -425,7 +425,7 @@ fn validate_keystone() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     let id_valid = keystone.is_some_and(|id| id.0 < network.factions.len() as u32);
     results.push(ValidationResult::check(
         EXP,

@@ -259,7 +259,10 @@ impl SampleSystem {
     }
 
     /// Advance the system `tick`.
-    #[allow(clippy::missing_const_for_fn)] // cannot be const: mutates self.tick
+    #[expect(
+        clippy::missing_const_for_fn,
+        reason = "mutates self — cannot be const"
+    )]
     pub fn advance_tick(&mut self) {
         self.tick += 1;
     }
@@ -602,7 +605,6 @@ impl SampleSystem {
     }
 
     /// Inject a collect event for testing (e.g. mislabeled specimen fraud scenario).
-    #[allow(dead_code)]
     pub fn inject_collect_event_for_test(
         &mut self,
         cert_id: CertificateId,

@@ -207,7 +207,6 @@ fn cmd_validate() {
 
     // 10. Sigmoid batch: Rust must be fast (we time the Rust side)
     let n = 100_000;
-    #[allow(clippy::cast_precision_loss)]
     let input: Vec<f64> = (0..n)
         .map(|i| (f64::from(i) / f64::from(n)).mul_add(10.0, -5.0))
         .collect();
@@ -237,7 +236,6 @@ fn cmd_validate() {
     let mut noise_sum = 0.0_f64;
     for y in 0..256 {
         for x in 0..256 {
-            #[allow(clippy::cast_precision_loss)]
             let v = noise::perlin_2d(f64::from(x) * 0.05, f64::from(y) * 0.05);
             noise_sum += v;
         }
@@ -256,7 +254,6 @@ fn cmd_validate() {
     let t_fitts = Instant::now();
     let mut fitts_sum = 0.0_f64;
     for i in 0..10_000 {
-        #[allow(clippy::cast_precision_loss)]
         let d = f64::from(i).mul_add(0.1, 50.0);
         fitts_sum += input_laws::fitts_movement_time(d, 20.0, 50.0, 150.0);
     }
@@ -287,9 +284,7 @@ fn cmd_validate() {
     println!("  [INFO] LCG 1M steps: {lcg_us}us (final={state})");
 
     // 14. Dot product 10K elements
-    #[allow(clippy::cast_precision_loss)]
     let big_a: Vec<f64> = (0..10_000).map(|i| f64::from(i) * 0.001).collect();
-    #[allow(clippy::cast_precision_loss)]
     let big_b: Vec<f64> = (0..10_000).map(|i| f64::from(10_000 - i) * 0.001).collect();
     let t_dot = Instant::now();
     let dot_result = barcuda_math::dot(&big_a, &big_b);
@@ -308,7 +303,6 @@ fn cmd_validate() {
     let mut fbm_sum = 0.0_f64;
     for y in 0..128 {
         for x in 0..128 {
-            #[allow(clippy::cast_precision_loss)]
             let v = noise::fbm_2d(f64::from(x) * 0.05, f64::from(y) * 0.05, 4, 2.0, 0.5);
             fbm_sum += v;
         }
@@ -346,7 +340,6 @@ fn cmd_bench() {
     println!("Sigmoid batch (compiled Rust):");
     println!("{:>10} {:>12}", "N", "Time (us)");
     for &n in &sizes {
-        #[allow(clippy::cast_precision_loss)]
         let input: Vec<f64> = (0..n)
             .map(|i| (f64::from(i) / f64::from(n)).mul_add(10.0, -5.0))
             .collect();
@@ -362,7 +355,6 @@ fn cmd_bench() {
         let mut sum = 0.0_f64;
         for y in 0..n {
             for x in 0..n {
-                #[allow(clippy::cast_precision_loss)]
                 let v = noise::perlin_2d(f64::from(x) * 0.05, f64::from(y) * 0.05);
                 sum += v;
             }
