@@ -9,7 +9,7 @@
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
 # Date: March 16, 2026
-# Version: V19 (deep debt evolution — 75 experiments, 407 tests)
+# Version: V20 (deep primal integration — 75 experiments, 394 tests)
 
 niche:
   id: "ludospring-game"
