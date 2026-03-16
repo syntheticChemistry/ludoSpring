@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 16, 2026
-**Total:** 75 experiments, 1692 checks, 0 failures, 394 tests + 12 proptest + 6 IPC integration (V21)
+**Total:** 75 experiments, 1692 checks, 0 failures, 394 tests + 12 proptest + 6 IPC integration (V22)
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---

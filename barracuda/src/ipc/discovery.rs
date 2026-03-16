@@ -122,22 +122,43 @@ pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
         .unwrap_or("unknown")
         .to_owned();
 
-    let capabilities = result
-        .get("capabilities")
-        .and_then(serde_json::Value::as_array)
-        .map(|arr| {
-            arr.iter()
-                .filter_map(serde_json::Value::as_str)
-                .map(str::to_owned)
-                .collect()
-        })
-        .unwrap_or_default();
+    let capabilities = extract_capabilities(result);
 
     Some(PrimalEndpoint {
         socket: path.to_owned(),
         name,
         capabilities,
     })
+}
+
+/// Extract capabilities from a `lifecycle.status` response.
+///
+/// Handles two response formats seen across the ecosystem:
+/// - Array: `{"capabilities": ["cap1", "cap2"]}` (standard)
+/// - Nested: `{"capabilities": {"capabilities": ["cap1"]}}` (some primals)
+///
+/// This dual-format handling was identified by neuralSpring S156 where
+/// `probe_capabilities` needed to handle both shapes.
+fn extract_capabilities(result: &serde_json::Value) -> Vec<String> {
+    let caps_value = result.get("capabilities");
+    match caps_value {
+        Some(serde_json::Value::Array(arr)) => arr
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .map(str::to_owned)
+            .collect(),
+        Some(serde_json::Value::Object(obj)) => obj
+            .get("capabilities")
+            .and_then(serde_json::Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(serde_json::Value::as_str)
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    }
 }
 
 /// Discover all primals in the standard socket directories.
@@ -276,5 +297,41 @@ mod tests {
     fn discovery_dirs_never_empty() {
         let dirs = discovery_dirs();
         assert!(!dirs.is_empty(), "should always resolve at least one dir");
+    }
+
+    #[test]
+    fn extract_capabilities_from_array() {
+        let result = serde_json::json!({
+            "name": "test",
+            "capabilities": ["game.evaluate_flow", "game.fitts_cost"]
+        });
+        let caps = extract_capabilities(&result);
+        assert_eq!(caps, vec!["game.evaluate_flow", "game.fitts_cost"]);
+    }
+
+    #[test]
+    fn extract_capabilities_from_nested_object() {
+        let result = serde_json::json!({
+            "name": "test",
+            "capabilities": {
+                "capabilities": ["compute.submit", "compute.status"]
+            }
+        });
+        let caps = extract_capabilities(&result);
+        assert_eq!(caps, vec!["compute.submit", "compute.status"]);
+    }
+
+    #[test]
+    fn extract_capabilities_missing_returns_empty() {
+        let result = serde_json::json!({"name": "test"});
+        let caps = extract_capabilities(&result);
+        assert!(caps.is_empty());
+    }
+
+    #[test]
+    fn extract_capabilities_null_returns_empty() {
+        let result = serde_json::json!({"capabilities": null});
+        let caps = extract_capabilities(&result);
+        assert!(caps.is_empty());
     }
 }

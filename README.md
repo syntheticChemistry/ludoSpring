@@ -3,12 +3,12 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 16, 2026
-**Version:** V21 (75 experiments, 1692 validation checks, 394 tests + 12 proptest + 6 IPC integration)
+**Version:** V22 (75 experiments, 1692 validation checks, 394 tests + 12 proptest + 6 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, 19,302 lines Rust
+**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, 19,302+ lines Rust
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities, structured `capability_domains` registry
-**Audit Status:** Deep debt evolution — session decomposition (zero `#[allow]` suppressions), typed `TransitionIssue` enum (replaces excessive booleans), pluggable `ValidationSink` trait, typed toadStool IPC client, 6 IPC integration tests, `#[expect]` with reasons (edition 2024), platform-agnostic paths (`temp_dir()`), centralized `GAME_STATE_TOL`, 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics, `#![forbid(unsafe_code)]`
+**Audit Status:** Ecosystem absorption — toadStool `compute.dispatch.*` direct dispatch wired, dual-format capability discovery (neuralSpring S156 fix), Python tolerance mirror (wetSpring V121 pattern, 46 constants), Write→Absorb→Lean documented, deploy graph updated with dispatch capabilities, `-32601` compliance verified, 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics, `#![forbid(unsafe_code)]`
 
 ---
 
@@ -500,9 +500,18 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Hardcoded paths | 0 — `temp_dir()` + XDG-compliant socket resolution |
 | IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
 
-## V21 Deep Debt Evolution (March 16, 2026)
+## V22 Ecosystem Absorption (March 16, 2026)
 
-Code quality evolution: eliminate all lint suppressions through refactoring, introduce typed error patterns, pluggable validation infrastructure, typed IPC clients, integration tests, and platform-agnostic paths.
+Cross-ecosystem evolution absorbing patterns and fixes from sibling springs and infrastructure primals:
+
+- **toadStool `compute.dispatch.*`** — 3 new direct dispatch methods (`dispatch_submit`, `dispatch_result`, `dispatch_capabilities`) for low-latency real-time game GPU compute, bypassing the job queue
+- **Dual-format capability discovery** — `probe_socket()` now handles both `{"capabilities": [...]}` (array) and `{"capabilities": {"capabilities": [...]}}` (nested object) response formats, fixing the neuralSpring S156-discovered interop issue
+- **Python tolerance mirror** — `baselines/python/tolerances.py` with 46 named constants mirroring all Rust `tolerances/` submodules (wetSpring V121 pattern), enabling `from tolerances import ANALYTICAL_TOL` in baselines
+- **Write→Absorb→Lean documentation** — `procedural::noise` module documented with full absorption status: Perlin 2D/3D + fBm written by ludoSpring V2, 2D absorbed into barraCuda as GPU + CPU ops, 3D pending
+- **Deploy graph evolution** — `compute.dispatch.submit/result/capabilities` added to toadStool node capabilities
+- **4 new discovery tests** — array format, nested object format, missing capabilities, null capabilities
+
+### V21 Deep Debt Evolution (preserved)
 
 - **Session decomposition** — `GameSession::resolve()` extracted into per-command methods (`resolve_wait`, `resolve_end_turn`, `resolve_use_item`, `resolve_custom`, etc.), eliminating `#[allow(clippy::too_many_lines)]`
 - **Typed transition verification** — `TransitionVerification` booleans replaced with `TransitionIssue` enum (`InventoryLost`, `DispositionChanged`, `KnowledgeLost`, `ConditionMismatch`, `HpChanged`) + `Vec<TransitionIssue>`, eliminating `#[allow(clippy::struct_excessive_bools)]`

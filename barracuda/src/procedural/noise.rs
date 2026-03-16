@@ -2,8 +2,21 @@
 //! Noise functions — coherent pseudo-random fields for world generation.
 //!
 //! Perlin and simplex noise are the foundation of procedural terrain, density
-//! fields, and molecular distributions. These CPU implementations serve as
-//! reference; GPU versions live in barraCuda.
+//! fields, and molecular distributions. The canonical CPU implementations live
+//! here; GPU versions are upstream in barraCuda (`ops::procedural::perlin_noise`).
+//!
+//! ## Write → Absorb → Lean
+//!
+//! ludoSpring V2 wrote the original Perlin 2D/3D + fBm implementations.
+//! barraCuda absorbed them as `perlin_2d_f64.wgsl` / `fbm_2d_f64.wgsl` +
+//! `ops::procedural::perlin_noise` (CPU + GPU paths). ludoSpring retains the
+//! local implementation because it is the **validation reference** — the Python
+//! baselines were matched against this exact code, and modifying the reference
+//! would invalidate all baseline provenance chains.
+//!
+//! When barraCuda absorbs the 3D path and fBm variants, this module becomes a
+//! thin re-export. Until then, it is the authoritative Rust reference for all
+//! 75 experiments.
 //!
 //! # References
 //! - Perlin, K. (1985). "An image synthesizer." SIGGRAPH '85.

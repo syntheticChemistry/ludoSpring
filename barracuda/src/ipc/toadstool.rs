@@ -165,6 +165,130 @@ pub fn query_capabilities() -> Result<SubstrateCapabilities, String> {
         )
 }
 
+/// Submit a workload for direct GPU dispatch (lower latency, bypasses job queue).
+///
+/// Uses `compute.dispatch.submit` instead of `compute.submit`. Prefer this
+/// for real-time game compute (fog of war, pathfinding, lighting) where
+/// latency matters more than queuing guarantees.
+///
+/// # Errors
+///
+/// Returns an error only on non-recoverable failures.
+pub fn dispatch_submit(
+    shader_source: &str,
+    entry_point: &str,
+    workgroup_size: [u32; 3],
+    dispatch_size: [u32; 3],
+    buffers: &serde_json::Value,
+) -> Result<ComputeResult, String> {
+    let Ok(bridge) = NeuralBridge::discover() else {
+        return Ok(unavailable("No Neural API — GPU dispatch unavailable"));
+    };
+
+    let args = serde_json::json!({
+        "shader_source": shader_source,
+        "entry_point": entry_point,
+        "workgroup_size": workgroup_size,
+        "dispatch_size": dispatch_size,
+        "buffers": buffers,
+        "requester": crate::niche::NICHE_NAME,
+    });
+
+    bridge
+        .capability_call("compute.dispatch", "submit", &args)
+        .map_or_else(
+            |_| Ok(unavailable("toadStool compute.dispatch.submit unavailable")),
+            |result| {
+                let message = result
+                    .get("status")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("dispatched")
+                    .to_owned();
+                Ok(ComputeResult {
+                    available: true,
+                    data: result,
+                    message,
+                })
+            },
+        )
+}
+
+/// Query the result of a direct-dispatched workload.
+///
+/// # Errors
+///
+/// Returns an error only on non-recoverable failures.
+pub fn dispatch_result(workload_id: &str) -> Result<ComputeResult, String> {
+    let Ok(bridge) = NeuralBridge::discover() else {
+        return Ok(unavailable("No Neural API — GPU dispatch unavailable"));
+    };
+
+    let args = serde_json::json!({
+        "workload_id": workload_id,
+        "requester": crate::niche::NICHE_NAME,
+    });
+
+    bridge
+        .capability_call("compute.dispatch", "result", &args)
+        .map_or_else(
+            |_| Ok(unavailable("toadStool compute.dispatch.result unavailable")),
+            |result| {
+                let message = result
+                    .get("state")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_owned();
+                Ok(ComputeResult {
+                    available: true,
+                    data: result,
+                    message,
+                })
+            },
+        )
+}
+
+/// Query dispatch-tier capabilities from toadStool.
+///
+/// # Errors
+///
+/// Returns an error only on non-recoverable failures.
+pub fn dispatch_capabilities() -> Result<SubstrateCapabilities, String> {
+    let Ok(bridge) = NeuralBridge::discover() else {
+        return Ok(SubstrateCapabilities::default());
+    };
+
+    let args = serde_json::json!({
+        "requester": crate::niche::NICHE_NAME,
+    });
+
+    bridge
+        .capability_call("compute.dispatch", "capabilities", &args)
+        .map_or_else(
+            |_| Ok(SubstrateCapabilities::default()),
+            |result| {
+                let gpu_available = result
+                    .get("gpu_available")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                let gpu_name = result
+                    .get("gpu_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_owned();
+                let f64_supported = result
+                    .get("f64_supported")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                Ok(SubstrateCapabilities {
+                    gpu_available,
+                    gpu_name,
+                    f64_supported,
+                    raw: result,
+                })
+            },
+        )
+}
+
 fn unavailable(message: &str) -> ComputeResult {
     ComputeResult {
         available: false,
@@ -208,6 +332,33 @@ mod tests {
     #[test]
     fn capabilities_degrades_gracefully_without_neural_api() {
         let result = query_capabilities();
+        let caps = result.expect("should not error");
+        assert!(!caps.gpu_available);
+    }
+
+    #[test]
+    fn dispatch_submit_degrades_gracefully_without_neural_api() {
+        let result = dispatch_submit(
+            "@compute void main() {}",
+            "main",
+            [1, 1, 1],
+            [1, 1, 1],
+            &serde_json::json!([]),
+        );
+        let r = result.expect("should not error");
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn dispatch_result_degrades_gracefully_without_neural_api() {
+        let result = dispatch_result("nonexistent");
+        let r = result.expect("should not error");
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn dispatch_capabilities_degrades_gracefully_without_neural_api() {
+        let result = dispatch_capabilities();
         let caps = result.expect("should not error");
         assert!(!caps.gpu_available);
     }
