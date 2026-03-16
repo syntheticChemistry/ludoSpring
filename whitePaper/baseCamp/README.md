@@ -2,7 +2,7 @@
 
 **Date:** March 16, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + **RPGPT Dialogue Plane** + **Deep Primal Integration** + **Deep Debt Evolution** — 75 experiments, 1692 checks, 407 tests + 12 proptest, 0 clippy warnings, 0 magic numbers, 0 production panics, provenance trio decomposed (V19)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + Deep Debt Evolution + **Deep Primal Integration V20** — 75 experiments, 1692 checks, 394 tests + 12 proptest, 19 IPC methods aligned, typed provenance pipeline, tolerance decomposition (6 submodules), RulesetCert command validation, capability_domains registry (V20)
 
 ---
 
@@ -64,13 +64,23 @@ Nine experiments implementing the first playable plane of the RPGPT system:
 - **GPU compute**: fog of war, tile lighting, pathfinding wavefront, Perlin terrain — via toadStool/barraCuda WGSL shaders
 - **Audio narration**: blind-accessible gameplay — every state change produces semantic narration cues
 
-### Deep Debt Evolution (V19)
+### Deep Primal Integration V20
 
-- **Magic numbers eliminated**: 9 new tolerance constants with provenance citations
-- **Clone abuse removed**: `JsonRpcError`/`JsonRpcResponse` constructors take `&serde_json::Value`; 13 `.clone()` calls eliminated
-- **Production panic removed**: `BlockPalette::register()` → `Result<BlockId, String>`
-- **Provenance decomposed**: 773-line monolith → `rhizocrypt.rs` + `loamspine.rs` + `sweetgrass.rs` submodules
-- **Audio refactored**: `compile_outcome` → 5 focused functions; `#[allow(too_many_lines)]` removed
+- **IPC method alignment**: 19 external method names aligned to canonical JSON-RPC specs across NestGate, Squirrel, rhizoCrypt, loamSpine, sweetGrass
+- **Capability domains registry**: structured `Domain`/`Method` types classifying 24 capabilities as local (10) or external (14)
+- **Tolerance decomposition**: monolithic `tolerances/mod.rs` → 6 submodules (`game`, `interaction`, `ipc`, `metrics`, `procedural`, `validation`)
+- **Typed provenance pipeline**: `DehydrationSummary` struct + `TrioStage` enum; 4-step session completion
+- **Game engine core**: `RulesetCert` validation in `process()`, concrete `apply()` for 3 effects, `From<&TileWorld> for GridMap`
+- **Runtime discovery**: `discover_by_capability()` for primal peer lookup
+- **Workspace deps**: `serde`, `serde_json`, `uuid`, `proptest` centralized
+
+### Deep Debt Evolution (V19, preserved)
+
+- Magic numbers eliminated: 9 tolerance constants with provenance citations
+- Clone abuse removed: `&serde_json::Value` constructors; 13 `.clone()` calls eliminated
+- Production panic removed: `BlockPalette::register()` → `Result<BlockId, String>`
+- Provenance decomposed: 773-line monolith → 3 focused submodules
+- Audio refactored: `compile_outcome` → 5 focused functions
 
 ### Cross-Spring Provenance
 
@@ -177,7 +187,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # 407 tests + 12 proptest
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # 394 tests (incl. 12 proptest)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike
@@ -280,7 +290,7 @@ Any world + any ruleset = playable RPG. Lord of the Rings + PF2e. Dune + FATE. O
 3. AI narration loop (Squirrel + ruleset cert + ludoSpring quality metrics)
 4. Attribution + economics (sweetGrass + sunCloud)
 
-**Full specification**: `ludoSpring/specs/RPGPT_ARCHITECTURE_SKETCH.md`
+**Full specification**: `ludoSpring/specs/RPGPT_DEEP_SYSTEM_DESIGN.md`
 **baseCamp paper**: `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`
 
 ---

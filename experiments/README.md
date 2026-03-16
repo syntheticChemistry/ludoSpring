@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 16, 2026
-**Total:** 75 experiments, 1692 checks, 0 failures, 407 tests + 12 proptest (V19)
+**Total:** 75 experiments, 1692 checks, 0 failures, 394 tests + 12 proptest (V20)
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -120,7 +120,7 @@ Build phases:
 3. AI narration loop (Squirrel + ludoSpring quality metrics)
 4. Creative attribution (sweetGrass + sunCloud)
 
-See `specs/RPGPT_ARCHITECTURE_SKETCH.md` and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
+See `specs/RPGPT_DEEP_SYSTEM_DESIGN.md` and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
 
 | # | Package | Checks | Status | Reference | What it proves |
 |---|---------|--------|--------|-----------|----------------|

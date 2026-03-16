@@ -3,12 +3,12 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 16, 2026
-**Version:** V19 (75 experiments, 1692 validation checks, 407 tests + 12 proptest)
+**Version:** V20 (75 experiments, 1692 validation checks, 394 tests + 12 proptest)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.5 (standalone, 150+ primitives)
-**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities
-**Audit Status:** Deep debt evolution — 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics in production, `niche.rs` self-knowledge, `NeuralBridge` typed IPC, provenance trio decomposed, capability-based discovery everywhere
+**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 74 .rs files, 18,758 lines Rust
+**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities, structured `capability_domains` registry
+**Audit Status:** Deep primal integration — IPC method alignment (19 external methods), typed provenance pipeline (`DehydrationSummary`), tolerance decomposition (6 submodules), `RulesetCert` command validation, `discover_by_capability()` runtime peer lookup, workspace dependency consolidation, 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics, `#![forbid(unsafe_code)]`
 
 ---
 
@@ -32,7 +32,7 @@ Games are the most demanding real-time interactive systems humans build. They so
 
 | Module | What it studies | Key models | Status |
 |--------|----------------|------------|--------|
-| `game` | Mechanics, state, genre taxonomy | Raycasting (DDA), voxel worlds, session state | Validated |
+| `game` | Mechanics, state, genre taxonomy | Raycasting (DDA), voxel worlds, session state, RulesetCert validation | Validated |
 | `interaction` | Input science, flow, accessibility | Fitts, Hick, Steering, GOMS, Flow, DDA | All 4 HCI laws validated |
 | `procedural` | Content generation | Perlin noise, fBm, WFC, L-systems, BSP trees | All 4 PCG algorithms validated |
 | `metrics` | Quantifying fun | Tufte-on-games, engagement curves, Four Keys to Fun | All 3 frameworks validated |
@@ -397,7 +397,8 @@ cargo run --features ipc --bin ludospring -- version
 | Niche YAML | `niches/ludospring-game.yaml` | BYOB definition with organisms and customization |
 | Self-knowledge | `barracuda/src/niche.rs` | Identity, capabilities, semantic mappings, cost estimates, socket resolution |
 | Neural bridge | `barracuda/src/ipc/neural_bridge.rs` | Typed IPC client for biomeOS Neural API |
-| Capability domain | `barracuda/src/biomeos/mod.rs` | `game` domain registration via NeuralBridge |
+| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 24 capabilities, local/external classification |
+| Domain registration | `barracuda/src/biomeos/mod.rs` | `game` domain registration via NeuralBridge |
 
 **Compliance with Spring-as-Niche Deployment Standard:**
 
@@ -423,7 +424,7 @@ ludoSpring/
 │   │   ├── interaction/   # Fitts, Hick, Steering, GOMS, Flow, DDA
 │   │   ├── procedural/    # Noise, WFC, L-systems, BSP
 │   │   ├── metrics/       # Tufte, engagement, Four Keys to Fun
-│   │   ├── tolerances/    # All constants with provenance (no magic numbers)
+│   │   ├── tolerances/    # 6 submodules (game, interaction, ipc, metrics, procedural, validation)
 │   │   ├── validation/    # ValidationResult harness
 │   │   ├── telemetry/     # Portable event protocol + analysis pipeline
 │   │   ├── visualization/ # Data channels + VisualizationPushClient (capability-based)
@@ -457,7 +458,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (407 total: 349 unit + 8 determinism + 12 proptest + 23 parity + 12 validation + 3 doctest)
+# All tests (394 total: 382 unit/determinism/parity/doctest + 12 proptest)
 cargo test --features ipc -p ludospring-barracuda --lib --tests
 
 # Run a specific experiment
@@ -482,7 +483,7 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
-| `cargo test --features ipc` (barracuda) | 407 tests, 0 failures |
+| `cargo test --features ipc` (barracuda) | 394 tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
 | 75 validation binaries | 1692 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
@@ -497,17 +498,27 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Structured logging | `tracing` for all library IPC/biomeOS (no `eprintln!`) |
 | Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery |
 
-## V19 Deep Debt Evolution (March 16, 2026)
+## V20 Deep Primal Integration (March 16, 2026)
 
-Comprehensive code quality pass eliminating all remaining technical debt:
+Comprehensive integration evolution aligning all external primal interactions with canonical specifications and deepening game engine core:
 
-- **Magic numbers eliminated** — 9 new tolerance constants (`RPC_TIMEOUT_SECS`, `PROBE_TIMEOUT_MS`, `NPC_PROXIMITY_TILES`, `AREA_DESCRIPTION_RANGE_TILES`, `ITEM_PROXIMITY_TILES`, `DEFAULT_VERTEX_QUERY_LIMIT`, `TARGET_FRAME_RATE_HZ`, `CONNECT_PROBE_TIMEOUT_MS`) with provenance citations, replacing raw literals in `audio.rs`, `push_client.rs`, `handlers.rs`, `provenance/rhizocrypt.rs`
-- **Clone abuse eliminated** — `JsonRpcError` and `JsonRpcResponse` constructors now take `&serde_json::Value` instead of owned values; 13 call-site `.clone()` calls removed from `handlers.rs`
-- **Production panic eliminated** — `BlockPalette::register()` evolved from `unwrap_or_else(|| panic!())` to `Result<BlockId, String>`; `chemistry_palette()` propagates with `?`
-- **Provenance decomposed** — 773-line monolith split into `provenance/mod.rs` (session lifecycle) + `rhizocrypt.rs` (DAG queries) + `loamspine.rs` (certificates) + `sweetgrass.rs` (attribution), each focused and testable
-- **Audio narration refactored** — `compile_outcome` split into 5 focused functions (`compile_effect_cues`, `compile_movement_cues`, `compile_damage_cues`, `compile_trigger_cues`, `push_narration_cue`); `#[allow(clippy::too_many_lines)]` suppression removed
-- **407 tests pass** (349 unit + 8 determinism + 12 proptest + 23 parity + 12 validation + 3 doctest)
-- **Zero clippy warnings** under pedantic + nursery across both default and `--features ipc`
+- **IPC method alignment** — 19 external method names updated to match canonical JSON-RPC specs: `storage.put→store`, `storage.get→retrieve` (NestGate), `ai.chat→query`, `ai.text_generation→suggest`, `ai.inference→analyze` (Squirrel), `dag.create_session→session.create`, `dag.append_vertex→vertex.append` (rhizoCrypt), `spine.create_waypoint→spine.waypoint.create` (loamSpine), `provenance.lineage→provenance.graph`, `provenance.attribution→attribution.chain` (sweetGrass)
+- **Capability domains registry** — new `capability_domains.rs` with structured `Domain`/`Method` types classifying all 24 capabilities as local (10) or external (14); drives `capability.list` RPC response with operation dependencies and cost estimates
+- **Tolerance decomposition** — monolithic `tolerances/mod.rs` → 6 focused submodules (`game.rs`, `interaction.rs`, `ipc.rs`, `metrics.rs`, `procedural.rs`, `validation.rs`); new constants `DEFAULT_SIGHT_RADIUS` (5), `TRIGGER_DETECTION_RANGE` (1); backward-compatible re-exports
+- **Typed provenance pipeline** — `DehydrationSummary` struct and `TrioStage` enum; 4-step session completion: dehydrate → record_dehydration (sweetGrass) → commit (loamSpine) → braid (sweetGrass)
+- **Game engine core** — `RulesetCert` validation integrated into `process()` via `Command::verb()` + `available_actions` checking; concrete `apply()` for `ItemAcquired` (despawn), `Damaged` (HP update), `Interacted` (property set); `From<&TileWorld> for GridMap` raycaster bridge
+- **NarrationContext** — argument sprawl reduction for audio narration compilation functions
+- **`discover_by_capability()`** — runtime primal peer lookup with tolerance-backed timeouts
+- **Workspace dependencies** — `serde`, `serde_json`, `uuid`, `proptest` centralized at workspace level
+- **394 tests pass** (382 unit/determinism/parity/doctest + 12 proptest), zero clippy warnings
+
+### V19 Foundation (preserved)
+
+- Magic numbers eliminated — 9 tolerance constants with provenance citations
+- Clone abuse eliminated — `&serde_json::Value` constructors
+- Production panic eliminated — `BlockPalette::register()` → `Result`
+- Provenance decomposed — 773-line monolith → 3 focused submodules
+- Audio narration refactored — 5 focused functions
 
 ### V18 Foundation (preserved)
 

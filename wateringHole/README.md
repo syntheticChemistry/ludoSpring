@@ -24,19 +24,19 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V19** | `LUDOSPRING_V19_BARRACUDA_TOADSTOOL_DEEP_DEBT_HANDOFF_MAR16_2026.md` | Mar 16 | Deep debt evolution: magic numbers eliminated, clone abuse removed, production panic eliminated, provenance decomposed, audio refactored, 24 capabilities, 407 tests |
+| **V20** | [LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md) | Mar 16 | Deep primal integration: 19 IPC methods aligned, capability_domains registry, tolerance decomposition (6 submodules), typed provenance pipeline, RulesetCert validation, discover_by_capability(), workspace deps, 394 tests |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 75 experiments, 1692 checks, 407 tests + 12 proptest, deep debt V19)
+ludoSpring (game science, 75 experiments, 1692 checks, 394 tests + 12 proptest, deep primal integration V20)
     │
-    ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern)
+    ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders)
     ├─→ coralReef (compile: f64-canonical shaders, log2 only transcendental)
     ├─→ petalTongue (render: 15 GameChannelType channels, scene push, dashboard, streaming sessions)
-    ├─→ Squirrel (AI: NPC dialogue, narration, internal voices via ai.chat/inference/text_generation)
-    ├─→ NestGate (storage: game state, NPC snapshots, rulesets via storage.put/get)
+    ├─→ Squirrel (AI: NPC dialogue, narration, internal voices via ai.query/analyze/suggest)
+    ├─→ NestGate (storage: game state, NPC snapshots, rulesets via storage.store/retrieve)
     ├─→ biomeOS (orchestrate: game_logic + metrics nodes, Tower Atomic validated)
     ├─→ wetSpring (cross-spring: exp062 field sample scaffold, Anderson QS explorer)
     ├─→ healthSpring (cross-spring: exp063 consent-gated medical scaffold)
@@ -75,6 +75,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `procedural::wfc` | ~265 | Wave Function Collapse (GPU-parallel) | P2 |
 | `procedural::lsystem` | ~200 | L-system string rewriting | P3 |
 | `procedural::bsp` | ~220 | BSP spatial partitioning | P2 |
+| `capability_domains.rs` | ~100 | Structured Domain/Method introspection | P1 |
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
@@ -82,6 +83,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V19 | `handoffs/archive/LUDOSPRING_V19_BARRACUDA_TOADSTOOL_DEEP_DEBT_HANDOFF_MAR16_2026.md` | V20 Deep Primal Integration |
 | V18 | `handoffs/archive/LUDOSPRING_V18_NICHE_SELF_KNOWLEDGE_NEURALBRIDGE_HANDOFF_MAR15_2026.md` | V19 Deep Debt |
 | V18 | `handoffs/archive/LUDOSPRING_V18_BARRACUDA_TOADSTOOL_NICHE_ABSORPTION_HANDOFF_MAR15_2026.md` | V19 Deep Debt |
 | V17 | `handoffs/archive/LUDOSPRING_V17_BARRACUDA_TOADSTOOL_DEEP_EVOLUTION_HANDOFF_MAR15_2026.md` | V18 Niche Self-Knowledge |
