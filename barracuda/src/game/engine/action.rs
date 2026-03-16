@@ -423,9 +423,7 @@ mod tests {
 
     #[test]
     fn trigger_events() {
-        let conv = TriggerEvent::ConversationStart {
-            npc: EntityId(5),
-        };
+        let conv = TriggerEvent::ConversationStart { npc: EntityId(5) };
         assert!(matches!(conv, TriggerEvent::ConversationStart { .. }));
 
         let plane = TriggerEvent::PlaneTransition {
@@ -445,9 +443,7 @@ mod tests {
             },
             cost: ActionCost::One,
             narration: Some("You step cautiously into the dim corridor.".into()),
-            triggers: vec![TriggerEvent::ConversationStart {
-                npc: EntityId(2),
-            }],
+            triggers: vec![TriggerEvent::ConversationStart { npc: EntityId(2) }],
         };
         assert_eq!(outcome.triggers.len(), 1);
         assert!(outcome.narration.is_some());

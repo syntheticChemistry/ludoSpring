@@ -2,7 +2,7 @@
 
 **Date:** March 16, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + Deep Debt Evolution + **Deep Primal Integration V20** — 75 experiments, 1692 checks, 394 tests + 12 proptest, 19 IPC methods aligned, typed provenance pipeline, tolerance decomposition (6 submodules), RulesetCert command validation, capability_domains registry (V20)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + **Deep Debt Evolution V21** — 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, session decomposition, typed TransitionIssue enum, pluggable ValidationSink, typed toadStool IPC client, `#[expect]` evolution, platform-agnostic paths, centralized GAME_STATE_TOL (V21)
 
 ---
 
@@ -64,15 +64,26 @@ Nine experiments implementing the first playable plane of the RPGPT system:
 - **GPU compute**: fog of war, tile lighting, pathfinding wavefront, Perlin terrain — via toadStool/barraCuda WGSL shaders
 - **Audio narration**: blind-accessible gameplay — every state change produces semantic narration cues
 
-### Deep Primal Integration V20
+### Deep Debt Evolution V21
 
-- **IPC method alignment**: 19 external method names aligned to canonical JSON-RPC specs across NestGate, Squirrel, rhizoCrypt, loamSpine, sweetGrass
-- **Capability domains registry**: structured `Domain`/`Method` types classifying 24 capabilities as local (10) or external (14)
-- **Tolerance decomposition**: monolithic `tolerances/mod.rs` → 6 submodules (`game`, `interaction`, `ipc`, `metrics`, `procedural`, `validation`)
-- **Typed provenance pipeline**: `DehydrationSummary` struct + `TrioStage` enum; 4-step session completion
-- **Game engine core**: `RulesetCert` validation in `process()`, concrete `apply()` for 3 effects, `From<&TileWorld> for GridMap`
-- **Runtime discovery**: `discover_by_capability()` for primal peer lookup
-- **Workspace deps**: `serde`, `serde_json`, `uuid`, `proptest` centralized
+- **Session decomposition**: `GameSession::resolve()` extracted into per-command methods, eliminating `#[allow(clippy::too_many_lines)]`
+- **Typed transition verification**: boolean fields → `TransitionIssue` enum + `Vec<TransitionIssue>`, eliminating `#[allow(clippy::struct_excessive_bools)]`
+- **Pluggable validation output**: `ValidationSink` trait with `StderrSink` (default) and `BufferSink` (testing); `ValidationHarness<S>` generic over sink
+- **Typed toadStool IPC client**: `ipc/toadstool.rs` — `submit_workload`, `workload_status`, `query_capabilities` with graceful degradation
+- **IPC integration tests**: 6 tests covering lifecycle, capability list, game methods, error handling
+- **`#[expect]` evolution**: `#[allow(dead_code)]` → `#[expect(dead_code, reason = "...")]` for justified IPC wire types
+- **Platform-agnostic paths**: `temp_dir()` replaces hardcoded `/tmp` in test fixtures
+- **Centralized game tolerance**: `GAME_STATE_TOL` replaces inline `0.01` across experiments
+- **ValidationHarness adoption**: `exp001` rewritten from legacy `ValidationResult` to `ValidationHarness` + `BaselineProvenance`
+
+### Deep Primal Integration V20 (preserved)
+
+- IPC method alignment: 19 external methods aligned to canonical JSON-RPC specs
+- Capability domains registry: 24 capabilities (10 local, 14 external)
+- Tolerance decomposition: 6 domain-specific submodules
+- Typed provenance pipeline: `DehydrationSummary` + `TrioStage`
+- Game engine core: `RulesetCert` validation, concrete `apply()`, `GridMap` bridge
+- Runtime discovery: `discover_by_capability()` for primal peer lookup
 
 ### Deep Debt Evolution (V19, preserved)
 
@@ -167,6 +178,15 @@ that constrained evolution produces transferable specializations.
 | 064 | BearDog-Signed Provenance Chain | Ed25519 signing on all trio operations, chain verification, tamper detection at exact point | — |
 | 065 | Cross-Domain Fraud Unification | Same GenericFraudDetector across gaming/science/medical, >80% structural similarity | — |
 | 066 | Radiating Attribution Calculator | sunCloud value distribution: decay models, role weighting, conservation (shares=1.0) | — |
+| 067 | NPC Knowledge Bounds | Four-quadrant knowledge model, metadata-only responses for unknown topics | — |
+| 068 | Lie Detection / Passive Checks | NPC deception with detection DCs, behavioral tells, passive perception | — |
+| 069 | Internal Voice Personality | 10 Disco Elysium-style skill voices as constrained AI perspectives | — |
+| 070 | Voice Priority / Concurrency | Priority ordering, max 3 voices per action, deterministic selection | — |
+| 071 | NPC Memory DAG | Graph-aware memory retrieval, emotional tagging, recency/relevance scoring | — |
+| 072 | Trust Dynamics Arc | Multi-factor disposition (faction+personal+relationship+debt), trust gates | — |
+| 073 | Dialogue Skill Checks | D6 pool resolution, 5-degree outcomes, binomial distribution validation | — |
+| 074 | Dialogue Flow Monitoring | Flow/DDA/Hick integration with dialogue pacing, stall detection | — |
+| 075 | Plane Transition Continuity | 7 game modes, state preservation, condition mapping, round-trip verification | — |
 
 ### Barrier Removal Philosophy
 
@@ -232,6 +252,15 @@ cargo run --release -p ludospring-exp063              # Consent-gated medical ac
 cargo run --release -p ludospring-exp064              # BearDog-signed chain: 39/39 checks
 cargo run --release -p ludospring-exp065              # Cross-domain fraud unification: 74/74 checks
 cargo run --release -p ludospring-exp066              # Radiating attribution: 41/41 checks
+cargo run -p ludospring-exp067                        # NPC knowledge bounds: 38/38 checks
+cargo run -p ludospring-exp068                        # Lie detection: 21/21 checks
+cargo run -p ludospring-exp069                        # Internal voices: 75/75 checks
+cargo run -p ludospring-exp070                        # Voice priority: 25/25 checks
+cargo run -p ludospring-exp071                        # NPC memory DAG: 26/26 checks
+cargo run -p ludospring-exp072                        # Trust dynamics: 45/45 checks
+cargo run -p ludospring-exp073                        # Dialogue skill checks: 34/34 checks
+cargo run -p ludospring-exp074                        # Dialogue flow: 26/26 checks
+cargo run -p ludospring-exp075                        # Plane transitions: 31/31 checks
 cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
 ```
 

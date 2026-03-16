@@ -7,8 +7,8 @@
 //! 3. Record the transition as a DAG vertex
 //! 4. Swap the active ruleset cert
 
+use super::super::ruleset::{Character, Condition};
 use super::plane::PlaneType;
-use super::super::ruleset::{Condition, Character};
 use std::collections::HashMap;
 
 /// Inventory item that persists across plane transitions.
@@ -175,22 +175,65 @@ pub fn map_conditions(conditions: &[Condition], mappings: &[ConditionMapping]) -
         .collect()
 }
 
-/// Verify that world state was preserved across a transition.
+/// Specific integrity check that can fail during a plane transition.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TransitionIssue {
+    /// One or more inventory items were lost.
+    InventoryLost,
+    /// NPC dispositions changed unexpectedly.
+    DispositionChanged,
+    /// Cross-plane knowledge was dropped.
+    KnowledgeLost,
+    /// Conditions were not correctly mapped between rulesets.
+    ConditionMismatch,
+    /// Hit points changed during the transition.
+    HpChanged,
+}
+
+impl TransitionIssue {
+    /// Human-readable description for diagnostics.
+    #[must_use]
+    pub const fn description(&self) -> &str {
+        match self {
+            Self::InventoryLost => "Inventory items missing after transition",
+            Self::DispositionChanged => "NPC dispositions changed during transition",
+            Self::KnowledgeLost => "Cross-plane knowledge lost during transition",
+            Self::ConditionMismatch => "Conditions not correctly mapped during transition",
+            Self::HpChanged => "HP changed during transition",
+        }
+    }
+}
+
+/// Result of verifying world state preservation across a plane transition.
+///
+/// An empty `issues` vec means the transition preserved all state correctly.
 #[derive(Debug)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct TransitionVerification {
-    /// Whether inventory was fully preserved.
-    pub inventory_preserved: bool,
-    /// Whether NPC dispositions were preserved.
-    pub dispositions_preserved: bool,
-    /// Whether knowledge carried forward.
-    pub knowledge_preserved: bool,
-    /// Whether conditions were correctly mapped.
-    pub conditions_mapped: bool,
-    /// Whether HP was preserved.
-    pub hp_preserved: bool,
-    /// Any issues found.
-    pub issues: Vec<String>,
+    /// Typed issues found during verification (empty = all passed).
+    pub issues: Vec<TransitionIssue>,
+}
+
+impl TransitionVerification {
+    /// Whether all integrity checks passed.
+    #[must_use]
+    pub fn passed(&self) -> bool {
+        self.issues.is_empty()
+    }
+
+    /// Whether a specific check passed.
+    #[must_use]
+    pub fn check_passed(&self, issue: &TransitionIssue) -> bool {
+        !self.issues.contains(issue)
+    }
+
+    /// Human-readable descriptions of all failures.
+    #[must_use]
+    pub fn failure_descriptions(&self) -> Vec<&str> {
+        self.issues
+            .iter()
+            .map(TransitionIssue::description)
+            .collect()
+    }
 }
 
 /// Verify transition integrity between pre and post snapshots.
@@ -202,61 +245,50 @@ pub fn verify_transition(
 ) -> TransitionVerification {
     let mut issues = Vec::new();
 
-    let inventory_preserved = pre.inventory.len() == post.inventory.len()
+    let inventory_ok = pre.inventory.len() == post.inventory.len()
         && pre
             .inventory
             .iter()
             .all(|item| post.inventory.iter().any(|p| p.id == item.id));
-    if !inventory_preserved {
-        issues.push("Inventory items missing after transition".into());
+    if !inventory_ok {
+        issues.push(TransitionIssue::InventoryLost);
     }
 
-    let dispositions_preserved = pre
-        .npc_dispositions
-        .iter()
-        .all(|d| {
-            post.npc_dispositions
-                .iter()
-                .any(|p| p.npc_id == d.npc_id && (p.trust - d.trust).abs() < f64::EPSILON)
-        });
-    if !dispositions_preserved {
-        issues.push("NPC dispositions changed during transition".into());
+    let dispositions_ok = pre.npc_dispositions.iter().all(|d| {
+        post.npc_dispositions
+            .iter()
+            .any(|p| p.npc_id == d.npc_id && (p.trust - d.trust).abs() < f64::EPSILON)
+    });
+    if !dispositions_ok {
+        issues.push(TransitionIssue::DispositionChanged);
     }
 
-    let knowledge_preserved = pre
+    let knowledge_ok = pre
         .knowledge
         .iter()
         .filter(|k| k.cross_plane)
         .all(|k| post.knowledge.iter().any(|p| p.fact == k.fact));
-    if !knowledge_preserved {
-        issues.push("Cross-plane knowledge lost during transition".into());
+    if !knowledge_ok {
+        issues.push(TransitionIssue::KnowledgeLost);
     }
 
     let expected_conditions = map_conditions(&pre.conditions, condition_mappings);
-    let conditions_mapped = expected_conditions.iter().all(|ec| {
+    let conditions_ok = expected_conditions.iter().all(|ec| {
         post.conditions
             .iter()
             .any(|pc| pc.name == ec.name && pc.value == ec.value)
     });
-    if !conditions_mapped {
-        issues.push("Conditions not correctly mapped during transition".into());
+    if !conditions_ok {
+        issues.push(TransitionIssue::ConditionMismatch);
     }
 
-    let hp_preserved =
-        pre.character.hp_current == post.character.hp_current
-            && pre.character.hp_max == post.character.hp_max;
-    if !hp_preserved {
-        issues.push("HP changed during transition".into());
+    let hp_ok = pre.character.hp_current == post.character.hp_current
+        && pre.character.hp_max == post.character.hp_max;
+    if !hp_ok {
+        issues.push(TransitionIssue::HpChanged);
     }
 
-    TransitionVerification {
-        inventory_preserved,
-        dispositions_preserved,
-        knowledge_preserved,
-        conditions_mapped,
-        hp_preserved,
-        issues,
-    }
+    TransitionVerification { issues }
 }
 
 // ---------------------------------------------------------------------------

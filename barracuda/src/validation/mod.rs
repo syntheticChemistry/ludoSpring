@@ -71,34 +71,96 @@ pub struct Check {
     pub detail: String,
 }
 
+/// Output sink for validation diagnostics.
+///
+/// Pluggable output allows the harness to write to stderr (the default for
+/// validation binaries), a buffer (for embedding in tests), or any custom
+/// destination.  The default [`StderrSink`] preserves backward compatibility
+/// with the original hotSpring `eprintln!` pattern.
+pub trait ValidationSink {
+    /// Write a diagnostic line (no trailing newline expected — implementations add it).
+    fn emit(&mut self, line: &str);
+}
+
+/// Default sink — writes to stderr.  Used by [`ValidationHarness::new`].
+#[derive(Debug, Default)]
+pub struct StderrSink;
+
+impl ValidationSink for StderrSink {
+    fn emit(&mut self, line: &str) {
+        eprintln!("{line}");
+    }
+}
+
+/// Buffer sink — collects lines for programmatic inspection in tests.
+#[derive(Debug, Default)]
+pub struct BufferSink {
+    /// All lines emitted by the harness.
+    pub lines: Vec<String>,
+}
+
+impl ValidationSink for BufferSink {
+    fn emit(&mut self, line: &str) {
+        self.lines.push(line.to_owned());
+    }
+}
+
 /// Validation harness — accumulates checks and produces a summary with exit code.
 ///
 /// Follows the hotSpring pattern: structured checks, provenance printing,
 /// machine-readable summary line, and deterministic `process::exit`.
-#[derive(Debug)]
-pub struct ValidationHarness {
+///
+/// Output goes through a [`ValidationSink`], defaulting to stderr.  Use
+/// [`ValidationHarness::with_sink`] to redirect output for embedding or testing.
+pub struct ValidationHarness<S: ValidationSink = StderrSink> {
     name: String,
     checks: Vec<Check>,
+    sink: S,
 }
 
-impl ValidationHarness {
+impl<S: core::fmt::Debug + ValidationSink> core::fmt::Debug for ValidationHarness<S> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ValidationHarness")
+            .field("name", &self.name)
+            .field("checks", &self.checks)
+            .field("sink", &self.sink)
+            .finish()
+    }
+}
+
+impl ValidationHarness<StderrSink> {
     /// Create a new harness with a descriptive experiment name.
+    ///
+    /// Output goes to stderr (the hotSpring default).
     #[must_use]
     pub fn new(name: &str) -> Self {
         Self {
             name: name.into(),
             checks: Vec::new(),
+            sink: StderrSink,
+        }
+    }
+}
+
+impl<S: ValidationSink> ValidationHarness<S> {
+    /// Create a harness with a custom output sink.
+    #[must_use]
+    pub fn with_sink(name: &str, sink: S) -> Self {
+        Self {
+            name: name.into(),
+            checks: Vec::new(),
+            sink,
         }
     }
 
     /// Print provenance records for the baselines used in this validation.
-    pub fn print_provenance(&self, baselines: &[&BaselineProvenance]) {
-        eprintln!("═══ {} ═══", self.name);
+    pub fn print_provenance(&mut self, baselines: &[&BaselineProvenance]) {
+        self.sink.emit(&format!("═══ {} ═══", self.name));
         for (i, b) in baselines.iter().enumerate() {
-            eprintln!("Baseline #{}", i + 1);
-            eprintln!("{b}");
+            self.sink.emit(&format!("Baseline #{}", i + 1));
+            self.sink.emit(&format!("{b}"));
         }
-        eprintln!();
+        self.sink.emit("");
     }
 
     /// Absolute tolerance check: `|observed - expected| <= tolerance`.
@@ -176,15 +238,21 @@ impl ValidationHarness {
     fn record(&mut self, label: &str, passed: bool, detail: &str) {
         let symbol = if passed { "✓" } else { "✗" };
         if passed {
-            eprintln!("  {symbol} {label}");
+            self.sink.emit(&format!("  {symbol} {label}"));
         } else {
-            eprintln!("  {symbol} {label}: {detail}");
+            self.sink.emit(&format!("  {symbol} {label}: {detail}"));
         }
         self.checks.push(Check {
             label: label.into(),
             passed,
             detail: detail.into(),
         });
+    }
+
+    /// The accumulated check results.
+    #[must_use]
+    pub fn checks(&self) -> &[Check] {
+        &self.checks
     }
 
     /// Number of checks that passed.
@@ -205,30 +273,30 @@ impl ValidationHarness {
         self.checks.iter().all(|c| c.passed)
     }
 
-    /// Print summary and return exit code (0 = all passed, 1 = any failure).
+    /// Emit summary and return exit code (0 = all passed, 1 = any failure).
     ///
     /// Use this when you need the exit code without calling `process::exit`
     /// (e.g., in `#[test]` contexts).
     #[must_use]
-    pub fn summary(&self) -> i32 {
+    pub fn summary(&mut self) -> i32 {
         let passed = self.passed_count();
         let total = self.total_count();
         let ok = self.all_passed();
         let status = if ok { "PASS" } else { "FAIL" };
-        eprintln!();
-        eprintln!(
+        self.sink.emit("");
+        self.sink.emit(&format!(
             "═══ {name} validation: {passed}/{total} checks passed — {status} ═══",
             name = self.name,
-        );
+        ));
         i32::from(!ok)
     }
 
-    /// Print summary and exit the process.
+    /// Emit summary and exit the process.
     ///
     /// Calls `std::process::exit(0)` if all checks passed, otherwise
     /// `std::process::exit(1)`. This is the standard hotSpring termination
     /// pattern for validation binaries.
-    pub fn finish(&self) -> ! {
+    pub fn finish(&mut self) -> ! {
         std::process::exit(self.summary());
     }
 }
@@ -284,7 +352,7 @@ mod tests {
 
     #[test]
     fn harness_all_pass() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_abs("exact", 1.0, 1.0, 1e-10);
         h.check_bool("true", true);
         h.check_upper("below", 5.0, 10.0);
@@ -295,7 +363,7 @@ mod tests {
 
     #[test]
     fn harness_detects_failure() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_abs("exact", 1.0, 1.0, 1e-10);
         h.check_abs("off", 2.0, 1.0, 0.01);
         assert!(!h.all_passed());
@@ -305,43 +373,55 @@ mod tests {
     }
 
     #[test]
+    fn buffer_sink_captures_output() {
+        let mut h = ValidationHarness::with_sink("cap-test", BufferSink::default());
+        h.check_bool("ok", true);
+        h.check_bool("fail", false);
+        let code = h.summary();
+        assert_eq!(code, 1);
+        assert!(h.sink.lines.iter().any(|l| l.contains("✓ ok")));
+        assert!(h.sink.lines.iter().any(|l| l.contains("✗ fail")));
+        assert!(h.sink.lines.iter().any(|l| l.contains("FAIL")));
+    }
+
+    #[test]
     fn check_rel_near_zero_expected() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_rel("near-zero", 1e-15, 0.0, 1e-10);
         assert!(h.all_passed());
     }
 
     #[test]
     fn check_rel_normal() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_rel("1ppm", 1_000_001.0, 1_000_000.0, 1e-5);
         assert!(h.all_passed());
     }
 
     #[test]
     fn check_rel_fails() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_rel("10%", 1.1, 1.0, 0.01);
         assert!(!h.all_passed());
     }
 
     #[test]
     fn check_upper_fails() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_upper("over", 11.0, 10.0);
         assert!(!h.all_passed());
     }
 
     #[test]
     fn check_lower_fails() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_lower("under", 4.0, 5.0);
         assert!(!h.all_passed());
     }
 
     #[test]
     fn check_bool_false_fails() {
-        let mut h = ValidationHarness::new("test");
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
         h.check_bool("nope", false);
         assert!(!h.all_passed());
     }
@@ -357,6 +437,30 @@ mod tests {
         let s = format!("{p}");
         assert!(s.contains("run.py"));
         assert!(s.contains("abc123"));
+    }
+
+    #[test]
+    fn provenance_prints_through_sink() {
+        let mut h = ValidationHarness::with_sink("prov-test", BufferSink::default());
+        let p = BaselineProvenance {
+            script: "run.py",
+            commit: "abc123",
+            date: "2026-03-15",
+            command: "python3 run.py",
+        };
+        h.print_provenance(&[&p]);
+        assert!(h.sink.lines.iter().any(|l| l.contains("prov-test")));
+        assert!(h.sink.lines.iter().any(|l| l.contains("run.py")));
+    }
+
+    #[test]
+    fn checks_accessor() {
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
+        h.check_bool("a", true);
+        h.check_bool("b", false);
+        assert_eq!(h.checks().len(), 2);
+        assert!(h.checks()[0].passed);
+        assert!(!h.checks()[1].passed);
     }
 
     // ── Legacy ValidationResult tests ───────────────────────────────

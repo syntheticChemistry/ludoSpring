@@ -10,7 +10,7 @@
 //! 5. Modifier stacking (trust, environment, knowledge) works
 
 use ludospring_barracuda::game::rpgpt::dialogue::{
-    resolve_d6_pool, effective_pool_size, DialogueCheck, DialogueModifiers, D6PoolResult,
+    D6PoolResult, DialogueCheck, DialogueModifiers, effective_pool_size, resolve_d6_pool,
 };
 use ludospring_barracuda::game::ruleset::DegreeOfSuccess;
 use ludospring_barracuda::validation::ValidationHarness;
@@ -50,10 +50,20 @@ fn validate_pool_resolution_mapping(h: &mut ValidationHarness) {
 
 fn validate_d6_pool_counting(h: &mut ValidationHarness) {
     let r1 = D6PoolResult::from_dice(&[1, 2, 3, 4, 5, 6], 4);
-    h.check_abs("six_dice_three_successes", f64::from(r1.successes), 3.0, 0.0);
+    h.check_abs(
+        "six_dice_three_successes",
+        f64::from(r1.successes),
+        3.0,
+        0.0,
+    );
 
     let r2 = D6PoolResult::from_dice(&[1, 2, 3], 4);
-    h.check_abs("three_low_zero_successes", f64::from(r2.successes), 0.0, 0.0);
+    h.check_abs(
+        "three_low_zero_successes",
+        f64::from(r2.successes),
+        0.0,
+        0.0,
+    );
 
     let r3 = D6PoolResult::from_dice(&[4, 5, 6, 4, 5], 4);
     h.check_abs("all_high_five_successes", f64::from(r3.successes), 5.0, 0.0);
@@ -66,19 +76,34 @@ fn validate_d6_pool_counting(h: &mut ValidationHarness) {
 fn validate_modifier_stacking(h: &mut ValidationHarness) {
     let no_mods = DialogueModifiers::default();
     h.check_abs("no_mods_total_zero", f64::from(no_mods.total()), 0.0, 0.0);
-    h.check_abs("base_pool_3", f64::from(effective_pool_size(3, &no_mods)), 3.0, 0.0);
+    h.check_abs(
+        "base_pool_3",
+        f64::from(effective_pool_size(3, &no_mods)),
+        3.0,
+        0.0,
+    );
 
     let trust_bonus = DialogueModifiers {
         trust_bonus: 2,
         ..Default::default()
     };
-    h.check_abs("trust_adds_2", f64::from(effective_pool_size(3, &trust_bonus)), 5.0, 0.0);
+    h.check_abs(
+        "trust_adds_2",
+        f64::from(effective_pool_size(3, &trust_bonus)),
+        5.0,
+        0.0,
+    );
 
     let env_penalty = DialogueModifiers {
         environment: -2,
         ..Default::default()
     };
-    h.check_abs("env_subtracts_2", f64::from(effective_pool_size(3, &env_penalty)), 1.0, 0.0);
+    h.check_abs(
+        "env_subtracts_2",
+        f64::from(effective_pool_size(3, &env_penalty)),
+        1.0,
+        0.0,
+    );
 
     let combined = DialogueModifiers {
         trust_bonus: 2,
@@ -87,7 +112,12 @@ fn validate_modifier_stacking(h: &mut ValidationHarness) {
         knowledge: 1,
     };
     h.check_abs("combined_total_2", f64::from(combined.total()), 2.0, 0.0);
-    h.check_abs("combined_pool_5", f64::from(effective_pool_size(3, &combined)), 5.0, 0.0);
+    h.check_abs(
+        "combined_pool_5",
+        f64::from(effective_pool_size(3, &combined)),
+        5.0,
+        0.0,
+    );
 
     let heavy_penalty = DialogueModifiers {
         trust_bonus: -5,
@@ -95,7 +125,12 @@ fn validate_modifier_stacking(h: &mut ValidationHarness) {
         emotional: -5,
         knowledge: -5,
     };
-    h.check_abs("pool_minimum_one", f64::from(effective_pool_size(1, &heavy_penalty)), 1.0, 0.0);
+    h.check_abs(
+        "pool_minimum_one",
+        f64::from(effective_pool_size(1, &heavy_penalty)),
+        1.0,
+        0.0,
+    );
 }
 
 fn validate_statistical_distribution(h: &mut ValidationHarness) {
@@ -134,10 +169,7 @@ fn simulate_pool(pool_size: usize, trials: usize) -> f64 {
     for trial in 0..trials {
         let dice: Vec<u8> = (0..pool_size)
             .map(|i| {
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "die values are 1-6"
-                )]
+                #[expect(clippy::cast_possible_truncation, reason = "die values are 1-6")]
                 {
                     ((trial * 7 + i * 13 + 3) % 6 + 1) as u8
                 }
@@ -149,7 +181,9 @@ fn simulate_pool(pool_size: usize, trials: usize) -> f64 {
         }
     }
     #[expect(clippy::cast_precision_loss, reason = "trial counts fit in f64")]
-    { successes as f64 / trials as f64 }
+    {
+        successes as f64 / trials as f64
+    }
 }
 
 fn simulate_critical_failure(pool_size: usize, trials: usize) -> f64 {
@@ -157,10 +191,7 @@ fn simulate_critical_failure(pool_size: usize, trials: usize) -> f64 {
     for trial in 0..trials {
         let dice: Vec<u8> = (0..pool_size)
             .map(|i| {
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "die values are 1-6"
-                )]
+                #[expect(clippy::cast_possible_truncation, reason = "die values are 1-6")]
                 {
                     ((trial * 7 + i * 13 + 3) % 6 + 1) as u8
                 }
@@ -174,7 +205,9 @@ fn simulate_critical_failure(pool_size: usize, trials: usize) -> f64 {
         }
     }
     #[expect(clippy::cast_precision_loss, reason = "trial counts fit in f64")]
-    { crit_fails as f64 / trials as f64 }
+    {
+        crit_fails as f64 / trials as f64
+    }
 }
 
 fn validate_dialogue_check_integration(h: &mut ValidationHarness) {
@@ -185,26 +218,63 @@ fn validate_dialogue_check_integration(h: &mut ValidationHarness) {
     };
     let check = DialogueCheck::resolve("Persuasion", 4, mods, &[2, 3, 5, 6, 4]);
     h.check_abs("check_pool_size_5", f64::from(check.pool_size), 5.0, 0.0);
-    h.check_abs("check_successes_3", f64::from(check.result.successes), 3.0, 0.0); // 5,6,4
-    h.check_bool("check_degree_success", check.degree == DegreeOfSuccess::Success);
+    h.check_abs(
+        "check_successes_3",
+        f64::from(check.result.successes),
+        3.0,
+        0.0,
+    ); // 5,6,4
+    h.check_bool(
+        "check_degree_success",
+        check.degree == DegreeOfSuccess::Success,
+    );
 
     // Failed check: skill 1, no mods, dice = [1]
     let fail = DialogueCheck::resolve("Intimidation", 1, DialogueModifiers::default(), &[1]);
     h.check_abs("fail_pool_size_1", f64::from(fail.pool_size), 1.0, 0.0);
-    h.check_abs("fail_successes_0", f64::from(fail.result.successes), 0.0, 0.0);
-    h.check_bool("fail_degree_failure", fail.degree == DegreeOfSuccess::Failure);
+    h.check_abs(
+        "fail_successes_0",
+        f64::from(fail.result.successes),
+        0.0,
+        0.0,
+    );
+    h.check_bool(
+        "fail_degree_failure",
+        fail.degree == DegreeOfSuccess::Failure,
+    );
 
     // Critical success: skill 6, high dice
-    let crit = DialogueCheck::resolve("Diplomacy", 6, DialogueModifiers::default(), &[4, 5, 6, 4, 5, 6]);
-    h.check_abs("crit_successes_6", f64::from(crit.result.successes), 6.0, 0.0);
-    h.check_bool("crit_degree", crit.degree == DegreeOfSuccess::CriticalSuccess);
+    let crit = DialogueCheck::resolve(
+        "Diplomacy",
+        6,
+        DialogueModifiers::default(),
+        &[4, 5, 6, 4, 5, 6],
+    );
+    h.check_abs(
+        "crit_successes_6",
+        f64::from(crit.result.successes),
+        6.0,
+        0.0,
+    );
+    h.check_bool(
+        "crit_degree",
+        crit.degree == DegreeOfSuccess::CriticalSuccess,
+    );
 }
 
 fn validate_partial_success_meaning(h: &mut ValidationHarness) {
     // 1 success = partial: NPC gives info but at a cost
     let check = DialogueCheck::resolve("Deception", 3, DialogueModifiers::default(), &[1, 2, 5]);
-    h.check_abs("partial_one_success", f64::from(check.result.successes), 1.0, 0.0);
-    h.check_bool("partial_degree", check.degree == DegreeOfSuccess::PartialSuccess);
+    h.check_abs(
+        "partial_one_success",
+        f64::from(check.result.successes),
+        1.0,
+        0.0,
+    );
+    h.check_bool(
+        "partial_degree",
+        check.degree == DegreeOfSuccess::PartialSuccess,
+    );
 }
 
 fn main() {

@@ -9,7 +9,7 @@
 
 use ludospring_barracuda::game::rpgpt::plane::PassiveCheckPriority;
 use ludospring_barracuda::game::rpgpt::voice::{
-    select_voice_outputs, VoiceCheckResult, VoiceId, VoiceOutput,
+    VoiceCheckResult, VoiceId, VoiceOutput, select_voice_outputs,
 };
 use ludospring_barracuda::validation::ValidationHarness;
 
@@ -23,10 +23,7 @@ fn validate_voice_identity(h: &mut ValidationHarness) {
     let mut names = std::collections::HashSet::new();
     for v in all {
         let name = v.name();
-        h.check_bool(
-            &format!("voice_{name}_has_name"),
-            !name.is_empty(),
-        );
+        h.check_bool(&format!("voice_{name}_has_name"), !name.is_empty());
         names.insert(name);
     }
     h.check_abs("all_names_unique", names.len() as f64, 10.0, 0.0);
@@ -43,35 +40,29 @@ fn validate_temperature_ranges(h: &mut ValidationHarness) {
 
     h.check_bool(
         "logic_lower_temp_than_inland_empire",
-        VoiceId::Logic.recommended_temperature()
-            < VoiceId::InlandEmpire.recommended_temperature(),
+        VoiceId::Logic.recommended_temperature() < VoiceId::InlandEmpire.recommended_temperature(),
     );
 
     h.check_bool(
         "composure_lowest_temp",
-        VoiceId::ALL
-            .iter()
-            .all(|&v| v == VoiceId::Composure
-                || VoiceId::Composure.recommended_temperature()
-                    <= v.recommended_temperature()),
+        VoiceId::ALL.iter().all(|&v| {
+            v == VoiceId::Composure
+                || VoiceId::Composure.recommended_temperature() <= v.recommended_temperature()
+        }),
     );
 
     h.check_bool(
         "inland_empire_highest_temp",
-        VoiceId::ALL
-            .iter()
-            .all(|&v| v == VoiceId::InlandEmpire
-                || VoiceId::InlandEmpire.recommended_temperature()
-                    >= v.recommended_temperature()),
+        VoiceId::ALL.iter().all(|&v| {
+            v == VoiceId::InlandEmpire
+                || VoiceId::InlandEmpire.recommended_temperature() >= v.recommended_temperature()
+        }),
     );
 }
 
 fn validate_max_tokens(h: &mut ValidationHarness) {
     for v in VoiceId::ALL {
-        h.check_bool(
-            &format!("tokens_{}_positive", v.name()),
-            v.max_tokens() > 0,
-        );
+        h.check_bool(&format!("tokens_{}_positive", v.name()), v.max_tokens() > 0);
         h.check_bool(
             &format!("tokens_{}_under_limit", v.name()),
             v.max_tokens() <= 100,
@@ -125,10 +116,7 @@ fn validate_opposing_voices(h: &mut ValidationHarness) {
 
     for v in VoiceId::ALL {
         if let Some(opp) = v.opposite() {
-            h.check_bool(
-                &format!("opposite_not_self_{}", v.name()),
-                v != opp,
-            );
+            h.check_bool(&format!("opposite_not_self_{}", v.name()), v != opp);
         }
     }
 }
@@ -141,7 +129,8 @@ fn validate_voice_check_evaluation(h: &mut ValidationHarness) {
     let fail = VoiceCheckResult::evaluate(VoiceId::Logic, 5, 9, 15, PassiveCheckPriority::High);
     h.check_bool("check_14_fails_dc15", !fail.success);
 
-    let exact = VoiceCheckResult::evaluate(VoiceId::Empathy, 5, 10, 15, PassiveCheckPriority::Medium);
+    let exact =
+        VoiceCheckResult::evaluate(VoiceId::Empathy, 5, 10, 15, PassiveCheckPriority::Medium);
     h.check_bool("exact_dc_passes", exact.success);
 
     let different_voices = [
@@ -193,18 +182,9 @@ fn validate_selection_priority(h: &mut ValidationHarness) {
 
     let selected = select_voice_outputs(outputs, 3);
     h.check_abs("selection_returns_3", selected.len() as f64, 3.0, 0.0);
-    h.check_bool(
-        "critical_first",
-        selected[0].voice == VoiceId::Perception,
-    );
-    h.check_bool(
-        "high_roll_18_second",
-        selected[1].voice == VoiceId::Logic,
-    );
-    h.check_bool(
-        "high_roll_15_third",
-        selected[2].voice == VoiceId::Empathy,
-    );
+    h.check_bool("critical_first", selected[0].voice == VoiceId::Perception);
+    h.check_bool("high_roll_18_second", selected[1].voice == VoiceId::Logic);
+    h.check_bool("high_roll_15_third", selected[2].voice == VoiceId::Empathy);
 }
 
 fn validate_empty_and_single(h: &mut ValidationHarness) {

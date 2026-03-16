@@ -166,8 +166,9 @@ fn validate_deployment_graph() -> Vec<ValidationResult> {
 fn validate_songbird_protocol() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
-    // Player registration
-    let p1_reg = coordination::player_register("player1", "/tmp/biomeos/ludospring-player1.sock");
+    let base = std::env::temp_dir().join("biomeos");
+    let p1_sock = base.join("ludospring-player1.sock");
+    let p1_reg = coordination::player_register("player1", &p1_sock.to_string_lossy());
     let json = serde_json::to_value(&p1_reg).unwrap_or_default();
     results.push(ValidationResult::check(
         EXP,
@@ -189,7 +190,8 @@ fn validate_songbird_protocol() -> Vec<ValidationResult> {
     ));
 
     // Server registration
-    let srv_reg = coordination::raid_server_register("/tmp/biomeos/ludospring-raid-server.sock");
+    let srv_sock = base.join("ludospring-raid-server.sock");
+    let srv_reg = coordination::raid_server_register(&srv_sock.to_string_lossy());
     let srv_json = serde_json::to_value(&srv_reg).unwrap_or_default();
     let has_authority = srv_json
         .get("capabilities")
@@ -234,11 +236,10 @@ fn validate_songbird_protocol() -> Vec<ValidationResult> {
 fn validate_biomeos_lifecycle() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
-    let lc = coordination::lifecycle_register(
-        "ludospring-player1",
-        "/tmp/biomeos/ludospring-player1.sock",
-        12345,
-    );
+    let base = std::env::temp_dir().join("biomeos");
+    let p1_sock = base.join("ludospring-player1.sock");
+    let lc =
+        coordination::lifecycle_register("ludospring-player1", &p1_sock.to_string_lossy(), 12345);
     results.push(ValidationResult::check(
         EXP,
         "biomeos_lifecycle_method",
@@ -257,7 +258,7 @@ fn validate_biomeos_lifecycle() -> Vec<ValidationResult> {
     let cap = coordination::capability_register(
         "game.player_input",
         "ludospring-player1",
-        "/tmp/biomeos/ludospring-player1.sock",
+        &p1_sock.to_string_lossy(),
     );
     results.push(ValidationResult::check(
         EXP,
@@ -552,7 +553,10 @@ fn validate_cross_primal() -> Vec<ValidationResult> {
     ));
 
     // Songbird discovers viz provider
-    let viz_reg = coordination::viz_register("/tmp/petaltongue/petaltongue-nat0-default.sock");
+    let pt_sock = std::env::temp_dir()
+        .join("petaltongue")
+        .join("petaltongue-nat0-default.sock");
+    let viz_reg = coordination::viz_register(&pt_sock.to_string_lossy());
     let has_viz_cap = viz_reg
         .capabilities
         .contains(&"visualization.render".into());

@@ -14,10 +14,12 @@ use std::collections::HashMap;
 
 use ludospring_barracuda::game::rpgpt::plane::{PlaneTransition, PlaneType};
 use ludospring_barracuda::game::rpgpt::transition::{
+    InventoryItem, KnowledgeEntry, NpcDisposition, TransitionIssue, WorldStateSnapshot,
     dialogue_to_tactical_mappings, map_conditions, tactical_to_dialogue_mappings,
-    verify_transition, InventoryItem, KnowledgeEntry, NpcDisposition, WorldStateSnapshot,
+    verify_transition,
 };
 use ludospring_barracuda::game::ruleset::{AbilityScore, Character, Condition};
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::ValidationHarness;
 
 const EXP: &str = "exp075_plane_transition_continuity";
@@ -110,14 +112,12 @@ fn pre_transition_snapshot() -> WorldStateSnapshot {
         inventory: test_inventory(),
         npc_dispositions: test_dispositions(),
         knowledge: test_knowledge(),
-        conditions: vec![
-            Condition {
-                name: "Frightened".into(),
-                value: 1,
-                decay_per_turn: 0,
-                turns_remaining: None,
-            },
-        ],
+        conditions: vec![Condition {
+            name: "Frightened".into(),
+            value: 1,
+            decay_per_turn: 0,
+            turns_remaining: None,
+        }],
         from_plane: PlaneType::Dialogue,
         to_plane: PlaneType::Tactical,
         trigger: "guard_draws_weapon".into(),
@@ -131,10 +131,22 @@ fn validate_transition_vertex(h: &mut ValidationHarness) {
         "guard_draws_weapon",
     );
 
-    h.check_bool("transition_from_dialogue", transition.from == PlaneType::Dialogue);
-    h.check_bool("transition_to_tactical", transition.to == PlaneType::Tactical);
-    h.check_bool("transition_trigger_correct", transition.trigger == "guard_draws_weapon");
-    h.check_bool("transition_hash_none_initially", transition.world_state_hash.is_none());
+    h.check_bool(
+        "transition_from_dialogue",
+        transition.from == PlaneType::Dialogue,
+    );
+    h.check_bool(
+        "transition_to_tactical",
+        transition.to == PlaneType::Tactical,
+    );
+    h.check_bool(
+        "transition_trigger_correct",
+        transition.trigger == "guard_draws_weapon",
+    );
+    h.check_bool(
+        "transition_hash_none_initially",
+        transition.world_state_hash.is_none(),
+    );
 }
 
 fn validate_inventory_preservation(h: &mut ValidationHarness) {
@@ -147,8 +159,16 @@ fn validate_inventory_preservation(h: &mut ValidationHarness) {
     post.conditions = map_conditions(&pre.conditions, &mappings);
 
     let v = verify_transition(&pre, &post, &mappings);
-    h.check_bool("inventory_preserved", v.inventory_preserved);
-    h.check_abs("inventory_count_matches", post.inventory.len() as f64, 3.0, 0.0);
+    h.check_bool(
+        "inventory_preserved",
+        v.check_passed(&TransitionIssue::InventoryLost),
+    );
+    h.check_abs(
+        "inventory_count_matches",
+        post.inventory.len() as f64,
+        3.0,
+        0.0,
+    );
 }
 
 fn validate_disposition_preservation(h: &mut ValidationHarness) {
@@ -157,15 +177,21 @@ fn validate_disposition_preservation(h: &mut ValidationHarness) {
     post.conditions = map_conditions(&pre.conditions, &dialogue_to_tactical_mappings());
 
     let v = verify_transition(&pre, &post, &dialogue_to_tactical_mappings());
-    h.check_bool("dispositions_preserved", v.dispositions_preserved);
+    h.check_bool(
+        "dispositions_preserved",
+        v.check_passed(&TransitionIssue::DispositionChanged),
+    );
 
-    let guard = post.npc_dispositions.iter().find(|d| d.npc_id == "guard_captain");
+    let guard = post
+        .npc_dispositions
+        .iter()
+        .find(|d| d.npc_id == "guard_captain");
     h.check_bool("guard_still_hostile", guard.is_some_and(|g| g.hostile));
     h.check_abs(
         "guard_trust_preserved",
         guard.map_or(0.0, |g| g.trust),
         -2.0,
-        0.01,
+        tolerances::GAME_STATE_TOL,
     );
 }
 
@@ -236,10 +262,19 @@ fn validate_knowledge_carries_forward(h: &mut ValidationHarness) {
     post.conditions = map_conditions(&pre.conditions, &dialogue_to_tactical_mappings());
 
     let v = verify_transition(&pre, &post, &dialogue_to_tactical_mappings());
-    h.check_bool("knowledge_preserved", v.knowledge_preserved);
+    h.check_bool(
+        "knowledge_preserved",
+        v.check_passed(&TransitionIssue::KnowledgeLost),
+    );
 
-    let cross_plane: Vec<&KnowledgeEntry> = post.knowledge.iter().filter(|k| k.cross_plane).collect();
-    h.check_abs("cross_plane_knowledge_count", cross_plane.len() as f64, 2.0, 0.0);
+    let cross_plane: Vec<&KnowledgeEntry> =
+        post.knowledge.iter().filter(|k| k.cross_plane).collect();
+    h.check_abs(
+        "cross_plane_knowledge_count",
+        cross_plane.len() as f64,
+        2.0,
+        0.0,
+    );
 }
 
 fn validate_hp_preservation(h: &mut ValidationHarness) {
@@ -248,8 +283,13 @@ fn validate_hp_preservation(h: &mut ValidationHarness) {
     post.conditions = map_conditions(&pre.conditions, &dialogue_to_tactical_mappings());
 
     let v = verify_transition(&pre, &post, &dialogue_to_tactical_mappings());
-    h.check_bool("hp_preserved", v.hp_preserved);
-    h.check_abs("hp_current_45", f64::from(post.character.hp_current), 45.0, 0.0);
+    h.check_bool("hp_preserved", v.check_passed(&TransitionIssue::HpChanged));
+    h.check_abs(
+        "hp_current_45",
+        f64::from(post.character.hp_current),
+        45.0,
+        0.0,
+    );
     h.check_abs("hp_max_52", f64::from(post.character.hp_max), 52.0, 0.0);
 }
 
@@ -270,25 +310,36 @@ fn validate_round_trip(h: &mut ValidationHarness) {
 
     // Tactical -> Dialogue
     let mut post_dialogue = tactical_state.clone();
-    post_dialogue.conditions = map_conditions(
-        &tactical_state.conditions,
-        &tactical_to_dialogue_mappings(),
-    );
+    post_dialogue.conditions =
+        map_conditions(&tactical_state.conditions, &tactical_to_dialogue_mappings());
     post_dialogue.from_plane = PlaneType::Tactical;
     post_dialogue.to_plane = PlaneType::Dialogue;
 
-    h.check_abs("post_combat_hp", f64::from(post_dialogue.character.hp_current), 30.0, 0.0);
+    h.check_abs(
+        "post_combat_hp",
+        f64::from(post_dialogue.character.hp_current),
+        30.0,
+        0.0,
+    );
 
     let has_wounded = post_dialogue.conditions.iter().any(|c| c.name == "Wounded");
     h.check_bool("wounded_persists_to_dialogue_roundtrip", has_wounded);
 
-    h.check_abs("inventory_still_three", post_dialogue.inventory.len() as f64, 3.0, 0.0);
+    h.check_abs(
+        "inventory_still_three",
+        post_dialogue.inventory.len() as f64,
+        3.0,
+        0.0,
+    );
 
     let guard = post_dialogue
         .npc_dispositions
         .iter()
         .find(|d| d.npc_id == "guard_captain");
-    h.check_bool("guard_still_hostile_after_roundtrip", guard.is_some_and(|g| g.hostile));
+    h.check_bool(
+        "guard_still_hostile_after_roundtrip",
+        guard.is_some_and(|g| g.hostile),
+    );
 }
 
 fn validate_unmapped_conditions_dropped(h: &mut ValidationHarness) {
@@ -314,12 +365,13 @@ fn validate_no_state_leak(h: &mut ValidationHarness) {
     );
 
     // Non-cross-plane knowledge should exist but be marked
-    let dialogue_only = post
-        .knowledge
-        .iter()
-        .filter(|k| !k.cross_plane)
-        .count();
-    h.check_abs("dialogue_only_knowledge_count", dialogue_only as f64, 1.0, 0.0);
+    let dialogue_only = post.knowledge.iter().filter(|k| !k.cross_plane).count();
+    h.check_abs(
+        "dialogue_only_knowledge_count",
+        dialogue_only as f64,
+        1.0,
+        0.0,
+    );
 }
 
 fn validate_verification_detects_issues(h: &mut ValidationHarness) {
@@ -330,15 +382,21 @@ fn validate_verification_detects_issues(h: &mut ValidationHarness) {
     // Remove an item to trigger inventory issue
     post.inventory.pop();
     let v = verify_transition(&pre, &post, &dialogue_to_tactical_mappings());
-    h.check_bool("detects_missing_inventory", !v.inventory_preserved);
-    h.check_bool("issues_not_empty", !v.issues.is_empty());
+    h.check_bool(
+        "detects_missing_inventory",
+        !v.check_passed(&TransitionIssue::InventoryLost),
+    );
+    h.check_bool("issues_not_empty", !v.passed());
 
     // Change HP to trigger HP issue
     let mut post2 = pre.clone();
     post2.conditions = map_conditions(&pre.conditions, &dialogue_to_tactical_mappings());
     post2.character.hp_current = 10;
     let v2 = verify_transition(&pre, &post2, &dialogue_to_tactical_mappings());
-    h.check_bool("detects_hp_change", !v2.hp_preserved);
+    h.check_bool(
+        "detects_hp_change",
+        !v2.check_passed(&TransitionIssue::HpChanged),
+    );
 }
 
 fn main() {

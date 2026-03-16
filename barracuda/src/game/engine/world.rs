@@ -235,7 +235,10 @@ impl TileWorld {
 
     /// Whether movement from (x,y) in the given direction is possible.
     #[must_use]
-    #[expect(clippy::cast_possible_wrap, reason = "grid coords are small positive numbers")]
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "grid coords are small positive numbers"
+    )]
     #[expect(clippy::cast_sign_loss, reason = "nx,ny validated non-negative above")]
     pub fn can_move(&self, x: u32, y: u32, dir: Direction) -> bool {
         let (dx, dy) = dir.delta();
@@ -251,8 +254,14 @@ impl TileWorld {
 
     /// Apply coordinates after moving in a direction. Returns `None` if blocked.
     #[must_use]
-    #[expect(clippy::cast_possible_wrap, reason = "grid coords are small positive numbers")]
-    #[expect(clippy::cast_sign_loss, reason = "can_move validates result is in bounds")]
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "grid coords are small positive numbers"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "can_move validates result is in bounds"
+    )]
     pub fn move_in(&self, x: u32, y: u32, dir: Direction) -> Option<(u32, u32)> {
         if !self.can_move(x, y, dir) {
             return None;
@@ -284,8 +293,14 @@ impl TileWorld {
     /// Line-of-sight check using Bresenham's algorithm.
     /// Returns `true` if there is a clear line from (x0,y0) to (x1,y1).
     #[must_use]
-    #[expect(clippy::cast_possible_wrap, reason = "grid coords are small positive numbers")]
-    #[expect(clippy::cast_sign_loss, reason = "Bresenham iterates within grid bounds")]
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "grid coords are small positive numbers"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "Bresenham iterates within grid bounds"
+    )]
     pub fn has_line_of_sight(&self, x0: u32, y0: u32, x1: u32, y1: u32) -> bool {
         let (mut cx, mut cy) = (x0 as i32, y0 as i32);
         let (tx, ty) = (x1 as i32, y1 as i32);
@@ -404,10 +419,7 @@ mod tests {
     #[test]
     fn fog_of_war() {
         let mut w = TileWorld::new(10, 10, "Fog Test", Terrain::Open);
-        assert_eq!(
-            w.count_where(|t| t.visibility == Visibility::Hidden),
-            100
-        );
+        assert_eq!(w.count_where(|t| t.visibility == Visibility::Hidden), 100);
 
         w.reveal_radius(5, 5, 2);
         let visible = w.count_where(|t| t.visibility == Visibility::Visible);

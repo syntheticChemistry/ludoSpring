@@ -318,7 +318,10 @@ mod tests {
         // Position is blocked by player
         assert!(reg.is_blocked(5, 5));
         // Lantern doesn't block
-        assert!(!reg.at(5, 5).any(|e| e.kind == EntityKind::Item && e.blocking));
+        assert!(
+            !reg.at(5, 5)
+                .any(|e| e.kind == EntityKind::Item && e.blocking)
+        );
 
         // Range query
         assert_eq!(reg.within_range(5, 5, 1).count(), 3); // all within 1

@@ -78,26 +78,11 @@ fn validate_detection_rates(h: &mut ValidationHarness) {
     let rate_skill_15 = simulate_checks(15, dc, trials);
     let rate_skill_20 = simulate_checks(20, dc, trials);
 
-    h.check_bool(
-        "low_skill_lower_rate",
-        rate_skill_5 < rate_skill_10,
-    );
-    h.check_bool(
-        "mid_skill_lower_than_high",
-        rate_skill_10 < rate_skill_15,
-    );
-    h.check_bool(
-        "high_skill_lower_than_max",
-        rate_skill_15 <= rate_skill_20,
-    );
-    h.check_bool(
-        "max_skill_high_rate",
-        rate_skill_20 > 0.9,
-    );
-    h.check_bool(
-        "low_skill_low_rate",
-        rate_skill_5 < 0.6,
-    );
+    h.check_bool("low_skill_lower_rate", rate_skill_5 < rate_skill_10);
+    h.check_bool("mid_skill_lower_than_high", rate_skill_10 < rate_skill_15);
+    h.check_bool("high_skill_lower_than_max", rate_skill_15 <= rate_skill_20);
+    h.check_bool("max_skill_high_rate", rate_skill_20 > 0.9);
+    h.check_bool("low_skill_low_rate", rate_skill_5 < 0.6);
 
     h.check_bool(
         "monotonic_skill_rate",
@@ -115,14 +100,8 @@ fn validate_dc_affects_rate(h: &mut ValidationHarness) {
     let rate_dc15 = simulate_checks(skill, 15, trials);
     let rate_dc18 = simulate_checks(skill, 18, trials);
 
-    h.check_bool(
-        "higher_dc_lower_rate_12_vs_15",
-        rate_dc12 > rate_dc15,
-    );
-    h.check_bool(
-        "higher_dc_lower_rate_15_vs_18",
-        rate_dc15 > rate_dc18,
-    );
+    h.check_bool("higher_dc_lower_rate_12_vs_15", rate_dc12 > rate_dc15);
+    h.check_bool("higher_dc_lower_rate_15_vs_18", rate_dc15 > rate_dc18);
 }
 
 fn validate_lie_tell_association(h: &mut ValidationHarness) {
@@ -155,7 +134,9 @@ fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
 
     h.check_bool(
         "perception_can_detect_experiments",
-        experiment_lie.detection_skills.contains(&"Perception".into()),
+        experiment_lie
+            .detection_skills
+            .contains(&"Perception".into()),
     );
     h.check_bool(
         "empathy_can_detect_experiments",
@@ -174,37 +155,19 @@ fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
 }
 
 fn validate_voice_check_mechanics(h: &mut ValidationHarness) {
-    let success = VoiceCheckResult::evaluate(
-        VoiceId::Perception,
-        10,
-        10,
-        15,
-        PassiveCheckPriority::High,
-    );
+    let success =
+        VoiceCheckResult::evaluate(VoiceId::Perception, 10, 10, 15, PassiveCheckPriority::High);
     h.check_bool("roll_20_meets_dc_15", success.success);
 
-    let fail = VoiceCheckResult::evaluate(
-        VoiceId::Perception,
-        5,
-        9,
-        15,
-        PassiveCheckPriority::High,
-    );
+    let fail =
+        VoiceCheckResult::evaluate(VoiceId::Perception, 5, 9, 15, PassiveCheckPriority::High);
     h.check_bool("roll_14_fails_dc_15", !fail.success);
 
-    let exact = VoiceCheckResult::evaluate(
-        VoiceId::Empathy,
-        5,
-        10,
-        15,
-        PassiveCheckPriority::Medium,
-    );
+    let exact =
+        VoiceCheckResult::evaluate(VoiceId::Empathy, 5, 10, 15, PassiveCheckPriority::Medium);
     h.check_bool("exact_dc_succeeds", exact.success);
 
-    h.check_bool(
-        "voice_id_preserved",
-        success.voice == VoiceId::Perception,
-    );
+    h.check_bool("voice_id_preserved", success.voice == VoiceId::Perception);
     h.check_bool(
         "priority_preserved",
         success.priority == PassiveCheckPriority::High,

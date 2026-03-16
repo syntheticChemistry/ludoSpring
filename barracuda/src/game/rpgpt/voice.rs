@@ -135,7 +135,13 @@ pub struct VoiceCheckResult {
 impl VoiceCheckResult {
     /// Evaluate a passive voice check.
     #[must_use]
-    pub fn evaluate(voice: VoiceId, skill_modifier: i32, die_roll: i32, dc: u8, priority: PassiveCheckPriority) -> Self {
+    pub fn evaluate(
+        voice: VoiceId,
+        skill_modifier: i32,
+        die_roll: i32,
+        dc: u8,
+        priority: PassiveCheckPriority,
+    ) -> Self {
         let total = die_roll + skill_modifier;
         Self {
             voice,
@@ -231,25 +237,15 @@ mod tests {
 
     #[test]
     fn voice_check_succeeds_when_roll_meets_dc() {
-        let result = VoiceCheckResult::evaluate(
-            VoiceId::Logic,
-            5,
-            10,
-            15,
-            PassiveCheckPriority::High,
-        );
+        let result =
+            VoiceCheckResult::evaluate(VoiceId::Logic, 5, 10, 15, PassiveCheckPriority::High);
         assert!(result.success); // 10 + 5 = 15 >= 15
     }
 
     #[test]
     fn voice_check_fails_when_roll_below_dc() {
-        let result = VoiceCheckResult::evaluate(
-            VoiceId::Logic,
-            5,
-            9,
-            15,
-            PassiveCheckPriority::High,
-        );
+        let result =
+            VoiceCheckResult::evaluate(VoiceId::Logic, 5, 9, 15, PassiveCheckPriority::High);
         assert!(!result.success); // 9 + 5 = 14 < 15
     }
 

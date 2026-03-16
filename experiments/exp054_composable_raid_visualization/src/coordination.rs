@@ -225,20 +225,31 @@ pub fn viz_register(socket_path: &str) -> SongbirdRegisterRequest {
 }
 
 /// Simulate songbird discovery response for `game.player_input`.
+///
+/// Socket paths are derived from the platform's temp directory to avoid
+/// hardcoded `/tmp` references.  In production, songbird resolves these
+/// at runtime via XDG-compliant discovery.
 #[must_use]
 pub fn discover_players() -> SongbirdDiscoverResponse {
+    let base = std::env::temp_dir().join("biomeos");
     SongbirdDiscoverResponse {
         providers: vec![
             SongbirdProvider {
                 primal_id: "ludospring-player1".into(),
                 virtual_endpoint: "/primal/ludospring-player1".into(),
-                native_endpoint: "/tmp/biomeos/ludospring-player1.sock".into(),
+                native_endpoint: base
+                    .join("ludospring-player1.sock")
+                    .to_string_lossy()
+                    .into_owned(),
                 capabilities: vec!["game.player_input".into()],
             },
             SongbirdProvider {
                 primal_id: "ludospring-player2".into(),
                 virtual_endpoint: "/primal/ludospring-player2".into(),
-                native_endpoint: "/tmp/biomeos/ludospring-player2.sock".into(),
+                native_endpoint: base
+                    .join("ludospring-player2.sock")
+                    .to_string_lossy()
+                    .into_owned(),
                 capabilities: vec!["game.player_input".into()],
             },
         ],

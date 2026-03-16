@@ -185,15 +185,9 @@ mod tests {
     fn build_interactions(count: usize) -> Vec<NpcInteraction> {
         (0..count)
             .map(|i| {
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "test value fits in u32"
-                )]
+                #[expect(clippy::cast_possible_truncation, reason = "test value fits in u32")]
                 let session = (i / 5) as u32;
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "test value fits in u32"
-                )]
+                #[expect(clippy::cast_possible_truncation, reason = "test value fits in u32")]
                 let sequence = (i % 5) as u32;
                 NpcInteraction {
                     npc_id: "maren".into(),

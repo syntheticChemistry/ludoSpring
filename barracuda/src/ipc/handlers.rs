@@ -15,7 +15,6 @@ use super::params::{
     PushSceneParams, QueryVerticesParams, RecordActionParams, StorageGetParams, StoragePutParams,
     VoiceCheckParams, WfcStepParams,
 };
-use super::{nestgate, provenance, squirrel};
 use super::results::{
     AccessibilityResult, DifficultyAdjustmentResult, EngagementResult, FittsCostResult, FlowResult,
     NoiseResult, UiAnalysisResult, WfcStepResult,
@@ -27,6 +26,7 @@ use super::{
     METHOD_POLL_TELEMETRY, METHOD_PUSH_SCENE, METHOD_QUERY_VERTICES, METHOD_RECORD_ACTION,
     METHOD_STORAGE_GET, METHOD_STORAGE_PUT, METHOD_VOICE_CHECK, METHOD_WFC_STEP,
 };
+use super::{nestgate, provenance, squirrel};
 
 type HandlerResult = Result<serde_json::Value, JsonRpcError>;
 
@@ -368,8 +368,13 @@ fn handle_complete_session(req: &JsonRpcRequest) -> HandlerResult {
 
 fn handle_npc_dialogue(req: &JsonRpcRequest) -> HandlerResult {
     let p: NpcDialogueParams = parse_params(req)?;
-    let result = squirrel::npc_dialogue(&p.npc_name, &p.personality_prompt, &p.player_input, &p.history)
-        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    let result = squirrel::npc_dialogue(
+        &p.npc_name,
+        &p.personality_prompt,
+        &p.player_input,
+        &p.history,
+    )
+    .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
     to_json(
         &req.id,
         serde_json::json!({
@@ -475,8 +480,7 @@ fn handle_storage_put(req: &JsonRpcRequest) -> HandlerResult {
 
 fn handle_storage_get(req: &JsonRpcRequest) -> HandlerResult {
     let p: StorageGetParams = parse_params(req)?;
-    let result = nestgate::get(&p.key)
-        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    let result = nestgate::get(&p.key).map_err(|e| JsonRpcError::internal(&req.id, &e))?;
     to_json(
         &req.id,
         serde_json::json!({

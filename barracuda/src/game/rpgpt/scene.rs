@@ -432,10 +432,7 @@ mod tests {
             party_x: 10,
             party_y: 8,
         };
-        assert_eq!(
-            map.terrain.len(),
-            (map.width * map.height) as usize
-        );
+        assert_eq!(map.terrain.len(), (map.width * map.height) as usize);
         assert_eq!(map.revealed.len(), map.terrain.len());
     }
 }

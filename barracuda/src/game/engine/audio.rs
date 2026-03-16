@@ -142,24 +142,24 @@ pub fn compile_outcome(
     entities: &super::entity::EntityRegistry,
 ) -> Vec<NarrationCue> {
     let mut cues = Vec::new();
-    let mut ctx = NarrationContext { entities, cues: &mut cues };
+    let mut ctx = NarrationContext {
+        entities,
+        cues: &mut cues,
+    };
     compile_effect_cues(&outcome.effect, outcome.narration.as_deref(), &mut ctx);
     compile_trigger_cues(&outcome.triggers, ctx.cues);
     cues
 }
 
 /// Translate an [`Effect`] into narration cues with entity context.
-fn compile_effect_cues(
-    effect: &Effect,
-    narration: Option<&str>,
-    ctx: &mut NarrationContext<'_>,
-) {
+fn compile_effect_cues(effect: &Effect, narration: Option<&str>, ctx: &mut NarrationContext<'_>) {
     match effect {
         Effect::Moved { entity, to_x, to_y } => {
             compile_movement_cues(*entity, *to_x, *to_y, narration, ctx);
         }
         Effect::DialogueAdvanced { speaker, .. } => {
-            let speaker_name = ctx.entities
+            let speaker_name = ctx
+                .entities
                 .get(*speaker)
                 .map_or_else(|| "Someone".into(), |e| e.name.clone());
             if let Some(text) = narration {
@@ -175,10 +175,7 @@ fn compile_effect_cues(
         }
         Effect::ItemAcquired { item_name, .. } => {
             ctx.cues.push(NarrationCue {
-                text: narration.map_or_else(
-                    || format!("You acquired {item_name}."),
-                    str::to_owned,
-                ),
+                text: narration.map_or_else(|| format!("You acquired {item_name}."), str::to_owned),
                 priority: CuePriority::Normal,
                 speaker: "narrator".into(),
                 spatial: None,
@@ -230,7 +227,8 @@ fn compile_movement_cues(
 
     if let Some(e) = ctx.entities.get(entity) {
         if e.kind == EntityKind::Player {
-            let nearby_npcs: Vec<_> = ctx.entities
+            let nearby_npcs: Vec<_> = ctx
+                .entities
                 .within_range(to_x, to_y, crate::tolerances::NPC_PROXIMITY_TILES)
                 .filter(|n| n.kind == EntityKind::Npc && n.visible)
                 .collect();
@@ -260,7 +258,8 @@ fn compile_damage_cues(
     narration: Option<&str>,
     ctx: &mut NarrationContext<'_>,
 ) {
-    let target_name = ctx.entities
+    let target_name = ctx
+        .entities
         .get(target)
         .map_or_else(|| "Something".into(), |e| e.name.clone());
     ctx.cues.push(NarrationCue {
@@ -358,7 +357,10 @@ fn compile_trigger_cues(triggers: &[TriggerEvent], cues: &mut Vec<NarrationCue>)
 }
 
 /// Derive a direction from one position to another.
-#[expect(clippy::cast_possible_wrap, reason = "grid coords are small positive numbers")]
+#[expect(
+    clippy::cast_possible_wrap,
+    reason = "grid coords are small positive numbers"
+)]
 const fn direction_from_to(from_x: u32, from_y: u32, to_x: u32, to_y: u32) -> Option<Direction> {
     let dx = to_x as i32 - from_x as i32;
     let dy = to_y as i32 - from_y as i32;
@@ -387,7 +389,11 @@ pub fn compile_area_description(
     let mut parts = vec![format!("You are in {}.", world.name)];
 
     let nearby_npcs: Vec<_> = entities
-        .within_range(player_x, player_y, crate::tolerances::AREA_DESCRIPTION_RANGE_TILES)
+        .within_range(
+            player_x,
+            player_y,
+            crate::tolerances::AREA_DESCRIPTION_RANGE_TILES,
+        )
         .filter(|e| e.kind == EntityKind::Npc && e.visible)
         .collect();
 

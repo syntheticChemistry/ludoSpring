@@ -74,11 +74,13 @@ pub fn get_certificate(cert_id: &str) -> Result<ProvenanceResult, String> {
         .capability_call("certificate", "get", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: cert_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: cert_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -98,11 +100,13 @@ pub fn verify_certificate(cert_id: &str) -> Result<ProvenanceResult, String> {
         .capability_call("certificate", "verify", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: cert_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: cert_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -122,11 +126,13 @@ pub fn certificate_lifecycle(cert_id: &str) -> Result<ProvenanceResult, String> 
         .capability_call("certificate", "lifecycle", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: cert_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: cert_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -135,10 +141,7 @@ pub fn certificate_lifecycle(cert_id: &str) -> Result<ProvenanceResult, String> 
 /// # Errors
 ///
 /// Returns an error only on non-recoverable failures.
-pub fn create_spine(
-    owner: &str,
-    metadata: &serde_json::Value,
-) -> Result<ProvenanceResult, String> {
+pub fn create_spine(owner: &str, metadata: &serde_json::Value) -> Result<ProvenanceResult, String> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -231,10 +234,12 @@ pub fn loan_certificate(
         .capability_call("certificate", "loan", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: cert_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: cert_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }

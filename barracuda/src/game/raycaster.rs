@@ -86,11 +86,7 @@ impl From<&super::engine::world::TileWorld> for GridMap {
         let h = world.height();
         let data: Vec<bool> = (0..h)
             .flat_map(|y| {
-                (0..w).map(move |x| {
-                    world
-                        .get(x, y)
-                        .is_some_and(|t| t.terrain.blocks_sight())
-                })
+                (0..w).map(move |x| world.get(x, y).is_some_and(|t| t.terrain.blocks_sight()))
             })
             .collect();
         Self {

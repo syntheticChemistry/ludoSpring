@@ -20,7 +20,10 @@
 //!   8. Composable deployment: IPC wire format for inter-primal orchestration
 
 mod ferment;
-#[allow(dead_code)] // wire format types for IPC contract — constructed by remote callers
+#[expect(
+    dead_code,
+    reason = "wire format types for IPC contract — constructed by remote callers, not locally"
+)]
 mod protocol;
 mod validate_objects;
 mod validate_systems;

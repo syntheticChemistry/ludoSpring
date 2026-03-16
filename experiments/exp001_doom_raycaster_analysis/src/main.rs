@@ -9,33 +9,29 @@
 //!
 //! # Provenance
 //!
-//! Raycaster geometry: analytical. Fitts: `MacKenzie` (1992).
+//! Raycaster geometry: analytical (enclosed arena, known wall distances).
+//! Fitts: MacKenzie (1992) — `a=50, b=150` mouse parameters.
 //! Tufte thresholds: Tufte (1983), Fagerholt & Lorentzon (2009).
-//! Python baseline: `baselines/python/interaction_laws.py` (2026-03-11).
+//! Python baseline: `baselines/python/interaction_laws.py` commit 74cf9488, 2026-03-15.
 
 use ludospring_barracuda::game::raycaster::{GridMap, RayPlayer, cast_screen};
 use ludospring_barracuda::interaction::input_laws::fitts_movement_time;
 use ludospring_barracuda::metrics::tufte_gaming::{UiElement, analyze_game_ui};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.6}, want={:.6}, tol={:.6})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/interaction_laws.py",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "python3 baselines/python/run_all_baselines.py",
+};
 
 #[expect(
     clippy::cast_precision_loss,
     reason = "hit_count ≤ 320; fits in f64 mantissa"
 )]
-fn validate_raycaster(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Raycaster DDA validation");
+fn validate_raycaster(h: &mut ValidationHarness) {
     let map = GridMap::from_nested(&[
         vec![true; 8],
         vec![true, false, false, false, false, false, false, true],
@@ -56,35 +52,25 @@ fn validate_raycaster(results: &mut Vec<ValidationResult>) {
     let hits = cast_screen(&player, 320, &map, 20.0);
     let hit_count = hits.iter().filter(|h| h.is_some()).count();
 
-    let r = ValidationResult::check(
-        "exp001_hit_rate",
-        ">=300/320 rays hit enclosed arena",
+    h.check_lower(
+        "hit_rate >= 300/320 in enclosed arena",
         hit_count as f64,
-        320.0,
-        20.0,
+        300.0,
     );
-    report(&r);
-    results.push(r);
 
     if let Some(center) = &hits[160] {
-        let r = ValidationResult::check(
-            "exp001_center_ray",
-            "center ray dist to east wall ~3.0",
+        h.check_abs(
+            "center_ray_dist_to_east_wall ~3.0",
             center.distance,
             3.0,
             tolerances::RAYCASTER_DISTANCE_TOL,
         );
-        report(&r);
-        results.push(r);
     } else {
-        let r = ValidationResult::check("exp001_center_ray", "center ray hit", 0.0, 1.0, 0.0);
-        report(&r);
-        results.push(r);
+        h.check_bool("center_ray_hit", false);
     }
 }
 
-fn validate_tufte(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Doom HUD Tufte analysis");
+fn validate_tufte(h: &mut ValidationHarness) {
     let doom_hud = vec![
         UiElement {
             name: "health".into(),
@@ -129,39 +115,28 @@ fn validate_tufte(results: &mut Vec<ValidationResult>) {
     ];
     let ui = analyze_game_ui(&doom_hud);
 
-    let r = ValidationResult::check(
-        "exp001_data_ink",
-        "Doom HUD data-ink ~0.125 (chartjunk-heavy)",
+    h.check_abs(
+        "doom_hud_data_ink ~0.125 (chartjunk-heavy)",
         ui.data_ink_ratio,
         0.125,
-        0.05,
+        tolerances::UI_DATA_INK_TOL,
     );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp001_coverage",
-        "Doom HUD ~11% screen coverage",
+    h.check_abs(
+        "doom_hud ~11% screen coverage",
         ui.screen_coverage,
         0.114,
-        0.02,
+        tolerances::UI_COVERAGE_TOL,
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_fitts(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Fitts's law targeting");
+fn validate_fitts(h: &mut ValidationHarness) {
     let mt = fitts_movement_time(100.0, 10.0, 50.0, 150.0);
-    let r = ValidationResult::check(
-        "exp001_fitts",
-        "Fitts MT D=100 W=10 (MacKenzie 1992, Python baseline)",
+    h.check_abs(
+        "fitts MT D=100 W=10 (MacKenzie 1992, Python baseline)",
         mt,
         708.847_613_416_814,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
 
     let mt_barrel = fitts_movement_time(
         50.0,
@@ -170,29 +145,21 @@ fn validate_fitts(results: &mut Vec<ValidationResult>) {
         tolerances::FITTS_B_MOUSE_MS,
     );
     let expected = 150.0_f64.mul_add((2.0 * 50.0 / 30.0 + 1.0_f64).log2(), 50.0);
-    let r = ValidationResult::check(
-        "exp001_fitts_barrel",
-        "Fitts MT barrel D=50 W=30",
+    h.check_abs(
+        "fitts MT barrel D=50 W=30",
         mt_barrel,
         expected,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp001: Doom Raycaster Analysis (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp001_doom_raycaster_analysis");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_raycaster(&mut results);
-    validate_tufte(&mut results);
-    validate_fitts(&mut results);
+    validate_raycaster(&mut h);
+    validate_tufte(&mut h);
+    validate_fitts(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

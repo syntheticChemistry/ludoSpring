@@ -27,7 +27,11 @@ pub struct StorageResult {
 /// # Errors
 ///
 /// Returns an error only on non-recoverable failures.
-pub fn put(key: &str, value: &serde_json::Value, metadata: &serde_json::Value) -> Result<StorageResult, String> {
+pub fn put(
+    key: &str,
+    value: &serde_json::Value,
+    metadata: &serde_json::Value,
+) -> Result<StorageResult, String> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };
@@ -38,10 +42,17 @@ pub fn put(key: &str, value: &serde_json::Value, metadata: &serde_json::Value) -
         "metadata": metadata,
     });
 
-    bridge.capability_call("storage", "store", &args).map_or_else(
-        |_| Ok(unavailable()),
-        |result| Ok(StorageResult { available: true, data: result }),
-    )
+    bridge
+        .capability_call("storage", "store", &args)
+        .map_or_else(
+            |_| Ok(unavailable()),
+            |result| {
+                Ok(StorageResult {
+                    available: true,
+                    data: result,
+                })
+            },
+        )
 }
 
 /// Retrieve a value from NestGate by key.
@@ -56,10 +67,17 @@ pub fn get(key: &str) -> Result<StorageResult, String> {
 
     let args = serde_json::json!({ "key": key });
 
-    bridge.capability_call("storage", "retrieve", &args).map_or_else(
-        |_| Ok(unavailable()),
-        |result| Ok(StorageResult { available: true, data: result }),
-    )
+    bridge
+        .capability_call("storage", "retrieve", &args)
+        .map_or_else(
+            |_| Ok(unavailable()),
+            |result| {
+                Ok(StorageResult {
+                    available: true,
+                    data: result,
+                })
+            },
+        )
 }
 
 /// Check whether a key exists in NestGate without retrieving data.
@@ -77,7 +95,10 @@ pub fn exists(key: &str) -> Result<bool, String> {
     bridge
         .capability_call("storage", "exists", &args)
         .map_or(Ok(false), |result| {
-            Ok(result.get("exists").and_then(serde_json::Value::as_bool).unwrap_or(false))
+            Ok(result
+                .get("exists")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false))
         })
 }
 
@@ -96,10 +117,17 @@ pub fn list(prefix: Option<&str>) -> Result<StorageResult, String> {
         |p| serde_json::json!({ "prefix": p }),
     );
 
-    bridge.capability_call("storage", "list", &args).map_or_else(
-        |_| Ok(unavailable()),
-        |result| Ok(StorageResult { available: true, data: result }),
-    )
+    bridge
+        .capability_call("storage", "list", &args)
+        .map_or_else(
+            |_| Ok(unavailable()),
+            |result| {
+                Ok(StorageResult {
+                    available: true,
+                    data: result,
+                })
+            },
+        )
 }
 
 /// Retrieve metadata for a stored object without fetching its data.
@@ -114,10 +142,17 @@ pub fn metadata(key: &str) -> Result<StorageResult, String> {
 
     let args = serde_json::json!({ "key": key });
 
-    bridge.capability_call("storage", "metadata", &args).map_or_else(
-        |_| Ok(unavailable()),
-        |result| Ok(StorageResult { available: true, data: result }),
-    )
+    bridge
+        .capability_call("storage", "metadata", &args)
+        .map_or_else(
+            |_| Ok(unavailable()),
+            |result| {
+                Ok(StorageResult {
+                    available: true,
+                    data: result,
+                })
+            },
+        )
 }
 
 /// Delete a stored object by key.
@@ -132,10 +167,17 @@ pub fn delete(key: &str) -> Result<StorageResult, String> {
 
     let args = serde_json::json!({ "key": key });
 
-    bridge.capability_call("storage", "delete", &args).map_or_else(
-        |_| Ok(unavailable()),
-        |result| Ok(StorageResult { available: true, data: result }),
-    )
+    bridge
+        .capability_call("storage", "delete", &args)
+        .map_or_else(
+            |_| Ok(unavailable()),
+            |result| {
+                Ok(StorageResult {
+                    available: true,
+                    data: result,
+                })
+            },
+        )
 }
 
 fn unavailable() -> StorageResult {
@@ -151,7 +193,12 @@ mod tests {
 
     #[test]
     fn put_without_neural_api() {
-        let r = put("test-key", &serde_json::json!({"hp": 100}), &serde_json::json!({"type": "character"})).unwrap();
+        let r = put(
+            "test-key",
+            &serde_json::json!({"hp": 100}),
+            &serde_json::json!({"type": "character"}),
+        )
+        .unwrap();
         assert!(!r.available);
     }
 

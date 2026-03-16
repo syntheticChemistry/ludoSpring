@@ -86,10 +86,7 @@ pub fn npc_dialogue(
 /// # Errors
 ///
 /// Returns an error only on non-recoverable failures.
-pub fn narrate_action(
-    action_description: &str,
-    context: &str,
-) -> Result<SquirrelResult, String> {
+pub fn narrate_action(action_description: &str, context: &str) -> Result<SquirrelResult, String> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — narration unavailable"));
     };
@@ -104,19 +101,17 @@ pub fn narrate_action(
         "metadata": { "domain": "game", "type": "narration" },
     });
 
-    bridge
-        .capability_call("ai", "suggest", &args)
-        .map_or_else(
-            |_| Ok(unavailable("Squirrel ai.suggest unavailable")),
-            |result| {
-                let text = extract_text(&result);
-                Ok(SquirrelResult {
-                    text,
-                    available: true,
-                    data: result,
-                })
-            },
-        )
+    bridge.capability_call("ai", "suggest", &args).map_or_else(
+        |_| Ok(unavailable("Squirrel ai.suggest unavailable")),
+        |result| {
+            let text = extract_text(&result);
+            Ok(SquirrelResult {
+                text,
+                available: true,
+                data: result,
+            })
+        },
+    )
 }
 
 /// Generate internal voice output via `ai.analyze`, constrained by voice personality.
@@ -142,19 +137,17 @@ pub fn voice_check(
         "metadata": { "domain": "game", "type": "voice", "voice": voice_name },
     });
 
-    bridge
-        .capability_call("ai", "analyze", &args)
-        .map_or_else(
-            |_| Ok(unavailable("Squirrel ai.analyze unavailable")),
-            |result| {
-                let text = extract_text(&result);
-                Ok(SquirrelResult {
-                    text,
-                    available: true,
-                    data: result,
-                })
-            },
-        )
+    bridge.capability_call("ai", "analyze", &args).map_or_else(
+        |_| Ok(unavailable("Squirrel ai.analyze unavailable")),
+        |result| {
+            let text = extract_text(&result);
+            Ok(SquirrelResult {
+                text,
+                available: true,
+                data: result,
+            })
+        },
+    )
 }
 
 /// Create a new context window in Squirrel for NPC memory.
@@ -210,11 +203,13 @@ pub fn context_update(context_id: &str, content: &str) -> Result<SquirrelResult,
         .capability_call("context", "update", &args)
         .map_or_else(
             |_| Ok(unavailable("Squirrel context.update unavailable")),
-            |result| Ok(SquirrelResult {
-                text: String::new(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(SquirrelResult {
+                    text: String::new(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 

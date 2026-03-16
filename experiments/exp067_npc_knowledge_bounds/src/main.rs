@@ -17,6 +17,7 @@
 use ludospring_barracuda::game::rpgpt::knowledge::{
     KnowledgeBounds, KnowledgeQueryResult, LieTopic, Suspicion,
 };
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::ValidationHarness;
 
 const EXP: &str = "exp067_npc_knowledge_bounds";
@@ -160,11 +161,14 @@ fn validate_maren(h: &mut ValidationHarness) {
     );
 
     let ore_suspicion = kb.get_suspicion("strange ore").expect("suspicion exists");
-    h.check_abs("maren_ore_confidence", ore_suspicion.confidence, 0.6, 0.01);
+    h.check_abs(
+        "maren_ore_confidence",
+        ore_suspicion.confidence,
+        0.6,
+        tolerances::GAME_STATE_TOL,
+    );
 
-    let master_suspicion = kb
-        .get_suspicion("old master")
-        .expect("suspicion exists");
+    let master_suspicion = kb.get_suspicion("old master").expect("suspicion exists");
     h.check_abs(
         "maren_master_confidence",
         master_suspicion.confidence,
@@ -182,7 +186,12 @@ fn validate_maren(h: &mut ValidationHarness) {
     );
 
     let exp_lie = kb.get_lie("experiments").expect("lie exists");
-    h.check_abs("maren_experiment_dc", f64::from(exp_lie.detection_dc), 15.0, 0.0);
+    h.check_abs(
+        "maren_experiment_dc",
+        f64::from(exp_lie.detection_dc),
+        15.0,
+        0.0,
+    );
     h.check_bool(
         "maren_experiment_tell_mentions_scars",
         exp_lie.tell.contains("burn scars"),
@@ -195,7 +204,12 @@ fn validate_maren(h: &mut ValidationHarness) {
     );
 
     let cellar_lie = kb.get_lie("cellar").expect("lie exists");
-    h.check_abs("maren_cellar_dc", f64::from(cellar_lie.detection_dc), 12.0, 0.0);
+    h.check_abs(
+        "maren_cellar_dc",
+        f64::from(cellar_lie.detection_dc),
+        12.0,
+        0.0,
+    );
     h.check_bool(
         "maren_cellar_dc_lower_than_experiment",
         cellar_lie.detection_dc < exp_lie.detection_dc,
@@ -284,14 +298,15 @@ fn validate_multi_npc(h: &mut ValidationHarness) {
     );
 
     let prof_lie = professor.get_lie("research").expect("lie exists");
-    h.check_abs("professor_research_dc", f64::from(prof_lie.detection_dc), 10.0, 0.0);
+    h.check_abs(
+        "professor_research_dc",
+        f64::from(prof_lie.detection_dc),
+        10.0,
+        0.0,
+    );
     h.check_bool(
         "professor_research_dc_lower_than_sheriff",
-        prof_lie.detection_dc
-            < sheriff
-                .get_lie("family")
-                .expect("lie exists")
-                .detection_dc,
+        prof_lie.detection_dc < sheriff.get_lie("family").expect("lie exists").detection_dc,
     );
 }
 
@@ -300,9 +315,24 @@ fn validate_totals(h: &mut ValidationHarness) {
     let sheriff = sheriff_knowledge();
     let professor = professor_knowledge();
 
-    h.check_abs("maren_total_entries", maren.total_entries() as f64, 13.0, 0.0);
-    h.check_abs("sheriff_total_entries", sheriff.total_entries() as f64, 7.0, 0.0);
-    h.check_abs("professor_total_entries", professor.total_entries() as f64, 6.0, 0.0);
+    h.check_abs(
+        "maren_total_entries",
+        maren.total_entries() as f64,
+        13.0,
+        0.0,
+    );
+    h.check_abs(
+        "sheriff_total_entries",
+        sheriff.total_entries() as f64,
+        7.0,
+        0.0,
+    );
+    h.check_abs(
+        "professor_total_entries",
+        professor.total_entries() as f64,
+        6.0,
+        0.0,
+    );
 }
 
 fn main() {

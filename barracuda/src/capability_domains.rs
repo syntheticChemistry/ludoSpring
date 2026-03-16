@@ -31,38 +31,132 @@ pub struct Method {
 }
 
 /// All domains exposed by ludoSpring.
-pub const DOMAINS: &[Domain] = &[
-    Domain {
-        prefix: "game",
-        description: "Game science — HCI models, flow, engagement, procedural generation",
-        methods: &[
-            Method { name: "evaluate_flow", fqn: "game.evaluate_flow", external: false },
-            Method { name: "fitts_cost", fqn: "game.fitts_cost", external: false },
-            Method { name: "engagement", fqn: "game.engagement", external: false },
-            Method { name: "analyze_ui", fqn: "game.analyze_ui", external: false },
-            Method { name: "accessibility", fqn: "game.accessibility", external: false },
-            Method { name: "wfc_step", fqn: "game.wfc_step", external: false },
-            Method { name: "difficulty_adjustment", fqn: "game.difficulty_adjustment", external: false },
-            Method { name: "generate_noise", fqn: "game.generate_noise", external: false },
-            Method { name: "begin_session", fqn: "game.begin_session", external: true },
-            Method { name: "record_action", fqn: "game.record_action", external: true },
-            Method { name: "complete_session", fqn: "game.complete_session", external: true },
-            Method { name: "poll_telemetry", fqn: "game.poll_telemetry", external: false },
-            Method { name: "npc_dialogue", fqn: "game.npc_dialogue", external: true },
-            Method { name: "narrate_action", fqn: "game.narrate_action", external: true },
-            Method { name: "voice_check", fqn: "game.voice_check", external: true },
-            Method { name: "push_scene", fqn: "game.push_scene", external: true },
-            Method { name: "query_vertices", fqn: "game.query_vertices", external: true },
-            Method { name: "mint_certificate", fqn: "game.mint_certificate", external: true },
-            Method { name: "storage_put", fqn: "game.storage_put", external: true },
-            Method { name: "storage_get", fqn: "game.storage_get", external: true },
-            Method { name: "gpu.fog_of_war", fqn: "game.gpu.fog_of_war", external: true },
-            Method { name: "gpu.tile_lighting", fqn: "game.gpu.tile_lighting", external: true },
-            Method { name: "gpu.pathfind", fqn: "game.gpu.pathfind", external: true },
-            Method { name: "gpu.perlin_terrain", fqn: "game.gpu.perlin_terrain", external: true },
-        ],
-    },
-];
+pub const DOMAINS: &[Domain] = &[Domain {
+    prefix: "game",
+    description: "Game science — HCI models, flow, engagement, procedural generation",
+    methods: &[
+        Method {
+            name: "evaluate_flow",
+            fqn: "game.evaluate_flow",
+            external: false,
+        },
+        Method {
+            name: "fitts_cost",
+            fqn: "game.fitts_cost",
+            external: false,
+        },
+        Method {
+            name: "engagement",
+            fqn: "game.engagement",
+            external: false,
+        },
+        Method {
+            name: "analyze_ui",
+            fqn: "game.analyze_ui",
+            external: false,
+        },
+        Method {
+            name: "accessibility",
+            fqn: "game.accessibility",
+            external: false,
+        },
+        Method {
+            name: "wfc_step",
+            fqn: "game.wfc_step",
+            external: false,
+        },
+        Method {
+            name: "difficulty_adjustment",
+            fqn: "game.difficulty_adjustment",
+            external: false,
+        },
+        Method {
+            name: "generate_noise",
+            fqn: "game.generate_noise",
+            external: false,
+        },
+        Method {
+            name: "begin_session",
+            fqn: "game.begin_session",
+            external: true,
+        },
+        Method {
+            name: "record_action",
+            fqn: "game.record_action",
+            external: true,
+        },
+        Method {
+            name: "complete_session",
+            fqn: "game.complete_session",
+            external: true,
+        },
+        Method {
+            name: "poll_telemetry",
+            fqn: "game.poll_telemetry",
+            external: false,
+        },
+        Method {
+            name: "npc_dialogue",
+            fqn: "game.npc_dialogue",
+            external: true,
+        },
+        Method {
+            name: "narrate_action",
+            fqn: "game.narrate_action",
+            external: true,
+        },
+        Method {
+            name: "voice_check",
+            fqn: "game.voice_check",
+            external: true,
+        },
+        Method {
+            name: "push_scene",
+            fqn: "game.push_scene",
+            external: true,
+        },
+        Method {
+            name: "query_vertices",
+            fqn: "game.query_vertices",
+            external: true,
+        },
+        Method {
+            name: "mint_certificate",
+            fqn: "game.mint_certificate",
+            external: true,
+        },
+        Method {
+            name: "storage_put",
+            fqn: "game.storage_put",
+            external: true,
+        },
+        Method {
+            name: "storage_get",
+            fqn: "game.storage_get",
+            external: true,
+        },
+        Method {
+            name: "gpu.fog_of_war",
+            fqn: "game.gpu.fog_of_war",
+            external: true,
+        },
+        Method {
+            name: "gpu.tile_lighting",
+            fqn: "game.gpu.tile_lighting",
+            external: true,
+        },
+        Method {
+            name: "gpu.pathfind",
+            fqn: "game.gpu.pathfind",
+            external: true,
+        },
+        Method {
+            name: "gpu.perlin_terrain",
+            fqn: "game.gpu.perlin_terrain",
+            external: true,
+        },
+    ],
+}];
 
 /// Valid domain prefixes for method validation.
 pub const VALID_DOMAIN_PREFIXES: &[&str] = &["game"];

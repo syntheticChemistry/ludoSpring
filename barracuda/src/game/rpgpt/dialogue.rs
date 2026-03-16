@@ -219,7 +219,11 @@ impl DialogueFlowTracker {
         if self.exchanges.is_empty() {
             return 0.0;
         }
-        let total: u32 = self.exchanges.iter().map(|e| u32::from(e.options_count)).sum();
+        let total: u32 = self
+            .exchanges
+            .iter()
+            .map(|e| u32::from(e.options_count))
+            .sum();
         #[expect(clippy::cast_precision_loss, reason = "exchange counts fit in f64")]
         {
             f64::from(total) / self.exchanges.len() as f64
@@ -229,14 +233,26 @@ impl DialogueFlowTracker {
     /// Success rate across exchanges with checks.
     #[must_use]
     pub fn success_rate(&self) -> f64 {
-        let checks: Vec<&DialogueExchange> =
-            self.exchanges.iter().filter(|e| e.degree.is_some()).collect();
+        let checks: Vec<&DialogueExchange> = self
+            .exchanges
+            .iter()
+            .filter(|e| e.degree.is_some())
+            .collect();
         if checks.is_empty() {
             return 0.0;
         }
         let successes = checks
             .iter()
-            .filter(|e| matches!(e.degree, Some(DegreeOfSuccess::Success | DegreeOfSuccess::CriticalSuccess | DegreeOfSuccess::PartialSuccess)))
+            .filter(|e| {
+                matches!(
+                    e.degree,
+                    Some(
+                        DegreeOfSuccess::Success
+                            | DegreeOfSuccess::CriticalSuccess
+                            | DegreeOfSuccess::PartialSuccess
+                    )
+                )
+            })
             .count();
         #[expect(clippy::cast_precision_loss, reason = "counts fit in f64")]
         {

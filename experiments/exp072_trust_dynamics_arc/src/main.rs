@@ -18,6 +18,7 @@ use ludospring_barracuda::game::rpgpt::npc::{
     NpcSecret, NpcVoice, Relationship, RelationshipType,
 };
 use ludospring_barracuda::game::rpgpt::trust::{TrustAction, TrustModel};
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::ValidationHarness;
 
 const EXP: &str = "exp072_trust_dynamics_arc";
@@ -140,10 +141,16 @@ fn maren() -> NpcPersonality {
 fn validate_initial_state(h: &mut ValidationHarness) {
     let npc = maren();
     h.check_abs("initial_trust_zero", npc.trust.current_trust(), 0.0, 0.0);
-    h.check_abs("initial_trust_level_zero", f64::from(npc.trust.current_level()), 0.0, 0.0);
+    h.check_abs(
+        "initial_trust_level_zero",
+        f64::from(npc.trust.current_level()),
+        0.0,
+        0.0,
+    );
     h.check_bool(
         "initial_arc_internal_conflict",
-        npc.current_arc_phase().is_some_and(|p| p.id == "internal_conflict"),
+        npc.current_arc_phase()
+            .is_some_and(|p| p.id == "internal_conflict"),
     );
     h.check_bool(
         "initial_effect_professional",
@@ -160,8 +167,18 @@ fn validate_trust_accumulation(h: &mut ValidationHarness) {
     // Session 2: Bring rare materials (+0.5) + Defend reputation (+1.0) = 1.5
     npc.trust.apply_delta("Bring rare materials", 0.5);
     npc.trust.apply_delta("Defend reputation", 1.0);
-    h.check_abs("session2_trust", npc.trust.current_trust(), 1.5, 0.01);
-    h.check_abs("session2_level", f64::from(npc.trust.current_level()), 1.0, 0.0);
+    h.check_abs(
+        "session2_trust",
+        npc.trust.current_trust(),
+        1.5,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "session2_level",
+        f64::from(npc.trust.current_level()),
+        1.0,
+        0.0,
+    );
     h.check_bool(
         "session2_effect_warmer",
         npc.trust.current_effect().contains("Warmer"),
@@ -169,14 +186,34 @@ fn validate_trust_accumulation(h: &mut ValidationHarness) {
 
     // Session 3: Help with experiments (+1.0) = 2.5
     npc.trust.apply_delta("Help with experiments", 1.0);
-    h.check_abs("session3_trust", npc.trust.current_trust(), 2.5, 0.01);
-    h.check_abs("session3_level", f64::from(npc.trust.current_level()), 2.0, 0.0);
+    h.check_abs(
+        "session3_trust",
+        npc.trust.current_trust(),
+        2.5,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "session3_level",
+        f64::from(npc.trust.current_level()),
+        2.0,
+        0.0,
+    );
 
     // Session 4: Keep secret (+0.5) + More help (+1.0) = 4.0
     npc.trust.apply_delta("Keep her secret", 0.5);
     npc.trust.apply_delta("Help with experiments", 1.0);
-    h.check_abs("session4_trust", npc.trust.current_trust(), 4.0, 0.01);
-    h.check_abs("session4_level", f64::from(npc.trust.current_level()), 4.0, 0.0);
+    h.check_abs(
+        "session4_trust",
+        npc.trust.current_trust(),
+        4.0,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "session4_level",
+        f64::from(npc.trust.current_level()),
+        4.0,
+        0.0,
+    );
     h.check_bool(
         "session4_effect_journal",
         npc.trust.current_effect().contains("journal"),
@@ -186,13 +223,31 @@ fn validate_trust_accumulation(h: &mut ValidationHarness) {
 fn validate_trust_gates_secrets(h: &mut ValidationHarness) {
     let npc = maren();
 
-    h.check_bool("workshop_hidden_at_trust_0", !npc.can_reveal_secret("hidden_workshop", 0));
-    h.check_bool("workshop_hidden_at_trust_2", !npc.can_reveal_secret("hidden_workshop", 2));
-    h.check_bool("workshop_revealed_at_trust_3", npc.can_reveal_secret("hidden_workshop", 3));
-    h.check_bool("workshop_revealed_at_trust_5", npc.can_reveal_secret("hidden_workshop", 5));
+    h.check_bool(
+        "workshop_hidden_at_trust_0",
+        !npc.can_reveal_secret("hidden_workshop", 0),
+    );
+    h.check_bool(
+        "workshop_hidden_at_trust_2",
+        !npc.can_reveal_secret("hidden_workshop", 2),
+    );
+    h.check_bool(
+        "workshop_revealed_at_trust_3",
+        npc.can_reveal_secret("hidden_workshop", 3),
+    );
+    h.check_bool(
+        "workshop_revealed_at_trust_5",
+        npc.can_reveal_secret("hidden_workshop", 5),
+    );
 
-    h.check_bool("journal_hidden_at_trust_3", !npc.can_reveal_secret("masters_journal", 3));
-    h.check_bool("journal_revealed_at_trust_4", npc.can_reveal_secret("masters_journal", 4));
+    h.check_bool(
+        "journal_hidden_at_trust_3",
+        !npc.can_reveal_secret("masters_journal", 3),
+    );
+    h.check_bool(
+        "journal_revealed_at_trust_4",
+        npc.can_reveal_secret("masters_journal", 4),
+    );
 }
 
 fn validate_betrayal_asymmetry(h: &mut ValidationHarness) {
@@ -211,10 +266,7 @@ fn validate_betrayal_asymmetry(h: &mut ValidationHarness) {
         .map(|a| a.delta.abs())
         .fold(0.0_f64, f64::max);
 
-    h.check_bool(
-        "betrayal_larger_than_help",
-        max_negative > max_positive,
-    );
+    h.check_bool("betrayal_larger_than_help", max_negative > max_positive);
     h.check_abs("max_positive_action", max_positive, 1.0, 0.0);
     h.check_abs("max_negative_action", max_negative, 5.0, 0.0);
 
@@ -222,11 +274,21 @@ fn validate_betrayal_asymmetry(h: &mut ValidationHarness) {
     let mut npc = maren();
     npc.trust.apply_delta("Defend reputation", 1.0);
     npc.trust.apply_delta("Help with experiments", 1.0);
-    h.check_abs("pre_betrayal_trust", npc.trust.current_trust(), 2.0, 0.01);
+    h.check_abs(
+        "pre_betrayal_trust",
+        npc.trust.current_trust(),
+        2.0,
+        tolerances::GAME_STATE_TOL,
+    );
 
     npc.trust.apply_delta("Betray confidence to guild", -5.0);
     h.check_bool("betrayal_devastating", npc.trust.current_trust() < 0.0);
-    h.check_abs("betrayal_level_zero", f64::from(npc.trust.current_level()), 0.0, 0.0);
+    h.check_abs(
+        "betrayal_level_zero",
+        f64::from(npc.trust.current_level()),
+        0.0,
+        0.0,
+    );
 }
 
 fn validate_arc_progression(h: &mut ValidationHarness) {
@@ -236,13 +298,22 @@ fn validate_arc_progression(h: &mut ValidationHarness) {
     h.check_abs("three_arc_phases", npc.arc.len() as f64, 3.0, 0.0);
 
     // Conformity completed
-    h.check_bool("conformity_completed", npc.arc[0].status == ArcPhaseStatus::Completed);
+    h.check_bool(
+        "conformity_completed",
+        npc.arc[0].status == ArcPhaseStatus::Completed,
+    );
 
     // Internal conflict active
-    h.check_bool("internal_conflict_active", npc.arc[1].status == ArcPhaseStatus::Active);
+    h.check_bool(
+        "internal_conflict_active",
+        npc.arc[1].status == ArcPhaseStatus::Active,
+    );
 
     // Revelation pending
-    h.check_bool("revelation_pending", npc.arc[2].status == ArcPhaseStatus::Pending);
+    h.check_bool(
+        "revelation_pending",
+        npc.arc[2].status == ArcPhaseStatus::Pending,
+    );
 
     // Internal conflict has triggers
     h.check_bool(
@@ -274,16 +345,17 @@ fn validate_quorum_threshold(h: &mut ValidationHarness) {
         .copied()
         .collect();
 
-    h.check_abs("npcs_above_threshold", above_threshold.len() as f64, 2.0, 0.0);
+    h.check_abs(
+        "npcs_above_threshold",
+        above_threshold.len() as f64,
+        2.0,
+        0.0,
+    );
 
     let quorum_reached = above_threshold.len() >= 2;
     h.check_bool("quorum_reached_with_2", quorum_reached);
 
-    let quorum_not_reached = [0.4, 0.3, 0.5]
-        .iter()
-        .filter(|&&v| v >= threshold)
-        .count()
-        >= 2;
+    let quorum_not_reached = [0.4, 0.3, 0.5].iter().filter(|&&v| v >= threshold).count() >= 2;
     h.check_bool("quorum_not_reached_below", !quorum_not_reached);
 }
 
@@ -296,13 +368,43 @@ fn validate_trust_history(h: &mut ValidationHarness) {
     h.check_abs("history_length", npc.trust.history_len() as f64, 3.0, 0.0);
 
     let history = npc.trust.history();
-    h.check_abs("first_delta", history[0].delta, 0.5, 0.01);
-    h.check_abs("second_delta", history[1].delta, 1.0, 0.01);
-    h.check_abs("third_delta", history[2].delta, -2.0, 0.01);
+    h.check_abs(
+        "first_delta",
+        history[0].delta,
+        0.5,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "second_delta",
+        history[1].delta,
+        1.0,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "third_delta",
+        history[2].delta,
+        -2.0,
+        tolerances::GAME_STATE_TOL,
+    );
 
-    h.check_abs("trust_after_first", history[0].trust_after, 0.5, 0.01);
-    h.check_abs("trust_after_second", history[1].trust_after, 1.5, 0.01);
-    h.check_abs("trust_after_third", history[2].trust_after, -0.5, 0.01);
+    h.check_abs(
+        "trust_after_first",
+        history[0].trust_after,
+        0.5,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "trust_after_second",
+        history[1].trust_after,
+        1.5,
+        tolerances::GAME_STATE_TOL,
+    );
+    h.check_abs(
+        "trust_after_third",
+        history[2].trust_after,
+        -0.5,
+        tolerances::GAME_STATE_TOL,
+    );
 }
 
 fn validate_motivation_drives_behavior(h: &mut ValidationHarness) {
@@ -310,11 +412,13 @@ fn validate_motivation_drives_behavior(h: &mut ValidationHarness) {
     let (active, urgency) = npc.active_need();
 
     h.check_bool("active_need_is_esteem", active == "esteem");
-    h.check_abs("esteem_urgency", urgency, 0.8, 0.01);
+    h.check_abs("esteem_urgency", urgency, 0.8, tolerances::GAME_STATE_TOL);
 
     h.check_bool(
         "has_esteem_safety_conflict",
-        npc.motivation_conflicts.iter().any(|c| c.need_a == "esteem" && c.need_b == "safety"),
+        npc.motivation_conflicts
+            .iter()
+            .any(|c| c.need_a == "esteem" && c.need_b == "safety"),
     );
 }
 

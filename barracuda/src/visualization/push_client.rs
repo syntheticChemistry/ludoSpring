@@ -216,11 +216,7 @@ impl VisualizationPushClient {
     /// # Errors
     ///
     /// Returns an error string if the connection or RPC call fails.
-    pub fn export(
-        &self,
-        session_id: &str,
-        modality: &str,
-    ) -> Result<serde_json::Value, String> {
+    pub fn export(&self, session_id: &str, modality: &str) -> Result<serde_json::Value, String> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.export",
@@ -238,10 +234,7 @@ impl VisualizationPushClient {
     /// # Errors
     ///
     /// Returns an error string if the connection or RPC call fails.
-    pub fn subscribe_interaction(
-        &self,
-        session_id: &str,
-    ) -> Result<serde_json::Value, String> {
+    pub fn subscribe_interaction(&self, session_id: &str) -> Result<serde_json::Value, String> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "interaction.subscribe",
@@ -259,10 +252,7 @@ impl VisualizationPushClient {
     /// # Errors
     ///
     /// Returns an error string if the connection or RPC call fails.
-    pub fn validate(
-        &self,
-        bindings: &serde_json::Value,
-    ) -> Result<serde_json::Value, String> {
+    pub fn validate(&self, bindings: &serde_json::Value) -> Result<serde_json::Value, String> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.validate",
@@ -317,7 +307,9 @@ impl VisualizationPushClient {
         let entries = std::fs::read_dir(dir).ok()?;
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().is_some_and(|ext| ext == "sock") && Self::probe_with_capability(&path) {
+            if path.extension().is_some_and(|ext| ext == "sock")
+                && Self::probe_with_capability(&path)
+            {
                 return Some(path);
             }
         }

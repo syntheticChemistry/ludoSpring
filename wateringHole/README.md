@@ -24,12 +24,12 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V20** | [LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md) | Mar 16 | Deep primal integration: 19 IPC methods aligned, capability_domains registry, tolerance decomposition (6 submodules), typed provenance pipeline, RulesetCert validation, discover_by_capability(), workspace deps, 394 tests |
+| **V21** | [LUDOSPRING_V21_BARRACUDA_TOADSTOOL_DEEP_DEBT_EVOLUTION_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V21_BARRACUDA_TOADSTOOL_DEEP_DEBT_EVOLUTION_HANDOFF_MAR16_2026.md) | Mar 16 | Deep debt evolution: session decomposition, typed TransitionIssue enum, pluggable ValidationSink, typed toadStool IPC client, 6 IPC integration tests, `#[expect]` evolution, platform-agnostic paths, centralized GAME_STATE_TOL, 75 .rs files / 19,302 lines |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 75 experiments, 1692 checks, 394 tests + 12 proptest, deep primal integration V20)
+ludoSpring (game science, 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, deep debt evolution V21)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders)
@@ -65,7 +65,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `stats::dot` | `metrics::engagement` | Weighted engagement composite |
 | `rng::lcg_step` | `procedural::bsp` | Deterministic BSP generation |
 | `rng::state_to_f64` | `procedural::bsp` | Split ratio from LCG state |
-| `validation::ValidationResult` | All 75 experiments | hotSpring-pattern check harness |
+| `validation::ValidationHarness` | All 75 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
 
 ### Absorption Opportunities
 
@@ -76,6 +76,8 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `procedural::lsystem` | ~200 | L-system string rewriting | P3 |
 | `procedural::bsp` | ~220 | BSP spatial partitioning | P2 |
 | `capability_domains.rs` | ~100 | Structured Domain/Method introspection | P1 |
+| `validation/` (pattern) | ~400 | `ValidationSink` trait + `ValidationHarness<S>` — composable validation | P1 |
+| `ipc/toadstool.rs` | ~80 | Typed toadStool client — first typed contract for compute dispatch | P0 |
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
@@ -83,6 +85,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V20 | `handoffs/archive/LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md` | V21 Deep Debt Evolution |
 | V19 | `handoffs/archive/LUDOSPRING_V19_BARRACUDA_TOADSTOOL_DEEP_DEBT_HANDOFF_MAR16_2026.md` | V20 Deep Primal Integration |
 | V18 | `handoffs/archive/LUDOSPRING_V18_NICHE_SELF_KNOWLEDGE_NEURALBRIDGE_HANDOFF_MAR15_2026.md` | V19 Deep Debt |
 | V18 | `handoffs/archive/LUDOSPRING_V18_BARRACUDA_TOADSTOOL_NICHE_ABSORPTION_HANDOFF_MAR15_2026.md` | V19 Deep Debt |

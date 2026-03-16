@@ -10,7 +10,7 @@
 
 use ludospring_barracuda::game::rpgpt::plane::PassiveCheckPriority;
 use ludospring_barracuda::game::rpgpt::voice::{
-    select_voice_outputs, VoiceCheckResult, VoiceId, VoiceOutput,
+    VoiceCheckResult, VoiceId, VoiceOutput, select_voice_outputs,
 };
 use ludospring_barracuda::validation::ValidationHarness;
 
@@ -49,10 +49,7 @@ fn validate_priority_order(h: &mut ValidationHarness) {
         "critical_before_high",
         selected[0].voice == VoiceId::Perception,
     );
-    h.check_bool(
-        "high_before_medium",
-        selected[1].voice == VoiceId::Logic,
-    );
+    h.check_bool("high_before_medium", selected[1].voice == VoiceId::Logic);
     h.check_bool(
         "medium_before_low",
         selected[2].voice == VoiceId::Encyclopedia,
@@ -66,24 +63,13 @@ fn validate_tie_breaking(h: &mut ValidationHarness) {
         make_output(VoiceId::Rhetoric, PassiveCheckPriority::High, 12),
     ];
     let selected = select_voice_outputs(outputs, 3);
-    h.check_bool(
-        "highest_roll_first",
-        selected[0].voice == VoiceId::Empathy,
-    );
-    h.check_bool(
-        "second_highest_second",
-        selected[1].voice == VoiceId::Logic,
-    );
-    h.check_bool(
-        "lowest_roll_third",
-        selected[2].voice == VoiceId::Rhetoric,
-    );
+    h.check_bool("highest_roll_first", selected[0].voice == VoiceId::Empathy);
+    h.check_bool("second_highest_second", selected[1].voice == VoiceId::Logic);
+    h.check_bool("lowest_roll_third", selected[2].voice == VoiceId::Rhetoric);
 }
 
 fn validate_fewer_than_max(h: &mut ValidationHarness) {
-    let outputs = vec![
-        make_output(VoiceId::Logic, PassiveCheckPriority::High, 15),
-    ];
+    let outputs = vec![make_output(VoiceId::Logic, PassiveCheckPriority::High, 15)];
     let selected = select_voice_outputs(outputs, 3);
     h.check_abs("single_voice_returns_one", selected.len() as f64, 1.0, 0.0);
 
@@ -96,9 +82,11 @@ fn validate_fewer_than_max(h: &mut ValidationHarness) {
 }
 
 fn validate_zero_max(h: &mut ValidationHarness) {
-    let outputs = vec![
-        make_output(VoiceId::Logic, PassiveCheckPriority::Critical, 20),
-    ];
+    let outputs = vec![make_output(
+        VoiceId::Logic,
+        PassiveCheckPriority::Critical,
+        20,
+    )];
     let selected = select_voice_outputs(outputs, 0);
     h.check_abs("zero_max_returns_empty", selected.len() as f64, 0.0, 0.0);
 }
@@ -121,21 +109,21 @@ fn validate_all_same_priority(h: &mut ValidationHarness) {
         "highest_roll_wins_tie",
         selected[0].voice == VoiceId::Empathy,
     );
-    h.check_bool(
-        "second_roll_second",
-        selected[1].voice == VoiceId::Rhetoric,
-    );
-    h.check_bool(
-        "third_roll_third",
-        selected[2].voice == VoiceId::Perception,
-    );
+    h.check_bool("second_roll_second", selected[1].voice == VoiceId::Rhetoric);
+    h.check_bool("third_roll_third", selected[2].voice == VoiceId::Perception);
 }
 
 fn validate_check_result_gating(h: &mut ValidationHarness) {
     let checks = [
         VoiceCheckResult::evaluate(VoiceId::Logic, 10, 10, 15, PassiveCheckPriority::High),
         VoiceCheckResult::evaluate(VoiceId::Empathy, 3, 5, 15, PassiveCheckPriority::High),
-        VoiceCheckResult::evaluate(VoiceId::Perception, 15, 5, 15, PassiveCheckPriority::Critical),
+        VoiceCheckResult::evaluate(
+            VoiceId::Perception,
+            15,
+            5,
+            15,
+            PassiveCheckPriority::Critical,
+        ),
         VoiceCheckResult::evaluate(VoiceId::Encyclopedia, 2, 3, 15, PassiveCheckPriority::Low),
     ];
 
@@ -145,22 +133,10 @@ fn validate_check_result_gating(h: &mut ValidationHarness) {
     h.check_abs("two_checks_pass", passed.len() as f64, 2.0, 0.0);
     h.check_abs("two_checks_fail", failed.len() as f64, 2.0, 0.0);
 
-    h.check_bool(
-        "logic_passes_20_vs_15",
-        checks[0].success,
-    );
-    h.check_bool(
-        "empathy_fails_8_vs_15",
-        !checks[1].success,
-    );
-    h.check_bool(
-        "perception_passes_20_vs_15",
-        checks[2].success,
-    );
-    h.check_bool(
-        "encyclopedia_fails_5_vs_15",
-        !checks[3].success,
-    );
+    h.check_bool("logic_passes_20_vs_15", checks[0].success);
+    h.check_bool("empathy_fails_8_vs_15", !checks[1].success);
+    h.check_bool("perception_passes_20_vs_15", checks[2].success);
+    h.check_bool("encyclopedia_fails_5_vs_15", !checks[3].success);
 
     let voice_outputs: Vec<VoiceOutput> = passed
         .iter()
@@ -194,7 +170,12 @@ fn validate_large_batch(h: &mut ValidationHarness) {
     h.check_abs("ten_voices_generated", outputs.len() as f64, 10.0, 0.0);
 
     let selected = select_voice_outputs(outputs, 3);
-    h.check_abs("large_batch_capped_at_three", selected.len() as f64, 3.0, 0.0);
+    h.check_abs(
+        "large_batch_capped_at_three",
+        selected.len() as f64,
+        3.0,
+        0.0,
+    );
 
     h.check_bool(
         "large_batch_first_is_critical",

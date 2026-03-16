@@ -106,7 +106,10 @@ pub struct FogOfWarParams {
 impl FogOfWarParams {
     /// Create from viewer position and sight radius.
     #[must_use]
-    #[expect(clippy::cast_precision_loss, reason = "grid coords are small enough for f32")]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "grid coords are small enough for f32"
+    )]
     pub const fn new(
         viewer_x: f32,
         viewer_y: f32,
@@ -180,7 +183,10 @@ impl TileLightingParams {
 
     /// Number of active lights (clamped to 8).
     #[must_use]
-    #[expect(clippy::cast_possible_truncation, reason = "clamped to 8, always fits u32")]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "clamped to 8, always fits u32"
+    )]
     pub fn light_count(&self) -> u32 {
         self.lights.len().min(8) as u32
     }
@@ -296,8 +302,18 @@ mod tests {
             grid_h: 50,
             ambient: 0.1,
             lights: vec![
-                PointLight { x: 5.0, y: 5.0, intensity: 1.0, radius: 10.0 },
-                PointLight { x: 25.0, y: 25.0, intensity: 0.5, radius: 8.0 },
+                PointLight {
+                    x: 5.0,
+                    y: 5.0,
+                    intensity: 1.0,
+                    radius: 10.0,
+                },
+                PointLight {
+                    x: 25.0,
+                    y: 25.0,
+                    intensity: 0.5,
+                    radius: 8.0,
+                },
             ],
         };
         assert_eq!(params.tile_count(), 2500);

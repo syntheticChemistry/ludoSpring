@@ -32,6 +32,7 @@ pub mod discovery;
 pub mod nestgate;
 pub mod provenance;
 pub mod squirrel;
+pub mod toadstool;
 
 pub use discovery::{
     PrimalEndpoint, PrimalRegistry, call_primal, discover_by_capability, discover_primals,

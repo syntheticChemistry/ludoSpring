@@ -39,11 +39,13 @@ pub fn record_dehydration(
         .capability_call("contribution", "record_dehydration", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: session_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: session_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -65,16 +67,16 @@ pub fn query_braids(
         "agent": agent,
     });
 
-    bridge
-        .capability_call("braid", "query", &args)
-        .map_or_else(
-            |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
+    bridge.capability_call("braid", "query", &args).map_or_else(
+        |_| Ok(unavailable_result()),
+        |result| {
+            Ok(ProvenanceResult {
                 id: String::new(),
                 available: true,
                 data: result,
-            }),
-        )
+            })
+        },
+    )
 }
 
 /// Anchor a braid to a loamSpine spine for permanence.
@@ -82,10 +84,7 @@ pub fn query_braids(
 /// # Errors
 ///
 /// Returns an error only on non-recoverable failures.
-pub fn commit_braid(
-    braid_id: &str,
-    spine_id: &str,
-) -> Result<ProvenanceResult, String> {
+pub fn commit_braid(braid_id: &str, spine_id: &str) -> Result<ProvenanceResult, String> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -100,11 +99,13 @@ pub fn commit_braid(
         .capability_call("braid", "commit", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: braid_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: braid_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -124,11 +125,13 @@ pub fn provenance_lineage(braid_id: &str) -> Result<ProvenanceResult, String> {
         .capability_call("provenance", "graph", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: braid_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: braid_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -148,10 +151,12 @@ pub fn provenance_attribution(braid_id: &str) -> Result<ProvenanceResult, String
         .capability_call("attribution", "chain", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: braid_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: braid_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }

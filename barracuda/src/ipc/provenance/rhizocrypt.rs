@@ -41,11 +41,13 @@ pub fn query_vertices(
         .capability_call("dag", "vertex.query", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: session_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: session_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -54,10 +56,7 @@ pub fn query_vertices(
 /// # Errors
 ///
 /// Returns an error only on non-recoverable failures.
-pub fn vertex_children(
-    session_id: &str,
-    vertex_id: &str,
-) -> Result<ProvenanceResult, String> {
+pub fn vertex_children(session_id: &str, vertex_id: &str) -> Result<ProvenanceResult, String> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -71,11 +70,13 @@ pub fn vertex_children(
         .capability_call("dag", "vertex.children", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: vertex_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: vertex_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -95,11 +96,13 @@ pub fn get_frontier(session_id: &str) -> Result<ProvenanceResult, String> {
         .capability_call("dag", "frontier.get", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: session_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: session_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -119,11 +122,13 @@ pub fn merkle_root(session_id: &str) -> Result<ProvenanceResult, String> {
         .capability_call("dag", "merkle.root", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: session_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: session_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -132,10 +137,7 @@ pub fn merkle_root(session_id: &str) -> Result<ProvenanceResult, String> {
 /// # Errors
 ///
 /// Returns an error only on non-recoverable failures.
-pub fn merkle_proof(
-    session_id: &str,
-    vertex_id: &str,
-) -> Result<ProvenanceResult, String> {
+pub fn merkle_proof(session_id: &str, vertex_id: &str) -> Result<ProvenanceResult, String> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -149,11 +151,13 @@ pub fn merkle_proof(
         .capability_call("dag", "merkle.proof", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: vertex_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: vertex_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -181,11 +185,13 @@ pub fn append_batch(
         .capability_call("dag", "event.append_batch", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: session_id.to_string(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: session_id.to_string(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }
 
@@ -203,10 +209,12 @@ pub fn list_sessions() -> Result<ProvenanceResult, String> {
         .capability_call("dag", "session.list", &serde_json::json!({}))
         .map_or_else(
             |_| Ok(unavailable_result()),
-            |result| Ok(ProvenanceResult {
-                id: String::new(),
-                available: true,
-                data: result,
-            }),
+            |result| {
+                Ok(ProvenanceResult {
+                    id: String::new(),
+                    available: true,
+                    data: result,
+                })
+            },
         )
 }

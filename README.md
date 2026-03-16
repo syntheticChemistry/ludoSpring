@@ -3,12 +3,12 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 16, 2026
-**Version:** V20 (75 experiments, 1692 validation checks, 394 tests + 12 proptest)
+**Version:** V21 (75 experiments, 1692 validation checks, 394 tests + 12 proptest + 6 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 74 .rs files, 18,758 lines Rust
+**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, 19,302 lines Rust
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities, structured `capability_domains` registry
-**Audit Status:** Deep primal integration — IPC method alignment (19 external methods), typed provenance pipeline (`DehydrationSummary`), tolerance decomposition (6 submodules), `RulesetCert` command validation, `discover_by_capability()` runtime peer lookup, workspace dependency consolidation, 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics, `#![forbid(unsafe_code)]`
+**Audit Status:** Deep debt evolution — session decomposition (zero `#[allow]` suppressions), typed `TransitionIssue` enum (replaces excessive booleans), pluggable `ValidationSink` trait, typed toadStool IPC client, 6 IPC integration tests, `#[expect]` with reasons (edition 2024), platform-agnostic paths (`temp_dir()`), centralized `GAME_STATE_TOL`, 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics, `#![forbid(unsafe_code)]`
 
 ---
 
@@ -425,13 +425,13 @@ ludoSpring/
 │   │   ├── procedural/    # Noise, WFC, L-systems, BSP
 │   │   ├── metrics/       # Tufte, engagement, Four Keys to Fun
 │   │   ├── tolerances/    # 6 submodules (game, interaction, ipc, metrics, procedural, validation)
-│   │   ├── validation/    # ValidationResult harness
+│   │   ├── validation/    # ValidationHarness<S: ValidationSink> + BaselineProvenance
 │   │   ├── telemetry/     # Portable event protocol + analysis pipeline
 │   │   ├── visualization/ # Data channels + VisualizationPushClient (capability-based)
-│   │   ├── ipc/           # JSON-RPC 2.0 server (capability-based discovery, tracing)
+│   │   ├── ipc/           # JSON-RPC 2.0 server + typed clients (toadStool, NestGate, Squirrel, trio)
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
-│   └── tests/             # python_parity, validation, determinism, proptest_invariants
+│   └── tests/             # python_parity, validation, determinism, proptest_invariants, ipc_integration
 ├── experiments/           # 75 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
@@ -483,34 +483,47 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
-| `cargo test --features ipc` (barracuda) | 394 tests, 0 failures |
+| `cargo test --features ipc` (barracuda) | 394 tests + 6 IPC integration, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
 | 75 validation binaries | 1692 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 12 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
-| `#[allow()]` in production | 0 — all lints configured in `Cargo.toml` |
+| `#[allow()]` in production | 0 — all lints configured in `Cargo.toml`; justified exceptions use `#[expect(reason)]` |
 | `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
 | SPDX headers | All `.rs` + all `Cargo.toml` |
 | Files > 1000 LOC | 0 — exp030 refactored into 4 modules (was 1949 LOC) |
 | TODO/FIXME/HACK in source | 0 |
-| Structured logging | `tracing` for all library IPC/biomeOS (no `eprintln!`) |
+| Structured logging | `tracing` for all library IPC/biomeOS; `ValidationSink` trait for validation output |
 | Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery |
+| Hardcoded paths | 0 — `temp_dir()` + XDG-compliant socket resolution |
+| IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
 
-## V20 Deep Primal Integration (March 16, 2026)
+## V21 Deep Debt Evolution (March 16, 2026)
 
-Comprehensive integration evolution aligning all external primal interactions with canonical specifications and deepening game engine core:
+Code quality evolution: eliminate all lint suppressions through refactoring, introduce typed error patterns, pluggable validation infrastructure, typed IPC clients, integration tests, and platform-agnostic paths.
 
-- **IPC method alignment** — 19 external method names updated to match canonical JSON-RPC specs: `storage.put→store`, `storage.get→retrieve` (NestGate), `ai.chat→query`, `ai.text_generation→suggest`, `ai.inference→analyze` (Squirrel), `dag.create_session→session.create`, `dag.append_vertex→vertex.append` (rhizoCrypt), `spine.create_waypoint→spine.waypoint.create` (loamSpine), `provenance.lineage→provenance.graph`, `provenance.attribution→attribution.chain` (sweetGrass)
-- **Capability domains registry** — new `capability_domains.rs` with structured `Domain`/`Method` types classifying all 24 capabilities as local (10) or external (14); drives `capability.list` RPC response with operation dependencies and cost estimates
-- **Tolerance decomposition** — monolithic `tolerances/mod.rs` → 6 focused submodules (`game.rs`, `interaction.rs`, `ipc.rs`, `metrics.rs`, `procedural.rs`, `validation.rs`); new constants `DEFAULT_SIGHT_RADIUS` (5), `TRIGGER_DETECTION_RANGE` (1); backward-compatible re-exports
-- **Typed provenance pipeline** — `DehydrationSummary` struct and `TrioStage` enum; 4-step session completion: dehydrate → record_dehydration (sweetGrass) → commit (loamSpine) → braid (sweetGrass)
-- **Game engine core** — `RulesetCert` validation integrated into `process()` via `Command::verb()` + `available_actions` checking; concrete `apply()` for `ItemAcquired` (despawn), `Damaged` (HP update), `Interacted` (property set); `From<&TileWorld> for GridMap` raycaster bridge
-- **NarrationContext** — argument sprawl reduction for audio narration compilation functions
-- **`discover_by_capability()`** — runtime primal peer lookup with tolerance-backed timeouts
-- **Workspace dependencies** — `serde`, `serde_json`, `uuid`, `proptest` centralized at workspace level
-- **394 tests pass** (382 unit/determinism/parity/doctest + 12 proptest), zero clippy warnings
+- **Session decomposition** — `GameSession::resolve()` extracted into per-command methods (`resolve_wait`, `resolve_end_turn`, `resolve_use_item`, `resolve_custom`, etc.), eliminating `#[allow(clippy::too_many_lines)]`
+- **Typed transition verification** — `TransitionVerification` booleans replaced with `TransitionIssue` enum (`InventoryLost`, `DispositionChanged`, `KnowledgeLost`, `ConditionMismatch`, `HpChanged`) + `Vec<TransitionIssue>`, eliminating `#[allow(clippy::struct_excessive_bools)]`
+- **Pluggable validation output** — `ValidationSink` trait with `StderrSink` (default) and `BufferSink` (testing); `ValidationHarness<S>` generic over sink, replacing hardcoded `eprintln!`
+- **Typed toadStool IPC client** — `ipc/toadstool.rs` with `ComputeResult`, `SubstrateCapabilities`, typed methods (`submit_workload`, `workload_status`, `query_capabilities`), graceful degradation when Neural API unavailable
+- **IPC integration tests** — 6 tests in `barracuda/tests/ipc_integration.rs`: lifecycle status, capability list, game method evaluation, error handling, health check
+- **`#[expect]` evolution** — `#[allow(dead_code)]` replaced with `#[expect(dead_code, reason = "...")]` for justified IPC wire types (edition 2024 pattern)
+- **Platform-agnostic paths** — hardcoded `/tmp/biomeos/` and `/tmp/petaltongue/` replaced with `std::env::temp_dir().join(...)` in test fixtures
+- **Centralized game tolerance** — `GAME_STATE_TOL` constant in `tolerances/game.rs`, replacing inline `0.01` across 4 experiments
+- **ValidationHarness adoption** — `exp001` fully rewritten from legacy `ValidationResult` to `ValidationHarness` + `BaselineProvenance`
+- **75 .rs files, 19,302 lines** — net +544 lines (typed clients, integration tests, extracted methods)
+
+### V20 Deep Primal Integration (preserved)
+
+- IPC method alignment: 19 external methods aligned to canonical JSON-RPC specs
+- Capability domains registry: 24 capabilities (10 local, 14 external)
+- Tolerance decomposition: 6 domain-specific submodules
+- Typed provenance pipeline: `DehydrationSummary` + `TrioStage`
+- Game engine core: `RulesetCert` validation, concrete `apply()`, `GridMap` bridge
+- `discover_by_capability()` runtime peer lookup
+- 394 tests pass, zero clippy warnings
 
 ### V19 Foundation (preserved)
 

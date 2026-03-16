@@ -26,10 +26,7 @@ fn build_session(
 ) -> Vec<NpcInteraction> {
     (0..count)
         .map(|i| {
-            #[expect(
-                clippy::cast_possible_truncation,
-                reason = "test value fits in u32"
-            )]
+            #[expect(clippy::cast_possible_truncation, reason = "test value fits in u32")]
             let sequence = i as u32;
             NpcInteraction {
                 npc_id: npc_id.into(),
@@ -127,17 +124,14 @@ fn validate_recent_window(h: &mut ValidationHarness) {
     );
 
     let last = &ctx.recent_interactions[ctx.recent_interactions.len() - 1];
-    h.check_bool(
-        "most_recent_is_session_10",
-        last.session == 10,
-    );
+    h.check_bool("most_recent_is_session_10", last.session == 10);
 
     h.check_bool(
         "recent_are_chronological",
-        ctx.recent_interactions
-            .windows(2)
-            .all(|w| w[0].session <= w[1].session
-                || (w[0].session == w[1].session && w[0].sequence <= w[1].sequence)),
+        ctx.recent_interactions.windows(2).all(|w| {
+            w[0].session <= w[1].session
+                || (w[0].session == w[1].session && w[0].sequence <= w[1].sequence)
+        }),
     );
 }
 
@@ -157,10 +151,7 @@ fn validate_promises_always_included(h: &mut ValidationHarness) {
         .any(|v| v.promises_made.contains(&"Find star-metal".into()));
     h.check_bool("star_metal_promise_included", has_star_metal);
 
-    let promise_in_session_2 = ctx
-        .promise_vertices
-        .iter()
-        .any(|v| v.session == 2);
+    let promise_in_session_2 = ctx.promise_vertices.iter().any(|v| v.session == 2);
     h.check_bool("old_promise_included", promise_in_session_2);
 }
 
@@ -186,10 +177,7 @@ fn validate_cumulative_trust(h: &mut ValidationHarness) {
     let assembler = NpcMemoryAssembler::default();
     let ctx = assembler.assemble("Maren", &history, "esteem", "internal_conflict");
 
-    h.check_bool(
-        "trust_value_positive",
-        ctx.trust_value > 0.0,
-    );
+    h.check_bool("trust_value_positive", ctx.trust_value > 0.0);
 
     // Count expected: 5*0.1 + 3*0.1 + 0.5 + 2*0.1 + 1.0 + 4*0.1 + 0.0 + 15*0.1
     // = 0.5 + 0.3 + 0.5 + 0.2 + 1.0 + 0.4 + 0.0 + 1.5 = 4.4
@@ -200,10 +188,7 @@ fn validate_cumulative_trust(h: &mut ValidationHarness) {
         0.1, // tolerance for float accumulation
     );
 
-    h.check_bool(
-        "trust_level_at_least_4",
-        ctx.trust_level >= 4,
-    );
+    h.check_bool("trust_level_at_least_4", ctx.trust_level >= 4);
 }
 
 fn validate_historical_summary(h: &mut ValidationHarness) {
@@ -231,9 +216,24 @@ fn validate_empty_history(h: &mut ValidationHarness) {
     let assembler = NpcMemoryAssembler::default();
     let ctx = assembler.assemble("Maren", &[], "esteem", "internal_conflict");
 
-    h.check_abs("empty_recent_count", ctx.recent_interactions.len() as f64, 0.0, 0.0);
-    h.check_abs("empty_promise_count", ctx.promise_vertices.len() as f64, 0.0, 0.0);
-    h.check_abs("empty_milestone_count", ctx.trust_milestones.len() as f64, 0.0, 0.0);
+    h.check_abs(
+        "empty_recent_count",
+        ctx.recent_interactions.len() as f64,
+        0.0,
+        0.0,
+    );
+    h.check_abs(
+        "empty_promise_count",
+        ctx.promise_vertices.len() as f64,
+        0.0,
+        0.0,
+    );
+    h.check_abs(
+        "empty_milestone_count",
+        ctx.trust_milestones.len() as f64,
+        0.0,
+        0.0,
+    );
     h.check_abs("empty_trust_value", ctx.trust_value, 0.0, 0.0);
     h.check_abs("empty_trust_level", f64::from(ctx.trust_level), 0.0, 0.0);
     h.check_bool("empty_summary_is_empty", ctx.historical_summary.is_empty());

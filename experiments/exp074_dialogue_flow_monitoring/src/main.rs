@@ -9,13 +9,12 @@
 //! 3. Hick's law threshold (>6 options) triggers complexity reduction
 //! 4. DDA adjusts NPC cooperativeness based on flow state
 
-use ludospring_barracuda::game::rpgpt::dialogue::{
-    DialogueExchange, DialogueFlowTracker,
-};
+use ludospring_barracuda::game::rpgpt::dialogue::{DialogueExchange, DialogueFlowTracker};
 use ludospring_barracuda::game::ruleset::DegreeOfSuccess;
-use ludospring_barracuda::interaction::difficulty::{suggest_adjustment, PerformanceWindow};
-use ludospring_barracuda::interaction::flow::{evaluate_flow, FlowState};
+use ludospring_barracuda::interaction::difficulty::{PerformanceWindow, suggest_adjustment};
+use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::interaction::input_laws::hick_reaction_time;
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::ValidationHarness;
 
 const EXP: &str = "exp074_dialogue_flow_monitoring";
@@ -55,16 +54,10 @@ fn validate_hick_threshold(h: &mut ValidationHarness) {
     h.check_bool("hick_rt_8_higher", rt_8 > rt_6);
 
     // Threshold: >6 options is problematic
-    h.check_bool(
-        "hick_threshold_exceeded_at_8",
-        rt_8 > 600.0,
-    );
+    h.check_bool("hick_threshold_exceeded_at_8", rt_8 > 600.0);
 
     // Reducing to 4 brings it down
-    h.check_bool(
-        "hick_reduced_at_4",
-        rt_4 < rt_8,
-    );
+    h.check_bool("hick_reduced_at_4", rt_4 < rt_8);
 }
 
 fn validate_dda_anxiety_response(h: &mut ValidationHarness) {
@@ -130,10 +123,23 @@ fn validate_dialogue_tracker_flow_integration(h: &mut ValidationHarness) {
     let flow_state = evaluate_flow(tracker.challenge(), tracker.skill(), 0.15);
     h.check_bool(
         "tracker_balanced_near_flow",
-        matches!(flow_state, FlowState::Flow | FlowState::Relaxation | FlowState::Arousal),
+        matches!(
+            flow_state,
+            FlowState::Flow | FlowState::Relaxation | FlowState::Arousal
+        ),
     );
-    h.check_abs("tracker_exchange_count", tracker.exchange_count() as f64, 5.0, 0.0);
-    h.check_abs("tracker_avg_options", tracker.avg_options(), 4.0, 0.01);
+    h.check_abs(
+        "tracker_exchange_count",
+        tracker.exchange_count() as f64,
+        5.0,
+        0.0,
+    );
+    h.check_abs(
+        "tracker_avg_options",
+        tracker.avg_options(),
+        4.0,
+        tolerances::GAME_STATE_TOL,
+    );
 }
 
 fn validate_stall_detection(h: &mut ValidationHarness) {
@@ -157,7 +163,12 @@ fn validate_stall_detection(h: &mut ValidationHarness) {
     });
 
     h.check_abs("stall_count_five", tracker.stall_count() as f64, 5.0, 0.0);
-    h.check_abs("success_rate_one_sixth", tracker.success_rate(), 1.0 / 6.0, 0.01);
+    h.check_abs(
+        "success_rate_one_sixth",
+        tracker.success_rate(),
+        1.0 / 6.0,
+        0.01,
+    );
 }
 
 fn validate_option_overload(h: &mut ValidationHarness) {
@@ -177,7 +188,12 @@ fn validate_option_overload(h: &mut ValidationHarness) {
     });
 
     h.check_bool("avg_options_above_6", tracker.avg_options() > 6.0);
-    h.check_abs("avg_options_value", tracker.avg_options(), 9.0, 0.01);
+    h.check_abs(
+        "avg_options_value",
+        tracker.avg_options(),
+        9.0,
+        tolerances::GAME_STATE_TOL,
+    );
 
     // Hick's law shows this is too many
     let rt_avg = hick_reaction_time(tracker.avg_options() as usize, 200.0, 150.0);
@@ -198,7 +214,10 @@ fn validate_skill_estimate_evolves(h: &mut ValidationHarness) {
         });
     }
 
-    h.check_bool("skill_increased_after_successes", tracker.skill() > initial_skill);
+    h.check_bool(
+        "skill_increased_after_successes",
+        tracker.skill() > initial_skill,
+    );
 
     // Series of failures should lower it
     let mid_skill = tracker.skill();
@@ -211,16 +230,34 @@ fn validate_skill_estimate_evolves(h: &mut ValidationHarness) {
         });
     }
 
-    h.check_bool("skill_decreased_after_failures", tracker.skill() < mid_skill);
+    h.check_bool(
+        "skill_decreased_after_failures",
+        tracker.skill() < mid_skill,
+    );
 }
 
 fn validate_cross_flow_states(h: &mut ValidationHarness) {
     // All 5 flow states reachable
-    h.check_bool("boredom_reachable", evaluate_flow(0.0, 1.0, 0.15) == FlowState::Boredom);
-    h.check_bool("relaxation_reachable", evaluate_flow(0.3, 0.5, 0.15) == FlowState::Relaxation);
-    h.check_bool("flow_reachable", evaluate_flow(0.5, 0.5, 0.15) == FlowState::Flow);
-    h.check_bool("arousal_reachable", evaluate_flow(0.7, 0.5, 0.15) == FlowState::Arousal);
-    h.check_bool("anxiety_reachable", evaluate_flow(1.0, 0.0, 0.15) == FlowState::Anxiety);
+    h.check_bool(
+        "boredom_reachable",
+        evaluate_flow(0.0, 1.0, 0.15) == FlowState::Boredom,
+    );
+    h.check_bool(
+        "relaxation_reachable",
+        evaluate_flow(0.3, 0.5, 0.15) == FlowState::Relaxation,
+    );
+    h.check_bool(
+        "flow_reachable",
+        evaluate_flow(0.5, 0.5, 0.15) == FlowState::Flow,
+    );
+    h.check_bool(
+        "arousal_reachable",
+        evaluate_flow(0.7, 0.5, 0.15) == FlowState::Arousal,
+    );
+    h.check_bool(
+        "anxiety_reachable",
+        evaluate_flow(1.0, 0.0, 0.15) == FlowState::Anxiety,
+    );
 }
 
 fn main() {

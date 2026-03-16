@@ -46,3 +46,11 @@ pub const DEFAULT_SIGHT_RADIUS: u32 = 5;
 /// and adjacent tiles, catching doorway triggers the player walks
 /// past. Range 0 (previous value) missed adjacent triggers.
 pub const TRIGGER_DETECTION_RANGE: u32 = 1;
+
+/// Game-state comparison tolerance for trust, flow, and engagement values.
+///
+/// Justification: game state values (NPC trust, dialogue option counts,
+/// engagement scores) are computed from small integer operations where
+/// f64 representation error is negligible. 0.01 catches real logic bugs
+/// while absorbing floating-point arithmetic noise.
+pub const GAME_STATE_TOL: f64 = 0.01;

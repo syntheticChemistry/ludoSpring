@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 16, 2026
-**Total:** 75 experiments, 1692 checks, 0 failures, 394 tests + 12 proptest (V20)
+**Total:** 75 experiments, 1692 checks, 0 failures, 394 tests + 12 proptest + 6 IPC integration (V21)
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -414,17 +414,32 @@ cargo test --features ipc --lib --tests
 
 ## Validation Pattern
 
-Every experiment follows the hotSpring validation pattern:
+Every experiment follows the hotSpring validation pattern using `ValidationHarness`:
 
 ```rust
-let result = ValidationResult::new("test_name")
-    .expected(expected_value)
-    .actual(actual_value)
-    .tolerance(tolerance)
-    .evaluate();
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/raycaster_baseline.py",
+    commit: "abc1234",
+    date: "2026-03-10",
+    python: "3.12.1",
+    command: "python3 baselines/python/raycaster_baseline.py",
+};
+
+fn main() {
+    let mut h = ValidationHarness::new("exp001_raycaster");
+    h.print_provenance(&PROVENANCE);
+    h.check_abs("hit_rate", actual, expected, tolerances::RAYCASTER_HIT_RATE_TOL);
+    h.check_bool("walls_only", actual_bool);
+    h.finish();
+}
 ```
 
+- `ValidationHarness<S: ValidationSink>` with pluggable output (default: stderr)
+- `BaselineProvenance` records script, commit, date, Python version, exact command
+- Named tolerances from `tolerances/` submodules (zero magic numbers)
 - Hardcoded expected values from documented Python baselines
 - Explicit pass/fail with tolerance justification
 - Exit code 0 = all pass, exit code 1 = any failure
 - Summary printed to stdout with check counts
+
+Legacy experiments use `ValidationResult::check()` — migration to `ValidationHarness` is incremental (exp001 complete, remainder follows same pattern).

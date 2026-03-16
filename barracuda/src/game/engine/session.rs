@@ -146,7 +146,6 @@ impl GameSession {
 
     /// Resolve a command against the current state (pure — no mutation).
     #[must_use]
-    #[allow(clippy::too_many_lines)]
     fn resolve(&self, command: &Command) -> ActionOutcome {
         match command {
             Command::Move { entity, direction } => self.resolve_move(*entity, *direction),
@@ -157,41 +156,59 @@ impl GameSession {
                 choice_id,
             } => self.resolve_talk(*actor, *target, choice_id.as_deref()),
             Command::Examine { actor, target } => self.resolve_examine(*actor, target),
-            Command::Wait { entity } => ActionOutcome {
-                effect: Effect::TurnEnded { entity: *entity },
-                cost: ActionCost::One,
-                narration: Some("You wait, watching and listening.".into()),
-                triggers: Vec::new(),
-            },
-            Command::EndTurn { entity } => {
-                ActionOutcome {
-                    effect: Effect::TurnEnded { entity: *entity },
-                    cost: ActionCost::Free,
-                    narration: None,
-                    triggers: Vec::new(),
-                }
-            }
+            Command::Wait { entity } => self.resolve_wait(*entity),
+            Command::EndTurn { entity } => self.resolve_end_turn(*entity),
             Command::Attack { actor, target, .. } => self.resolve_attack(*actor, *target),
             Command::UseItem {
                 actor, item_name, ..
-            } => ActionOutcome {
-                effect: Effect::ItemUsed {
-                    actor: *actor,
-                    item_name: item_name.clone(),
-                    result: "Used".into(),
-                },
-                cost: ActionCost::One,
-                narration: Some(format!("You use the {item_name}.")),
-                triggers: Vec::new(),
+            } => self.resolve_use_item(*actor, item_name),
+            Command::Custom {
+                actor: _,
+                verb,
+                args,
+            } => self.resolve_custom(verb, args),
+        }
+    }
+
+    fn resolve_wait(&self, entity: EntityId) -> ActionOutcome {
+        ActionOutcome {
+            effect: Effect::TurnEnded { entity },
+            cost: ActionCost::One,
+            narration: Some("You wait, watching and listening.".into()),
+            triggers: Vec::new(),
+        }
+    }
+
+    fn resolve_end_turn(&self, entity: EntityId) -> ActionOutcome {
+        ActionOutcome {
+            effect: Effect::TurnEnded { entity },
+            cost: ActionCost::Free,
+            narration: None,
+            triggers: Vec::new(),
+        }
+    }
+
+    fn resolve_use_item(&self, actor: EntityId, item_name: &str) -> ActionOutcome {
+        ActionOutcome {
+            effect: Effect::ItemUsed {
+                actor,
+                item_name: item_name.to_owned(),
+                result: "Used".into(),
             },
-            Command::Custom { actor: _, verb, args } => ActionOutcome {
-                effect: Effect::NoEffect {
-                    reason: format!("custom command: {verb} {}", args.join(" ")),
-                },
-                cost: ActionCost::One,
-                narration: Some(format!("You attempt to {verb}.")),
-                triggers: Vec::new(),
+            cost: ActionCost::One,
+            narration: Some(format!("You use the {item_name}.")),
+            triggers: Vec::new(),
+        }
+    }
+
+    fn resolve_custom(&self, verb: &str, args: &[String]) -> ActionOutcome {
+        ActionOutcome {
+            effect: Effect::NoEffect {
+                reason: format!("custom command: {verb} {}", args.join(" ")),
             },
+            cost: ActionCost::One,
+            narration: Some(format!("You attempt to {verb}.")),
+            triggers: Vec::new(),
         }
     }
 
@@ -222,7 +239,10 @@ impl GameSession {
             }
 
             let mut triggers = Vec::new();
-            for adj in self.entities.within_range(nx, ny, crate::tolerances::TRIGGER_DETECTION_RANGE) {
+            for adj in
+                self.entities
+                    .within_range(nx, ny, crate::tolerances::TRIGGER_DETECTION_RANGE)
+            {
                 if adj.kind == EntityKind::Trigger {
                     if let Some(zone) = adj.properties.get("zone_transition") {
                         triggers.push(TriggerEvent::ZoneTransition {
@@ -427,7 +447,10 @@ impl GameSession {
             Effect::TurnEnded { .. } => {
                 self.advance_turn();
             }
-            Effect::ItemAcquired { actor: _, item_name } => {
+            Effect::ItemAcquired {
+                actor: _,
+                item_name,
+            } => {
                 let item_id = self
                     .entities
                     .iter()
@@ -437,9 +460,7 @@ impl GameSession {
                     self.entities.despawn(id);
                 }
             }
-            Effect::Damaged {
-                target, amount, ..
-            } => {
+            Effect::Damaged { target, amount, .. } => {
                 if *amount > 0 {
                     if let Some(e) = self.entities.get_mut(*target) {
                         let hp = e
@@ -452,11 +473,10 @@ impl GameSession {
                     }
                 }
             }
-            Effect::Interacted {
-                target, result, ..
-            } => {
+            Effect::Interacted { target, result, .. } => {
                 if let Some(e) = self.entities.get_mut(*target) {
-                    e.properties.insert("last_interaction".into(), result.clone());
+                    e.properties
+                        .insert("last_interaction".into(), result.clone());
                 }
             }
             Effect::DialogueAdvanced { .. }
@@ -505,9 +525,7 @@ impl GameSession {
 
     /// All visible NPC entities (for narration and UI).
     pub fn visible_npcs(&self) -> impl Iterator<Item = &Entity> {
-        self.entities
-            .of_kind(EntityKind::Npc)
-            .filter(|e| e.visible)
+        self.entities.of_kind(EntityKind::Npc).filter(|e| e.visible)
     }
 }
 
@@ -580,12 +598,7 @@ mod tests {
     fn interact_with_npc_starts_conversation() {
         let mut s = tavern_session();
         let pid = s.entities.player().unwrap().id;
-        let npc_id = s
-            .entities
-            .of_kind(EntityKind::Npc)
-            .next()
-            .unwrap()
-            .id;
+        let npc_id = s.entities.of_kind(EntityKind::Npc).next().unwrap().id;
 
         let outcome = s.process(Command::Interact {
             actor: pid,
@@ -603,12 +616,7 @@ mod tests {
     fn pick_up_item() {
         let mut s = tavern_session();
         let pid = s.entities.player().unwrap().id;
-        let item_id = s
-            .entities
-            .of_kind(EntityKind::Item)
-            .next()
-            .unwrap()
-            .id;
+        let item_id = s.entities.of_kind(EntityKind::Item).next().unwrap().id;
 
         let outcome = s.process(Command::Interact {
             actor: pid,
@@ -621,12 +629,7 @@ mod tests {
     fn examine_entity() {
         let mut s = tavern_session();
         let pid = s.entities.player().unwrap().id;
-        let npc_id = s
-            .entities
-            .of_kind(EntityKind::Npc)
-            .next()
-            .unwrap()
-            .id;
+        let npc_id = s.entities.of_kind(EntityKind::Npc).next().unwrap().id;
 
         let outcome = s.process(Command::Examine {
             actor: pid,
