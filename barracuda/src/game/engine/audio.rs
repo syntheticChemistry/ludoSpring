@@ -120,6 +120,17 @@ pub enum SoundEffect {
     Custom(String),
 }
 
+/// Shared context for narration compilation — reduces argument sprawl.
+///
+/// Follows the healthSpring `TissueContext` pattern: groups related
+/// parameters that flow through the entire narration pipeline.
+pub struct NarrationContext<'a> {
+    /// Entity registry for name resolution and spatial queries.
+    pub entities: &'a super::entity::EntityRegistry,
+    /// Accumulated narration cues (mutated during compilation).
+    pub cues: &'a mut Vec<NarrationCue>,
+}
+
 /// Compiles game outcomes into narration cues.
 ///
 /// This is the bridge between the engine's action resolution and
@@ -131,8 +142,9 @@ pub fn compile_outcome(
     entities: &super::entity::EntityRegistry,
 ) -> Vec<NarrationCue> {
     let mut cues = Vec::new();
-    compile_effect_cues(&outcome.effect, outcome.narration.as_deref(), entities, &mut cues);
-    compile_trigger_cues(&outcome.triggers, &mut cues);
+    let mut ctx = NarrationContext { entities, cues: &mut cues };
+    compile_effect_cues(&outcome.effect, outcome.narration.as_deref(), &mut ctx);
+    compile_trigger_cues(&outcome.triggers, ctx.cues);
     cues
 }
 
@@ -140,19 +152,18 @@ pub fn compile_outcome(
 fn compile_effect_cues(
     effect: &Effect,
     narration: Option<&str>,
-    entities: &super::entity::EntityRegistry,
-    cues: &mut Vec<NarrationCue>,
+    ctx: &mut NarrationContext<'_>,
 ) {
     match effect {
         Effect::Moved { entity, to_x, to_y } => {
-            compile_movement_cues(*entity, *to_x, *to_y, narration, entities, cues);
+            compile_movement_cues(*entity, *to_x, *to_y, narration, ctx);
         }
         Effect::DialogueAdvanced { speaker, .. } => {
-            let speaker_name = entities
+            let speaker_name = ctx.entities
                 .get(*speaker)
                 .map_or_else(|| "Someone".into(), |e| e.name.clone());
             if let Some(text) = narration {
-                cues.push(NarrationCue {
+                ctx.cues.push(NarrationCue {
                     text: text.to_owned(),
                     priority: CuePriority::Important,
                     speaker: speaker_name,
@@ -163,7 +174,7 @@ fn compile_effect_cues(
             }
         }
         Effect::ItemAcquired { item_name, .. } => {
-            cues.push(NarrationCue {
+            ctx.cues.push(NarrationCue {
                 text: narration.map_or_else(
                     || format!("You acquired {item_name}."),
                     str::to_owned,
@@ -176,10 +187,10 @@ fn compile_effect_cues(
             });
         }
         Effect::Damaged { target, amount, .. } => {
-            compile_damage_cues(*target, *amount, narration, entities, cues);
+            compile_damage_cues(*target, *amount, narration, ctx);
         }
         Effect::Revealed { info, .. } => {
-            cues.push(NarrationCue {
+            ctx.cues.push(NarrationCue {
                 text: narration.map_or_else(|| info.clone(), str::to_owned),
                 priority: CuePriority::Important,
                 speaker: "narrator".into(),
@@ -189,11 +200,11 @@ fn compile_effect_cues(
             });
         }
         Effect::NoEffect { reason } => {
-            push_narration_cue(narration, CuePriority::Ambient, cues);
+            push_narration_cue(narration, CuePriority::Ambient, ctx.cues);
             let _ = reason;
         }
         Effect::TurnEnded { .. } | Effect::Interacted { .. } | Effect::ItemUsed { .. } => {
-            push_narration_cue(narration, CuePriority::Normal, cues);
+            push_narration_cue(narration, CuePriority::Normal, ctx.cues);
         }
     }
 }
@@ -204,11 +215,10 @@ fn compile_movement_cues(
     to_x: u32,
     to_y: u32,
     narration: Option<&str>,
-    entities: &super::entity::EntityRegistry,
-    cues: &mut Vec<NarrationCue>,
+    ctx: &mut NarrationContext<'_>,
 ) {
     if let Some(text) = narration {
-        cues.push(NarrationCue {
+        ctx.cues.push(NarrationCue {
             text: text.to_owned(),
             priority: CuePriority::Normal,
             speaker: "narrator".into(),
@@ -218,16 +228,16 @@ fn compile_movement_cues(
         });
     }
 
-    if let Some(e) = entities.get(entity) {
+    if let Some(e) = ctx.entities.get(entity) {
         if e.kind == EntityKind::Player {
-            let nearby_npcs: Vec<_> = entities
+            let nearby_npcs: Vec<_> = ctx.entities
                 .within_range(to_x, to_y, crate::tolerances::NPC_PROXIMITY_TILES)
                 .filter(|n| n.kind == EntityKind::Npc && n.visible)
                 .collect();
             for npc in nearby_npcs {
                 let dir = direction_from_to(to_x, to_y, npc.x, npc.y);
                 let dir_text = dir.map_or_else(|| "nearby".into(), |d| format!("to the {d:?}"));
-                cues.push(NarrationCue {
+                ctx.cues.push(NarrationCue {
                     text: format!("{} is {dir_text}.", npc.name),
                     priority: CuePriority::Ambient,
                     speaker: "narrator".into(),
@@ -248,13 +258,12 @@ fn compile_damage_cues(
     target: EntityId,
     amount: i32,
     narration: Option<&str>,
-    entities: &super::entity::EntityRegistry,
-    cues: &mut Vec<NarrationCue>,
+    ctx: &mut NarrationContext<'_>,
 ) {
-    let target_name = entities
+    let target_name = ctx.entities
         .get(target)
         .map_or_else(|| "Something".into(), |e| e.name.clone());
-    cues.push(NarrationCue {
+    ctx.cues.push(NarrationCue {
         text: narration.map_or_else(
             || format!("{target_name} takes {amount} damage!"),
             str::to_owned,

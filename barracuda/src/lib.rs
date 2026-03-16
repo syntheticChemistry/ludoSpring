@@ -91,6 +91,9 @@ pub mod procedural;
 /// Niche self-knowledge: identity, capabilities, semantic mappings, cost metadata.
 pub mod niche;
 
+/// Capability domain registry — structured method catalog with introspection.
+pub mod capability_domains;
+
 /// Domain-specific tolerances for validation (no magic numbers).
 pub mod tolerances;
 

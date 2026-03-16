@@ -149,15 +149,10 @@ fn handle_lifecycle_status(req: &JsonRpcRequest) -> HandlerResult {
 }
 
 fn handle_capability_list(req: &JsonRpcRequest) -> HandlerResult {
-    to_json(
-        &req.id,
-        serde_json::json!({
-            "domain": crate::niche::NICHE_DOMAIN,
-            "capabilities": crate::niche::CAPABILITIES,
-            "operation_dependencies": crate::niche::operation_dependencies(),
-            "cost_estimates": crate::niche::cost_estimates(),
-        }),
-    )
+    let mut response = crate::capability_domains::capability_list_response();
+    response["operation_dependencies"] = crate::niche::operation_dependencies();
+    response["cost_estimates"] = crate::niche::cost_estimates();
+    to_json(&req.id, response)
 }
 
 fn handle_evaluate_flow(req: &JsonRpcRequest) -> HandlerResult {

@@ -93,12 +93,9 @@ pub fn discovery_dirs() -> Vec<PathBuf> {
 /// Sends `lifecycle.status` and parses the response for name and capabilities.
 pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
     let stream = UnixStream::connect(path).ok()?;
-    stream
-        .set_read_timeout(Some(Duration::from_millis(500)))
-        .ok()?;
-    stream
-        .set_write_timeout(Some(Duration::from_millis(500)))
-        .ok()?;
+    let probe = Duration::from_millis(crate::tolerances::PROBE_TIMEOUT_MS);
+    stream.set_read_timeout(Some(probe)).ok()?;
+    stream.set_write_timeout(Some(probe)).ok()?;
 
     let request = serde_json::json!({
         "jsonrpc": "2.0",
@@ -169,6 +166,17 @@ pub fn discover_primals() -> PrimalRegistry {
     registry
 }
 
+/// Discover a primal endpoint by capability at runtime.
+///
+/// Scans all socket directories for a primal advertising the requested
+/// capability. Returns `None` if no primal serves it. This is the preferred
+/// way to find peers — never hardcode primal names or socket paths.
+#[must_use]
+pub fn discover_by_capability(capability: &str) -> Option<PrimalEndpoint> {
+    let registry = discover_primals();
+    registry.find(capability).cloned()
+}
+
 /// Send a JSON-RPC request to a primal and return the result.
 ///
 /// # Errors
@@ -180,11 +188,12 @@ pub fn call_primal(
     params: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
     let stream = UnixStream::connect(&endpoint.socket).map_err(|e| format!("connect: {e}"))?;
+    let rpc_timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
     stream
-        .set_read_timeout(Some(Duration::from_secs(5)))
+        .set_read_timeout(Some(rpc_timeout))
         .map_err(|e| format!("set_read_timeout: {e}"))?;
     stream
-        .set_write_timeout(Some(Duration::from_secs(5)))
+        .set_write_timeout(Some(rpc_timeout))
         .map_err(|e| format!("set_write_timeout: {e}"))?;
 
     let request = serde_json::json!({

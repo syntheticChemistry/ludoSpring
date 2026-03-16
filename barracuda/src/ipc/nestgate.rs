@@ -3,7 +3,7 @@
 //!
 //! Routes storage capability calls through [`NeuralBridge`] to NestGate:
 //!
-//! - `storage.put` / `storage.get` — save/load game state, NPC snapshots, rulesets
+//! - `storage.store` / `storage.retrieve` — save/load game state, NPC snapshots, rulesets
 //! - `storage.exists` — check cache before recomputing
 //! - `storage.list` — enumerate saved games and world states
 //! - `storage.metadata` — version and timestamp tracking
@@ -38,7 +38,7 @@ pub fn put(key: &str, value: &serde_json::Value, metadata: &serde_json::Value) -
         "metadata": metadata,
     });
 
-    bridge.capability_call("storage", "put", &args).map_or_else(
+    bridge.capability_call("storage", "store", &args).map_or_else(
         |_| Ok(unavailable()),
         |result| Ok(StorageResult { available: true, data: result }),
     )
@@ -56,7 +56,7 @@ pub fn get(key: &str) -> Result<StorageResult, String> {
 
     let args = serde_json::json!({ "key": key });
 
-    bridge.capability_call("storage", "get", &args).map_or_else(
+    bridge.capability_call("storage", "retrieve", &args).map_or_else(
         |_| Ok(unavailable()),
         |result| Ok(StorageResult { available: true, data: result }),
     )

@@ -33,7 +33,9 @@ pub mod nestgate;
 pub mod provenance;
 pub mod squirrel;
 
-pub use discovery::{PrimalEndpoint, PrimalRegistry, call_primal, discover_primals};
+pub use discovery::{
+    PrimalEndpoint, PrimalRegistry, call_primal, discover_by_capability, discover_primals,
+};
 pub use envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody};
 pub use handlers::dispatch;
 pub use neural_bridge::NeuralBridge;

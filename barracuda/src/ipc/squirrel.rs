@@ -3,10 +3,11 @@
 //!
 //! Routes AI capability calls through [`NeuralBridge`] to Squirrel:
 //!
-//! - `ai.chat` — NPC dialogue generation constrained by personality + knowledge
-//! - `ai.inference` — Internal voice outputs constrained by `VoiceId` personality
-//! - `context.create` / `context.update` / `context.summarize` — NPC memory context
-//! - `ai.text_generation` — Structured narration for exploration and combat
+//! - `ai.query` — NPC dialogue generation constrained by personality + knowledge
+//! - `ai.analyze` — Internal voice outputs constrained by `VoiceId` personality
+//! - `ai.suggest` — Structured narration for exploration and combat
+//!
+//! Context management uses Squirrel's internal memory through the AI domain.
 //!
 //! Graceful degradation: returns `SquirrelResult { available: false, .. }` when
 //! Squirrel is not reachable through the Neural API.
@@ -24,7 +25,7 @@ pub struct SquirrelResult {
     pub data: serde_json::Value,
 }
 
-/// Generate NPC dialogue via `ai.chat`, constrained by personality and knowledge.
+/// Generate NPC dialogue via `ai.query`, constrained by personality and knowledge.
 ///
 /// The system prompt encodes the NPC's personality, knowledge bounds, and current
 /// trust level so Squirrel generates responses consistent with the NPC's character.
@@ -61,8 +62,8 @@ pub fn npc_dialogue(
         "metadata": { "npc": npc_name, "domain": "game" },
     });
 
-    bridge.capability_call("ai", "chat", &args).map_or_else(
-        |_| Ok(unavailable("Squirrel ai.chat unavailable")),
+    bridge.capability_call("ai", "query", &args).map_or_else(
+        |_| Ok(unavailable("Squirrel ai.query unavailable")),
         |result| {
             let text = result
                 .get("content")
@@ -80,7 +81,7 @@ pub fn npc_dialogue(
     )
 }
 
-/// Generate narration text for a game action via `ai.text_generation`.
+/// Generate narration text for a game action via `ai.suggest`.
 ///
 /// # Errors
 ///
@@ -104,9 +105,9 @@ pub fn narrate_action(
     });
 
     bridge
-        .capability_call("ai", "text_generation", &args)
+        .capability_call("ai", "suggest", &args)
         .map_or_else(
-            |_| Ok(unavailable("Squirrel ai.text_generation unavailable")),
+            |_| Ok(unavailable("Squirrel ai.suggest unavailable")),
             |result| {
                 let text = extract_text(&result);
                 Ok(SquirrelResult {
@@ -118,7 +119,7 @@ pub fn narrate_action(
         )
 }
 
-/// Generate internal voice output via `ai.inference`, constrained by voice personality.
+/// Generate internal voice output via `ai.analyze`, constrained by voice personality.
 ///
 /// # Errors
 ///
@@ -142,9 +143,9 @@ pub fn voice_check(
     });
 
     bridge
-        .capability_call("ai", "inference", &args)
+        .capability_call("ai", "analyze", &args)
         .map_or_else(
-            |_| Ok(unavailable("Squirrel ai.inference unavailable")),
+            |_| Ok(unavailable("Squirrel ai.analyze unavailable")),
             |result| {
                 let text = extract_text(&result);
                 Ok(SquirrelResult {

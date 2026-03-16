@@ -5,8 +5,8 @@
 //!
 //! - `contribution.record_dehydration` — who created what during session end
 //! - `braid.query` / `braid.commit` — attribution braid lifecycle
-//! - `provenance.lineage` — derivation history (NPC design evolution)
-//! - `provenance.attribution` — contribution shares for collaborative campaigns
+//! - `provenance.graph` — derivation history (NPC design evolution)
+//! - `attribution.chain` — contribution shares for collaborative campaigns
 
 use crate::ipc::neural_bridge::NeuralBridge;
 
@@ -121,7 +121,7 @@ pub fn provenance_lineage(braid_id: &str) -> Result<ProvenanceResult, String> {
     let args = serde_json::json!({ "braid_id": braid_id });
 
     bridge
-        .capability_call("provenance", "lineage", &args)
+        .capability_call("provenance", "graph", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
             |result| Ok(ProvenanceResult {
@@ -145,7 +145,7 @@ pub fn provenance_attribution(braid_id: &str) -> Result<ProvenanceResult, String
     let args = serde_json::json!({ "braid_id": braid_id });
 
     bridge
-        .capability_call("provenance", "attribution", &args)
+        .capability_call("attribution", "chain", &args)
         .map_or_else(
             |_| Ok(unavailable_result()),
             |result| Ok(ProvenanceResult {
