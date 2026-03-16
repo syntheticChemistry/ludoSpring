@@ -97,6 +97,24 @@ pub enum Command {
     },
 }
 
+impl Command {
+    /// Machine-readable verb for ruleset validation.
+    #[must_use]
+    pub fn verb(&self) -> &str {
+        match self {
+            Self::Move { .. } => "move",
+            Self::Interact { .. } => "interact",
+            Self::Talk { .. } => "talk",
+            Self::UseItem { .. } => "use_item",
+            Self::Examine { .. } => "examine",
+            Self::Attack { .. } => "attack",
+            Self::EndTurn { .. } => "end_turn",
+            Self::Wait { .. } => "wait",
+            Self::Custom { verb, .. } => verb,
+        }
+    }
+}
+
 /// What to examine — an entity, a tile, or a direction.
 #[derive(Debug, Clone)]
 pub enum ExamineTarget {

@@ -76,6 +76,31 @@ impl GridMap {
     }
 }
 
+impl From<&super::engine::world::TileWorld> for GridMap {
+    /// Convert a `TileWorld` into a raycaster grid.
+    ///
+    /// Tiles that block sight (walls, closed doors) become `true` (solid).
+    /// All other terrain becomes `false` (open).
+    fn from(world: &super::engine::world::TileWorld) -> Self {
+        let w = world.width();
+        let h = world.height();
+        let data: Vec<bool> = (0..h)
+            .flat_map(|y| {
+                (0..w).map(move |x| {
+                    world
+                        .get(x, y)
+                        .is_some_and(|t| t.terrain.blocks_sight())
+                })
+            })
+            .collect();
+        Self {
+            data,
+            width: w as usize,
+            height: h as usize,
+        }
+    }
+}
+
 /// Player state in a raycasted world.
 #[derive(Debug, Clone)]
 pub struct RayPlayer {

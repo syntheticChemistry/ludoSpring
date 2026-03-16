@@ -32,3 +32,17 @@ pub const DEFAULT_VERTEX_QUERY_LIMIT: u32 = 50;
 /// Justification: 60 Hz is the standard interactive rate for smooth
 /// gameplay. petalTongue's interaction stream targets this rate.
 pub const TARGET_FRAME_RATE_HZ: f64 = 60.0;
+
+/// Default player sight radius for fog of war (tiles).
+///
+/// Justification: 5 tiles gives good visibility in a 10x10 room
+/// while maintaining meaningful fog for larger spaces. Adjustable
+/// per-session via `GameSession::with_sight_radius()`.
+pub const DEFAULT_SIGHT_RADIUS: u32 = 5;
+
+/// Trigger detection range for movement events (tiles).
+///
+/// Justification: Range 1 detects triggers on the destination tile
+/// and adjacent tiles, catching doorway triggers the player walks
+/// past. Range 0 (previous value) missed adjacent triggers.
+pub const TRIGGER_DETECTION_RANGE: u32 = 1;

@@ -14,7 +14,7 @@
 use super::action::{ActionCost, ActionOutcome, Command, Effect, TriggerEvent, TurnBudget};
 use super::entity::{Entity, EntityId, EntityKind, EntityRegistry};
 use super::world::TileWorld;
-use crate::game::rpgpt::plane::PlaneType;
+use crate::game::rpgpt::plane::{PlaneType, RulesetCert};
 
 /// The game session — root of all game state.
 #[derive(Debug, Clone)]
@@ -25,6 +25,8 @@ pub struct GameSession {
     pub entities: EntityRegistry,
     /// Currently active game plane.
     pub active_plane: PlaneType,
+    /// Active ruleset (drives command validation and action economy).
+    pub active_ruleset: Option<RulesetCert>,
     /// Current turn number (increments after each full turn cycle).
     pub turn: u32,
     /// Turn budget for the currently acting entity.
@@ -60,14 +62,28 @@ impl GameSession {
             world,
             entities: EntityRegistry::new(),
             active_plane: plane,
+            active_ruleset: None,
             turn: 0,
             turn_budget: None,
             initiative: Vec::new(),
             initiative_index: 0,
             history: Vec::new(),
-            sight_radius: 5,
+            sight_radius: crate::tolerances::DEFAULT_SIGHT_RADIUS,
             session_id: String::new(),
         }
+    }
+
+    /// Set a custom sight radius (overrides the default tolerance).
+    pub const fn with_sight_radius(&mut self, radius: u32) -> &mut Self {
+        self.sight_radius = radius;
+        self
+    }
+
+    /// Set the active ruleset for the current plane.
+    pub fn with_ruleset(&mut self, ruleset: RulesetCert) -> &mut Self {
+        self.active_plane = ruleset.plane;
+        self.active_ruleset = Some(ruleset);
+        self
     }
 
     /// Spawn an entity into the session. Returns its ID.
@@ -75,11 +91,49 @@ impl GameSession {
         self.entities.spawn(entity)
     }
 
-    /// Process a command through the resolution pipeline.
+    /// Check whether a command is permitted by the active ruleset.
     ///
-    /// Returns the outcome. The caller is responsible for rendering
-    /// the outcome via petalTongue and routing narration to Squirrel.
+    /// Returns `None` if valid (or no ruleset is loaded), `Some(reason)` if invalid.
+    #[must_use]
+    pub fn validate_command(&self, command: &Command) -> Option<String> {
+        let Some(ruleset) = &self.active_ruleset else {
+            return None;
+        };
+
+        if ruleset.available_actions.is_empty() {
+            return None;
+        }
+
+        let verb = command.verb();
+        let is_permitted = ruleset
+            .available_actions
+            .iter()
+            .any(|t| t.id == verb || t.name.eq_ignore_ascii_case(verb));
+
+        if is_permitted {
+            None
+        } else {
+            Some(format!(
+                "{verb} is not available in the {} plane",
+                self.active_plane.label()
+            ))
+        }
+    }
+
+    /// Process a command through the validation → resolution → apply pipeline.
+    ///
+    /// Returns the outcome. If the active ruleset rejects the command, the
+    /// outcome is `NoEffect` with the rejection reason. The caller is
+    /// responsible for rendering via petalTongue and routing to Squirrel.
     pub fn process(&mut self, command: Command) -> ActionOutcome {
+        if let Some(reason) = self.validate_command(&command) {
+            return ActionOutcome {
+                effect: Effect::NoEffect { reason },
+                cost: ActionCost::Free,
+                narration: Some("That action isn't available right now.".into()),
+                triggers: Vec::new(),
+            };
+        }
         let outcome = self.resolve(&command);
         self.apply(&outcome);
         self.history.push(ResolvedCommand {
@@ -168,7 +222,7 @@ impl GameSession {
             }
 
             let mut triggers = Vec::new();
-            for adj in self.entities.within_range(nx, ny, 0) {
+            for adj in self.entities.within_range(nx, ny, crate::tolerances::TRIGGER_DETECTION_RANGE) {
                 if adj.kind == EntityKind::Trigger {
                     if let Some(zone) = adj.properties.get("zone_transition") {
                         triggers.push(TriggerEvent::ZoneTransition {
@@ -362,7 +416,6 @@ impl GameSession {
                     e.x = *to_x;
                     e.y = *to_y;
                 }
-                // Update fog of war if player moved
                 if self
                     .entities
                     .get(*entity)
@@ -374,15 +427,42 @@ impl GameSession {
             Effect::TurnEnded { .. } => {
                 self.advance_turn();
             }
-            Effect::ItemAcquired { .. }
-            | Effect::Interacted { .. }
-            | Effect::DialogueAdvanced { .. }
-            | Effect::Damaged { .. }
+            Effect::ItemAcquired { actor: _, item_name } => {
+                let item_id = self
+                    .entities
+                    .iter()
+                    .find(|e| e.kind == EntityKind::Item && e.name == *item_name)
+                    .map(|e| e.id);
+                if let Some(id) = item_id {
+                    self.entities.despawn(id);
+                }
+            }
+            Effect::Damaged {
+                target, amount, ..
+            } => {
+                if *amount > 0 {
+                    if let Some(e) = self.entities.get_mut(*target) {
+                        let hp = e
+                            .properties
+                            .entry("hp".into())
+                            .or_insert_with(|| "10".into());
+                        if let Ok(current) = hp.parse::<i32>() {
+                            *hp = (current - amount).to_string();
+                        }
+                    }
+                }
+            }
+            Effect::Interacted {
+                target, result, ..
+            } => {
+                if let Some(e) = self.entities.get_mut(*target) {
+                    e.properties.insert("last_interaction".into(), result.clone());
+                }
+            }
+            Effect::DialogueAdvanced { .. }
             | Effect::ItemUsed { .. }
             | Effect::Revealed { .. }
-            | Effect::NoEffect { .. } => {
-                // In a full implementation, ItemAcquired would remove entity and add to inventory
-            }
+            | Effect::NoEffect { .. } => {}
         }
     }
 
