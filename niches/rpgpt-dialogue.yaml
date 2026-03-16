@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # BYOB niche composition: RPGPT Compute Engine
-# V21 — RPGPT Dialogue Engine + petalTongue UI + GPU compute (barraCuda shaders)
+# V22 — RPGPT Dialogue Engine + petalTongue UI + GPU compute (barraCuda shaders) + ecosystem absorption
 
 niche:
   id: "rpgpt-dialogue"

@@ -219,32 +219,32 @@ See `specs/LYSOGENY_CATALOG.md` for full citation tables.
 
 ### Track 19: BearDog-Signed Provenance Chain
 
-|| # | Package | Checks | Status | Description |
-||---|---------|--------|--------|-------------|
-|| 064 | `ludospring-exp064` | 39 | PASS | BearDog Ed25519 signing wired into all trio operations: vertex, certificate, braid. Chain verification detects tampered items at exact position. IPC wire format for `crypto.sign_ed25519` / `crypto.verify_ed25519` / `crypto.blake3_hash`. |
+| # | Package | Checks | Status | Description |
+|---|---------|--------|--------|-------------|
+| 064 | `ludospring-exp064` | 39 | PASS | BearDog Ed25519 signing wired into all trio operations: vertex, certificate, braid. Chain verification detects tampered items at exact position. IPC wire format for `crypto.sign_ed25519` / `crypto.verify_ed25519` / `crypto.blake3_hash`. |
 
 ### Track 20: Cross-Spring Provenance — Field Sample (wetSpring Scaffold)
 
-|| # | Package | Checks | Status | Description |
-||---|---------|--------|--------|-------------|
-|| 062 | `ludospring-exp062` | 39 | PASS | Full biological sample lifecycle: collect → transport → store → extract → amplify → sequence → analyze → publish. 6 fraud types (PhantomSample, DuplicateAccession, BrokenColdChain, UnauthorizedAccess, MislabeledSpecimen, ContaminationGap). DAG isomorphism with extraction shooter exp053. IPC wire format. |
+| # | Package | Checks | Status | Description |
+|---|---------|--------|--------|-------------|
+| 062 | `ludospring-exp062` | 39 | PASS | Full biological sample lifecycle: collect → transport → store → extract → amplify → sequence → analyze → publish. 6 fraud types (PhantomSample, DuplicateAccession, BrokenColdChain, UnauthorizedAccess, MislabeledSpecimen, ContaminationGap). DAG isomorphism with extraction shooter exp053. IPC wire format. |
 
 **What wetSpring gets**: `SampleCertificate` and `SampleDag` patterns mapping directly to field genomics architecture. Fraud detectors become the QC pipeline.
 
 ### Track 21: Cross-Spring Provenance — Consent-Gated Medical Access (healthSpring Scaffold)
 
-|| # | Package | Checks | Status | Description |
-||---|---------|--------|--------|-------------|
-|| 063 | `ludospring-exp063` | 35 | PASS | Patient-owned medical records via DID-based loamSpine certs. Consent certificates as scoped lending. 5 fraud types (UnauthorizedAccess, ExpiredConsent, ScopeViolation, PhantomAccess, ConsentForgery). BearDog zero-knowledge access proofs. PROV-O audit trail. |
+| # | Package | Checks | Status | Description |
+|---|---------|--------|--------|-------------|
+| 063 | `ludospring-exp063` | 35 | PASS | Patient-owned medical records via DID-based loamSpine certs. Consent certificates as scoped lending. 5 fraud types (UnauthorizedAccess, ExpiredConsent, ScopeViolation, PhantomAccess, ConsentForgery). BearDog zero-knowledge access proofs. PROV-O audit trail. |
 
 **What healthSpring gets**: consent/access model mapping to clinical tracks (PK/PD, microbiome, biosignal, TRT). Zero-knowledge access proof pattern via BearDog.
 
 ### Track 22: Cross-Domain Fraud Unification + Radiating Attribution
 
-|| # | Package | Checks | Status | Description |
-||---|---------|--------|--------|-------------|
-|| 065 | `ludospring-exp065` | 74 | PASS | Same `GenericFraudDetector` catches fraud across gaming (exp053), science (exp062), medical (exp063). 5 generic fraud types, 3 vocabularies. Structural similarity >80%. |
-|| 066 | `ludospring-exp066` | 41 | PASS | sunCloud radiating attribution: walk sweetGrass chain, compute proportional credit. Decay models, role weighting. Conservation proven (shares sum to 1.0). Game/science/medical scenarios. |
+| # | Package | Checks | Status | Description |
+|---|---------|--------|--------|-------------|
+| 065 | `ludospring-exp065` | 74 | PASS | Same `GenericFraudDetector` catches fraud across gaming (exp053), science (exp062), medical (exp063). 5 generic fraud types, 3 vocabularies. Structural similarity >80%. |
+| 066 | `ludospring-exp066` | 41 | PASS | sunCloud radiating attribution: walk sweetGrass chain, compute proportional credit. Decay models, role weighting. Conservation proven (shares sum to 1.0). Game/science/medical scenarios. |
 
 **Key insight**: The universality claim from Paper 18 (anti-cheat = chain-of-custody) is not just conceptual — it is the same code path. exp065 proves it with identical fraud detections across all 3 domain vocabularies.
 
@@ -418,11 +418,11 @@ Every experiment follows the hotSpring validation pattern using `ValidationHarne
 
 ```rust
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "baselines/python/raycaster_baseline.py",
+    script: "baselines/python/interaction_laws.py",
     commit: "abc1234",
     date: "2026-03-10",
     python: "3.12.1",
-    command: "python3 baselines/python/raycaster_baseline.py",
+    command: "python3 baselines/python/interaction_laws.py",
 };
 
 fn main() {
