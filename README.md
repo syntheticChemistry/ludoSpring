@@ -2,13 +2,13 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 15, 2026
-**Version:** V18 (66 experiments, 1371 validation checks, 244 tests + 12 proptest)
+**Date:** March 16, 2026
+**Version:** V19 (75 experiments, 1692 validation checks, 407 tests + 12 proptest)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives)
-**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration
-**Audit Status:** Deep audit + niche evolution — 0 clippy warnings, 0 `#[allow()]` in production, `niche.rs` self-knowledge, `NeuralBridge` typed IPC, platform-agnostic paths, zero `/tmp` hardcoding
+**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities
+**Audit Status:** Deep debt evolution — 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics in production, `niche.rs` self-knowledge, `NeuralBridge` typed IPC, provenance trio decomposed, capability-based discovery everywhere
 
 ---
 
@@ -153,7 +153,7 @@ The core insight: **anti-cheat is chain-of-custody**. The same rhizoCrypt DAG th
 | BearDog | Anti-cheat action signing |
 | Squirrel | AI narration constrained by ruleset cert |
 
-See `specs/RPGPT_ARCHITECTURE_SKETCH.md` and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
+See `specs/RPGPT_DEEP_SYSTEM_DESIGN.md` (planes architecture, NPC personality, internal voices) and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
 
 ```bash
 cargo run --release -p ludospring-exp045 -- validate  # 49/49 Ruleset control systems (PF2e, FATE, Cairn)
@@ -268,6 +268,29 @@ Key results:
 - **Radiating attribution**: sunCloud value distribution walks sweetGrass chains. Shares always sum to 1.0 (conservation). Decay models and role weighting.
 
 Papers 21 (Sovereign Sample Provenance) and 22 (Zero-Knowledge Medical Provenance) are pending gen3 baseCamp write-up — the experimental validation is complete.
+
+## RPGPT Dialogue Plane (exp067-075)
+
+Nine experiments validating the Dialogue Plane of the RPGPT system — NPC personality,
+knowledge bounds, internal voices, trust dynamics, and plane transition continuity:
+
+```bash
+cargo run --release -p ludospring-exp067 -- validate  # NPC knowledge bounds
+cargo run --release -p ludospring-exp068 -- validate  # Lie detection / passive checks
+cargo run --release -p ludospring-exp069 -- validate  # NPC memory DAG
+cargo run --release -p ludospring-exp070 -- validate  # Ruleset hot-swap
+cargo run --release -p ludospring-exp071 -- validate  # Multi-voice integration
+cargo run --release -p ludospring-exp072 -- validate  # Trust dynamics arc
+cargo run --release -p ludospring-exp073 -- validate  # Dialogue skill checks
+cargo run --release -p ludospring-exp074 -- validate  # Faction cascade
+cargo run --release -p ludospring-exp075 -- validate  # Plane transition continuity
+```
+
+Key results:
+- **NPC personality certificates**: loamSpine-anchored personality + knowledge bounds — NPCs know what they know, refuse what they don't
+- **Internal voices**: Disco Elysium-style skill-as-perspective via constrained Squirrel AI calls (10 voices: Logic, Empathy, Rhetoric, Perception, Endurance, Authority, Composure, Imagination, History, Esotericism)
+- **Trust dynamics**: Multi-factor disposition (faction + personal + relationship + debt), trust gates on knowledge sharing
+- **Plane transitions**: State preserved across Exploration ↔ Dialogue ↔ Tactical ↔ Investigation ↔ Political ↔ Crafting ↔ Card/Stack
 
 ## Specs Paper Validation + Performance Benchmarks
 
@@ -408,7 +431,7 @@ ludoSpring/
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity, validation, determinism, proptest_invariants
-├── experiments/           # 66 experiments
+├── experiments/           # 75 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Capability-based routing (9 tests, GPU>NPU>CPU)
@@ -434,7 +457,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (234 total: 180 unit + 8 determinism + 12 proptest + 22 parity + 12 validation)
+# All tests (407 total: 349 unit + 8 determinism + 12 proptest + 23 parity + 12 validation + 3 doctest)
 cargo test --features ipc -p ludospring-barracuda --lib --tests
 
 # Run a specific experiment
@@ -459,9 +482,9 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
-| `cargo test` (barracuda) | 244 tests, 0 failures |
+| `cargo test --features ipc` (barracuda) | 407 tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
-| 67 validation binaries | 1371 checks, 0 failures |
+| 75 validation binaries | 1692 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 12 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick) |
@@ -474,21 +497,28 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Structured logging | `tracing` for all library IPC/biomeOS (no `eprintln!`) |
 | Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery |
 
-## V18 Niche Self-Knowledge Evolution (March 15, 2026)
+## V19 Deep Debt Evolution (March 16, 2026)
 
-This version adds deep architectural evolution on the V17 foundation:
+Comprehensive code quality pass eliminating all remaining technical debt:
 
-- **`niche.rs` single source of truth** — all primal identity, capabilities, semantic mappings, operation dependencies, cost estimates, and socket resolution centralized in one module
-- **`NeuralBridge` typed IPC client** — `discover()`, `capability_call()`, `discover_capability()`, `register()`, `deregister()` — replaces scattered RPC helpers across biomeos, provenance, and binaries
-- **Platform-agnostic paths** — all `/tmp` hardcoding replaced with `std::env::temp_dir()` through centralized `niche::socket_dirs()` XDG-compliant chain
-- **Socket resolution centralized** — `niche::resolve_server_socket()` and `niche::resolve_neural_api_socket()` used by all IPC code (server, discovery, provenance, biomeos, binaries)
-- **Capability deduplication** — `handlers.rs`, `biomeos/mod.rs`, and `bin/ludospring.rs` all delegate to `niche::CAPABILITIES` instead of maintaining independent lists
-- **Zero production mocks** confirmed — no mocks outside `#[cfg(test)]`
-- **All deps pure Rust** — ecoBin compliant, zero C build dependencies
+- **Magic numbers eliminated** — 9 new tolerance constants (`RPC_TIMEOUT_SECS`, `PROBE_TIMEOUT_MS`, `NPC_PROXIMITY_TILES`, `AREA_DESCRIPTION_RANGE_TILES`, `ITEM_PROXIMITY_TILES`, `DEFAULT_VERTEX_QUERY_LIMIT`, `TARGET_FRAME_RATE_HZ`, `CONNECT_PROBE_TIMEOUT_MS`) with provenance citations, replacing raw literals in `audio.rs`, `push_client.rs`, `handlers.rs`, `provenance/rhizocrypt.rs`
+- **Clone abuse eliminated** — `JsonRpcError` and `JsonRpcResponse` constructors now take `&serde_json::Value` instead of owned values; 13 call-site `.clone()` calls removed from `handlers.rs`
+- **Production panic eliminated** — `BlockPalette::register()` evolved from `unwrap_or_else(|| panic!())` to `Result<BlockId, String>`; `chemistry_palette()` propagates with `?`
+- **Provenance decomposed** — 773-line monolith split into `provenance/mod.rs` (session lifecycle) + `rhizocrypt.rs` (DAG queries) + `loamspine.rs` (certificates) + `sweetgrass.rs` (attribution), each focused and testable
+- **Audio narration refactored** — `compile_outcome` split into 5 focused functions (`compile_effect_cues`, `compile_movement_cues`, `compile_damage_cues`, `compile_trigger_cues`, `push_narration_cue`); `#[allow(clippy::too_many_lines)]` suppression removed
+- **407 tests pass** (349 unit + 8 determinism + 12 proptest + 23 parity + 12 validation + 3 doctest)
+- **Zero clippy warnings** under pedantic + nursery across both default and `--features ipc`
+
+### V18 Foundation (preserved)
+
+- `niche.rs` single source of truth — 24 capabilities, semantic mappings, cost estimates
+- `NeuralBridge` typed IPC client for all inter-primal communication
+- Platform-agnostic paths, XDG-compliant socket chain
+- Squirrel AI, NestGate storage, petalTongue scene push, provenance trio all wired
+- GPU compute: fog of war, tile lighting, pathfinding, Perlin terrain via toadStool/barraCuda
 
 ### V17 Foundation (preserved)
 
-- Zero clippy warnings under pedantic + nursery lints
 - Zero `#[allow()]` in production code
 - 11 WGSL shaders extracted for toadStool absorption
 - 12 proptest invariants

@@ -69,14 +69,14 @@ impl BlockPalette {
 
     /// Register a new block type. Returns its `BlockId`.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if more than `u16::MAX` block types are registered.
-    pub fn register(&mut self, entry: BlockEntry) -> BlockId {
+    /// Returns an error if more than `u16::MAX` block types are registered.
+    pub fn register(&mut self, entry: BlockEntry) -> Result<BlockId, String> {
         let id = u16::try_from(self.entries.len())
-            .unwrap_or_else(|_| panic!("palette overflow: {} exceeds u16", self.entries.len()));
+            .map_err(|_| format!("palette overflow: {} exceeds u16::MAX", self.entries.len()))?;
         self.entries.push(entry);
-        BlockId(id)
+        Ok(BlockId(id))
     }
 
     /// Look up a block type by ID.
@@ -192,8 +192,10 @@ impl Chunk {
 ///
 /// Colors follow the CPK (Corey-Pauling-Koltun) convention; see
 /// [`crate::tolerances`] for color constants and citations.
-#[must_use]
-pub fn chemistry_palette() -> BlockPalette {
+/// # Errors
+///
+/// Returns an error if more than `u16::MAX` block types are registered.
+pub fn chemistry_palette() -> Result<BlockPalette, String> {
     use crate::tolerances::{
         CPK_CALCIUM, CPK_CARBON, CPK_CHLORINE, CPK_HYDROGEN, CPK_IRON, CPK_NITROGEN, CPK_OXYGEN,
         CPK_PHOSPHORUS, CPK_SODIUM, CPK_SULFUR,
@@ -219,9 +221,9 @@ pub fn chemistry_palette() -> BlockPalette {
             color,
             solid: true,
             atomic_number: num,
-        });
+        })?;
     }
-    p
+    Ok(p)
 }
 
 #[cfg(test)]
@@ -246,11 +248,9 @@ mod tests {
 
     #[test]
     fn chemistry_palette_has_common_elements() {
-        let palette = chemistry_palette();
+        let palette = chemistry_palette().unwrap();
         assert!(palette.len() > 10);
-        let Some(hydrogen) = palette.get(BlockId(1)) else {
-            panic!("hydrogen must be in palette");
-        };
+        let hydrogen = palette.get(BlockId(1)).unwrap();
         assert_eq!(hydrogen.atomic_number, 1);
     }
 

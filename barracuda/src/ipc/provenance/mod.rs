@@ -5,14 +5,28 @@
 //! discovery through [`NeuralBridge`]. Uses `capability.call` routing:
 //!
 //! - `dag.create_session` / `dag.append_event` / `dag.dehydrate` → rhizoCrypt
-//! - `commit.session` → LoamSpine
+//! - `commit.session` → loamSpine
 //! - `provenance.create_braid` → sweetGrass
 //!
 //! No hardcoded primal names — capability routing is delegated to biomeOS.
 //! Graceful degradation: if the trio is unavailable, handlers return success
 //! with `"provenance": "unavailable"`.
+//!
+//! # Module structure
+//!
+//! - [`rhizocrypt`] — DAG queries (vertex query, Merkle proofs, batch append)
+//! - [`loamspine`] — certificate operations (mint, verify, lifecycle, spines)
+//! - [`sweetgrass`] — attribution (braids, lineage, dehydration records)
 
 use super::neural_bridge::NeuralBridge;
+
+pub mod loamspine;
+pub mod rhizocrypt;
+pub mod sweetgrass;
+
+pub use loamspine::*;
+pub use rhizocrypt::*;
+pub use sweetgrass::*;
 
 /// Result of a provenance operation; includes availability status.
 #[derive(Debug)]
@@ -115,7 +129,7 @@ pub fn record_game_action(
 /// Complete a game session: dehydrate, commit, and attribute.
 ///
 /// 1. `dag.dehydrate` — compute Merkle root and frontier
-/// 2. `commit.session` — anchor to LoamSpine
+/// 2. `commit.session` — anchor to loamSpine
 /// 3. `provenance.create_braid` — attribute via sweetGrass
 ///
 /// # Errors

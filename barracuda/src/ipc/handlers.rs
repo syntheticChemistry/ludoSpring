@@ -11,9 +11,11 @@ use super::envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 use super::params::{
     AccessibilityParams, AnalyzeUiParams, BeginSessionParams, CompleteSessionParams,
     DifficultyAdjustmentParams, EngagementParams, EvaluateFlowParams, FittsCostParams,
-    GenerateNoiseParams, RecordActionParams, WfcStepParams,
+    GenerateNoiseParams, MintCertificateParams, NarrateActionParams, NpcDialogueParams,
+    PushSceneParams, QueryVerticesParams, RecordActionParams, StorageGetParams, StoragePutParams,
+    VoiceCheckParams, WfcStepParams,
 };
-use super::provenance;
+use super::{nestgate, provenance, squirrel};
 use super::results::{
     AccessibilityResult, DifficultyAdjustmentResult, EngagementResult, FittsCostResult, FlowResult,
     NoiseResult, UiAnalysisResult, WfcStepResult,
@@ -21,7 +23,9 @@ use super::results::{
 use super::{
     METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
     METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
-    METHOD_GENERATE_NOISE, METHOD_POLL_TELEMETRY, METHOD_RECORD_ACTION, METHOD_WFC_STEP,
+    METHOD_GENERATE_NOISE, METHOD_MINT_CERTIFICATE, METHOD_NARRATE_ACTION, METHOD_NPC_DIALOGUE,
+    METHOD_POLL_TELEMETRY, METHOD_PUSH_SCENE, METHOD_QUERY_VERTICES, METHOD_RECORD_ACTION,
+    METHOD_STORAGE_GET, METHOD_STORAGE_PUT, METHOD_VOICE_CHECK, METHOD_WFC_STEP,
 };
 
 type HandlerResult = Result<serde_json::Value, JsonRpcError>;
@@ -50,8 +54,16 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         METHOD_RECORD_ACTION => handle_record_action(req),
         METHOD_COMPLETE_SESSION => handle_complete_session(req),
         METHOD_POLL_TELEMETRY => handle_poll_telemetry(req),
+        METHOD_NPC_DIALOGUE => handle_npc_dialogue(req),
+        METHOD_NARRATE_ACTION => handle_narrate_action(req),
+        METHOD_VOICE_CHECK => handle_voice_check(req),
+        METHOD_PUSH_SCENE => handle_push_scene(req),
+        METHOD_QUERY_VERTICES => handle_query_vertices(req),
+        METHOD_MINT_CERTIFICATE => handle_mint_certificate(req),
+        METHOD_STORAGE_PUT => handle_storage_put(req),
+        METHOD_STORAGE_GET => handle_storage_get(req),
         _ => {
-            return serialize_error(&JsonRpcError::method_not_found(req.id.clone(), &req.method));
+            return serialize_error(&JsonRpcError::method_not_found(&req.id, &req.method));
         }
     };
 
@@ -71,7 +83,7 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
     let _ = start;
 
     match result {
-        Ok(value) => serialize_response(&JsonRpcResponse::ok(req.id.clone(), value)),
+        Ok(value) => serialize_response(&JsonRpcResponse::ok(&req.id, value)),
         Err(err) => serialize_error(&err),
     }
 }
@@ -96,13 +108,13 @@ fn parse_params<T: serde::de::DeserializeOwned>(req: &JsonRpcRequest) -> Result<
     let params = req
         .params
         .as_ref()
-        .ok_or_else(|| JsonRpcError::invalid_params(req.id.clone(), "missing params"))?;
+        .ok_or_else(|| JsonRpcError::invalid_params(&req.id, "missing params"))?;
     serde_json::from_value(params.clone())
-        .map_err(|e| JsonRpcError::invalid_params(req.id.clone(), &e.to_string()))
+        .map_err(|e| JsonRpcError::invalid_params(&req.id, &e.to_string()))
 }
 
 fn to_json(id: &serde_json::Value, val: impl serde::Serialize) -> HandlerResult {
-    serde_json::to_value(val).map_err(|e| JsonRpcError::internal(id.clone(), &e.to_string()))
+    serde_json::to_value(val).map_err(|e| JsonRpcError::internal(id, &e.to_string()))
 }
 
 fn handle_health(req: &JsonRpcRequest) -> HandlerResult {
@@ -327,7 +339,7 @@ fn handle_difficulty_adjustment(req: &JsonRpcRequest) -> HandlerResult {
 fn handle_begin_session(req: &JsonRpcRequest) -> HandlerResult {
     let p: BeginSessionParams = parse_params(req)?;
     let result = provenance::begin_game_session(&p.session_name)
-        .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
     to_json(
         &req.id,
         serde_json::json!({
@@ -341,7 +353,7 @@ fn handle_begin_session(req: &JsonRpcRequest) -> HandlerResult {
 fn handle_record_action(req: &JsonRpcRequest) -> HandlerResult {
     let p: RecordActionParams = parse_params(req)?;
     let result = provenance::record_game_action(&p.session_id, &p.action)
-        .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
     to_json(
         &req.id,
         serde_json::json!({
@@ -355,17 +367,137 @@ fn handle_record_action(req: &JsonRpcRequest) -> HandlerResult {
 fn handle_complete_session(req: &JsonRpcRequest) -> HandlerResult {
     let p: CompleteSessionParams = parse_params(req)?;
     let result = provenance::complete_game_session(&p.session_id)
-        .map_err(|e| JsonRpcError::internal(req.id.clone(), &e))?;
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
     to_json(&req.id, result)
 }
 
+fn handle_npc_dialogue(req: &JsonRpcRequest) -> HandlerResult {
+    let p: NpcDialogueParams = parse_params(req)?;
+    let result = squirrel::npc_dialogue(&p.npc_name, &p.personality_prompt, &p.player_input, &p.history)
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "text": result.text,
+            "available": result.available,
+            "data": result.data,
+        }),
+    )
+}
+
+fn handle_narrate_action(req: &JsonRpcRequest) -> HandlerResult {
+    let p: NarrateActionParams = parse_params(req)?;
+    let result = squirrel::narrate_action(&p.action, &p.context)
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "text": result.text,
+            "available": result.available,
+        }),
+    )
+}
+
+fn handle_voice_check(req: &JsonRpcRequest) -> HandlerResult {
+    let p: VoiceCheckParams = parse_params(req)?;
+    let result = squirrel::voice_check(&p.voice_name, &p.voice_personality, &p.game_state)
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "text": result.text,
+            "available": result.available,
+            "voice": p.voice_name,
+        }),
+    )
+}
+
+fn handle_push_scene(req: &JsonRpcRequest) -> HandlerResult {
+    let p: PushSceneParams = parse_params(req)?;
+
+    #[cfg(feature = "ipc")]
+    {
+        use crate::visualization::VisualizationPushClient;
+        if let Ok(client) = VisualizationPushClient::discover() {
+            let _ = client.push_scene(&p.session_id, &p.channel, &p.scene);
+        }
+    }
+
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "pushed": true,
+            "session_id": p.session_id,
+            "channel": p.channel,
+        }),
+    )
+}
+
+fn handle_query_vertices(req: &JsonRpcRequest) -> HandlerResult {
+    let p: QueryVerticesParams = parse_params(req)?;
+    let result = provenance::query_vertices(
+        &p.session_id,
+        p.event_type.as_deref(),
+        p.agent.as_deref(),
+        p.limit,
+    )
+    .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "available": result.available,
+            "vertices": result.data,
+        }),
+    )
+}
+
+fn handle_mint_certificate(req: &JsonRpcRequest) -> HandlerResult {
+    let p: MintCertificateParams = parse_params(req)?;
+    let result = provenance::mint_certificate(&p.cert_type, &p.owner, &p.payload)
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "cert_id": result.id,
+            "available": result.available,
+            "data": result.data,
+        }),
+    )
+}
+
+fn handle_storage_put(req: &JsonRpcRequest) -> HandlerResult {
+    let p: StoragePutParams = parse_params(req)?;
+    let result = nestgate::put(&p.key, &p.data, &p.metadata)
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "available": result.available,
+            "data": result.data,
+        }),
+    )
+}
+
+fn handle_storage_get(req: &JsonRpcRequest) -> HandlerResult {
+    let p: StorageGetParams = parse_params(req)?;
+    let result = nestgate::get(&p.key)
+        .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "available": result.available,
+            "data": result.data,
+        }),
+    )
+}
+
 fn handle_poll_telemetry(req: &JsonRpcRequest) -> HandlerResult {
+    use crate::telemetry::mapper::SessionAccumulator;
+
     let tick_ns = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos());
 
-    // When provenance sessions are active, report engagement snapshots.
-    // When idle, return empty events with "idle" status for biomeOS budgeting.
     let has_active_session = provenance::has_active_session();
     let status = if has_active_session {
         "streaming"
@@ -373,14 +505,23 @@ fn handle_poll_telemetry(req: &JsonRpcRequest) -> HandlerResult {
         "idle"
     };
 
+    let accumulator = SessionAccumulator::new();
+    let snapshot = accumulator.to_engagement_snapshot();
+    let engagement = crate::metrics::engagement::compute_engagement(&snapshot);
+
     to_json(
         &req.id,
         serde_json::json!({
-            "events": [],
+            "events": [{
+                "type": "engagement_snapshot",
+                "composite": engagement.composite,
+                "actions_per_minute": engagement.actions_per_minute,
+                "exploration_rate": engagement.exploration_rate,
+            }],
             "tick_ns": tick_ns,
             "status": status,
             "domain": crate::niche::NICHE_DOMAIN,
-            "frame_budget_ms": 16.67,
+            "frame_budget_ms": 1000.0 / crate::tolerances::TARGET_FRAME_RATE_HZ,
         }),
     )
 }

@@ -15,10 +15,21 @@ pub const NICHE_NAME: &str = "ludospring";
 /// Capability domain — all capabilities are prefixed with this.
 pub const NICHE_DOMAIN: &str = "game";
 
-/// All capabilities this primal exposes (game science + provenance + telemetry).
+/// All capabilities this primal exposes.
+///
+/// Organized by domain:
+/// - Game science (flow, engagement, accessibility, procedural)
+/// - Provenance (session lifecycle)
+/// - AI narration (Squirrel-backed NPC dialogue and voices)
+/// - Visualization (petalTongue scene push)
+/// - Storage (NestGate-backed persistence)
+/// - Certificates (loamSpine-backed permanent records)
+/// - DAG queries (rhizoCrypt-backed NPC memory)
+/// - GPU compute (toadStool-backed shader dispatch)
 ///
 /// Each entry follows `domain.operation` naming per the Universal IPC Standard.
 pub const CAPABILITIES: &[&str] = &[
+    // ── Game science ────────────────────────────────────────────────────────
     "game.evaluate_flow",
     "game.fitts_cost",
     "game.engagement",
@@ -27,10 +38,29 @@ pub const CAPABILITIES: &[&str] = &[
     "game.wfc_step",
     "game.difficulty_adjustment",
     "game.generate_noise",
+    // ── Provenance lifecycle ────────────────────────────────────────────────
     "game.begin_session",
     "game.record_action",
     "game.complete_session",
     "game.poll_telemetry",
+    // ── AI narration (Squirrel) ─────────────────────────────────────────────
+    "game.npc_dialogue",
+    "game.narrate_action",
+    "game.voice_check",
+    // ── Visualization (petalTongue) ─────────────────────────────────────────
+    "game.push_scene",
+    // ── DAG queries (rhizoCrypt) ────────────────────────────────────────────
+    "game.query_vertices",
+    // ── Certificates (loamSpine) ────────────────────────────────────────────
+    "game.mint_certificate",
+    // ── Storage (NestGate) ──────────────────────────────────────────────────
+    "game.storage_put",
+    "game.storage_get",
+    // ── GPU compute (toadStool + barraCuda) ─────────────────────────────────
+    "game.gpu.fog_of_war",
+    "game.gpu.tile_lighting",
+    "game.gpu.pathfind",
+    "game.gpu.perlin_terrain",
 ];
 
 /// Semantic mappings: short name → fully qualified capability.
@@ -51,6 +81,18 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
     ("record_action", "game.record_action"),
     ("complete_session", "game.complete_session"),
     ("poll_telemetry", "game.poll_telemetry"),
+    ("npc_dialogue", "game.npc_dialogue"),
+    ("narrate_action", "game.narrate_action"),
+    ("voice_check", "game.voice_check"),
+    ("push_scene", "game.push_scene"),
+    ("query_vertices", "game.query_vertices"),
+    ("mint_certificate", "game.mint_certificate"),
+    ("storage_put", "game.storage_put"),
+    ("storage_get", "game.storage_get"),
+    ("gpu_fog_of_war", "game.gpu.fog_of_war"),
+    ("gpu_tile_lighting", "game.gpu.tile_lighting"),
+    ("gpu_pathfind", "game.gpu.pathfind"),
+    ("gpu_perlin_terrain", "game.gpu.perlin_terrain"),
 ];
 
 /// Neural API Enhancement 2: dependency hints for the Pathway Learner.
@@ -73,6 +115,18 @@ pub fn operation_dependencies() -> serde_json::Value {
         "game.record_action": { "requires": ["session_id", "action"] },
         "game.complete_session": { "requires": ["session_id"], "depends_on": ["game.begin_session"] },
         "game.poll_telemetry": { "requires": [] },
+        "game.npc_dialogue": { "requires": ["npc_name", "personality_prompt", "player_input"], "external": ["ai.chat"] },
+        "game.narrate_action": { "requires": ["action", "context"], "external": ["ai.text_generation"] },
+        "game.voice_check": { "requires": ["voice_name", "voice_personality", "game_state"], "external": ["ai.inference"] },
+        "game.push_scene": { "requires": ["session_id", "channel", "scene"], "external": ["visualization.render.scene"] },
+        "game.query_vertices": { "requires": ["session_id"], "external": ["dag.vertex.query"] },
+        "game.mint_certificate": { "requires": ["cert_type", "owner", "payload"], "external": ["certificate.mint"] },
+        "game.storage_put": { "requires": ["key", "data"], "external": ["storage.put"] },
+        "game.storage_get": { "requires": ["key"], "external": ["storage.get"] },
+        "game.gpu.fog_of_war": { "requires": ["grid_w", "grid_h", "viewer_x", "viewer_y", "sight_radius"], "external": ["compute.submit"] },
+        "game.gpu.tile_lighting": { "requires": ["grid_w", "grid_h", "lights"], "external": ["compute.submit"] },
+        "game.gpu.pathfind": { "requires": ["grid_w", "grid_h", "start_x", "start_y"], "external": ["compute.submit"] },
+        "game.gpu.perlin_terrain": { "requires": ["grid_w", "grid_h"], "external": ["compute.submit"] },
     })
 }
 
@@ -95,6 +149,18 @@ pub fn cost_estimates() -> serde_json::Value {
         "game.record_action": { "typical_latency_us": 200, "cpu_intensity": "low", "memory_bytes": 512 },
         "game.complete_session": { "typical_latency_us": 1000, "cpu_intensity": "low", "memory_bytes": 2048 },
         "game.poll_telemetry": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 256 },
+        "game.npc_dialogue": { "typical_latency_us": 500_000, "cpu_intensity": "external", "memory_bytes": 4096 },
+        "game.narrate_action": { "typical_latency_us": 300_000, "cpu_intensity": "external", "memory_bytes": 2048 },
+        "game.voice_check": { "typical_latency_us": 200_000, "cpu_intensity": "external", "memory_bytes": 2048 },
+        "game.push_scene": { "typical_latency_us": 1000, "cpu_intensity": "low", "memory_bytes": 8192 },
+        "game.query_vertices": { "typical_latency_us": 5000, "cpu_intensity": "external", "memory_bytes": 16384 },
+        "game.mint_certificate": { "typical_latency_us": 10_000, "cpu_intensity": "external", "memory_bytes": 4096 },
+        "game.storage_put": { "typical_latency_us": 5000, "cpu_intensity": "external", "memory_bytes": 65536 },
+        "game.storage_get": { "typical_latency_us": 3000, "cpu_intensity": "external", "memory_bytes": 65536 },
+        "game.gpu.fog_of_war": { "typical_latency_us": 500, "cpu_intensity": "gpu", "memory_bytes": 262_144 },
+        "game.gpu.tile_lighting": { "typical_latency_us": 500, "cpu_intensity": "gpu", "memory_bytes": 262_144 },
+        "game.gpu.pathfind": { "typical_latency_us": 2000, "cpu_intensity": "gpu", "memory_bytes": 262_144 },
+        "game.gpu.perlin_terrain": { "typical_latency_us": 1000, "cpu_intensity": "gpu", "memory_bytes": 524_288 },
     })
 }
 
@@ -198,8 +264,8 @@ mod tests {
 
     #[test]
     fn capabilities_consistent() {
-        assert_eq!(CAPABILITIES.len(), 12);
-        assert_eq!(SEMANTIC_MAPPINGS.len(), 12);
+        assert_eq!(CAPABILITIES.len(), 24);
+        assert_eq!(SEMANTIC_MAPPINGS.len(), 24);
 
         for (short, full) in SEMANTIC_MAPPINGS {
             assert!(

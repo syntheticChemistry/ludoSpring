@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 15, 2026
+**Date:** March 16, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + **Niche Self-Knowledge** + **NeuralBridge** — 66 experiments, 1371 checks, 244 tests + 12 proptest, 0 clippy warnings, `niche.rs` self-knowledge, NeuralBridge typed IPC, platform-agnostic paths (V18)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + **RPGPT Dialogue Plane** + **Deep Primal Integration** + **Deep Debt Evolution** — 75 experiments, 1692 checks, 407 tests + 12 proptest, 0 clippy warnings, 0 magic numbers, 0 production panics, provenance trio decomposed (V19)
 
 ---
 
@@ -50,6 +50,27 @@ validated HCI models benefit every primal in the ecosystem.
 | Medical Access | healthSpring scaffold — consent-gated access, 5 fraud types, zero-knowledge proofs | 063 | 35 |
 | Cross-Domain Fraud | Same GenericFraudDetector across gaming/science/medical (>80% similarity) | 065 | 74 |
 | Radiating Attribution | sunCloud value distribution — decay, role weighting, conservation of attribution | 066 | 41 |
+| RPGPT Dialogue Plane | NPC knowledge bounds, lie detection, memory DAG, ruleset hot-swap, multi-voice, trust, factions, plane transitions | 067–075 | 321 |
+
+### RPGPT Dialogue Plane (V18–V19)
+
+Nine experiments implementing the first playable plane of the RPGPT system:
+
+- **NPC personality certs** (loamSpine): motivations, knowledge bounds, voice, secrets, relationships, arc
+- **Internal voices** (Squirrel AI): 10 Disco Elysium-style skills as constrained AI perspectives
+- **Trust dynamics**: multi-factor disposition gates on knowledge sharing
+- **Plane transitions**: 7 game modes (Exploration, Dialogue, Tactical, Investigation, Political, Crafting, Card/Stack) — state preserved across transitions
+- **2D engine primitives**: TileWorld, EntityRegistry, ActionOutcome, NarrationCue pipeline
+- **GPU compute**: fog of war, tile lighting, pathfinding wavefront, Perlin terrain — via toadStool/barraCuda WGSL shaders
+- **Audio narration**: blind-accessible gameplay — every state change produces semantic narration cues
+
+### Deep Debt Evolution (V19)
+
+- **Magic numbers eliminated**: 9 new tolerance constants with provenance citations
+- **Clone abuse removed**: `JsonRpcError`/`JsonRpcResponse` constructors take `&serde_json::Value`; 13 `.clone()` calls eliminated
+- **Production panic removed**: `BlockPalette::register()` → `Result<BlockId, String>`
+- **Provenance decomposed**: 773-line monolith → `rhizocrypt.rs` + `loamspine.rs` + `sweetgrass.rs` submodules
+- **Audio refactored**: `compile_outcome` → 5 focused functions; `#[allow(too_many_lines)]` removed
 
 ### Cross-Spring Provenance
 
@@ -156,7 +177,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # 234 tests + 12 proptest
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # 407 tests + 12 proptest
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

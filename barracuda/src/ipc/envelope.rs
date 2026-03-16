@@ -51,54 +51,54 @@ pub struct RpcErrorBody {
 }
 
 impl JsonRpcResponse {
-    /// Construct a success response.
+    /// Construct a success response. Clones `id` from the request.
     #[must_use]
-    pub const fn ok(id: serde_json::Value, result: serde_json::Value) -> Self {
+    pub fn ok(id: &serde_json::Value, result: serde_json::Value) -> Self {
         Self {
             jsonrpc: "2.0",
             result,
-            id,
+            id: id.clone(),
         }
     }
 }
 
 impl JsonRpcError {
-    /// Method not found (-32601).
+    /// Method not found (-32601). Clones `id` from the request.
     #[must_use]
-    pub fn method_not_found(id: serde_json::Value, method: &str) -> Self {
+    pub fn method_not_found(id: &serde_json::Value, method: &str) -> Self {
         Self {
             jsonrpc: "2.0",
             error: RpcErrorBody {
                 code: -32601,
                 message: format!("method not found: {method}"),
             },
-            id,
+            id: id.clone(),
         }
     }
 
-    /// Invalid params (-32602).
+    /// Invalid params (-32602). Clones `id` from the request.
     #[must_use]
-    pub fn invalid_params(id: serde_json::Value, detail: &str) -> Self {
+    pub fn invalid_params(id: &serde_json::Value, detail: &str) -> Self {
         Self {
             jsonrpc: "2.0",
             error: RpcErrorBody {
                 code: -32602,
                 message: format!("invalid params: {detail}"),
             },
-            id,
+            id: id.clone(),
         }
     }
 
-    /// Internal error (-32603).
+    /// Internal error (-32603). Clones `id` from the request.
     #[must_use]
-    pub fn internal(id: serde_json::Value, detail: &str) -> Self {
+    pub fn internal(id: &serde_json::Value, detail: &str) -> Self {
         Self {
             jsonrpc: "2.0",
             error: RpcErrorBody {
                 code: -32603,
                 message: format!("internal error: {detail}"),
             },
-            id,
+            id: id.clone(),
         }
     }
 }

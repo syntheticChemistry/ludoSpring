@@ -79,6 +79,15 @@ members = [
     "experiments/exp064_beardog_signed_chain",
     "experiments/exp065_cross_domain_fraud",
     "experiments/exp066_radiating_attribution",
+    "experiments/exp067_npc_knowledge_bounds",
+    "experiments/exp068_lie_detection_passive_checks",
+    "experiments/exp069_internal_voice_personality",
+    "experiments/exp070_voice_priority_concurrency",
+    "experiments/exp071_npc_memory_dag",
+    "experiments/exp072_trust_dynamics_arc",
+    "experiments/exp073_dialogue_skill_checks",
+    "experiments/exp074_dialogue_flow_monitoring",
+    "experiments/exp075_plane_transition_continuity",
 ]
 
 [workspace.package]

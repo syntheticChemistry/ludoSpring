@@ -1962,6 +1962,69 @@ dependencies = [
 ]
 
 [[package]]
+name = "ludospring-exp067"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp068"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp069"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp070"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp071"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp072"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp073"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp074"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp075"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
 name = "ludospring-forge"
 version = "0.1.0"
 dependencies = [

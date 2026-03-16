@@ -118,12 +118,13 @@ impl VisualizationPushClient {
     }
 
     fn send(&self, request: &serde_json::Value) -> Result<(), String> {
+        let timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
         let stream = UnixStream::connect(&self.socket).map_err(|e| format!("connect: {e}"))?;
         stream
-            .set_read_timeout(Some(Duration::from_secs(5)))
+            .set_read_timeout(Some(timeout))
             .map_err(|e| format!("timeout: {e}"))?;
         stream
-            .set_write_timeout(Some(Duration::from_secs(5)))
+            .set_write_timeout(Some(timeout))
             .map_err(|e| format!("timeout: {e}"))?;
 
         let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
@@ -151,20 +152,236 @@ impl VisualizationPushClient {
 
     fn probe(path: &std::path::Path) -> bool {
         UnixStream::connect(path)
-            .and_then(|s| s.set_read_timeout(Some(Duration::from_millis(200))))
+            .and_then(|s| {
+                s.set_read_timeout(Some(Duration::from_millis(
+                    crate::tolerances::CONNECT_PROBE_TIMEOUT_MS,
+                )))
+            })
             .is_ok()
     }
 
-    /// Scan a directory for any .sock file that responds to probing.
+    /// Push a scene graph to petalTongue for RPGPT game UI.
+    ///
+    /// Scene types from `rpgpt::scene` are serialized as JSON and routed
+    /// to `visualization.render.scene`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error string if the connection or RPC call fails.
+    pub fn push_scene(
+        &self,
+        session_id: &str,
+        channel: &str,
+        scene: &serde_json::Value,
+    ) -> Result<(), String> {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "visualization.render.scene",
+            "params": {
+                "session_id": session_id,
+                "channel": channel,
+                "domain": crate::niche::NICHE_DOMAIN,
+                "scene": scene,
+            },
+            "id": 1
+        });
+        self.send(&request)
+    }
+
+    /// Push a multi-panel dashboard (character sheet + map + narration + voices).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error string if the connection or RPC call fails.
+    pub fn push_dashboard(
+        &self,
+        session_id: &str,
+        panels: &[serde_json::Value],
+    ) -> Result<(), String> {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "visualization.render.dashboard",
+            "params": {
+                "session_id": session_id,
+                "domain": crate::niche::NICHE_DOMAIN,
+                "panels": panels,
+            },
+            "id": 1
+        });
+        self.send(&request)
+    }
+
+    /// Export a session replay (SVG timeline, audio archive).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error string if the connection or RPC call fails.
+    pub fn export(
+        &self,
+        session_id: &str,
+        modality: &str,
+    ) -> Result<serde_json::Value, String> {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "visualization.export",
+            "params": {
+                "session_id": session_id,
+                "modality": modality,
+            },
+            "id": 1
+        });
+        self.send_with_result(&request)
+    }
+
+    /// Subscribe to interaction events (player clicks, key presses, selections).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error string if the connection or RPC call fails.
+    pub fn subscribe_interaction(
+        &self,
+        session_id: &str,
+    ) -> Result<serde_json::Value, String> {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "interaction.subscribe",
+            "params": {
+                "session_id": session_id,
+                "domain": crate::niche::NICHE_DOMAIN,
+            },
+            "id": 1
+        });
+        self.send_with_result(&request)
+    }
+
+    /// Run Tufte pre-flight validation on a game UI composition.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error string if the connection or RPC call fails.
+    pub fn validate(
+        &self,
+        bindings: &serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "visualization.validate",
+            "params": {
+                "domain": crate::niche::NICHE_DOMAIN,
+                "bindings": bindings,
+            },
+            "id": 1
+        });
+        self.send_with_result(&request)
+    }
+
+    fn send_with_result(&self, request: &serde_json::Value) -> Result<serde_json::Value, String> {
+        let timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
+        let stream = UnixStream::connect(&self.socket).map_err(|e| format!("connect: {e}"))?;
+        stream
+            .set_read_timeout(Some(timeout))
+            .map_err(|e| format!("timeout: {e}"))?;
+        stream
+            .set_write_timeout(Some(timeout))
+            .map_err(|e| format!("timeout: {e}"))?;
+
+        let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
+        let mut msg = serde_json::to_string(request).map_err(|e| format!("serialize: {e}"))?;
+        msg.push('\n');
+        writer
+            .write_all(msg.as_bytes())
+            .map_err(|e| format!("write: {e}"))?;
+        writer.flush().map_err(|e| format!("flush: {e}"))?;
+
+        let mut reader = BufReader::new(stream);
+        let mut response = String::new();
+        reader
+            .read_line(&mut response)
+            .map_err(|e| format!("read: {e}"))?;
+
+        let parsed: serde_json::Value =
+            serde_json::from_str(&response).map_err(|e| format!("parse: {e}"))?;
+
+        if let Some(error) = parsed.get("error") {
+            return Err(format!("rpc error: {error}"));
+        }
+
+        parsed
+            .get("result")
+            .cloned()
+            .ok_or_else(|| "no result in response".to_owned())
+    }
+
+    /// Scan a directory for .sock files, verifying `visualization.render` capability.
     fn find_viz_sock_in(dir: &std::path::Path) -> Option<PathBuf> {
         let entries = std::fs::read_dir(dir).ok()?;
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().is_some_and(|ext| ext == "sock") && Self::probe(&path) {
+            if path.extension().is_some_and(|ext| ext == "sock") && Self::probe_with_capability(&path) {
                 return Some(path);
             }
         }
         None
+    }
+
+    /// Probe a socket and verify it advertises `visualization.render`.
+    fn probe_with_capability(path: &std::path::Path) -> bool {
+        let Ok(stream) = UnixStream::connect(path) else {
+            return false;
+        };
+        if stream
+            .set_read_timeout(Some(Duration::from_millis(
+                crate::tolerances::PROBE_TIMEOUT_MS,
+            )))
+            .is_err()
+        {
+            return false;
+        }
+        if stream
+            .set_write_timeout(Some(Duration::from_millis(
+                crate::tolerances::PROBE_TIMEOUT_MS,
+            )))
+            .is_err()
+        {
+            return false;
+        }
+
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "lifecycle.status",
+            "params": {},
+            "id": 1
+        });
+        let Ok(mut msg) = serde_json::to_string(&request) else {
+            return false;
+        };
+        msg.push('\n');
+
+        let Ok(mut writer) = stream.try_clone() else {
+            return false;
+        };
+        if writer.write_all(msg.as_bytes()).is_err() || writer.flush().is_err() {
+            return false;
+        }
+
+        let mut reader = BufReader::new(stream);
+        let mut response = String::new();
+        if reader.read_line(&mut response).is_err() {
+            return false;
+        }
+
+        let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&response) else {
+            return false;
+        };
+
+        parsed
+            .get("result")
+            .and_then(|r| r.get("capabilities"))
+            .and_then(|c| c.as_array())
+            .is_some_and(|caps| {
+                caps.iter()
+                    .any(|c| c.as_str().is_some_and(|s| s.contains("visualization")))
+            })
     }
 }
 

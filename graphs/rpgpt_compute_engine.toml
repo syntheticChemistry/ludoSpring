@@ -1,0 +1,293 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# biomeOS deployment graph: RPGPT Compute Engine
+#
+# Composes the Gaming Niche with Node Atomic Compute for GPU-accelerated
+# 2D game engine. Uses barraCuda shaders (fog of war, tile lighting,
+# terrain generation, pathfinding) dispatched via toadStool.
+#
+# Stack:
+#   Phase 1: Node Atomic (BearDog + Songbird + toadStool)
+#   Phase 2: Springs (ludoSpring + petalTongue, parallel)
+#   Phase 3: AI + Shader compile (Squirrel + coralReef, optional)
+#   Phase 4: Provenance Trio (optional)
+#   Phase 5: Validation
+#
+# This graph is the full RPGPT deployment: game logic, GPU compute,
+# visualization, AI narration, and provenance.
+#
+# Status: V1 — RPGPT Compute Engine
+#
+# Usage:
+#   biomeos deploy graphs/rpgpt_compute_engine.toml
+
+[graph]
+id = "rpgpt_compute_engine"
+description = "RPGPT full stack: game logic + GPU compute + visualization + AI + provenance"
+coordination = "Sequential"
+version = "1.0"
+
+# ── Phase 1: Node Atomic (security + discovery + compute) ─────────────────
+
+[[nodes]]
+id = "germinate_beardog"
+output = "beardog_genesis"
+capabilities = ["crypto", "security"]
+
+[nodes.primal]
+by_capability = "security"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 15000
+
+[nodes.capabilities_provided]
+"crypto.sign_ed25519" = "crypto.sign_ed25519"
+"crypto.verify_ed25519" = "crypto.verify_ed25519"
+"crypto.blake3_hash" = "crypto.blake3_hash"
+
+[[nodes]]
+id = "germinate_songbird"
+depends_on = ["germinate_beardog"]
+output = "songbird_genesis"
+capabilities = ["discovery"]
+
+[nodes.primal]
+by_capability = "discovery"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 15000
+
+[nodes.capabilities_provided]
+"discovery.register" = "discovery.register"
+"discovery.query" = "discovery.query"
+
+[[nodes]]
+id = "germinate_toadstool"
+depends_on = ["germinate_beardog", "germinate_songbird"]
+output = "toadstool_genesis"
+capabilities = ["compute", "workload"]
+
+[nodes.primal]
+by_capability = "compute"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+BEARDOG_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/beardog-${FAMILY_ID}.sock"
+SONGBIRD_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/songbird-${FAMILY_ID}.sock"
+
+[nodes.constraints]
+timeout_ms = 45000
+
+[nodes.capabilities_provided]
+"compute.submit" = "compute.submit"
+"compute.health" = "compute.health"
+"compute.capabilities" = "compute.capabilities"
+"compute.execute" = "compute.execute"
+"science.gpu.dispatch" = "science.gpu.dispatch"
+"science.gpu.capabilities" = "science.gpu.capabilities"
+
+# ── Phase 2: Springs (game logic + visualization, parallel) ───────────────
+
+[[nodes]]
+id = "germinate_ludospring"
+depends_on = ["germinate_songbird"]
+output = "ludospring_genesis"
+capabilities = ["game", "ludology"]
+
+[nodes.primal]
+by_capability = "game"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+domain = "game"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 15000
+
+[nodes.capabilities_provided]
+"game.evaluate_flow" = "game.evaluate_flow"
+"game.engagement" = "game.engagement"
+"game.difficulty_adjustment" = "game.difficulty_adjustment"
+"game.begin_session" = "game.begin_session"
+"game.record_action" = "game.record_action"
+"game.complete_session" = "game.complete_session"
+"game.gpu.fog_of_war" = "game.gpu.fog_of_war"
+"game.gpu.tile_lighting" = "game.gpu.tile_lighting"
+"game.gpu.pathfind" = "game.gpu.pathfind"
+"game.gpu.perlin_terrain" = "game.gpu.perlin_terrain"
+
+[[nodes]]
+id = "germinate_petaltongue"
+depends_on = ["germinate_songbird"]
+output = "petaltongue_genesis"
+capabilities = ["visualization", "ui", "interaction"]
+
+[nodes.primal]
+by_capability = "visualization"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+domain = "game"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 20000
+
+[nodes.capabilities_provided]
+"visualization.render" = "visualization.render"
+"visualization.render.stream" = "visualization.render.stream"
+"visualization.render.scene" = "visualization.render.scene"
+"visualization.render.dashboard" = "visualization.render.dashboard"
+"ui.render" = "ui.render"
+"interaction.subscribe" = "interaction.subscribe"
+"interaction.poll" = "interaction.poll"
+
+# ── Phase 3: AI + Shader compile (optional) ───────────────────────────────
+
+[[nodes]]
+id = "germinate_squirrel"
+depends_on = ["germinate_songbird"]
+output = "squirrel_genesis"
+capabilities = ["ai"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "ai"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[nodes.capabilities_provided]
+"ai.chat" = "ai.chat"
+"ai.inference" = "ai.inference"
+"ai.summarize" = "context.summarize"
+
+[[nodes]]
+id = "germinate_coralreef"
+depends_on = ["germinate_toadstool"]
+output = "coralreef_genesis"
+capabilities = ["shader"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "shader"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 20000
+
+[nodes.capabilities_provided]
+"shader.compile.wgsl" = "shader.compile.wgsl"
+"shader.compile.spirv" = "shader.compile.spirv"
+"shader.compile.capabilities" = "shader.compile.capabilities"
+
+# ── Phase 4: Provenance Trio (optional) ───────────────────────────────────
+
+[[nodes]]
+id = "germinate_rhizocrypt"
+depends_on = ["germinate_beardog"]
+output = "rhizocrypt_genesis"
+capabilities = ["provenance"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "provenance"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 15000
+
+[nodes.capabilities_provided]
+"provenance.session_create" = "provenance.session_create"
+"provenance.vertex_append" = "provenance.vertex_append"
+
+[[nodes]]
+id = "germinate_loamspine"
+depends_on = ["germinate_beardog"]
+output = "loamspine_genesis"
+capabilities = ["certificate"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "certificate"
+
+[nodes.operation]
+name = "start"
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+
+[nodes.constraints]
+timeout_ms = 15000
+
+[nodes.capabilities_provided]
+"certificate.mint" = "certificate.mint"
+"certificate.query" = "certificate.query"
+
+# ── Phase 5: Validation ───────────────────────────────────────────────────
+
+[[nodes]]
+id = "validate_rpgpt_compute"
+depends_on = ["germinate_ludospring", "germinate_petaltongue", "germinate_toadstool"]
+output = "rpgpt_compute_validated"
+
+[nodes.operation]
+name = "health_check"
+[nodes.operation.params]
+targets = ["ludospring", "petaltongue", "toadstool"]
+
+[nodes.constraints]
+timeout_ms = 15000

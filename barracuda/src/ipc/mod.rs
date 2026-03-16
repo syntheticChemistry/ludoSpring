@@ -29,7 +29,9 @@ mod results;
 mod server;
 
 pub mod discovery;
+pub mod nestgate;
 pub mod provenance;
+pub mod squirrel;
 
 pub use discovery::{PrimalEndpoint, PrimalRegistry, call_primal, discover_primals};
 pub use envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody};
@@ -63,3 +65,19 @@ pub const METHOD_RECORD_ACTION: &str = "game.record_action";
 pub const METHOD_COMPLETE_SESSION: &str = "game.complete_session";
 /// Poll telemetry events (continuous coordination).
 pub const METHOD_POLL_TELEMETRY: &str = "game.poll_telemetry";
+/// NPC dialogue via Squirrel AI.
+pub const METHOD_NPC_DIALOGUE: &str = "game.npc_dialogue";
+/// Narrate a game action via Squirrel AI.
+pub const METHOD_NARRATE_ACTION: &str = "game.narrate_action";
+/// Internal voice check via Squirrel AI.
+pub const METHOD_VOICE_CHECK: &str = "game.voice_check";
+/// Push game scene to petalTongue.
+pub const METHOD_PUSH_SCENE: &str = "game.push_scene";
+/// Query DAG vertices (NPC memory).
+pub const METHOD_QUERY_VERTICES: &str = "game.query_vertices";
+/// Mint a loamSpine certificate.
+pub const METHOD_MINT_CERTIFICATE: &str = "game.mint_certificate";
+/// Store game data in NestGate.
+pub const METHOD_STORAGE_PUT: &str = "game.storage_put";
+/// Retrieve game data from NestGate.
+pub const METHOD_STORAGE_GET: &str = "game.storage_get";

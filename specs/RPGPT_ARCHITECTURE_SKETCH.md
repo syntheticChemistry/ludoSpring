@@ -1,7 +1,7 @@
 # RPGPT Architecture Sketch — Tabletop RPG Meets Sovereign Data Layer
 
-**Status**: Sketch — structural exploration, not implementation spec
-**Date**: March 11, 2026
+**Status**: SUPERSEDED — see `RPGPT_DEEP_SYSTEM_DESIGN.md` for the implementation spec
+**Date**: March 11, 2026 (fossil record — preserved for lineage)
 **Springs**: ludoSpring (game science), rhizoCrypt (ephemeral DAG), sweetGrass (attribution), loamSpine (permanence), biomeOS (orchestration), Squirrel (AI/MCP)
 **Open Systems**: Pathfinder 2e (ORC License), other ORC-licensed rulesets
 

@@ -35,7 +35,10 @@ fn report(r: &ValidationResult) {
 )]
 fn validate_palette_and_generation(results: &mut Vec<ValidationResult>) {
     println!("Part 1: Chemistry palette and noise generation");
-    let palette = chemistry_palette();
+    let Ok(palette) = chemistry_palette() else {
+        eprintln!("FATAL: chemistry palette overflow");
+        std::process::exit(1);
+    };
     let r = ValidationResult::check(
         "exp002_palette",
         "chemistry palette has 11 entries",

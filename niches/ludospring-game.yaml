@@ -8,8 +8,8 @@
 # Deploy graph: graphs/ludospring_deploy.toml
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
-# Date: March 15, 2026
-# Version: V18 (niche self-knowledge + NeuralBridge)
+# Date: March 16, 2026
+# Version: V19 (deep debt evolution — 75 experiments, 407 tests)
 
 niche:
   id: "ludospring-game"

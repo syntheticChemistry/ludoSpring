@@ -153,3 +153,95 @@ pub struct CompleteSessionParams {
     /// Session ID to dehydrate, commit, and attribute.
     pub session_id: String,
 }
+
+/// Parameters for `game.npc_dialogue` (Squirrel AI).
+#[derive(Debug, Deserialize)]
+pub struct NpcDialogueParams {
+    /// NPC name for logging and context.
+    pub npc_name: String,
+    /// System prompt encoding NPC personality, knowledge bounds, trust level.
+    pub personality_prompt: String,
+    /// Player's dialogue input.
+    pub player_input: String,
+    /// Conversation history (role/content pairs).
+    #[serde(default)]
+    pub history: Vec<serde_json::Value>,
+}
+
+/// Parameters for `game.narrate_action` (Squirrel AI).
+#[derive(Debug, Deserialize)]
+pub struct NarrateActionParams {
+    /// Description of the action to narrate.
+    pub action: String,
+    /// Surrounding context for the narration.
+    pub context: String,
+}
+
+/// Parameters for `game.voice_check` (Squirrel AI).
+#[derive(Debug, Deserialize)]
+pub struct VoiceCheckParams {
+    /// Internal voice name (e.g. "Logic", "Empathy").
+    pub voice_name: String,
+    /// Voice personality constraint.
+    pub voice_personality: String,
+    /// Summary of current game state for the voice to react to.
+    pub game_state: String,
+}
+
+/// Parameters for `game.push_scene` (petalTongue).
+#[derive(Debug, Deserialize)]
+pub struct PushSceneParams {
+    /// Session ID for petalTongue routing.
+    pub session_id: String,
+    /// Channel name (e.g. "DialogueTree", "CombatGrid").
+    pub channel: String,
+    /// Scene payload as JSON.
+    pub scene: serde_json::Value,
+}
+
+/// Parameters for `game.query_vertices` (rhizoCrypt DAG).
+#[derive(Debug, Deserialize)]
+pub struct QueryVerticesParams {
+    /// Session ID to query.
+    pub session_id: String,
+    /// Optional event type filter.
+    pub event_type: Option<String>,
+    /// Optional agent filter.
+    pub agent: Option<String>,
+    /// Max results (default 50).
+    pub limit: Option<u32>,
+}
+
+/// Parameters for `game.mint_certificate` (loamSpine).
+#[derive(Debug, Deserialize)]
+pub struct MintCertificateParams {
+    /// Certificate type (e.g. "NpcPersonality", "Ruleset", "CharacterSheet").
+    pub cert_type: String,
+    /// Certificate owner.
+    pub owner: String,
+    /// Certificate payload.
+    pub payload: serde_json::Value,
+}
+
+/// Parameters for `game.storage_put` (NestGate).
+#[derive(Debug, Deserialize)]
+pub struct StoragePutParams {
+    /// Storage key.
+    pub key: String,
+    /// Data to store.
+    pub data: serde_json::Value,
+    /// Optional metadata.
+    #[serde(default = "default_json_object")]
+    pub metadata: serde_json::Value,
+}
+
+fn default_json_object() -> serde_json::Value {
+    serde_json::json!({})
+}
+
+/// Parameters for `game.storage_get` (NestGate).
+#[derive(Debug, Deserialize)]
+pub struct StorageGetParams {
+    /// Storage key to retrieve.
+    pub key: String,
+}

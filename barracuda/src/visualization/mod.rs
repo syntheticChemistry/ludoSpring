@@ -29,9 +29,14 @@ pub struct GameDataChannel {
 }
 
 /// Types of game data channels.
+///
+/// Analytics channels route to petalTongue DataBinding types.
+/// RPGPT channels route to petalTongue scene graph or grammar expressions
+/// for game-specific UI composition.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "ipc", derive(serde::Serialize, serde::Deserialize))]
 pub enum GameChannelType {
+    // ── Analytics channels (existing) ────────────────────────────────────
     /// Time series of engagement metrics.
     EngagementCurve,
     /// Difficulty profile over game progress.
@@ -46,6 +51,32 @@ pub enum GameChannelType {
     GenerationPreview,
     /// Accessibility score breakdown.
     AccessibilityReport,
+
+    // ── RPGPT game UI channels ───────────────────────────────────────────
+    /// Dialogue tree with branching choices and skill check indicators.
+    /// Renders as scene graph with selectable nodes.
+    DialogueTree,
+    /// Character sheet — stats, conditions, inventory, equipped items.
+    /// Renders as multi-panel scene graph with gauge sub-bindings.
+    CharacterSheet,
+    /// Tactical combat grid — zones, positions, action indicators.
+    /// Renders as FieldMap with interactive entity markers.
+    CombatGrid,
+    /// Internal voice display — passive check outputs, priority-ordered.
+    /// Renders as stacked cards in scene graph, max 3 visible.
+    VoiceDisplay,
+    /// NPC interaction panel — name, disposition gauge, trust, portrait.
+    /// Renders as scene graph with gauge + text sub-bindings.
+    NpcStatus,
+    /// Dice roll result with signed provenance and degree of success.
+    /// Renders as animated bar/arc with BearDog signature badge.
+    DiceResult,
+    /// Exploration map with fog of war, points of interest, party marker.
+    /// Renders as FieldMap with overlay geometry.
+    ExplorationMap,
+    /// Session narration stream — AI-generated text with voice attribution.
+    /// Renders as streaming text panel with speaker indicators.
+    NarrationStream,
 }
 
 /// A data point in a game data channel.

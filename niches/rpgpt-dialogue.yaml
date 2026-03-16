@@ -1,0 +1,288 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# BYOB niche composition: RPGPT Compute Engine
+# V21 — RPGPT Dialogue Engine + petalTongue UI + GPU compute (barraCuda shaders)
+
+niche:
+  id: "rpgpt-dialogue"
+  name: "RPGPT Compute Engine"
+  version: "2.0.0"
+  description: |
+    RPGPT full stack: Dialogue plane with NPC knowledge bounds,
+    internal voices (Disco Elysium model), Maslow-hierarchy NPCs,
+    trust model, NPC memory as DAG subgraph, plus GPU-accelerated
+    2D engine (fog of war, tile lighting, pathfinding, terrain gen)
+    via barraCuda WGSL shaders dispatched through toadStool.
+    AI narration via Squirrel + Ollama.
+  category: "game"
+  difficulty: "intermediate"
+  author: "ecoPrimals/ludoSpring"
+  deploy_graph: "graphs/rpgpt_compute_engine.toml"
+  features:
+    - "NPC personality certificates with knowledge bounds"
+    - "Internal voices — skills as perspectives (10 voices)"
+    - "Passive skill checks with priority-based display"
+    - "Maslow-hierarchy NPC motivations with emergent behavior"
+    - "Trust model gates information access across sessions"
+    - "NPC memory as DAG subgraph, not context window"
+    - "Provably fair dice via BearDog Ed25519 signing"
+    - "Session DAG with plane-aware vertex types"
+    - "Creative attribution for world-building and NPC evolution"
+    - "Local-first AI via Squirrel -> toadStool -> Ollama"
+    - "petalTongue universal game UI — dialogue tree, character sheet, combat grid"
+    - "Multi-modal rendering — GUI, TUI, audio, SVG, headless"
+    - "60 Hz interaction stream for real-time game input"
+    - "GPU fog of war via barraCuda compute shaders"
+    - "GPU tile lighting with point-light propagation (1/d² falloff)"
+    - "GPU pathfinding wavefront (parallel BFS expansion)"
+    - "GPU Perlin terrain generation (barraCuda perlin_2d.wgsl)"
+    - "coralReef native GPU binary compilation (NVIDIA + AMD)"
+
+organisms:
+  primals:
+    ludospring:
+      type: "ludospring"
+      required: true
+      role: "science"
+      capabilities:
+        - "game.evaluate_flow"
+        - "game.engagement"
+        - "game.difficulty_adjustment"
+        - "game.begin_session"
+        - "game.record_action"
+        - "game.complete_session"
+        - "game.gpu.fog_of_war"
+        - "game.gpu.tile_lighting"
+        - "game.gpu.pathfind"
+        - "game.gpu.perlin_terrain"
+      config:
+        mode: "server"
+        domain: "game"
+
+    squirrel:
+      type: "squirrel"
+      required: true
+      role: "ai"
+      capabilities:
+        - "ai.chat"
+        - "ai.inference"
+        - "ai.summarize"
+      config:
+        mode: "server"
+        providers: ["ollama"]
+
+    beardog:
+      type: "beardog"
+      required: true
+      role: "security"
+      capabilities:
+        - "crypto.sign_ed25519"
+        - "crypto.verify_ed25519"
+        - "crypto.blake3_hash"
+      config:
+        mode: "server"
+
+    songbird:
+      type: "songbird"
+      required: true
+      role: "discovery"
+      capabilities:
+        - "discovery.register"
+        - "discovery.query"
+      config:
+        mode: "server"
+
+    petaltongue:
+      type: "petaltongue"
+      required: true
+      role: "visualization"
+      capabilities:
+        - "visualization.render"
+        - "visualization.render.stream"
+        - "visualization.render.scene"
+        - "visualization.render.dashboard"
+        - "visualization.export"
+        - "ui.render"
+        - "interaction.subscribe"
+        - "interaction.poll"
+      config:
+        mode: "server"
+        domain: "game"
+
+    toadstool:
+      type: "toadstool"
+      required: true
+      role: "compute"
+      capabilities:
+        - "compute.submit"
+        - "compute.health"
+        - "compute.capabilities"
+        - "compute.execute"
+        - "science.gpu.dispatch"
+        - "science.gpu.capabilities"
+      config:
+        mode: "server"
+
+    coralreef:
+      type: "coralreef"
+      required: false
+      role: "shader"
+      capabilities:
+        - "shader.compile.wgsl"
+        - "shader.compile.spirv"
+        - "shader.compile.capabilities"
+      config:
+        mode: "server"
+
+    rhizocrypt:
+      type: "rhizocrypt"
+      required: false
+      role: "provenance"
+      capabilities:
+        - "provenance.session_create"
+        - "provenance.vertex_append"
+        - "provenance.vertex_query"
+      config:
+        mode: "server"
+
+    loamspine:
+      type: "loamspine"
+      required: false
+      role: "certificate"
+      capabilities:
+        - "certificate.mint"
+        - "certificate.query"
+        - "certificate.evolve"
+      config:
+        mode: "server"
+
+    sweetgrass:
+      type: "sweetgrass"
+      required: false
+      role: "attribution"
+      capabilities:
+        - "attribution.record"
+        - "attribution.query"
+      config:
+        mode: "server"
+
+  chimeras: {}
+
+interactions:
+  - from: "ludospring"
+    to: "beardog"
+    type: "capability_call"
+    config:
+      capabilities: ["crypto.sign_ed25519", "crypto.blake3_hash"]
+      description: "Dice roll signing and session integrity"
+
+  - from: "ludospring"
+    to: "petaltongue"
+    type: "capability_call"
+    config:
+      capabilities: ["visualization.render", "visualization.render.stream", "visualization.render.scene"]
+      description: "Game UI — dialogue tree, character sheet, combat grid, voice display, gauges"
+
+  - from: "petaltongue"
+    to: "ludospring"
+    type: "capability_call"
+    config:
+      capabilities: ["game.evaluate_flow", "game.engagement"]
+      description: "Flow and engagement data for dashboard overlays"
+
+  - from: "squirrel"
+    to: "petaltongue"
+    type: "capability_call"
+    config:
+      capabilities: ["visualization.render.stream", "ui.render"]
+      description: "AI narration display, NPC dialogue rendering, voice output"
+
+  - from: "ludospring"
+    to: "squirrel"
+    type: "capability_call"
+    config:
+      capabilities: ["ai.chat", "ai.inference"]
+      description: "NPC voicing, internal voices, main narration"
+
+  - from: "ludospring"
+    to: "toadstool"
+    type: "capability_call"
+    config:
+      capabilities: ["compute.submit", "science.gpu.dispatch"]
+      description: "GPU dispatch for fog of war, lighting, pathfinding, terrain gen via barraCuda shaders"
+
+  - from: "squirrel"
+    to: "toadstool"
+    type: "capability_call"
+    config:
+      capabilities: ["compute.submit"]
+      description: "Route local AI inference to GPU via Ollama"
+
+  - from: "toadstool"
+    to: "coralreef"
+    type: "capability_call"
+    config:
+      capabilities: ["shader.compile.wgsl", "shader.compile.capabilities"]
+      description: "Compile barraCuda WGSL to native GPU binaries (NVIDIA SASS, AMD GFX)"
+      optional: true
+
+  - from: "ludospring"
+    to: "rhizocrypt"
+    type: "capability_call"
+    config:
+      capabilities: ["provenance.session_create", "provenance.vertex_append", "provenance.vertex_query"]
+      description: "Session DAG: write actions, query NPC memory subgraph"
+      optional: true
+
+  - from: "ludospring"
+    to: "loamspine"
+    type: "capability_call"
+    config:
+      capabilities: ["certificate.mint", "certificate.query", "certificate.evolve"]
+      description: "NPC personality certs, ruleset certs, character sheets"
+      optional: true
+
+  - from: "ludospring"
+    to: "sweetgrass"
+    type: "capability_call"
+    config:
+      capabilities: ["attribution.record", "attribution.query"]
+      description: "Creative attribution for NPC evolution and world-building"
+      optional: true
+
+  - from: "squirrel"
+    to: "beardog"
+    type: "capability_call"
+    config:
+      capabilities: ["crypto.blake3_hash"]
+      description: "Hash context for cache keys and integrity"
+
+customization:
+  options:
+    gpu_compute:
+      type: boolean
+      default: true
+      affects: ["toadstool", "coralreef"]
+      description: "Enable GPU compute for game engine shaders and AI inference"
+    native_compile:
+      type: boolean
+      default: false
+      affects: ["coralreef"]
+      description: "Compile WGSL to native GPU binaries via coralReef (optional — naga/wgpu fallback)"
+    provenance_enabled:
+      type: boolean
+      default: true
+      affects: ["rhizocrypt", "loamspine", "sweetgrass"]
+      description: "Enable session DAG, NPC certs, and attribution"
+    ai_provider:
+      type: string
+      default: "ollama"
+      enum: ["ollama", "openai", "anthropic"]
+      description: "AI provider for Squirrel routing"
+    voice_count:
+      type: integer
+      default: 10
+      description: "Number of internal voices (1-10)"
+    max_voices_per_action:
+      type: integer
+      default: 3
+      description: "Maximum passive voice outputs per player action"

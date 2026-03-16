@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
-**Date:** March 15, 2026
-**Total:** 66 experiments, 1371 checks, 0 failures, 244 tests + 12 proptest
+**Date:** March 16, 2026
+**Total:** 75 experiments, 1692 checks, 0 failures, 407 tests + 12 proptest (V19)
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -248,6 +248,45 @@ See `specs/LYSOGENY_CATALOG.md` for full citation tables.
 
 **Key insight**: The universality claim from Paper 18 (anti-cheat = chain-of-custody) is not just conceptual — it is the same code path. exp065 proves it with identical fraud detections across all 3 domain vocabularies.
 
+### Track 23: RPGPT Deep System — Dialogue Engine (Phase 1)
+
+The Dialogue Engine is Phase 1 of the RPGPT Deep System Design: NPC personality
+certificates, knowledge bounds, internal voices (Disco Elysium model), passive
+checks, trust model, and NPC memory as DAG subgraph. These experiments validate
+the mechanical substrate before any AI narration is connected.
+
+biomeOS deploy graph: `graphs/rpgpt_dialogue_engine.toml`
+BYOB niche composition: `niches/rpgpt-dialogue.yaml`
+Core types: `barracuda/src/game/rpgpt/` (56 unit tests)
+
+| # | Package | Checks | Status | Reference | What it proves |
+|---|---------|--------|--------|-----------|----------------|
+| 067 | `ludospring-exp067` | 38 | PASS | RPGPT_NPC_PERSONALITY_SPEC.md | Knowledge bounds classify queries: knows / suspects / lies_about / does_not_know / unbound. Lies take priority. Case insensitive. Multi-NPC (Maren, Sheriff Marsh, Professor Armitage). |
+| 068 | `ludospring-exp068` | 21 | PASS | RPGPT_DIALOGUE_PLANE_EXPERIMENTS.md | Passive voice checks detect lies at DCs. Higher skill = higher rate. Higher DC = lower rate. Tells reveal behavioral cues, NOT the truth. Perception vs Empathy detection. |
+| 069 | `ludospring-exp069` | 75 | PASS | RPGPT_INTERNAL_VOICES_SPEC.md | 10 voices distinct. Temperature ranges valid (Composure coldest, Inland Empire warmest). Opposing voice pairs symmetric. Token limits bounded. Selection by priority then roll. |
+| 070 | `ludospring-exp070` | 25 | PASS | RPGPT_INTERNAL_VOICES_SPEC.md | Max 3 voices per action. Priority ordering: critical > high > medium > low. Tie-breaking by roll. Edge cases: zero max, empty input, all same priority. Check gating (only passing checks produce output). |
+| 071 | `ludospring-exp071` | 26 | PASS | RPGPT_DEEP_SYSTEM_DESIGN.md | NPC memory assembler: recent window verbatim, promises always included, trust milestones always included, routine summarized. Cumulative trust correct. Empty and few-interaction edge cases. Secret reveals excluded from routine. |
+| 072 | `ludospring-exp072` | 45 | PASS | RPGPT_NPC_PERSONALITY_SPEC.md | Trust accumulates from defined actions, gates information access at level thresholds. Betrayal asymmetric (-5 vs +1). Arc phases (conformity->internal_conflict->revelation) with triggers. Quorum threshold for collective NPC events. Full trust history with running totals. |
+| 073 | `ludospring-exp073` | 34 | PASS | RPGPT_PLANES_SCHEMA.md (Dialogue) | D6 pool resolution: threshold 4+, pool sizing from skill+modifiers. 5-degree resolution (CritFail/Fail/Partial/Success/CritSuccess). Statistical distribution matches expected binomial (10K trials). Modifier stacking (trust/env/emotional/knowledge). Pool minimum 1. |
+| 074 | `ludospring-exp074` | 26 | PASS | Csikszentmihalyi, Hick, Hunicke | Flow/DDA/Hick integration with dialogue: Flow detected when balanced, Anxiety when challenge>skill, Boredom when skill>challenge. Hick's law flags >6 options. DDA suggests easier/harder adjustments. DialogueFlowTracker evolves skill estimate. Stall detection. |
+| 075 | `ludospring-exp075` | 31 | PASS | RPGPT_DEEP_SYSTEM_DESIGN.md | Plane transition: Dialogue<->Tactical round-trip. Inventory preserved. NPC dispositions unchanged. Conditions mapped (Frightened->Frightened+decay, Exhausted->Fatigued, Wounded persists). Cross-plane knowledge carries. HP preserved. Verification detects tampering. |
+
+**Key results (Phase 1 — exp067-071):**
+- 185 validation checks, all passing
+- Knowledge bounds enforce the four-quadrant NPC knowledge model
+- Lies have detection DCs and behavioral tells — passive checks reveal tells, not truth
+- Internal voices have distinct personality parameters that constrain AI inference
+- Priority system ensures maximum 3 voices per action with deterministic ordering
+- NPC memory assembly is graph-aware, not context-window-aware
+
+**Key results (Phase 2 — exp072-075):**
+- 136 validation checks, all passing
+- Trust model gates secrets and drives NPC arc progression through defined phases
+- D6 pool system matches expected binomial distribution at all pool sizes
+- ludoSpring Flow/DDA/Hick integration detects and responds to dialogue pacing issues
+- Plane transitions preserve complete world state with verified condition mapping
+- Round-trip (Dialogue->Tactical->Dialogue) demonstrates ruleset-agnostic state preservation
+
 ### metalForge Dispatch (Capability-Based Routing)
 
 | Binary | Checks | Status | Modules Validated |
@@ -357,6 +396,17 @@ cargo run --release -p ludospring-exp063                   # Consent-gated medic
 # Run Cross-Domain Fraud + Radiating Attribution (Track 22)
 cargo run --release -p ludospring-exp065                   # Cross-domain fraud unification (74 checks)
 cargo run --release -p ludospring-exp066                   # Radiating attribution calculator (41 checks)
+
+# Run RPGPT Deep System — Dialogue Engine (Track 23)
+cargo run -p ludospring-exp067                             # NPC knowledge bounds (38 checks)
+cargo run -p ludospring-exp068                             # Lie detection passive checks (21 checks)
+cargo run -p ludospring-exp069                             # Internal voice personality (75 checks)
+cargo run -p ludospring-exp070                             # Voice priority/concurrency (25 checks)
+cargo run -p ludospring-exp071                             # NPC memory DAG retrieval (26 checks)
+cargo run -p ludospring-exp072                             # Trust dynamics/arc progression (45 checks)
+cargo run -p ludospring-exp073                             # Dialogue skill checks D6 pool (34 checks)
+cargo run -p ludospring-exp074                             # Dialogue flow monitoring (26 checks)
+cargo run -p ludospring-exp075                             # Plane transition continuity (31 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests
