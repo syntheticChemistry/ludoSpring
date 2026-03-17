@@ -40,6 +40,8 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
 
     let result = match req.method.as_str() {
         "health.check" | "lifecycle.health" | "health" => handle_health(req),
+        "health.liveness" => handle_liveness(req),
+        "health.readiness" => handle_readiness(req),
         "lifecycle.status" => handle_lifecycle_status(req),
         "capability.list" => handle_capability_list(req),
         METHOD_EVALUATE_FLOW => handle_evaluate_flow(req),
@@ -127,6 +129,32 @@ fn handle_health(req: &JsonRpcRequest) -> HandlerResult {
             "domain": crate::niche::NICHE_DOMAIN,
             "version": env!("CARGO_PKG_VERSION"),
             "capabilities": crate::niche::CAPABILITIES,
+        }),
+    )
+}
+
+/// `health.liveness` — Kubernetes-style liveness probe (coralReef Iter 51).
+///
+/// Returns immediately if the process is responsive. No external deps checked.
+fn handle_liveness(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(&req.id, serde_json::json!({"alive": true}))
+}
+
+/// `health.readiness` — Kubernetes-style readiness probe (healthSpring V32).
+///
+/// Reports whether subsystems are ready to accept science workloads.
+fn handle_readiness(req: &JsonRpcRequest) -> HandlerResult {
+    let trio_available = crate::ipc::provenance::has_active_session();
+
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "ready": true,
+            "subsystems": {
+                "science_dispatch": true,
+                "provenance_trio": trio_available,
+                "gpu_compute": cfg!(feature = "gpu"),
+            }
         }),
     )
 }

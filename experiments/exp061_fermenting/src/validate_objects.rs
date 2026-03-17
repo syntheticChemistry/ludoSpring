@@ -69,7 +69,10 @@ pub fn validate_cosmetic_schema() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let rt = round_tripped.expect("validated above");
+    let Some(rt) = round_tripped else {
+        eprintln!("FATAL: cosmetic roundtrip returned None despite prior check");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "cosmetic_roundtrip_rarity",
@@ -461,9 +464,10 @@ pub fn validate_ownership_enforcement() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    system
-        .loan(amulet_id, &alice, &bob, LoanTerms::new())
-        .expect("legitimate loan");
+    let Ok(()) = system.loan(amulet_id, &alice, &bob, LoanTerms::new()) else {
+        eprintln!("FATAL: legitimate loan failed");
+        std::process::exit(1);
+    };
 
     let alice_return = system.return_loan(amulet_id, &alice);
     results.push(ValidationResult::check(

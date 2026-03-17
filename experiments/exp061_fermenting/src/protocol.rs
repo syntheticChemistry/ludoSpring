@@ -195,78 +195,90 @@ pub struct GetTimelineRequest {
 ///
 /// In a composable deployment, minting a fermenting object requires three
 /// IPC calls: one to each primal in the trio.
+///
+/// # Errors
+///
+/// Returns a serialization error if any wire type fails to serialize.
 pub fn mint_ipc_sequence(
     owner_did: &str,
     item_name: &str,
     item_type: &str,
     rarity: &str,
-) -> Vec<JsonRpcRequest> {
+) -> Result<Vec<JsonRpcRequest>, String> {
     let mut calls = Vec::new();
 
     let mut attrs = std::collections::HashMap::new();
     attrs.insert("rarity".into(), rarity.into());
     attrs.insert("item_type".into(), item_type.into());
 
-    calls.push(JsonRpcRequest::new(
-        "certificate.mint",
-        serde_json::to_value(CertMintRequest {
-            cert_type: "game_item".into(),
-            owner_did: owner_did.into(),
-            metadata: CertMetadataWire {
-                name: item_name.into(),
-                description: format!("Fermenting object: {item_name}"),
-            },
-            item_attributes: attrs,
-        })
-        .expect("serialization"),
-        1,
-    ));
+    let cert_params = serde_json::to_value(CertMintRequest {
+        cert_type: "game_item".into(),
+        owner_did: owner_did.into(),
+        metadata: CertMetadataWire {
+            name: item_name.into(),
+            description: format!("Fermenting object: {item_name}"),
+        },
+        item_attributes: attrs,
+    })
+    .map_err(|e| format!("certificate.mint serialization: {e}"))?;
+
+    calls.push(JsonRpcRequest::new("certificate.mint", cert_params, 1));
 
     let mut dag_meta = std::collections::HashMap::new();
     dag_meta.insert("event".into(), "mint".into());
     dag_meta.insert("item_name".into(), item_name.into());
 
-    calls.push(JsonRpcRequest::new(
-        "dag.append_vertex",
-        serde_json::to_value(DagAppendVertexRequest {
-            session_id: "active_session".into(),
-            event_type: "ferment_mint".into(),
-            agent_did: owner_did.into(),
-            metadata: dag_meta,
-            parents: vec![],
-        })
-        .expect("serialization"),
-        2,
-    ));
+    let dag_params = serde_json::to_value(DagAppendVertexRequest {
+        session_id: "active_session".into(),
+        event_type: "ferment_mint".into(),
+        agent_did: owner_did.into(),
+        metadata: dag_meta,
+        parents: vec![],
+    })
+    .map_err(|e| format!("dag.append_vertex serialization: {e}"))?;
+
+    calls.push(JsonRpcRequest::new("dag.append_vertex", dag_params, 2));
+
+    let event_params = serde_json::to_value(ObjectEventRequest {
+        object_id: "pending_cert_id".into(),
+        event_type: "mint".into(),
+        description: format!("Minted: {item_name}"),
+        actor_did: owner_did.into(),
+        metadata: std::collections::HashMap::new(),
+    })
+    .map_err(|e| format!("provenance.object_event serialization: {e}"))?;
 
     calls.push(JsonRpcRequest::new(
         "provenance.object_event",
-        serde_json::to_value(ObjectEventRequest {
-            object_id: "pending_cert_id".into(),
-            event_type: "mint".into(),
-            description: format!("Minted: {item_name}"),
-            actor_did: owner_did.into(),
-            metadata: std::collections::HashMap::new(),
-        })
-        .expect("serialization"),
+        event_params,
         3,
     ));
 
-    calls
+    Ok(calls)
 }
 
 /// Build the JSON-RPC call for a trade operation.
-pub fn trade_ipc_sequence(cert_id: &str, from_did: &str, to_did: &str) -> Vec<JsonRpcRequest> {
+///
+/// # Errors
+///
+/// Returns a serialization error if any wire type fails to serialize.
+pub fn trade_ipc_sequence(
+    cert_id: &str,
+    from_did: &str,
+    to_did: &str,
+) -> Result<Vec<JsonRpcRequest>, String> {
     let mut calls = Vec::new();
+
+    let transfer_params = serde_json::to_value(CertTransferRequest {
+        cert_id: cert_id.into(),
+        from_did: from_did.into(),
+        to_did: to_did.into(),
+    })
+    .map_err(|e| format!("certificate.transfer serialization: {e}"))?;
 
     calls.push(JsonRpcRequest::new(
         "certificate.transfer",
-        serde_json::to_value(CertTransferRequest {
-            cert_id: cert_id.into(),
-            from_did: from_did.into(),
-            to_did: to_did.into(),
-        })
-        .expect("serialization"),
+        transfer_params,
         1,
     ));
 
@@ -275,33 +287,33 @@ pub fn trade_ipc_sequence(cert_id: &str, from_did: &str, to_did: &str) -> Vec<Js
     dag_meta.insert("from".into(), from_did.into());
     dag_meta.insert("to".into(), to_did.into());
 
-    calls.push(JsonRpcRequest::new(
-        "dag.append_vertex",
-        serde_json::to_value(DagAppendVertexRequest {
-            session_id: "active_session".into(),
-            event_type: "ferment_trade".into(),
-            agent_did: from_did.into(),
-            metadata: dag_meta,
-            parents: vec![],
-        })
-        .expect("serialization"),
-        2,
-    ));
+    let dag_params = serde_json::to_value(DagAppendVertexRequest {
+        session_id: "active_session".into(),
+        event_type: "ferment_trade".into(),
+        agent_did: from_did.into(),
+        metadata: dag_meta,
+        parents: vec![],
+    })
+    .map_err(|e| format!("dag.append_vertex serialization: {e}"))?;
+
+    calls.push(JsonRpcRequest::new("dag.append_vertex", dag_params, 2));
+
+    let event_params = serde_json::to_value(ObjectEventRequest {
+        object_id: cert_id.into(),
+        event_type: "trade".into(),
+        description: format!("Traded to {to_did}"),
+        actor_did: from_did.into(),
+        metadata: std::collections::HashMap::new(),
+    })
+    .map_err(|e| format!("provenance.object_event serialization: {e}"))?;
 
     calls.push(JsonRpcRequest::new(
         "provenance.object_event",
-        serde_json::to_value(ObjectEventRequest {
-            object_id: cert_id.into(),
-            event_type: "trade".into(),
-            description: format!("Traded to {to_did}"),
-            actor_did: from_did.into(),
-            metadata: std::collections::HashMap::new(),
-        })
-        .expect("serialization"),
+        event_params,
         3,
     ));
 
-    calls
+    Ok(calls)
 }
 
 /// Build the JSON-RPC calls for the full deployment graph health check.

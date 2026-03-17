@@ -33,8 +33,8 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if no visualization socket is found or connectable.
-    pub fn discover() -> Result<Self, String> {
+    /// Returns [`IpcError::NotFound`] if no visualization socket is found.
+    pub fn discover() -> Result<Self, crate::ipc::IpcError> {
         if let Ok(explicit) = std::env::var("VISUALIZATION_SOCKET") {
             let path = PathBuf::from(&explicit);
             if Self::probe(&path) {
@@ -65,20 +65,22 @@ impl VisualizationPushClient {
             return Ok(Self { socket: sock });
         }
 
-        Err("no visualization-capable primal found".into())
+        Err(crate::ipc::IpcError::NotFound(
+            "no visualization-capable primal found".into(),
+        ))
     }
 
     /// Push a visualization render request.
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
     pub fn push_render(
         &self,
         session_id: &str,
         title: &str,
         payload: &serde_json::Value,
-    ) -> Result<(), String> {
+    ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": VISUALIZATION_CAPABILITY,
@@ -97,13 +99,13 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
     pub fn push_stream(
         &self,
         session_id: &str,
         action: &str,
         payload: &serde_json::Value,
-    ) -> Result<(), String> {
+    ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.render.stream",
@@ -117,37 +119,33 @@ impl VisualizationPushClient {
         self.send(&request)
     }
 
-    fn send(&self, request: &serde_json::Value) -> Result<(), String> {
+    fn send(&self, request: &serde_json::Value) -> Result<(), crate::ipc::IpcError> {
+        use crate::ipc::IpcError;
+
         let timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
-        let stream = UnixStream::connect(&self.socket).map_err(|e| format!("connect: {e}"))?;
+        let stream = UnixStream::connect(&self.socket).map_err(IpcError::Connect)?;
         stream
             .set_read_timeout(Some(timeout))
-            .map_err(|e| format!("timeout: {e}"))?;
+            .map_err(IpcError::Timeout)?;
         stream
             .set_write_timeout(Some(timeout))
-            .map_err(|e| format!("timeout: {e}"))?;
+            .map_err(IpcError::Timeout)?;
 
-        let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
-        let mut msg = serde_json::to_string(request).map_err(|e| format!("serialize: {e}"))?;
+        let mut writer = stream.try_clone().map_err(IpcError::Io)?;
+        let mut msg =
+            serde_json::to_string(request).map_err(|e| IpcError::Serialization(e.to_string()))?;
         msg.push('\n');
-        writer
-            .write_all(msg.as_bytes())
-            .map_err(|e| format!("write: {e}"))?;
-        writer.flush().map_err(|e| format!("flush: {e}"))?;
+        writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
+        writer.flush().map_err(IpcError::Io)?;
 
         let mut reader = BufReader::new(stream);
         let mut response = String::new();
-        reader
-            .read_line(&mut response)
-            .map_err(|e| format!("read: {e}"))?;
+        reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-        let parsed: serde_json::Value =
-            serde_json::from_str(&response).map_err(|e| format!("parse: {e}"))?;
+        let parsed: serde_json::Value = serde_json::from_str(&response)
+            .map_err(|e| IpcError::Serialization(e.to_string()))?;
 
-        if let Some(error) = parsed.get("error") {
-            return Err(format!("rpc error: {error}"));
-        }
-        Ok(())
+        crate::ipc::extract_rpc_result(&parsed).map(|_| ())
     }
 
     fn probe(path: &std::path::Path) -> bool {
@@ -167,13 +165,13 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
     pub fn push_scene(
         &self,
         session_id: &str,
         channel: &str,
         scene: &serde_json::Value,
-    ) -> Result<(), String> {
+    ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.render.scene",
@@ -192,12 +190,12 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
     pub fn push_dashboard(
         &self,
         session_id: &str,
         panels: &[serde_json::Value],
-    ) -> Result<(), String> {
+    ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.render.dashboard",
@@ -215,8 +213,12 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
-    pub fn export(&self, session_id: &str, modality: &str) -> Result<serde_json::Value, String> {
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
+    pub fn export(
+        &self,
+        session_id: &str,
+        modality: &str,
+    ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.export",
@@ -233,8 +235,11 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
-    pub fn subscribe_interaction(&self, session_id: &str) -> Result<serde_json::Value, String> {
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
+    pub fn subscribe_interaction(
+        &self,
+        session_id: &str,
+    ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "interaction.subscribe",
@@ -251,8 +256,11 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns an error string if the connection or RPC call fails.
-    pub fn validate(&self, bindings: &serde_json::Value) -> Result<serde_json::Value, String> {
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
+    pub fn validate(
+        &self,
+        bindings: &serde_json::Value,
+    ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "visualization.validate",
@@ -265,41 +273,36 @@ impl VisualizationPushClient {
         self.send_with_result(&request)
     }
 
-    fn send_with_result(&self, request: &serde_json::Value) -> Result<serde_json::Value, String> {
+    fn send_with_result(
+        &self,
+        request: &serde_json::Value,
+    ) -> Result<serde_json::Value, crate::ipc::IpcError> {
+        use crate::ipc::IpcError;
+
         let timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
-        let stream = UnixStream::connect(&self.socket).map_err(|e| format!("connect: {e}"))?;
+        let stream = UnixStream::connect(&self.socket).map_err(IpcError::Connect)?;
         stream
             .set_read_timeout(Some(timeout))
-            .map_err(|e| format!("timeout: {e}"))?;
+            .map_err(IpcError::Timeout)?;
         stream
             .set_write_timeout(Some(timeout))
-            .map_err(|e| format!("timeout: {e}"))?;
+            .map_err(IpcError::Timeout)?;
 
-        let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
-        let mut msg = serde_json::to_string(request).map_err(|e| format!("serialize: {e}"))?;
+        let mut writer = stream.try_clone().map_err(IpcError::Io)?;
+        let mut msg =
+            serde_json::to_string(request).map_err(|e| IpcError::Serialization(e.to_string()))?;
         msg.push('\n');
-        writer
-            .write_all(msg.as_bytes())
-            .map_err(|e| format!("write: {e}"))?;
-        writer.flush().map_err(|e| format!("flush: {e}"))?;
+        writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
+        writer.flush().map_err(IpcError::Io)?;
 
         let mut reader = BufReader::new(stream);
         let mut response = String::new();
-        reader
-            .read_line(&mut response)
-            .map_err(|e| format!("read: {e}"))?;
+        reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-        let parsed: serde_json::Value =
-            serde_json::from_str(&response).map_err(|e| format!("parse: {e}"))?;
+        let parsed: serde_json::Value = serde_json::from_str(&response)
+            .map_err(|e| IpcError::Serialization(e.to_string()))?;
 
-        if let Some(error) = parsed.get("error") {
-            return Err(format!("rpc error: {error}"));
-        }
-
-        parsed
-            .get("result")
-            .cloned()
-            .ok_or_else(|| "no result in response".to_owned())
+        crate::ipc::extract_rpc_result(&parsed)
     }
 
     /// Scan a directory for .sock files, verifying `visualization.render` capability.
@@ -379,3 +382,80 @@ impl VisualizationPushClient {
 
 /// Type alias preserved for backward compatibility with existing callers.
 pub type PetalTonguePushClient = VisualizationPushClient;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn discover_fails_without_viz_primal() {
+        let result = VisualizationPushClient::discover();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn probe_returns_false_for_nonexistent_path() {
+        let result = VisualizationPushClient::probe(std::path::Path::new("/nonexistent.sock"));
+        assert!(!result);
+    }
+
+    #[test]
+    fn probe_with_capability_returns_false_for_nonexistent_path() {
+        let result = VisualizationPushClient::probe_with_capability(std::path::Path::new(
+            "/nonexistent.sock",
+        ));
+        assert!(!result);
+    }
+
+    #[test]
+    fn find_viz_sock_nonexistent_dir_returns_none() {
+        let result =
+            VisualizationPushClient::find_viz_sock_in(std::path::Path::new("/nonexistent/dir"));
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn push_render_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent.sock"),
+        };
+        let payload = serde_json::json!({"data": [1, 2, 3]});
+        let result = client.push_render("sess-1", "Test Scene", &payload);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn push_stream_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent.sock"),
+        };
+        let payload = serde_json::json!({"value": 42});
+        let result = client.push_stream("sess-1", "append", &payload);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn push_scene_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent.sock"),
+        };
+        let scene = serde_json::json!({"type": "dialogue"});
+        let result = client.push_scene("sess-1", "rpgpt", &scene);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn push_dashboard_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent.sock"),
+        };
+        let panels = vec![serde_json::json!({"type": "map"})];
+        let result = client.push_dashboard("sess-1", &panels);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn type_alias_works() {
+        let _: fn() -> Result<PetalTonguePushClient, _> = PetalTonguePushClient::discover;
+    }
+}

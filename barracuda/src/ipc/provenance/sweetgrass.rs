@@ -160,3 +160,40 @@ pub fn provenance_attribution(braid_id: &str) -> Result<ProvenanceResult, String
             },
         )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn record_dehydration_degrades() {
+        let agents = vec![serde_json::json!({"did": "did:key:test", "role": "author"})];
+        let ops = vec![serde_json::json!({"type": "game_session"})];
+        let r = record_dehydration("sess-1", "abc123", &agents, &ops).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn query_braids_degrades() {
+        let r = query_braids(Some("npc_creation"), None).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn commit_braid_degrades() {
+        let r = commit_braid("braid-1", "spine-1").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn provenance_lineage_degrades() {
+        let r = provenance_lineage("braid-1").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn provenance_attribution_degrades() {
+        let r = provenance_attribution("braid-1").unwrap();
+        assert!(!r.available);
+    }
+}

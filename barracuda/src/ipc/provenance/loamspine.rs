@@ -243,3 +243,54 @@ pub fn loan_certificate(
             },
         )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mint_certificate_degrades() {
+        let payload = serde_json::json!({"name": "Test NPC"});
+        let r = mint_certificate("npc_personality", "did:key:test", &payload).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn get_certificate_degrades() {
+        let r = get_certificate("cert-001").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn verify_certificate_degrades() {
+        let r = verify_certificate("cert-001").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn certificate_lifecycle_degrades() {
+        let r = certificate_lifecycle("cert-001").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn create_spine_degrades() {
+        let meta = serde_json::json!({"type": "character"});
+        let r = create_spine("did:key:test", &meta).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn append_spine_entry_degrades() {
+        let payload = serde_json::json!({"level": 5});
+        let r = append_spine_entry("spine-1", "level_up", &payload).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn loan_certificate_degrades() {
+        let terms = serde_json::json!({"duration_secs": 3600});
+        let r = loan_certificate("cert-001", "did:key:borrower", &terms).unwrap();
+        assert!(!r.available);
+    }
+}

@@ -48,10 +48,13 @@ impl NeuralBridge {
     ///
     /// # Errors
     ///
-    /// Returns an error if no Neural API socket is found.
-    pub fn discover() -> Result<Self, String> {
-        let socket = crate::niche::resolve_neural_api_socket()
-            .ok_or("Neural API not found in any standard location")?;
+    /// Returns [`IpcError::NotFound`] if no Neural API socket is found.
+    pub fn discover() -> Result<Self, super::envelope::IpcError> {
+        let socket = crate::niche::resolve_neural_api_socket().ok_or(
+            super::envelope::IpcError::NotFound(
+                "Neural API not found in any standard location".into(),
+            ),
+        )?;
 
         let timeout_secs = std::env::var("BIOMEOS_RPC_TIMEOUT_SECS")
             .ok()
@@ -88,13 +91,13 @@ impl NeuralBridge {
     ///
     /// # Errors
     ///
-    /// Returns an error if the connection, serialization, or RPC call fails.
+    /// Returns a typed [`IpcError`](super::envelope::IpcError) on failure.
     pub fn capability_call(
         &self,
         capability: &str,
         operation: &str,
         args: &serde_json::Value,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, super::envelope::IpcError> {
         let params = serde_json::json!({
             "capability": capability,
             "operation": operation,
@@ -107,8 +110,11 @@ impl NeuralBridge {
     ///
     /// # Errors
     ///
-    /// Returns an error if the discovery call fails.
-    pub fn discover_capability(&self, capability: &str) -> Result<serde_json::Value, String> {
+    /// Returns a typed [`IpcError`](super::envelope::IpcError) on failure.
+    pub fn discover_capability(
+        &self,
+        capability: &str,
+    ) -> Result<serde_json::Value, super::envelope::IpcError> {
         let params = serde_json::json!({
             "capability": capability,
         });
@@ -121,8 +127,11 @@ impl NeuralBridge {
     ///
     /// # Errors
     ///
-    /// Returns an error if the registration call fails.
-    pub fn register(&self, our_socket: &std::path::Path) -> Result<serde_json::Value, String> {
+    /// Returns a typed [`IpcError`](super::envelope::IpcError) on failure.
+    pub fn register(
+        &self,
+        our_socket: &std::path::Path,
+    ) -> Result<serde_json::Value, super::envelope::IpcError> {
         let mappings: serde_json::Value = crate::niche::SEMANTIC_MAPPINGS
             .iter()
             .map(|(short, full)| {
@@ -155,8 +164,8 @@ impl NeuralBridge {
     ///
     /// # Errors
     ///
-    /// Returns an error if the deregistration call fails.
-    pub fn deregister(&self) -> Result<serde_json::Value, String> {
+    /// Returns a typed [`IpcError`](super::envelope::IpcError) on failure.
+    pub fn deregister(&self) -> Result<serde_json::Value, super::envelope::IpcError> {
         let params = serde_json::json!({
             "domain": crate::niche::NICHE_DOMAIN,
             "provider": crate::niche::NICHE_NAME,
@@ -174,14 +183,16 @@ impl NeuralBridge {
         &self,
         method: &str,
         params: &serde_json::Value,
-    ) -> Result<serde_json::Value, String> {
-        let stream = UnixStream::connect(&self.socket).map_err(|e| format!("connect: {e}"))?;
+    ) -> Result<serde_json::Value, super::envelope::IpcError> {
+        use super::envelope::IpcError;
+
+        let stream = UnixStream::connect(&self.socket).map_err(IpcError::Connect)?;
         stream
             .set_read_timeout(Some(self.timeout))
-            .map_err(|e| format!("set_read_timeout: {e}"))?;
+            .map_err(IpcError::Timeout)?;
         stream
             .set_write_timeout(Some(self.timeout))
-            .map_err(|e| format!("set_write_timeout: {e}"))?;
+            .map_err(IpcError::Timeout)?;
 
         let request = serde_json::json!({
             "jsonrpc": "2.0",
@@ -190,22 +201,19 @@ impl NeuralBridge {
             "id": 1
         });
 
-        let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
-        let mut msg = serde_json::to_string(&request).map_err(|e| format!("serialize: {e}"))?;
+        let mut writer = stream.try_clone().map_err(IpcError::Io)?;
+        let mut msg = serde_json::to_string(&request)
+            .map_err(|e| IpcError::Serialization(e.to_string()))?;
         msg.push('\n');
-        writer
-            .write_all(msg.as_bytes())
-            .map_err(|e| format!("write: {e}"))?;
-        writer.flush().map_err(|e| format!("flush: {e}"))?;
+        writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
+        writer.flush().map_err(IpcError::Io)?;
 
         let mut reader = BufReader::new(stream);
         let mut response = String::new();
-        reader
-            .read_line(&mut response)
-            .map_err(|e| format!("read: {e}"))?;
+        reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-        let parsed: serde_json::Value =
-            serde_json::from_str(&response).map_err(|e| format!("parse: {e}"))?;
+        let parsed: serde_json::Value = serde_json::from_str(&response)
+            .map_err(|e| IpcError::Serialization(e.to_string()))?;
 
         super::envelope::extract_rpc_result(&parsed)
     }

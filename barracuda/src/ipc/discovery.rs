@@ -131,34 +131,47 @@ pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
     })
 }
 
-/// Extract capabilities from a `lifecycle.status` response.
+/// Extract capabilities from a `lifecycle.status` or `capability.list` response.
 ///
-/// Handles two response formats seen across the ecosystem:
-/// - Array: `{"capabilities": ["cap1", "cap2"]}` (standard)
-/// - Nested: `{"capabilities": {"capabilities": ["cap1"]}}` (some primals)
+/// Handles all 4 formats observed across the ecosystem (airSpring v0.8.7,
+/// rhizoCrypt S17, neuralSpring S156):
 ///
-/// This dual-format handling was identified by neuralSpring S156 where
-/// `probe_capabilities` needed to handle both shapes.
+/// - **Format A**: Flat string array `["cap1", "cap2"]`
+/// - **Format B**: Object array `[{"name": "cap1"}, {"name": "cap2"}]`
+/// - **Format C**: Nested wrapper `{"capabilities": ["cap1"]}`
+/// - **Format D**: Double-nested `{"capabilities": {"capabilities": ["cap1"]}}`
+///
+/// Also handles a `{"result": ...}` wrapper (biomeOS response format).
 fn extract_capabilities(result: &serde_json::Value) -> Vec<String> {
-    let caps_value = result.get("capabilities");
-    match caps_value {
-        Some(serde_json::Value::Array(arr)) => arr
-            .iter()
-            .filter_map(serde_json::Value::as_str)
-            .map(str::to_owned)
-            .collect(),
+    let target = result
+        .get("result")
+        .and_then(|r| r.get("capabilities"))
+        .or_else(|| result.get("capabilities"));
+
+    match target {
+        Some(serde_json::Value::Array(arr)) => extract_from_array(arr),
         Some(serde_json::Value::Object(obj)) => obj
             .get("capabilities")
             .and_then(serde_json::Value::as_array)
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(serde_json::Value::as_str)
-                    .map(str::to_owned)
-                    .collect()
-            })
+            .map(|arr| extract_from_array(arr))
             .unwrap_or_default(),
         _ => Vec::new(),
     }
+}
+
+/// Extract capability strings from an array that may contain strings (Format A)
+/// or objects with a `"name"` field (Format B).
+fn extract_from_array(arr: &[serde_json::Value]) -> Vec<String> {
+    arr.iter()
+        .filter_map(|v| match v {
+            serde_json::Value::String(s) => Some(s.clone()),
+            serde_json::Value::Object(obj) => obj
+                .get("name")
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned),
+            _ => None,
+        })
+        .collect()
 }
 
 /// Discover all primals in the standard socket directories.
@@ -202,20 +215,22 @@ pub fn discover_by_capability(capability: &str) -> Option<PrimalEndpoint> {
 ///
 /// # Errors
 ///
-/// Returns an error string if the connection, serialization, or RPC call fails.
+/// Returns a typed [`IpcError`](super::envelope::IpcError) on failure.
 pub fn call_primal(
     endpoint: &PrimalEndpoint,
     method: &str,
     params: &serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    let stream = UnixStream::connect(&endpoint.socket).map_err(|e| format!("connect: {e}"))?;
+) -> Result<serde_json::Value, super::envelope::IpcError> {
+    use super::envelope::IpcError;
+
+    let stream = UnixStream::connect(&endpoint.socket).map_err(IpcError::Connect)?;
     let rpc_timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
     stream
         .set_read_timeout(Some(rpc_timeout))
-        .map_err(|e| format!("set_read_timeout: {e}"))?;
+        .map_err(IpcError::Timeout)?;
     stream
         .set_write_timeout(Some(rpc_timeout))
-        .map_err(|e| format!("set_write_timeout: {e}"))?;
+        .map_err(IpcError::Timeout)?;
 
     let request = serde_json::json!({
         "jsonrpc": "2.0",
@@ -224,22 +239,19 @@ pub fn call_primal(
         "id": 1
     });
 
-    let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
-    let mut msg = serde_json::to_string(&request).map_err(|e| format!("serialize: {e}"))?;
+    let mut writer = stream.try_clone().map_err(IpcError::Io)?;
+    let mut msg =
+        serde_json::to_string(&request).map_err(|e| IpcError::Serialization(e.to_string()))?;
     msg.push('\n');
-    writer
-        .write_all(msg.as_bytes())
-        .map_err(|e| format!("write: {e}"))?;
-    writer.flush().map_err(|e| format!("flush: {e}"))?;
+    writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
+    writer.flush().map_err(IpcError::Io)?;
 
     let mut reader = BufReader::new(stream);
     let mut response = String::new();
-    reader
-        .read_line(&mut response)
-        .map_err(|e| format!("read: {e}"))?;
+    reader.read_line(&mut response).map_err(IpcError::Io)?;
 
     let parsed: serde_json::Value =
-        serde_json::from_str(&response).map_err(|e| format!("parse: {e}"))?;
+        serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
 
     super::envelope::extract_rpc_result(&parsed)
 }
@@ -293,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_capabilities_from_array() {
+    fn extract_capabilities_format_a_flat_array() {
         let result = serde_json::json!({
             "name": "test",
             "capabilities": ["game.evaluate_flow", "game.fitts_cost"]
@@ -303,7 +315,30 @@ mod tests {
     }
 
     #[test]
-    fn extract_capabilities_from_nested_object() {
+    fn extract_capabilities_format_b_object_array() {
+        let result = serde_json::json!({
+            "capabilities": [
+                {"name": "health", "version": "1.0"},
+                {"name": "compute.dispatch"}
+            ]
+        });
+        let caps = extract_capabilities(&result);
+        assert_eq!(caps, vec!["health", "compute.dispatch"]);
+    }
+
+    #[test]
+    fn extract_capabilities_format_c_nested_wrapper() {
+        let result = serde_json::json!({
+            "result": {
+                "capabilities": ["dag.session.create", "dag.event.append"]
+            }
+        });
+        let caps = extract_capabilities(&result);
+        assert_eq!(caps, vec!["dag.session.create", "dag.event.append"]);
+    }
+
+    #[test]
+    fn extract_capabilities_format_d_double_nested() {
         let result = serde_json::json!({
             "name": "test",
             "capabilities": {
@@ -326,5 +361,52 @@ mod tests {
         let result = serde_json::json!({"capabilities": null});
         let caps = extract_capabilities(&result);
         assert!(caps.is_empty());
+    }
+
+    #[test]
+    fn extract_capabilities_mixed_array_ignores_non_string() {
+        let result = serde_json::json!({
+            "capabilities": ["valid", 42, null, {"name": "also_valid"}]
+        });
+        let caps = extract_capabilities(&result);
+        assert_eq!(caps, vec!["valid", "also_valid"]);
+    }
+
+    // ── Proptest fuzz (airSpring v0.8.7 pattern) ────────────────────
+
+    mod proptest_fuzz {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn extract_capabilities_never_panics(json_str in "\\PC{0,200}") {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    let _ = extract_capabilities(&val);
+                }
+            }
+
+            #[test]
+            fn extract_capabilities_returns_strings_from_flat_array(
+                caps in prop::collection::vec("[a-z.]{1,20}", 0..5)
+            ) {
+                let val = serde_json::json!({"capabilities": caps});
+                let result = extract_capabilities(&val);
+                prop_assert_eq!(result, caps);
+            }
+
+            #[test]
+            fn extract_capabilities_handles_object_array(
+                caps in prop::collection::vec("[a-z.]{1,15}", 0..5)
+            ) {
+                let objects: Vec<serde_json::Value> = caps
+                    .iter()
+                    .map(|c| serde_json::json!({"name": c}))
+                    .collect();
+                let val = serde_json::json!({"capabilities": objects});
+                let result = extract_capabilities(&val);
+                prop_assert_eq!(result, caps);
+            }
+        }
     }
 }

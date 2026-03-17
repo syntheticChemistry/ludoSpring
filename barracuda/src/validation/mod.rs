@@ -301,6 +301,44 @@ impl<S: ValidationSink> ValidationHarness<S> {
     }
 }
 
+// ── OrExit trait (groundSpring V112 / wetSpring V123 pattern) ───────
+
+/// Zero-boilerplate exit for validation binaries.
+///
+/// Absorbed from groundSpring V112 and wetSpring V123. Replaces the
+/// `let Ok(...) = expr else { eprintln!("FATAL: ..."); std::process::exit(1); }`
+/// pattern with a single `.or_exit("context")` call.
+///
+/// Only intended for validation binaries (not library code).
+pub trait OrExit<T> {
+    /// Unwrap the value or print to stderr and exit with code 1.
+    fn or_exit(self, context: &str) -> T;
+}
+
+impl<T, E: core::fmt::Display> OrExit<T> for Result<T, E> {
+    fn or_exit(self, context: &str) -> T {
+        match self {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("FATAL: {context}: {e}");
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
+impl<T> OrExit<T> for Option<T> {
+    fn or_exit(self, context: &str) -> T {
+        match self {
+            Some(v) => v,
+            None => {
+                eprintln!("FATAL: {context}: None");
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
 // ── Legacy API (backward-compatible) ────────────────────────────────
 
 /// Validation result for a single experiment check (legacy API).
@@ -461,6 +499,20 @@ mod tests {
         assert_eq!(h.checks().len(), 2);
         assert!(h.checks()[0].passed);
         assert!(!h.checks()[1].passed);
+    }
+
+    // ── OrExit tests ──────────────────────────────────────────────────
+
+    #[test]
+    fn or_exit_result_ok_returns_value() {
+        let r: Result<i32, &str> = Ok(42);
+        assert_eq!(r.or_exit("should not exit"), 42);
+    }
+
+    #[test]
+    fn or_exit_option_some_returns_value() {
+        let o: Option<i32> = Some(99);
+        assert_eq!(o.or_exit("should not exit"), 99);
     }
 
     // ── Legacy ValidationResult tests ───────────────────────────────

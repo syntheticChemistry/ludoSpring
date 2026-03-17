@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 16, 2026
+**Last Updated:** March 17, 2026
 
 ---
 
@@ -24,13 +24,12 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V23** | [LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md) | Mar 16 | Cross-ecosystem deep debt: zero `#[allow()]` (`#[expect(reason)]` migration, wetSpring V122), zero-panic validation (14 experiments, groundSpring V109), `extract_rpc_result()` centralization (healthSpring V29), `deny.toml wildcards=deny` (barraCuda Sprint 6), XDG socket paths, unit conversion constants |
-| **V23** | [LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md) | Mar 16 | toadStool/barraCuda absorption: primitives consumed, 14 WGSL shaders (5 ready), typed dispatch contract, Write→Absorb→Lean status, reusable patterns, V24 candidates |
+| **V24** | [LUDOSPRING_V24_LEVERAGE_GUIDE_HANDOFF_MAR17_2026.md](handoffs/LUDOSPRING_V24_LEVERAGE_GUIDE_HANDOFF_MAR17_2026.md) | Mar 17 | Primal leverage guide + absorption sprint: OrExit\<T\>, DispatchOutcome\<T\>, 4-format capability parsing, health probes (26 capabilities), resilient trio IPC (circuit breaker + backoff), proptest fuzz, deny.toml yanked=deny, cross-primal composition catalog |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, cross-ecosystem deep debt V23)
+ludoSpring (game science, 75 experiments, 1692 checks, 450+ tests + 19 proptest + 6 IPC integration, ecosystem absorption V24)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders)
@@ -86,6 +85,8 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V23 | `handoffs/archive/LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md` | V24 Leverage Guide + Absorption Sprint |
+| V23 | `handoffs/archive/LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md` | V24 Leverage Guide + Absorption Sprint |
 | V22 | `handoffs/archive/LUDOSPRING_V22_ECOSYSTEM_ABSORPTION_HANDOFF_MAR16_2026.md` | V23 Cross-Ecosystem Deep Debt |
 | V21 | `handoffs/archive/LUDOSPRING_V21_BARRACUDA_TOADSTOOL_DEEP_DEBT_EVOLUTION_HANDOFF_MAR16_2026.md` | V22 Ecosystem Absorption |
 | V20 | `handoffs/archive/LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md` | V21 Deep Debt Evolution |

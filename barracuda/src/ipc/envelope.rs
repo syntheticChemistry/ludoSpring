@@ -1,10 +1,135 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! JSON-RPC 2.0 protocol envelope types.
+//! JSON-RPC 2.0 protocol envelope types and typed IPC error.
 //!
 //! These are protocol-level types, independent of any specific method.
 //! They follow the JSON-RPC 2.0 specification (2010-03-26).
+//!
+//! [`IpcError`] replaces bare `String` errors across the IPC layer,
+//! following the coralReef Iter 52 typed error pattern.
 
 use serde::{Deserialize, Serialize};
+
+// ── Typed IPC Error ──────────────────────────────────────────────────
+
+/// Structured error type for all IPC operations.
+///
+/// Replaces `Result<T, String>` throughout the IPC layer with a typed enum
+/// that preserves the error category. Each variant maps to a failure mode
+/// observed across ecosystem IPC (connect, timeout, serialization, protocol,
+/// RPC error codes). The `Display` impl produces human-readable messages
+/// compatible with the previous `String` error format.
+#[derive(Debug)]
+pub enum IpcError {
+    /// Socket connection failed (primal unreachable, path invalid).
+    Connect(std::io::Error),
+    /// Read/write timeout on an established connection.
+    Timeout(std::io::Error),
+    /// I/O error during read, write, or stream clone.
+    Io(std::io::Error),
+    /// JSON serialization or deserialization failed.
+    Serialization(String),
+    /// JSON-RPC error response from the remote primal.
+    RpcError {
+        /// JSON-RPC error code (-32600..-32603 standard, -32000..-32099 app).
+        code: i64,
+        /// Human-readable error message from the remote.
+        message: String,
+    },
+    /// The response was valid JSON but contained no `result` field.
+    NoResult,
+    /// Discovery failed — no primal found for the requested capability.
+    NotFound(String),
+}
+
+impl core::fmt::Display for IpcError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Connect(e) => write!(f, "connect: {e}"),
+            Self::Timeout(e) => write!(f, "timeout: {e}"),
+            Self::Io(e) => write!(f, "io: {e}"),
+            Self::Serialization(e) => write!(f, "serialization: {e}"),
+            Self::RpcError { code, message } => write!(f, "rpc error {code}: {message}"),
+            Self::NoResult => write!(f, "no result in response"),
+            Self::NotFound(what) => write!(f, "{what}"),
+        }
+    }
+}
+
+impl std::error::Error for IpcError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Connect(e) | Self::Timeout(e) | Self::Io(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<IpcError> for String {
+    fn from(e: IpcError) -> Self {
+        e.to_string()
+    }
+}
+
+// ── Dispatch Outcome (groundSpring V112 / petalTongue V166 pattern) ─
+
+/// Classifies the outcome of a JSON-RPC dispatch into one of three buckets.
+///
+/// Absorbed from groundSpring V112 and petalTongue V166. Replaces ad-hoc
+/// `match` on `Result<Value, IpcError>` with a structured enum that
+/// separates protocol-level failures from application-level errors.
+#[derive(Debug)]
+pub enum DispatchOutcome<T = serde_json::Value> {
+    /// The call succeeded and returned a typed result.
+    Ok(T),
+    /// Protocol-level failure: socket unreachable, timeout, serialization,
+    /// or the response was not valid JSON-RPC. Never the remote's fault.
+    ProtocolError(IpcError),
+    /// Application-level error: the remote primal explicitly returned a
+    /// JSON-RPC error response (code + message).
+    ApplicationError {
+        /// JSON-RPC error code.
+        code: i64,
+        /// Human-readable error message from the remote primal.
+        message: String,
+    },
+}
+
+impl<T> DispatchOutcome<T> {
+    /// Whether the dispatch succeeded.
+    #[must_use]
+    pub const fn is_ok(&self) -> bool {
+        matches!(self, Self::Ok(_))
+    }
+
+    /// Convert to `Result`, merging both error variants.
+    pub fn into_result(self) -> Result<T, IpcError> {
+        match self {
+            Self::Ok(v) => Ok(v),
+            Self::ProtocolError(e) => Err(e),
+            Self::ApplicationError { code, message } => Err(IpcError::RpcError { code, message }),
+        }
+    }
+}
+
+impl DispatchOutcome<serde_json::Value> {
+    /// Classify an `IpcError` into a `DispatchOutcome`.
+    #[must_use]
+    pub fn from_ipc_error(err: IpcError) -> Self {
+        match err {
+            IpcError::RpcError { code, message } => Self::ApplicationError { code, message },
+            other => Self::ProtocolError(other),
+        }
+    }
+
+    /// Classify a `Result<Value, IpcError>` into a `DispatchOutcome`.
+    #[must_use]
+    pub fn classify(result: Result<serde_json::Value, IpcError>) -> Self {
+        match result {
+            Ok(v) => Self::Ok(v),
+            Err(e) => Self::from_ipc_error(e),
+        }
+    }
+}
 
 /// JSON-RPC 2.0 request.
 #[derive(Debug, Deserialize)]
@@ -62,26 +187,28 @@ impl JsonRpcResponse {
     }
 }
 
-/// Extract a human-readable error string from a raw JSON-RPC response object.
+/// Extract the result from a raw JSON-RPC response object.
 ///
 /// Handles the common pattern where callers receive a `serde_json::Value`
 /// and need to check for an `"error"` field. Returns `Ok(result)` on success
-/// or `Err(message)` if the response contains an error or no result.
+/// or a typed [`IpcError`] if the response contains an error or no result.
 ///
-/// Follows the healthSpring V29 `extract_rpc_error()` centralization pattern.
-pub fn extract_rpc_result(response: &serde_json::Value) -> Result<serde_json::Value, String> {
+/// Follows the healthSpring V29 `extract_rpc_error()` centralization pattern,
+/// evolved to typed errors per coralReef Iter 52.
+pub fn extract_rpc_result(response: &serde_json::Value) -> Result<serde_json::Value, IpcError> {
     if let Some(error) = response.get("error") {
         let message = error
             .get("message")
             .and_then(|m| m.as_str())
-            .unwrap_or("unknown");
+            .unwrap_or("unknown")
+            .to_string();
         let code = error.get("code").and_then(|c| c.as_i64()).unwrap_or(0);
-        return Err(format!("rpc error {code}: {message}"));
+        return Err(IpcError::RpcError { code, message });
     }
     response
         .get("result")
         .cloned()
-        .ok_or_else(|| "no result in response".to_owned())
+        .ok_or(IpcError::NoResult)
 }
 
 impl JsonRpcError {
@@ -121,6 +248,193 @@ impl JsonRpcError {
                 message: format!("internal error: {detail}"),
             },
             id: id.clone(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_rpc_result_success() {
+        let resp = serde_json::json!({"jsonrpc": "2.0", "result": {"ok": true}, "id": 1});
+        let result = extract_rpc_result(&resp);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), serde_json::json!({"ok": true}));
+    }
+
+    #[test]
+    fn extract_rpc_result_rpc_error() {
+        let resp = serde_json::json!({
+            "jsonrpc": "2.0",
+            "error": {"code": -32601, "message": "method not found"},
+            "id": 1
+        });
+        let err = extract_rpc_result(&resp).unwrap_err();
+        assert!(matches!(err, IpcError::RpcError { code: -32601, .. }));
+        assert!(err.to_string().contains("-32601"));
+        assert!(err.to_string().contains("method not found"));
+    }
+
+    #[test]
+    fn extract_rpc_result_no_result() {
+        let resp = serde_json::json!({"jsonrpc": "2.0", "id": 1});
+        let err = extract_rpc_result(&resp).unwrap_err();
+        assert!(matches!(err, IpcError::NoResult));
+    }
+
+    #[test]
+    fn extract_rpc_result_error_missing_message() {
+        let resp = serde_json::json!({"error": {"code": -32000}, "id": 1});
+        let err = extract_rpc_result(&resp).unwrap_err();
+        match err {
+            IpcError::RpcError { code, message } => {
+                assert_eq!(code, -32000);
+                assert_eq!(message, "unknown");
+            }
+            _ => panic!("expected RpcError"),
+        }
+    }
+
+    #[test]
+    fn ipc_error_display_formats() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        assert_eq!(IpcError::Connect(io_err).to_string(), "connect: refused");
+
+        assert_eq!(
+            IpcError::Serialization("bad json".into()).to_string(),
+            "serialization: bad json"
+        );
+
+        assert_eq!(
+            IpcError::RpcError {
+                code: -32601,
+                message: "not found".into()
+            }
+            .to_string(),
+            "rpc error -32601: not found"
+        );
+
+        assert_eq!(IpcError::NoResult.to_string(), "no result in response");
+
+        assert_eq!(
+            IpcError::NotFound("no viz".into()).to_string(),
+            "no viz"
+        );
+    }
+
+    #[test]
+    fn ipc_error_to_string_conversion() {
+        let err = IpcError::NoResult;
+        let s: String = err.into();
+        assert_eq!(s, "no result in response");
+    }
+
+    #[test]
+    fn ipc_error_is_std_error() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::BrokenPipe, "pipe broke");
+        let ipc_err = IpcError::Io(io_err);
+        let as_error: &dyn std::error::Error = &ipc_err;
+        assert!(as_error.source().is_some());
+    }
+
+    // ── DispatchOutcome tests ────────────────────────────────────────
+
+    #[test]
+    fn dispatch_outcome_classify_ok() {
+        let result: Result<serde_json::Value, IpcError> = Ok(serde_json::json!(42));
+        let outcome = DispatchOutcome::classify(result);
+        assert!(outcome.is_ok());
+        assert!(outcome.into_result().is_ok());
+    }
+
+    #[test]
+    fn dispatch_outcome_classify_protocol_error() {
+        let result: Result<serde_json::Value, IpcError> = Err(IpcError::NoResult);
+        let outcome = DispatchOutcome::classify(result);
+        assert!(!outcome.is_ok());
+        assert!(matches!(outcome, DispatchOutcome::ProtocolError(_)));
+    }
+
+    #[test]
+    fn dispatch_outcome_classify_application_error() {
+        let result: Result<serde_json::Value, IpcError> = Err(IpcError::RpcError {
+            code: -32000,
+            message: "app error".into(),
+        });
+        let outcome = DispatchOutcome::classify(result);
+        assert!(!outcome.is_ok());
+        assert!(matches!(
+            outcome,
+            DispatchOutcome::ApplicationError { code: -32000, .. }
+        ));
+    }
+
+    #[test]
+    fn dispatch_outcome_into_result_merges_errors() {
+        let protocol = DispatchOutcome::<serde_json::Value>::ProtocolError(IpcError::NoResult);
+        let err = protocol.into_result().unwrap_err();
+        assert!(matches!(err, IpcError::NoResult));
+
+        let app = DispatchOutcome::<serde_json::Value>::ApplicationError {
+            code: -32001,
+            message: "fail".into(),
+        };
+        let err = app.into_result().unwrap_err();
+        assert!(matches!(err, IpcError::RpcError { code: -32001, .. }));
+    }
+
+    // ── Proptest fuzz (airSpring v0.8.7 pattern) ────────────────────
+
+    mod proptest_fuzz {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn extract_rpc_result_never_panics(json_str in "\\PC{0,200}") {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    let _ = extract_rpc_result(&val);
+                }
+            }
+
+            #[test]
+            fn extract_rpc_result_with_result_field_returns_ok(
+                inner in prop::collection::hash_map("[a-z]{1,5}", 0i64..100, 0..3)
+            ) {
+                let val = serde_json::json!({"jsonrpc": "2.0", "result": inner, "id": 1});
+                let res = extract_rpc_result(&val);
+                prop_assert!(res.is_ok());
+            }
+
+            #[test]
+            fn extract_rpc_result_with_error_field_returns_err(
+                code in -32700i64..-31999,
+                msg in "[a-z ]{0,30}"
+            ) {
+                let val = serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "error": {"code": code, "message": msg},
+                    "id": 1
+                });
+                let res = extract_rpc_result(&val);
+                prop_assert!(res.is_err());
+                match res.unwrap_err() {
+                    IpcError::RpcError { code: c, message: m } => {
+                        prop_assert_eq!(c, code);
+                        prop_assert_eq!(m, msg);
+                    }
+                    other => prop_assert!(false, "expected RpcError, got {:?}", other),
+                }
+            }
+
+            #[test]
+            fn dispatch_outcome_classify_round_trips(code in -32700i64..-31999) {
+                let rpc_err = IpcError::RpcError { code, message: "test".into() };
+                let outcome = DispatchOutcome::from_ipc_error(rpc_err);
+                prop_assert!(matches!(outcome, DispatchOutcome::ApplicationError { .. }));
+            }
         }
     }
 }

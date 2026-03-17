@@ -205,7 +205,10 @@ impl SampleDag {
         }
 
         let vertex = builder.build();
-        let vertex_id = vertex.compute_id().expect("vertex id computation");
+        let Ok(vertex_id) = vertex.compute_id() else {
+            eprintln!("FATAL: vertex id computation failed");
+            std::process::exit(1);
+        };
         self.session.update_frontier(vertex_id, &self.frontier);
         self.frontier = vec![vertex_id];
         self.vertices.push(vertex);
@@ -237,12 +240,14 @@ pub struct SampleSystem {
 impl SampleSystem {
     /// Create a new sample system.
     pub fn new(owner: &Did) -> Self {
-        let spine = Spine::new(
+        let Ok(spine) = Spine::new(
             owner.clone(),
             Some("FieldSample".into()),
             SpineConfig::default(),
-        )
-        .expect("spine creation");
+        ) else {
+            eprintln!("FATAL: spine creation failed");
+            std::process::exit(1);
+        };
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -288,10 +293,13 @@ impl SampleSystem {
             schema_version: 1,
         };
 
-        let (cert, _entry_hash) = self
+        let Ok((cert, _entry_hash)) = self
             .cert_manager
             .mint(cert_type, collector, metadata)
-            .expect("certificate minting");
+        else {
+            eprintln!("FATAL: certificate minting failed");
+            std::process::exit(1);
+        };
 
         let cert_id = cert.id;
 

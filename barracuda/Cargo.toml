@@ -28,6 +28,12 @@ signal-hook = { version = "0.3", optional = true }
 
 barracuda = { path = "../../barraCuda/crates/barracuda" }
 
+# wgpu is the only non-pure-Rust dependency (ash → Vulkan loader → system libvulkan).
+# It is optional, gated behind the `gpu` feature, and never active in default builds.
+# Evolution path: as coralReef (sovereign shader compiler) matures, local WGSL
+# shaders will be compiled via coralReef IPC rather than wgpu dispatch. At that
+# point, wgpu becomes unnecessary and can be removed entirely.
+# Until then: no wgpu in default features, no wgpu in CI quality gates.
 wgpu = { version = "28", default-features = false, features = [
     "wgsl",
     "vulkan-portability",

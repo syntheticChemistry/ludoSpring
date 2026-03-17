@@ -49,9 +49,10 @@ pub fn validate_trading_protocol() -> Vec<ValidationResult> {
     let shield_id = system.mint(&alice, "Oak Shield", "armor", shield_cosmetics);
     let helm_id = system.mint(&alice, "Iron Helm", "armor", helm_cosmetics);
 
-    system
-        .trade(helm_id, &alice, &bob)
-        .expect("initial helm transfer to bob");
+    let Ok(()) = system.trade(helm_id, &alice, &bob) else {
+        eprintln!("FATAL: initial helm transfer to bob failed");
+        std::process::exit(1);
+    };
 
     let offer_id = protocol.offer("did:key:alice_trader", "did:key:bob_trader", shield_id);
     results.push(ValidationResult::check(
@@ -221,7 +222,10 @@ pub fn validate_trio_integration() -> Vec<ValidationResult> {
     system.advance_tick();
     system.inspect(gem_id, &alice);
     system.advance_tick();
-    system.trade(gem_id, &alice, &bob).expect("trade succeeds");
+    let Ok(()) = system.trade(gem_id, &alice, &bob) else {
+        eprintln!("FATAL: gem trade to bob failed");
+        std::process::exit(1);
+    };
     system.advance_tick();
     system.record_achievement(gem_id, &bob, "first_trade_received");
 
@@ -424,9 +428,10 @@ pub fn validate_full_scenario() -> Vec<ValidationResult> {
         bob_ring_id,
     );
     protocol.accept(swap_id);
-    protocol
-        .execute(swap_id, &mut system)
-        .expect("swap succeeds");
+    let Ok(()) = protocol.execute(swap_id, &mut system) else {
+        eprintln!("FATAL: swap execution failed");
+        std::process::exit(1);
+    };
 
     system.advance_tick();
     system.record_achievement(sword_id, &bob, "inherited_a_legend");
@@ -549,8 +554,12 @@ pub fn validate_full_scenario() -> Vec<ValidationResult> {
 pub fn validate_composable_deployment() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
-    let mint_calls =
-        protocol::mint_ipc_sequence("did:key:alice_ferment", "Flame Sword", "weapon", "rare");
+    let Ok(mint_calls) =
+        protocol::mint_ipc_sequence("did:key:alice_ferment", "Flame Sword", "weapon", "rare")
+    else {
+        eprintln!("FATAL: mint IPC sequence serialization failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_mint_requires_three_calls",
@@ -589,8 +598,12 @@ pub fn validate_composable_deployment() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let cert_params: protocol::CertMintRequest =
-        serde_json::from_value(mint_calls[0].params.clone()).expect("deserialization");
+    let Ok(cert_params) =
+        serde_json::from_value::<protocol::CertMintRequest>(mint_calls[0].params.clone())
+    else {
+        eprintln!("FATAL: CertMintRequest deserialization failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_cert_mint_has_owner",
@@ -606,7 +619,12 @@ pub fn validate_composable_deployment() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let trade_calls = protocol::trade_ipc_sequence("cert-001", "did:key:alice", "did:key:bob");
+    let Ok(trade_calls) =
+        protocol::trade_ipc_sequence("cert-001", "did:key:alice", "did:key:bob")
+    else {
+        eprintln!("FATAL: trade IPC sequence serialization failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_trade_requires_three_calls",
@@ -622,8 +640,12 @@ pub fn validate_composable_deployment() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let transfer_params: protocol::CertTransferRequest =
-        serde_json::from_value(trade_calls[0].params.clone()).expect("deserialization");
+    let Ok(transfer_params) =
+        serde_json::from_value::<protocol::CertTransferRequest>(trade_calls[0].params.clone())
+    else {
+        eprintln!("FATAL: CertTransferRequest deserialization failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_trade_transfer_from_alice",
@@ -648,9 +670,14 @@ pub fn validate_composable_deployment() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let mint_json = serde_json::to_string(&mint_calls[0]).expect("serialization");
-    let roundtrip: protocol::JsonRpcRequest =
-        serde_json::from_str(&mint_json).expect("deserialization");
+    let Ok(mint_json) = serde_json::to_string(&mint_calls[0]) else {
+        eprintln!("FATAL: mint call serialization failed");
+        std::process::exit(1);
+    };
+    let Ok(roundtrip) = serde_json::from_str::<protocol::JsonRpcRequest>(&mint_json) else {
+        eprintln!("FATAL: mint call roundtrip deserialization failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_wire_format_roundtrip",

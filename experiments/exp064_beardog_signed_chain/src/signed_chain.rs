@@ -160,7 +160,10 @@ impl ProvDag {
         }
 
         let vertex = builder.build();
-        let vertex_id = vertex.compute_id().expect("vertex id");
+        let Ok(vertex_id) = vertex.compute_id() else {
+            eprintln!("FATAL: vertex id computation failed");
+            std::process::exit(1);
+        };
         self.session.update_frontier(vertex_id, &self.frontier);
 
         let content_hash = vertex_id.as_bytes().to_vec();
@@ -174,12 +177,14 @@ impl ProvDag {
 impl SignedProvenanceChain {
     /// Create a new signed provenance chain.
     pub fn new(owner: &Did, key_seed: &str) -> Self {
-        let spine = Spine::new(
+        let Ok(spine) = Spine::new(
             owner.clone(),
             Some("SignedChain".into()),
             SpineConfig::default(),
-        )
-        .expect("spine creation");
+        ) else {
+            eprintln!("FATAL: spine creation failed");
+            std::process::exit(1);
+        };
         let cert_manager = CertificateManager::new(spine);
         let key_pair = Ed25519KeyPair::from_seed(key_seed);
 
@@ -241,10 +246,10 @@ impl SignedProvenanceChain {
             attributes: HashMap::new(),
         };
 
-        let (cert, _) = self
-            .cert_manager
-            .mint(cert_type, owner, metadata)
-            .expect("certificate minting");
+        let Ok((cert, _)) = self.cert_manager.mint(cert_type, owner, metadata) else {
+            eprintln!("FATAL: certificate minting failed");
+            std::process::exit(1);
+        };
 
         let cert_id = cert.id;
         let content_hash = cert_id.to_string().into_bytes();

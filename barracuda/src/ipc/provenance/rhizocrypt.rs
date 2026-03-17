@@ -218,3 +218,51 @@ pub fn list_sessions() -> Result<ProvenanceResult, String> {
             },
         )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn query_vertices_degrades() {
+        let r = query_vertices("sess-1", Some("move"), None, None).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn vertex_children_degrades() {
+        let r = vertex_children("sess-1", "v-001").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn get_frontier_degrades() {
+        let r = get_frontier("sess-1").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn merkle_root_degrades() {
+        let r = merkle_root("sess-1").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn merkle_proof_degrades() {
+        let r = merkle_proof("sess-1", "v-001").unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn append_batch_degrades() {
+        let events = vec![serde_json::json!({"type": "attack"})];
+        let r = append_batch("sess-1", &events).unwrap();
+        assert!(!r.available);
+    }
+
+    #[test]
+    fn list_sessions_degrades() {
+        let r = list_sessions().unwrap();
+        assert!(!r.available);
+    }
+}

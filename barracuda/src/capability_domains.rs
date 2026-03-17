@@ -31,7 +31,8 @@ pub struct Method {
 }
 
 /// All domains exposed by ludoSpring.
-pub const DOMAINS: &[Domain] = &[Domain {
+pub const DOMAINS: &[Domain] = &[
+    Domain {
     prefix: "game",
     description: "Game science — HCI models, flow, engagement, procedural generation",
     methods: &[
@@ -156,10 +157,27 @@ pub const DOMAINS: &[Domain] = &[Domain {
             external: true,
         },
     ],
-}];
+},
+    Domain {
+    prefix: "health",
+    description: "Health probes — Kubernetes-style liveness and readiness checks",
+    methods: &[
+        Method {
+            name: "liveness",
+            fqn: "health.liveness",
+            external: false,
+        },
+        Method {
+            name: "readiness",
+            fqn: "health.readiness",
+            external: false,
+        },
+    ],
+},
+];
 
 /// Valid domain prefixes for method validation.
-pub const VALID_DOMAIN_PREFIXES: &[&str] = &["game"];
+pub const VALID_DOMAIN_PREFIXES: &[&str] = &["game", "health"];
 
 /// All fully qualified method names across all domains.
 #[must_use]
@@ -270,6 +288,6 @@ mod tests {
         let resp = capability_list_response();
         assert_eq!(resp["primal"], "ludospring");
         assert_eq!(resp["domain"], "game");
-        assert_eq!(resp["total_capabilities"], 24);
+        assert_eq!(resp["total_capabilities"], 26);
     }
 }

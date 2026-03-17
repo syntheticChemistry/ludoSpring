@@ -61,6 +61,9 @@ pub const CAPABILITIES: &[&str] = &[
     "game.gpu.tile_lighting",
     "game.gpu.pathfind",
     "game.gpu.perlin_terrain",
+    // ── Health probes (coralReef Iter 51 / healthSpring V32 pattern) ──────
+    "health.liveness",
+    "health.readiness",
 ];
 
 /// Semantic mappings: short name → fully qualified capability.
@@ -93,6 +96,8 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
     ("gpu_tile_lighting", "game.gpu.tile_lighting"),
     ("gpu_pathfind", "game.gpu.pathfind"),
     ("gpu_perlin_terrain", "game.gpu.perlin_terrain"),
+    ("liveness", "health.liveness"),
+    ("readiness", "health.readiness"),
 ];
 
 /// Neural API Enhancement 2: dependency hints for the Pathway Learner.
@@ -127,6 +132,8 @@ pub fn operation_dependencies() -> serde_json::Value {
         "game.gpu.tile_lighting": { "requires": ["grid_w", "grid_h", "lights"], "external": ["compute.submit"] },
         "game.gpu.pathfind": { "requires": ["grid_w", "grid_h", "start_x", "start_y"], "external": ["compute.submit"] },
         "game.gpu.perlin_terrain": { "requires": ["grid_w", "grid_h"], "external": ["compute.submit"] },
+        "health.liveness": { "requires": [] },
+        "health.readiness": { "requires": [] },
     })
 }
 
@@ -161,6 +168,8 @@ pub fn cost_estimates() -> serde_json::Value {
         "game.gpu.tile_lighting": { "typical_latency_us": 500, "cpu_intensity": "gpu", "memory_bytes": 262_144 },
         "game.gpu.pathfind": { "typical_latency_us": 2000, "cpu_intensity": "gpu", "memory_bytes": 262_144 },
         "game.gpu.perlin_terrain": { "typical_latency_us": 1000, "cpu_intensity": "gpu", "memory_bytes": 524_288 },
+        "health.liveness": { "typical_latency_us": 1, "cpu_intensity": "none", "memory_bytes": 32 },
+        "health.readiness": { "typical_latency_us": 5, "cpu_intensity": "low", "memory_bytes": 128 },
     })
 }
 
@@ -264,8 +273,8 @@ mod tests {
 
     #[test]
     fn capabilities_consistent() {
-        assert_eq!(CAPABILITIES.len(), 24);
-        assert_eq!(SEMANTIC_MAPPINGS.len(), 24);
+        assert_eq!(CAPABILITIES.len(), 26);
+        assert_eq!(SEMANTIC_MAPPINGS.len(), 26);
 
         for (short, full) in SEMANTIC_MAPPINGS {
             assert!(
@@ -276,11 +285,12 @@ mod tests {
     }
 
     #[test]
-    fn all_capabilities_prefixed_with_domain() {
+    fn all_capabilities_are_namespaced() {
+        let allowed_prefixes = ["game.", "health."];
         for cap in CAPABILITIES {
             assert!(
-                cap.starts_with("game."),
-                "capability '{cap}' does not start with '{NICHE_DOMAIN}.'"
+                allowed_prefixes.iter().any(|p| cap.starts_with(p)),
+                "capability '{cap}' has no recognized namespace prefix"
             );
         }
     }

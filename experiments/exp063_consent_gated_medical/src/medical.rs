@@ -155,7 +155,10 @@ impl MedicalDag {
         }
 
         let vertex = builder.build();
-        let vertex_id = vertex.compute_id().expect("vertex id computation");
+        let Ok(vertex_id) = vertex.compute_id() else {
+            eprintln!("FATAL: vertex id computation failed");
+            std::process::exit(1);
+        };
         self.session.update_frontier(vertex_id, &self.frontier);
         self.frontier = vec![vertex_id];
         self.vertices.push(vertex);
@@ -245,12 +248,14 @@ pub struct MedicalAccessSystem {
 impl MedicalAccessSystem {
     /// Create a new medical access system.
     pub fn new(owner: &Did) -> Self {
-        let spine = Spine::new(
+        let Ok(spine) = Spine::new(
             owner.clone(),
             Some("MedicalAccess".into()),
             SpineConfig::default(),
-        )
-        .expect("spine creation");
+        ) else {
+            eprintln!("FATAL: spine creation failed");
+            std::process::exit(1);
+        };
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -289,10 +294,13 @@ impl MedicalAccessSystem {
             schema_version: 1,
         };
 
-        let (cert, _entry_hash) = self
+        let Ok((cert, _entry_hash)) = self
             .cert_manager
             .mint(cert_type, patient, metadata)
-            .expect("certificate minting");
+        else {
+            eprintln!("FATAL: certificate minting failed");
+            std::process::exit(1);
+        };
 
         let cert_id = cert.id;
 
@@ -338,10 +346,13 @@ impl MedicalAccessSystem {
             schema_version: 1,
         };
 
-        let (cert, _entry_hash) = self
+        let Ok((cert, _entry_hash)) = self
             .cert_manager
             .mint(cert_type, patient, metadata)
-            .expect("certificate minting");
+        else {
+            eprintln!("FATAL: certificate minting failed");
+            std::process::exit(1);
+        };
 
         let consent_id = cert.id;
 

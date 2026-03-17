@@ -2,13 +2,13 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 16, 2026
-**Version:** V23 (75 experiments, 1692 validation checks, 394 tests + 12 proptest + 6 IPC integration)
+**Date:** March 17, 2026
+**Version:** V24 (75 experiments, 1692 validation checks, 450+ tests + 19 proptest + 6 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, 19,302+ lines Rust
-**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities, structured `capability_domains` registry
-**Audit Status:** Cross-ecosystem deep debt — zero `#[allow()]` anywhere (`#[expect(reason)]` curated dictionary, wetSpring V122), zero-panic validation (14 experiments, groundSpring V109), `extract_rpc_result()` centralized (healthSpring V29), `deny.toml wildcards=deny` (barraCuda Sprint 6), XDG socket paths, `MS_PER_SECOND`/`SECONDS_PER_MINUTE`/`DEFAULT_DT_S` named constants, 0 clippy warnings, 0 magic numbers in library, `#![forbid(unsafe_code)]`
+**Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 26 capabilities (24 game + 2 health probes), structured `capability_domains` registry
+**Audit Status:** Cross-ecosystem absorption — `OrExit<T>` trait (groundSpring V112), `DispatchOutcome<T>` enum (petalTongue V166), 4-format capability parsing (airSpring v0.8.7), `health.liveness`/`health.readiness` probes (healthSpring V32), resilient provenance trio IPC (circuit breaker + exponential backoff), `deny.toml yanked=deny` (toadStool S157b), 7 proptest fuzz properties (JSON-RPC + capability parsing), zero `#[allow()]`, zero-panic, `#![forbid(unsafe_code)]`
 
 ---
 
@@ -397,14 +397,14 @@ cargo run --features ipc --bin ludospring -- version
 | Niche YAML | `niches/ludospring-game.yaml` | BYOB definition with organisms and customization |
 | Self-knowledge | `barracuda/src/niche.rs` | Identity, capabilities, semantic mappings, cost estimates, socket resolution |
 | Neural bridge | `barracuda/src/ipc/neural_bridge.rs` | Typed IPC client for biomeOS Neural API |
-| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 24 capabilities, local/external classification |
+| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 26 capabilities (game + health), local/external classification |
 | Domain registration | `barracuda/src/biomeos/mod.rs` | `game` domain registration via NeuralBridge |
 
 **Compliance with Spring-as-Niche Deployment Standard:**
 
 - UniBin binary with `server`, `status`, `version`
 - JSON-RPC 2.0 over Unix socket (`$XDG_RUNTIME_DIR/biomeos/ludospring-${FAMILY_ID}.sock`)
-- `health.check`, `lifecycle.status`, and `capability.list` with domain, dependencies, cost estimates
+- `health.check`, `health.liveness`, `health.readiness`, `lifecycle.status`, and `capability.list` with domain, dependencies, cost estimates
 - Capability domain registration with semantic mappings via Neural API
 - Clean SIGTERM shutdown with `capability.deregister`
 - Provenance Trio wired at graph level (all nodes `fallback = "skip"`)
@@ -458,7 +458,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (394 total: 382 unit/determinism/parity/doctest + 12 proptest)
+# All tests (450+ total: unit/determinism/parity/doctest + 19 proptest + 6 IPC integration)
 cargo test --features ipc -p ludospring-barracuda --lib --tests
 
 # Run a specific experiment
@@ -483,12 +483,12 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
-| `cargo test --features ipc` (barracuda) | 394 tests + 6 IPC integration, 0 failures |
+| `cargo test --features ipc` (barracuda) | 450+ tests + 6 IPC integration, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
 | 75 validation binaries | 1692 checks, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
-| `proptest` invariants | 12 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick) |
+| `proptest` invariants | 19 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick, JSON-RPC, capability parsing, DispatchOutcome) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
 | `#[allow()]` in codebase | 0 — all exceptions use `#[expect(reason)]` with curated dictionary (V23) |
 | `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
@@ -500,19 +500,28 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Hardcoded paths | 0 — `temp_dir()` + XDG-compliant socket resolution |
 | IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
 
-## V23 Cross-Ecosystem Deep Debt (March 16, 2026)
+## V24 Ecosystem Absorption Sprint (March 17, 2026)
 
-Absorbed patterns from 6 sibling springs and 7 infrastructure primals reviewed during
-the cross-ecosystem pull. Eliminates all remaining lint debt, panic debt, and
-hardcoding debt:
+Absorbed 8 patterns from 7 sibling springs and 5 infrastructure primals. Adds
+resilience, fuzz testing, health probes, and structured dispatch classification:
 
-- **Zero `#[allow()]` anywhere** — 13 files migrated to `#[expect(reason)]` with wetSpring V122 curated dictionary: fail-fast (test), validation-harness (experiment), wire-format (IPC) — with automated stale-detection via `unfulfilled_lint_expectations`
-- **Zero-panic validation binaries** — 14 experiments evolved from `.expect()`/`.unwrap()` to groundSpring V109 `let Ok/Some else { eprintln!("FATAL: ..."); exit(1); }` pattern — CI gets clean exit codes, not stack traces
-- **Centralized `extract_rpc_result()`** — `ipc::envelope::extract_rpc_result()` replaces duplicated error extraction in `discovery.rs` and `neural_bridge.rs` (healthSpring V29 pattern)
-- **`deny.toml` supply chain hardening** — `wildcards = "deny"`, AGPL-compatible license allowlist, vulnerability/unmaintained advisories, source registry restrictions (barraCuda Sprint 6 pattern)
-- **XDG socket resolution** — exp042 `/run/user/{uid}/biomeos` evolved to `$XDG_RUNTIME_DIR` env with fallback; `rpc_call()` signature takes `&Path` (type-safe)
-- **Named unit constants** — `MS_PER_SECOND`, `SECONDS_PER_MINUTE`, `DEFAULT_DT_S` centralized in `tolerances/game.rs`, eliminating magic `60.0`, `1000.0`, `1.0/60.0` in library code
-- **Large file review** — `handlers.rs` (743), `session.rs` (701), `mapper.rs` (676) confirmed as algorithmically coherent per groundSpring smart-refactor principle; no artificial splits
+- **`OrExit<T>` trait** — `.or_exit("context")` on `Result`/`Option` replaces `let Ok else { eprintln!; exit(1) }` boilerplate (groundSpring V112, wetSpring V123)
+- **`DispatchOutcome<T>` enum** — `Ok` / `ProtocolError` / `ApplicationError` classification for RPC responses with `classify()` and `into_result()` (groundSpring V112, petalTongue V166)
+- **4-format capability parsing** — `extract_capabilities()` handles flat arrays, object arrays, nested, and double-nested formats + `result` wrapper (airSpring v0.8.7, rhizoCrypt S17)
+- **`health.liveness` + `health.readiness` probes** — Kubernetes-style probes registered as capabilities; 26 total (was 24) (healthSpring V32, coralReef Iter 51)
+- **Resilient provenance trio IPC** — circuit breaker (5s cooldown) + exponential backoff (50ms base, 2 retries) wrapping all trio calls; graceful degradation when trio unavailable (healthSpring V32)
+- **JSON-RPC proptest fuzz** — 7 property-based tests covering `extract_rpc_result`, `DispatchOutcome`, and `extract_capabilities` with arbitrary JSON (airSpring v0.8.7)
+- **`deny.toml` evolution** — `yanked = "deny"` (was `"warn"`) for supply chain hardening (toadStool S157b)
+- **Leverage guide** — cross-primal composition catalog: standalone, trio combos, wider primal combos, 6 novel cross-spring compositions
+
+### V23 Cross-Ecosystem Deep Debt (preserved)
+
+- Zero `#[allow()]` anywhere — `#[expect(reason)]` curated dictionary (wetSpring V122)
+- Zero-panic validation binaries — 14 experiments (groundSpring V109)
+- Centralized `extract_rpc_result()` (healthSpring V29)
+- `deny.toml wildcards=deny` (barraCuda Sprint 6)
+- XDG socket resolution, named unit constants
+- Large file review — `handlers.rs`, `session.rs`, `mapper.rs` confirmed coherent
 
 ### V22 Ecosystem Absorption (preserved)
 

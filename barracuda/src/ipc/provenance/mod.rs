@@ -28,6 +28,91 @@ pub use loamspine::*;
 pub use rhizocrypt::*;
 pub use sweetgrass::*;
 
+// ── Resilient IPC (healthSpring V32 circuit breaker pattern) ─────────
+
+use std::sync::atomic::{AtomicU64, Ordering};
+
+/// Cooldown period after a circuit opens (5 seconds, per healthSpring V32).
+const CIRCUIT_COOLDOWN_MS: u64 = 5_000;
+
+/// Maximum retry count with exponential backoff.
+const MAX_RETRIES: u32 = 2;
+
+/// Base delay between retries (doubles each attempt).
+const BASE_RETRY_DELAY_MS: u64 = 50;
+
+/// Timestamp (epoch ms) when the circuit last opened. 0 = circuit closed.
+static CIRCUIT_OPEN_SINCE: AtomicU64 = AtomicU64::new(0);
+
+/// Check whether the circuit breaker allows a call.
+fn circuit_allows() -> bool {
+    let opened = CIRCUIT_OPEN_SINCE.load(Ordering::Relaxed);
+    if opened == 0 {
+        return true;
+    }
+    let now = epoch_ms();
+    if now.saturating_sub(opened) >= CIRCUIT_COOLDOWN_MS {
+        CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
+        return true;
+    }
+    false
+}
+
+/// Trip the circuit breaker open.
+fn trip_circuit() {
+    CIRCUIT_OPEN_SINCE.store(epoch_ms(), Ordering::Relaxed);
+}
+
+/// Reset the circuit breaker (call succeeded).
+fn reset_circuit() {
+    CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
+}
+
+fn epoch_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+/// Execute a provenance trio call with circuit breaker and exponential backoff.
+///
+/// If the circuit is open, returns `None` immediately (graceful degradation).
+/// On failure, retries up to `MAX_RETRIES` times with exponential backoff,
+/// then trips the circuit.
+fn resilient_trio_call<F>(f: F) -> Option<serde_json::Value>
+where
+    F: Fn(&NeuralBridge) -> Result<serde_json::Value, super::envelope::IpcError>,
+{
+    if !circuit_allows() {
+        return None;
+    }
+
+    let Ok(bridge) = NeuralBridge::discover() else {
+        trip_circuit();
+        return None;
+    };
+
+    for attempt in 0..=MAX_RETRIES {
+        match f(&bridge) {
+            Ok(value) => {
+                reset_circuit();
+                return Some(value);
+            }
+            Err(_) if attempt < MAX_RETRIES => {
+                let delay = BASE_RETRY_DELAY_MS * (1 << attempt);
+                std::thread::sleep(std::time::Duration::from_millis(delay));
+            }
+            Err(_) => {
+                trip_circuit();
+                return None;
+            }
+        }
+    }
+
+    None
+}
+
 /// Result of a provenance operation; includes availability status.
 #[derive(Debug)]
 pub struct ProvenanceResult {
@@ -85,33 +170,28 @@ pub fn has_active_session() -> bool {
 ///
 /// Returns an error string only on non-recoverable failures.
 pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String> {
-    let Ok(bridge) = NeuralBridge::discover() else {
-        return Ok(unavailable_result());
-    };
-
     let args = serde_json::json!({
         "metadata": { "type": "game_session", "name": session_name },
         "session_type": { "Gaming": { "game_id": crate::PRIMAL_NAME } },
         "description": session_name,
     });
 
-    bridge
-        .capability_call("dag", "session.create", &args)
-        .map_or_else(
-            |_| Ok(unavailable_result()),
-            |result| {
-                let session_id = result
-                    .get("session_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string();
-                Ok(ProvenanceResult {
-                    id: session_id.clone(),
-                    available: true,
-                    data: serde_json::json!({ "session_id": session_id }),
-                })
-            },
-        )
+    let Some(result) = resilient_trio_call(|bridge| {
+        bridge.capability_call("dag", "session.create", &args)
+    }) else {
+        return Ok(unavailable_result());
+    };
+
+    let session_id = result
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+    Ok(ProvenanceResult {
+        id: session_id.clone(),
+        available: true,
+        data: serde_json::json!({ "session_id": session_id }),
+    })
 }
 
 /// Record a game action in the provenance trio.
@@ -126,33 +206,28 @@ pub fn record_game_action(
     session_id: &str,
     action: &serde_json::Value,
 ) -> Result<ProvenanceResult, String> {
-    let Ok(bridge) = NeuralBridge::discover() else {
-        return Ok(unavailable_result());
-    };
-
     let args = serde_json::json!({
         "session_id": session_id,
         "event": action,
     });
 
-    bridge
-        .capability_call("dag", "event.append", &args)
-        .map_or_else(
-            |_| Ok(unavailable_result()),
-            |result| {
-                let vertex_id = result
-                    .get("vertex_id")
-                    .or_else(|| result.get("id"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string();
-                Ok(ProvenanceResult {
-                    id: vertex_id.clone(),
-                    available: true,
-                    data: serde_json::json!({ "vertex_id": vertex_id }),
-                })
-            },
-        )
+    let Some(result) = resilient_trio_call(|bridge| {
+        bridge.capability_call("dag", "event.append", &args)
+    }) else {
+        return Ok(unavailable_result());
+    };
+
+    let vertex_id = result
+        .get("vertex_id")
+        .or_else(|| result.get("id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+    Ok(ProvenanceResult {
+        id: vertex_id.clone(),
+        available: true,
+        data: serde_json::json!({ "vertex_id": vertex_id }),
+    })
 }
 
 /// Complete a game session through the full provenance trio pipeline.
@@ -167,14 +242,11 @@ pub fn record_game_action(
 /// Returns an error string only on non-recoverable failures. Partial
 /// completion returns `Ok` with a `stage` field describing progress.
 pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, String> {
-    let Ok(bridge) = NeuralBridge::discover() else {
-        return Ok(stage_result(TrioStage::Unavailable, session_id, None));
-    };
-
     // Step 1: Dehydrate the DAG — compute Merkle root and frontier
     let dehydrate_args = serde_json::json!({ "session_id": session_id });
-    let Ok(dehydration_raw) = bridge.capability_call("dag", "dehydration.trigger", &dehydrate_args)
-    else {
+    let Some(dehydration_raw) = resilient_trio_call(|bridge| {
+        bridge.capability_call("dag", "dehydration.trigger", &dehydrate_args)
+    }) else {
         return Ok(stage_result(TrioStage::Unavailable, session_id, None));
     };
 
@@ -200,7 +272,9 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         "vertex_count": summary.vertex_count,
         "frontier": summary.frontier,
     });
-    let Ok(commit_result) = bridge.capability_call("session", "commit", &commit_args) else {
+    let Some(commit_result) = resilient_trio_call(|bridge| {
+        bridge.capability_call("session", "commit", &commit_args)
+    }) else {
         return Ok(stage_result(
             TrioStage::Dehydrated,
             session_id,
@@ -220,17 +294,16 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         "commit_ref": commit_id,
         "agents": agents,
     });
-    let braid_result = bridge.capability_call("braid", "create", &braid_args);
-
-    let braid_id = braid_result
-        .ok()
-        .and_then(|r| {
-            r.get("braid_id")
-                .or_else(|| r.get("id"))
-                .and_then(|v| v.as_str())
-                .map(str::to_string)
-        })
-        .unwrap_or_default();
+    let braid_id = resilient_trio_call(|bridge| {
+        bridge.capability_call("braid", "create", &braid_args)
+    })
+    .and_then(|r| {
+        r.get("braid_id")
+            .or_else(|| r.get("id"))
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+    })
+    .unwrap_or_default();
 
     Ok(serde_json::json!({
         "stage": "complete",
@@ -306,5 +379,102 @@ fn unavailable_result() -> ProvenanceResult {
         id: format!("local-{}", uuid::Uuid::now_v7()),
         available: false,
         data: serde_json::json!({ "provenance": "unavailable" }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn begin_session_degrades_without_neural_api() {
+        let result = begin_game_session("test-session").unwrap();
+        assert!(!result.available);
+        assert!(result.id.starts_with("local-"));
+        assert_eq!(result.data["provenance"], "unavailable");
+    }
+
+    #[test]
+    fn record_action_degrades_without_neural_api() {
+        let action = serde_json::json!({"type": "move", "x": 5, "y": 3});
+        let result = record_game_action("sess-1", &action).unwrap();
+        assert!(!result.available);
+    }
+
+    #[test]
+    fn complete_session_degrades_without_neural_api() {
+        let result = complete_game_session("sess-1").unwrap();
+        assert_eq!(result["stage"], "unavailable");
+        assert_eq!(result["session_id"], "sess-1");
+    }
+
+    #[test]
+    fn has_active_session_false_without_neural_api() {
+        assert!(!has_active_session());
+    }
+
+    #[test]
+    fn circuit_breaker_initially_closed() {
+        reset_circuit();
+        assert!(circuit_allows());
+    }
+
+    #[test]
+    fn circuit_breaker_trips_and_blocks() {
+        trip_circuit();
+        assert!(!circuit_allows());
+        reset_circuit();
+    }
+
+    #[test]
+    fn resilient_trio_call_degrades_without_neural_api() {
+        reset_circuit();
+        let result = resilient_trio_call(|bridge| {
+            bridge.capability_call("dag", "session.create", &serde_json::json!({}))
+        });
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn trio_stage_equality() {
+        assert_eq!(TrioStage::Unavailable, TrioStage::Unavailable);
+        assert_ne!(TrioStage::Dehydrated, TrioStage::Complete);
+    }
+
+    #[test]
+    fn parse_dehydration_handles_empty_response() {
+        let raw = serde_json::json!({});
+        let summary = parse_dehydration(&raw);
+        assert!(summary.merkle_root.is_empty());
+        assert!(summary.frontier.is_empty());
+        assert_eq!(summary.vertex_count, 0);
+    }
+
+    #[test]
+    fn parse_dehydration_extracts_fields() {
+        let raw = serde_json::json!({
+            "merkle_root": "abc123",
+            "frontier": ["v1", "v2"],
+            "vertex_count": 42
+        });
+        let summary = parse_dehydration(&raw);
+        assert_eq!(summary.merkle_root, "abc123");
+        assert_eq!(summary.frontier, vec!["v1", "v2"]);
+        assert_eq!(summary.vertex_count, 42);
+    }
+
+    #[test]
+    fn unavailable_result_has_uuid() {
+        let r1 = unavailable_result();
+        let r2 = unavailable_result();
+        assert_ne!(r1.id, r2.id);
+        assert!(r1.id.starts_with("local-"));
+    }
+
+    #[test]
+    fn stage_result_formats_correctly() {
+        let r = stage_result(TrioStage::Dehydrated, "sess-1", None);
+        assert_eq!(r["stage"], "dehydrated");
+        assert_eq!(r["session_id"], "sess-1");
     }
 }
