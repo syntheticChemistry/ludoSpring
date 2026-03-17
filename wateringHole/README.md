@@ -25,6 +25,7 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 | Version | File | Date | Scope |
 |---------|------|------|-------|
 | **V23** | [LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md) | Mar 16 | Cross-ecosystem deep debt: zero `#[allow()]` (`#[expect(reason)]` migration, wetSpring V122), zero-panic validation (14 experiments, groundSpring V109), `extract_rpc_result()` centralization (healthSpring V29), `deny.toml wildcards=deny` (barraCuda Sprint 6), XDG socket paths, unit conversion constants |
+| **V23** | [LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md) | Mar 16 | toadStool/barraCuda absorption: primitives consumed, 14 WGSL shaders (5 ready), typed dispatch contract, Write→Absorb→Lean status, reusable patterns, V24 candidates |
 
 ## Cross-Spring Context
 

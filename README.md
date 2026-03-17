@@ -490,7 +490,7 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 12 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
-| `#[allow()]` in production | 0 — all lints configured in `Cargo.toml`; justified exceptions use `#[expect(reason)]` |
+| `#[allow()]` in codebase | 0 — all exceptions use `#[expect(reason)]` with curated dictionary (V23) |
 | `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
 | SPDX headers | All `.rs` + all `Cargo.toml` |
 | Files > 1000 LOC | 0 — exp030 refactored into 4 modules (was 1949 LOC) |
@@ -500,16 +500,28 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Hardcoded paths | 0 — `temp_dir()` + XDG-compliant socket resolution |
 | IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
 
-## V22 Ecosystem Absorption (March 16, 2026)
+## V23 Cross-Ecosystem Deep Debt (March 16, 2026)
 
-Cross-ecosystem evolution absorbing patterns and fixes from sibling springs and infrastructure primals:
+Absorbed patterns from 6 sibling springs and 7 infrastructure primals reviewed during
+the cross-ecosystem pull. Eliminates all remaining lint debt, panic debt, and
+hardcoding debt:
 
-- **toadStool `compute.dispatch.*`** — 3 new direct dispatch methods (`dispatch_submit`, `dispatch_result`, `dispatch_capabilities`) for low-latency real-time game GPU compute, bypassing the job queue
-- **Dual-format capability discovery** — `probe_socket()` now handles both `{"capabilities": [...]}` (array) and `{"capabilities": {"capabilities": [...]}}` (nested object) response formats, fixing the neuralSpring S156-discovered interop issue
-- **Python tolerance mirror** — `baselines/python/tolerances.py` with 46 named constants mirroring all Rust `tolerances/` submodules (wetSpring V121 pattern), enabling `from tolerances import ANALYTICAL_TOL` in baselines
-- **Write→Absorb→Lean documentation** — `procedural::noise` module documented with full absorption status: Perlin 2D/3D + fBm written by ludoSpring V2, 2D absorbed into barraCuda as GPU + CPU ops, 3D pending
-- **Deploy graph evolution** — `compute.dispatch.submit/result/capabilities` added to toadStool node capabilities
-- **4 new discovery tests** — array format, nested object format, missing capabilities, null capabilities
+- **Zero `#[allow()]` anywhere** — 13 files migrated to `#[expect(reason)]` with wetSpring V122 curated dictionary: fail-fast (test), validation-harness (experiment), wire-format (IPC) — with automated stale-detection via `unfulfilled_lint_expectations`
+- **Zero-panic validation binaries** — 14 experiments evolved from `.expect()`/`.unwrap()` to groundSpring V109 `let Ok/Some else { eprintln!("FATAL: ..."); exit(1); }` pattern — CI gets clean exit codes, not stack traces
+- **Centralized `extract_rpc_result()`** — `ipc::envelope::extract_rpc_result()` replaces duplicated error extraction in `discovery.rs` and `neural_bridge.rs` (healthSpring V29 pattern)
+- **`deny.toml` supply chain hardening** — `wildcards = "deny"`, AGPL-compatible license allowlist, vulnerability/unmaintained advisories, source registry restrictions (barraCuda Sprint 6 pattern)
+- **XDG socket resolution** — exp042 `/run/user/{uid}/biomeos` evolved to `$XDG_RUNTIME_DIR` env with fallback; `rpc_call()` signature takes `&Path` (type-safe)
+- **Named unit constants** — `MS_PER_SECOND`, `SECONDS_PER_MINUTE`, `DEFAULT_DT_S` centralized in `tolerances/game.rs`, eliminating magic `60.0`, `1000.0`, `1.0/60.0` in library code
+- **Large file review** — `handlers.rs` (743), `session.rs` (701), `mapper.rs` (676) confirmed as algorithmically coherent per groundSpring smart-refactor principle; no artificial splits
+
+### V22 Ecosystem Absorption (preserved)
+
+- toadStool `compute.dispatch.*` — 3 direct dispatch methods for low-latency game GPU compute
+- Dual-format capability discovery — array and nested-object response formats (neuralSpring S156 fix)
+- Python tolerance mirror — 46 constants mirroring Rust tolerances (wetSpring V121 pattern)
+- Write→Absorb→Lean documentation on `procedural::noise`
+- Deploy graph evolution — `compute.dispatch.submit/result/capabilities` capabilities added
+- 4 new discovery tests
 
 ### V21 Deep Debt Evolution (preserved)
 

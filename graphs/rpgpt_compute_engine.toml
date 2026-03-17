@@ -15,7 +15,7 @@
 # This graph is the full RPGPT deployment: game logic, GPU compute,
 # visualization, AI narration, and provenance.
 #
-# Status: V1 — RPGPT Compute Engine
+# Status: V23 — RPGPT Compute Engine
 #
 # Usage:
 #   biomeos deploy graphs/rpgpt_compute_engine.toml

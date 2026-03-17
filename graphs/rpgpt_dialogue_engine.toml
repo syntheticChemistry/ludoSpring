@@ -9,13 +9,13 @@
 # Provenance trio (rhizoCrypt + loamSpine + sweetGrass) for session DAG,
 # NPC personality certs, and creative attribution.
 #
-# Status: V20 — RPGPT Dialogue Engine Phase 1 + petalTongue UI
+# Status: V23 — RPGPT Dialogue Engine Phase 1 + petalTongue UI
 
 [graph]
 id = "rpgpt_dialogue_engine"
 description = "RPGPT Phase 1: Dialogue plane with NPC knowledge bounds, internal voices, passive checks, and petalTongue game UI"
 coordination = "Sequential"
-version = "20.0"
+version = "23.0"
 
 # ── Phase 1: Tower Atomic (security + discovery) ──────────────────────────
 
