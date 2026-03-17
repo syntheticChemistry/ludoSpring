@@ -2,12 +2,19 @@
 #![forbid(unsafe_code)]
 #![expect(
     dead_code,
-    reason = "structural completeness — domain model includes all variants"
+    reason = "wire format types for IPC contract — constructed by remote callers, not locally"
 )]
-#![allow(
+#![expect(
     clippy::cast_possible_truncation,
+    reason = "validation harness: small-range numeric conversions"
+)]
+#![expect(
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    reason = "validation harness: non-negative values cast to unsigned"
+)]
+#![expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: counter/timing values within f64 range"
 )]
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! exp029 — A/B Street Telemetry Adapter

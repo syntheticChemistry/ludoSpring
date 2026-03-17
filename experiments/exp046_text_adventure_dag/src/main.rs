@@ -507,11 +507,14 @@ fn validate_isomorphism() -> Vec<ValidationResult> {
     //   - Field: soil sample collected → transported → sequenced
 
     // Trace crown's lineage: find crown take vertex, walk parents to root
-    let crown_idx = game
+    let Some(crown_idx) = game
         .vertices
         .iter()
         .position(|v| v.action == "take" && v.inventory.contains(&"crown"))
-        .unwrap();
+    else {
+        eprintln!("FATAL: crown take vertex not found in vertices");
+        std::process::exit(1);
+    };
 
     let mut lineage = Vec::new();
     let mut current = Some(crown_idx);

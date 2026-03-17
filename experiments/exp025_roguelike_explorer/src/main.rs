@@ -17,12 +17,25 @@
 //!
 //! Controls: WASD/arrows move, . wait, i stats, Esc quit
 #![forbid(unsafe_code)]
-#![allow(
+#![expect(
     clippy::cast_possible_truncation,
+    reason = "validation harness: small-range numeric conversions"
+)]
+#![expect(
     clippy::cast_sign_loss,
+    reason = "validation harness: non-negative values cast to unsigned"
+)]
+#![expect(
     clippy::cast_precision_loss,
+    reason = "validation harness: counter/timing values within f64 range"
+)]
+#![expect(
     clippy::cast_possible_wrap,
-    clippy::trivially_copy_pass_by_ref
+    reason = "validation harness: small-range numeric conversions"
+)]
+#![expect(
+    clippy::trivially_copy_pass_by_ref,
+    reason = "validation harness: API consistency with library types"
 )]
 
 use std::io::{self, Write as _};

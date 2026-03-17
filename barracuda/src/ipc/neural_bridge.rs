@@ -207,20 +207,7 @@ impl NeuralBridge {
         let parsed: serde_json::Value =
             serde_json::from_str(&response).map_err(|e| format!("parse: {e}"))?;
 
-        if let Some(error) = parsed.get("error") {
-            return Err(format!(
-                "rpc error: {}",
-                error
-                    .get("message")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("unknown")
-            ));
-        }
-
-        parsed
-            .get("result")
-            .cloned()
-            .ok_or_else(|| "no result in response".to_owned())
+        super::envelope::extract_rpc_result(&parsed)
     }
 }
 

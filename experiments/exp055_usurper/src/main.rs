@@ -229,8 +229,14 @@ fn validate_hierarchy_replicator(pass: &mut u32, fail: &mut u32) {
 
     h.replicator_step();
 
-    let alpha = h.usurpers.iter().find(|u| u.id == 0).unwrap();
-    let delta = h.usurpers.iter().find(|u| u.id == 3).unwrap();
+    let Some(alpha) = h.usurpers.iter().find(|u| u.id == 0) else {
+        eprintln!("FATAL: usurper id 0 (alpha) not found");
+        std::process::exit(1);
+    };
+    let Some(delta) = h.usurpers.iter().find(|u| u.id == 3) else {
+        eprintln!("FATAL: usurper id 3 (delta) not found");
+        std::process::exit(1);
+    };
 
     check(
         "replicator_winner_above_mean",
@@ -274,11 +280,11 @@ fn validate_vacancy_filling(pass: &mut u32, fail: &mut u32) {
     h.player_encounter(0, EncounterOutcome::PlayerWins);
     h.player_encounter(0, EncounterOutcome::PlayerWins);
 
-    h.usurpers
-        .iter_mut()
-        .find(|u| u.id == grunt_id)
-        .unwrap()
-        .power = 3.0;
+    let Some(grunt) = h.usurpers.iter_mut().find(|u| u.id == grunt_id) else {
+        eprintln!("FATAL: usurper grunt_id not found");
+        std::process::exit(1);
+    };
+    grunt.power = 3.0;
 
     h.fill_vacancies();
 
@@ -302,7 +308,10 @@ fn validate_vacancy_filling(pass: &mut u32, fail: &mut u32) {
         "Promotion reason = VacancyAbove",
     );
 
-    let grunt = h.usurpers.iter().find(|u| u.id == grunt_id).unwrap();
+    let Some(grunt) = h.usurpers.iter().find(|u| u.id == grunt_id) else {
+        eprintln!("FATAL: usurper grunt_id not found for vacancy check");
+        std::process::exit(1);
+    };
     check(
         "vacancy_strongest_promoted",
         pass,
@@ -319,11 +328,11 @@ fn validate_betrayal(pass: &mut u32, fail: &mut u32) {
     h.spawn("Overlord", 1, Strategy::Cautious);
     let amb_id = h.spawn("Ambitious", 2, Strategy::Deceptive);
 
-    h.usurpers
-        .iter_mut()
-        .find(|u| u.id == amb_id)
-        .unwrap()
-        .power = 5.0;
+    let Some(amb) = h.usurpers.iter_mut().find(|u| u.id == amb_id) else {
+        eprintln!("FATAL: usurper amb_id not found");
+        std::process::exit(1);
+    };
+    amb.power = 5.0;
 
     h.check_betrayals(4.0);
 
@@ -344,15 +353,15 @@ fn validate_betrayal(pass: &mut u32, fail: &mut u32) {
             "Ambitious (id=1) is the betrayer",
         );
 
+        let Some(target) = h.usurpers.iter().find(|u| u.id == b.target_id) else {
+            eprintln!("FATAL: betrayal target not found");
+            std::process::exit(1);
+        };
         check(
             "betrayal_target_eliminated",
             pass,
             fail,
-            !h.usurpers
-                .iter()
-                .find(|u| u.id == b.target_id)
-                .unwrap()
-                .alive,
+            !target.alive,
             "Target eliminated after betrayal",
         );
     } else {
@@ -372,7 +381,10 @@ fn validate_betrayal(pass: &mut u32, fail: &mut u32) {
         );
     }
 
-    let amb = h.usurpers.iter().find(|u| u.id == amb_id).unwrap();
+    let Some(amb) = h.usurpers.iter().find(|u| u.id == amb_id) else {
+        eprintln!("FATAL: usurper amb_id not found for betrayal promotion check");
+        std::process::exit(1);
+    };
     check(
         "betrayal_promotes_betrayer",
         pass,
@@ -536,21 +548,26 @@ fn validate_emergent_narrative(pass: &mut u32, fail: &mut u32) {
     h.fill_vacancies();
 
     h.advance_tick();
-    h.usurpers
-        .iter_mut()
-        .find(|u| u.id == grunt2)
-        .unwrap()
-        .power = 5.0;
+    let Some(grunt2_u) = h.usurpers.iter_mut().find(|u| u.id == grunt2) else {
+        eprintln!("FATAL: usurper grunt2 not found");
+        std::process::exit(1);
+    };
+    grunt2_u.power = 5.0;
     h.check_betrayals(4.0);
 
     h.advance_tick();
     h.replicator_step();
 
+    let warchief_alive = h
+        .usurpers
+        .iter()
+        .find(|u| u.id == warchief)
+        .map_or(false, |u| u.alive);
     check(
         "narrative_warchief_dead",
         pass,
         fail,
-        !h.usurpers.iter().find(|u| u.id == warchief).unwrap().alive,
+        !warchief_alive,
         "Warchief killed by player (4 defeats)",
     );
 

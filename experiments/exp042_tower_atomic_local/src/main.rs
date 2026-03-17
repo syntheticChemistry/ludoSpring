@@ -9,7 +9,7 @@ use std::time::Instant;
 const EXP: &str = "exp042";
 
 fn rpc_call(
-    socket_path: &str,
+    socket_path: &std::path::Path,
     method: &str,
     params: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
@@ -19,8 +19,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let mut stream =
-        UnixStream::connect(socket_path).map_err(|e| format!("connect {socket_path}: {e}"))?;
+    let mut stream = UnixStream::connect(socket_path)
+        .map_err(|e| format!("connect {}: {e}", socket_path.display()))?;
     stream
         .set_read_timeout(Some(std::time::Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -57,15 +57,16 @@ fn cmd_validate() {
             |_| "1000".into(),
             |o| String::from_utf8_lossy(&o.stdout).trim().to_string(),
         );
-    let xdg_dir = format!("/run/user/{uid}/biomeos");
-    let beardog_sock = format!("{xdg_dir}/beardog-eastgate.sock");
-    let songbird_sock = format!("{xdg_dir}/songbird-eastgate.sock");
+    let xdg_dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| format!("/run/user/{uid}"));
+    let biomeos_dir = std::path::PathBuf::from(&xdg_dir).join("biomeos");
+    let beardog_sock = biomeos_dir.join("beardog-eastgate.sock");
+    let songbird_sock = biomeos_dir.join("songbird-eastgate.sock");
 
     // --- Check 1: BearDog socket exists ---
-    let bd_exists = std::path::Path::new(&beardog_sock).exists();
+    let bd_exists = beardog_sock.exists();
     println!(
         "  BearDog socket: {} {}",
-        beardog_sock,
+        beardog_sock.display(),
         if bd_exists { "EXISTS" } else { "MISSING" }
     );
     results.push(ValidationResult::check(
@@ -77,10 +78,10 @@ fn cmd_validate() {
     ));
 
     // --- Check 2: Songbird socket exists ---
-    let sb_exists = std::path::Path::new(&songbird_sock).exists();
+    let sb_exists = songbird_sock.exists();
     println!(
         "  Songbird socket: {} {}",
-        songbird_sock,
+        songbird_sock.display(),
         if sb_exists { "EXISTS" } else { "MISSING" }
     );
     results.push(ValidationResult::check(

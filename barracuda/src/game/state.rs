@@ -31,7 +31,7 @@ pub struct TickBudget {
 impl Default for TickBudget {
     fn default() -> Self {
         Self {
-            dt: 1.0 / 60.0,
+            dt: crate::tolerances::DEFAULT_DT_S,
             max_substeps: 4,
             record_inputs: false,
         }

@@ -248,7 +248,10 @@ fn validate_sweetgrass_attribution() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let braid = cast_braid.expect("validated above");
+    let Ok(braid) = cast_braid else {
+        eprintln!("FATAL: cast_braid creation failed (validated above as Ok)");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "sweet_braid_attributed_to_alice",
@@ -278,13 +281,15 @@ fn validate_sweetgrass_attribution() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let bolt_braid = trio::GameActionBraid::new(
+    let Ok(bolt_braid) = trio::GameActionBraid::new(
         &bob,
         "cast_spell",
         Some("Lightning Bolt"),
         "f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3",
-    )
-    .expect("braid creation should succeed");
+    ) else {
+        eprintln!("FATAL: bolt braid creation failed");
+        std::process::exit(1);
+    };
 
     results.push(ValidationResult::check(
         EXP,
@@ -417,9 +422,12 @@ fn validate_cross_primal_roundtrip() -> Vec<ValidationResult> {
     let card_cert = trio::CardCertificate::new(&alice_loam, "Grizzly Bears", "10E", 268, spine_id);
 
     let cast_hex = cast_id.to_hex();
-    let action_braid =
+    let Ok(action_braid) =
         trio::GameActionBraid::new(&alice_sweet, "cast_spell", Some("Grizzly Bears"), &cast_hex)
-            .expect("braid should be created from vertex hex");
+    else {
+        eprintln!("FATAL: action braid creation from vertex hex failed");
+        std::process::exit(1);
+    };
 
     results.push(ValidationResult::check(
         EXP,

@@ -54,3 +54,19 @@ pub const TRIGGER_DETECTION_RANGE: u32 = 1;
 /// f64 representation error is negligible. 0.01 catches real logic bugs
 /// while absorbing floating-point arithmetic noise.
 pub const GAME_STATE_TOL: f64 = 0.01;
+
+/// Milliseconds per second — unit conversion constant.
+///
+/// Used in telemetry timestamp-to-duration calculations.
+pub const MS_PER_SECOND: f64 = 1000.0;
+
+/// Seconds per minute — unit conversion constant.
+///
+/// Used in engagement metrics to convert session duration from seconds
+/// to minutes for APM (actions per minute) calculations.
+pub const SECONDS_PER_MINUTE: f64 = 60.0;
+
+/// Default simulation timestep (seconds) — 1/60 s for 60 Hz.
+///
+/// Derived from [`TARGET_FRAME_RATE_HZ`]. Used in `TickBudget::default()`.
+pub const DEFAULT_DT_S: f64 = 1.0 / TARGET_FRAME_RATE_HZ;

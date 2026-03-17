@@ -3,12 +3,12 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 16, 2026
-**Version:** V22 (75 experiments, 1692 validation checks, 394 tests + 12 proptest + 6 IPC integration)
+**Version:** V23 (75 experiments, 1692 validation checks, 394 tests + 12 proptest + 6 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, 19,302+ lines Rust
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 24 capabilities, structured `capability_domains` registry
-**Audit Status:** Ecosystem absorption — toadStool `compute.dispatch.*` direct dispatch wired, dual-format capability discovery (neuralSpring S156 fix), Python tolerance mirror (wetSpring V121 pattern, 46 constants), Write→Absorb→Lean documented, deploy graph updated with dispatch capabilities, `-32601` compliance verified, 0 clippy warnings, 0 `#[allow()]` in production, 0 magic numbers, 0 panics, `#![forbid(unsafe_code)]`
+**Audit Status:** Cross-ecosystem deep debt — zero `#[allow()]` anywhere (`#[expect(reason)]` curated dictionary, wetSpring V122), zero-panic validation (14 experiments, groundSpring V109), `extract_rpc_result()` centralized (healthSpring V29), `deny.toml wildcards=deny` (barraCuda Sprint 6), XDG socket paths, `MS_PER_SECOND`/`SECONDS_PER_MINUTE`/`DEFAULT_DT_S` named constants, 0 clippy warnings, 0 magic numbers in library, `#![forbid(unsafe_code)]`
 
 ---
 

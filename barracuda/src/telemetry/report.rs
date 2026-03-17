@@ -402,7 +402,7 @@ fn build_interaction_cost_report(acc: &SessionAccumulator) -> Option<Interaction
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
+#[expect(clippy::expect_used, reason = "test module: fail-fast on setup errors")]
 mod tests {
     use super::*;
     use crate::telemetry::events::{EventType, TelemetryEvent};

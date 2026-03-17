@@ -107,7 +107,10 @@ fn validate_dc_affects_rate(h: &mut ValidationHarness) {
 fn validate_lie_tell_association(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
 
-    let experiment_lie = kb.get_lie("experiments").expect("lie exists");
+    let Some(experiment_lie) = kb.get_lie("experiments") else {
+        eprintln!("FATAL: lie for 'experiments' not found");
+        std::process::exit(1);
+    };
     h.check_bool(
         "experiment_tell_mentions_scars",
         experiment_lie.tell.contains("burn scars"),
@@ -117,7 +120,10 @@ fn validate_lie_tell_association(h: &mut ValidationHarness) {
         !experiment_lie.tell.contains("workshop"),
     );
 
-    let cellar_lie = kb.get_lie("cellar").expect("lie exists");
+    let Some(cellar_lie) = kb.get_lie("cellar") else {
+        eprintln!("FATAL: lie for 'cellar' not found");
+        std::process::exit(1);
+    };
     h.check_bool(
         "cellar_tell_mentions_glance",
         cellar_lie.tell.contains("Glances"),
@@ -130,7 +136,10 @@ fn validate_lie_tell_association(h: &mut ValidationHarness) {
 
 fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
-    let experiment_lie = kb.get_lie("experiments").expect("lie exists");
+    let Some(experiment_lie) = kb.get_lie("experiments") else {
+        eprintln!("FATAL: lie for 'experiments' not found");
+        std::process::exit(1);
+    };
 
     h.check_bool(
         "perception_can_detect_experiments",
@@ -143,7 +152,10 @@ fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
         experiment_lie.detection_skills.contains(&"Empathy".into()),
     );
 
-    let cellar_lie = kb.get_lie("cellar").expect("lie exists");
+    let Some(cellar_lie) = kb.get_lie("cellar") else {
+        eprintln!("FATAL: lie for 'cellar' not found");
+        std::process::exit(1);
+    };
     h.check_bool(
         "perception_can_detect_cellar",
         cellar_lie.detection_skills.contains(&"Perception".into()),

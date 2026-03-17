@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(
+#![expect(
     clippy::doc_markdown,
+    reason = "validation harness: domain-specific nomenclature (game titles, primal names)"
+)]
+#![expect(
     clippy::cast_precision_loss,
+    reason = "validation harness: counter/timing values within f64 range"
+)]
+#![expect(
     clippy::needless_range_loop,
-    clippy::missing_const_for_fn
+    reason = "validation harness: index used in assertions"
+)]
+#![expect(
+    clippy::missing_const_for_fn,
+    reason = "validation harness: const not needed for runtime logic"
 )]
 //
 //! Faction/reputation model from open population dynamics math.

@@ -499,7 +499,10 @@ fn validate_cross_primal() -> Vec<ValidationResult> {
     let snapshot = raid.snapshot();
     let dashboard = visualization::build_raid_dashboard(&snapshot);
     let json = serde_json::to_string(&dashboard).unwrap_or_default();
-    let rt: protocol::DashboardRenderRequest = serde_json::from_str(&json).unwrap();
+    let Ok(rt) = serde_json::from_str::<protocol::DashboardRenderRequest>(&json) else {
+        eprintln!("FATAL: round-trip deserialization failed");
+        std::process::exit(1);
+    };
 
     results.push(ValidationResult::check(
         EXP,

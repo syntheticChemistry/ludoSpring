@@ -323,12 +323,13 @@ fn validate_solo_branching() -> Vec<ValidationResult> {
         let factor = turn.total_branch_factor();
 
         // Every deck should have meaningful branching (> 1)
+        let Some(first_word) = deck.name.split_whitespace().next() else {
+            eprintln!("FATAL: deck name has no first word");
+            std::process::exit(1);
+        };
         results.push(ValidationResult::check(
             EXP,
-            &format!(
-                "solo_{}_branches_per_turn_gt_1",
-                deck.name.split_whitespace().next().unwrap().to_lowercase()
-            ),
+            &format!("solo_{}_branches_per_turn_gt_1", first_word.to_lowercase()),
             bool_f64(factor > 1),
             1.0,
             0.0,
@@ -695,17 +696,23 @@ fn validate_scalability_comparison() -> Vec<ValidationResult> {
 
     let mut rankings: Vec<(&str, f64)> = known.clone();
     rankings.push(("MTG (computed)", mtg_log10));
-    rankings.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    rankings.sort_by(|a, b| match a.1.partial_cmp(&b.1) {
+        Some(ord) => ord,
+        None => {
+            eprintln!("FATAL: log10 value is NaN");
+            std::process::exit(1);
+        }
+    });
 
     // MTG should rank near or above Go
-    let mtg_rank = rankings
-        .iter()
-        .position(|r| r.0 == "MTG (computed)")
-        .unwrap();
-    let poker_rank = rankings
-        .iter()
-        .position(|r| r.0 == "Poker (heads-up NLH)")
-        .unwrap();
+    let Some(mtg_rank) = rankings.iter().position(|r| r.0 == "MTG (computed)") else {
+        eprintln!("FATAL: MTG (computed) not found in rankings");
+        std::process::exit(1);
+    };
+    let Some(poker_rank) = rankings.iter().position(|r| r.0 == "Poker (heads-up NLH)") else {
+        eprintln!("FATAL: Poker (heads-up NLH) not found in rankings");
+        std::process::exit(1);
+    };
 
     results.push(ValidationResult::check(
         EXP,
@@ -716,7 +723,11 @@ fn validate_scalability_comparison() -> Vec<ValidationResult> {
     ));
 
     // The gap between MTG and chess should be enormous
-    let chess_log = known.iter().find(|g| g.0 == "Chess").unwrap().1;
+    let Some(chess_entry) = known.iter().find(|g| g.0 == "Chess") else {
+        eprintln!("FATAL: Chess not found in known game trees");
+        std::process::exit(1);
+    };
+    let chess_log = chess_entry.1;
     results.push(ValidationResult::check(
         EXP,
         "mtg_dwarfs_chess_by_orders_of_magnitude",

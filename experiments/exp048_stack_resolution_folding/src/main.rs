@@ -83,11 +83,10 @@ fn validate_same_cards_different_outcome() -> Vec<ValidationResult> {
     ));
 
     // In scenario B, bear should be 5/5 with 3 damage (alive)
-    let bear_b = board_b
-        .creatures
-        .iter()
-        .find(|c| c.name == "bear")
-        .expect("bear must exist in growth scenario");
+    let Some(bear_b) = board_b.creatures.iter().find(|c| c.name == "bear") else {
+        eprintln!("FATAL: bear must exist in growth scenario");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "pumped_bear_is_5_5",
@@ -183,11 +182,14 @@ fn validate_triple_stack() -> Vec<ValidationResult> {
     ));
 
     // In the growth-wins scenario, bear should be 8/8 (two Giant Growths resolved)
-    let bear_g = board_growth_wins
+    let Some(bear_g) = board_growth_wins
         .creatures
         .iter()
         .find(|c| c.name == "bear")
-        .expect("bear must exist in growth-wins scenario");
+    else {
+        eprintln!("FATAL: bear must exist in growth-wins scenario");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "double_pumped_bear_is_8_8",
@@ -407,7 +409,10 @@ fn validate_stack_lifo_mechanics() -> Vec<ValidationResult> {
     ));
 
     // Resolve order should be C, B, A (LIFO)
-    let first = stack.resolve_top().expect("stack has items to resolve");
+    let Some(first) = stack.resolve_top() else {
+        eprintln!("FATAL: stack has items to resolve");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "lifo_first_resolves_is_last_cast",
@@ -416,7 +421,10 @@ fn validate_stack_lifo_mechanics() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let second = stack.resolve_top().expect("stack has items to resolve");
+    let Some(second) = stack.resolve_top() else {
+        eprintln!("FATAL: stack has items to resolve (second)");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "lifo_second_resolves_is_middle",
@@ -425,7 +433,10 @@ fn validate_stack_lifo_mechanics() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let third = stack.resolve_top().expect("stack has items to resolve");
+    let Some(third) = stack.resolve_top() else {
+        eprintln!("FATAL: stack has items to resolve (third)");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "lifo_third_resolves_is_first_cast",

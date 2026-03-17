@@ -84,7 +84,10 @@ fn validate_isomorphism() -> Vec<ValidationResult> {
 
     // Games@Home has a strict superset of F@H's attribution
     // (sweetGrass provides full creative lineage vs F@H's team points)
-    let attribution = table.iter().find(|r| r.concept == "Attribution").unwrap();
+    let Some(attribution) = table.iter().find(|r| r.concept == "Attribution") else {
+        eprintln!("FATAL: Attribution concept not found in isomorphism table");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "games_attribution_exceeds_fah",
@@ -112,10 +115,13 @@ fn validate_human_compute() -> Vec<ValidationResult> {
     ));
 
     // RPGPT player has highest novelty rate (narrative branching = always novel)
-    let rpgpt = players
+    let Some(rpgpt) = players
         .iter()
         .find(|p| p.player_id == "rpgpt_campaign_player")
-        .unwrap();
+    else {
+        eprintln!("FATAL: rpgpt_campaign_player not found in example players");
+        std::process::exit(1);
+    };
     let max_novelty = players
         .iter()
         .map(|p| p.novelty_rate)
@@ -146,14 +152,17 @@ fn validate_human_compute() -> Vec<ValidationResult> {
 
     // Commander player has high novelty despite being casual
     // (singleton + multiplayer naturally drives exploration)
-    let commander = players
-        .iter()
-        .find(|p| p.player_id == "casual_commander")
-        .unwrap();
-    let competitive = players
+    let Some(commander) = players.iter().find(|p| p.player_id == "casual_commander") else {
+        eprintln!("FATAL: casual_commander not found in example players");
+        std::process::exit(1);
+    };
+    let Some(competitive) = players
         .iter()
         .find(|p| p.player_id == "competitive_standard")
-        .unwrap();
+    else {
+        eprintln!("FATAL: competitive_standard not found in example players");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "casual_commander_higher_novelty_than_competitive",
@@ -296,14 +305,21 @@ fn validate_cross_domain() -> Vec<ValidationResult> {
 
     // The highest-transfer domain should be tree search heuristics
     // (human pruning intuition → MCTS heuristics is the most direct)
-    let highest = transfers
-        .iter()
-        .max_by(|a, b| {
-            a.structural_similarity
-                .partial_cmp(&b.structural_similarity)
-                .unwrap()
-        })
-        .unwrap();
+    let Some(highest) = transfers.iter().max_by(|a, b| {
+        match a
+            .structural_similarity
+            .partial_cmp(&b.structural_similarity)
+        {
+            Some(ord) => ord,
+            None => {
+                eprintln!("FATAL: structural_similarity is NaN");
+                std::process::exit(1);
+            }
+        }
+    }) else {
+        eprintln!("FATAL: no transfers found for highest transfer domain");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "highest_transfer_is_tree_search_heuristics",
@@ -366,10 +382,10 @@ fn validate_scale() -> Vec<ValidationResult> {
     let scale = scale_comparison();
 
     // Games@Home has 200× more compute units than F@H
-    let fah_units = scale
-        .iter()
-        .find(|s| s.metric == "Active compute units")
-        .unwrap();
+    let Some(fah_units) = scale.iter().find(|s| s.metric == "Active compute units") else {
+        eprintln!("FATAL: Active compute units metric not found in scale comparison");
+        std::process::exit(1);
+    };
     let ratio = fah_units.games_at_home / fah_units.folding_at_home;
     results.push(ValidationResult::check(
         EXP,
@@ -380,10 +396,13 @@ fn validate_scale() -> Vec<ValidationResult> {
     ));
 
     // Games@Home costs nothing (or less — entertainment value)
-    let cost = scale
+    let Some(cost) = scale
         .iter()
         .find(|s| s.metric == "Compute cost per unit-hour (USD)")
-        .unwrap();
+    else {
+        eprintln!("FATAL: Compute cost metric not found in scale comparison");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "games_zero_compute_cost",
@@ -393,10 +412,13 @@ fn validate_scale() -> Vec<ValidationResult> {
     ));
 
     // Games@Home has higher creativity per trajectory
-    let creativity = scale
+    let Some(creativity) = scale
         .iter()
         .find(|s| s.metric == "Creativity per trajectory")
-        .unwrap();
+    else {
+        eprintln!("FATAL: Creativity per trajectory metric not found in scale comparison");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "games_higher_creativity",
@@ -406,10 +428,13 @@ fn validate_scale() -> Vec<ValidationResult> {
     ));
 
     // Games@Home has higher cross-domain transfer
-    let transfer = scale
+    let Some(transfer) = scale
         .iter()
         .find(|s| s.metric == "Cross-domain transfer potential")
-        .unwrap();
+    else {
+        eprintln!("FATAL: Cross-domain transfer potential metric not found in scale comparison");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "games_higher_transfer_potential",
@@ -419,10 +444,13 @@ fn validate_scale() -> Vec<ValidationResult> {
     ));
 
     // Games@Home search space is infinite (vs F@H's large but finite)
-    let space = scale
+    let Some(space) = scale
         .iter()
         .find(|s| s.metric == "Search space size (log10)")
-        .unwrap();
+    else {
+        eprintln!("FATAL: Search space size metric not found in scale comparison");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "games_search_space_infinite",

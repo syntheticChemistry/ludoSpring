@@ -29,7 +29,7 @@
 #   max_accumulator_ms = 250
 #   budget_warning_ms = 14
 #
-# STATUS: Active (Mar 16, 2026) — deep debt evolution V22
+# STATUS: Active (Mar 16, 2026) — cross-ecosystem deep debt V23
 # Requires: Tower Atomic (BearDog + Songbird)
 # Optional: ToadStool (GPU), Provenance Trio (rhizoCrypt, LoamSpine, sweetGrass)
 #
@@ -213,7 +213,7 @@ name = "capability_call"
 
 [nodes.operation.params]
 capability = "provenance.session_create"
-params = { agent = "ludospring", experiment_id = "deploy", version = "V22" }
+params = { agent = "ludospring", experiment_id = "deploy", version = "V23" }
 
 [nodes.constraints]
 timeout_ms = 10000

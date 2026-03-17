@@ -278,7 +278,9 @@ impl SessionAccumulator {
             return self.duration_s;
         }
         match (self.first_timestamp_ms, self.last_timestamp_ms) {
-            (Some(first), Some(last)) => (last.saturating_sub(first)) as f64 / 1000.0,
+            (Some(first), Some(last)) => {
+                (last.saturating_sub(first)) as f64 / crate::tolerances::MS_PER_SECOND
+            }
             _ => 0.0,
         }
     }
@@ -387,7 +389,7 @@ fn is_completion_action(action: &str) -> bool {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
+#[expect(clippy::expect_used, reason = "test module: fail-fast on setup errors")]
 mod tests {
     use super::*;
     use crate::metrics::engagement::compute_engagement;

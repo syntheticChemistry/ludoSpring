@@ -156,10 +156,18 @@ fn validate_mtg_infinite() -> Vec<ValidationResult> {
     ));
 
     // The highest FINITE game tree
-    let highest_finite = finite_games
-        .iter()
-        .max_by(|a, b| a.game_tree_log10.partial_cmp(&b.game_tree_log10).unwrap())
-        .unwrap();
+    let Some(highest_finite) = finite_games.iter().max_by(|a, b| {
+        match a.game_tree_log10.partial_cmp(&b.game_tree_log10) {
+            Some(ord) => ord,
+            None => {
+                eprintln!("FATAL: game_tree_log10 is NaN");
+                std::process::exit(1);
+            }
+        }
+    }) else {
+        eprintln!("FATAL: no finite games in catalog");
+        std::process::exit(1);
+    };
 
     results.push(ValidationResult::check(
         EXP,
@@ -177,10 +185,10 @@ fn validate_mtg_infinite() -> Vec<ValidationResult> {
     ));
 
     // MTG is categorically beyond all finite games
-    let mtg = games
-        .iter()
-        .find(|g| g.name == "Magic: The Gathering")
-        .unwrap();
+    let Some(mtg) = games.iter().find(|g| g.name == "Magic: The Gathering") else {
+        eprintln!("FATAL: Magic: The Gathering not found in game catalog");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "mtg_tree_is_infinite",
@@ -501,7 +509,10 @@ fn validate_longevity_correlation() -> Vec<ValidationResult> {
     ));
 
     // Tic-tac-toe: tiny tree, nobody plays it seriously
-    let ttt = games.iter().find(|g| g.name == "Tic-Tac-Toe").unwrap();
+    let Some(ttt) = games.iter().find(|g| g.name == "Tic-Tac-Toe") else {
+        eprintln!("FATAL: Tic-Tac-Toe not found in longevity games");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "tictactoe_small_tree_not_played",
@@ -511,10 +522,10 @@ fn validate_longevity_correlation() -> Vec<ValidationResult> {
     ));
 
     // MTG at 33 years old and growing — infinite tree can never be exhausted
-    let mtg = games
-        .iter()
-        .find(|g| g.name == "Magic: The Gathering")
-        .unwrap();
+    let Some(mtg) = games.iter().find(|g| g.name == "Magic: The Gathering") else {
+        eprintln!("FATAL: Magic: The Gathering not found in longevity games");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "mtg_infinite_tree_still_growing",
@@ -599,20 +610,24 @@ fn cmd_validate() {
     println!("\n--- Commander Hypothesis ---");
     println!("  Format RULES that expand the tree:");
     for rule in commander_format_rules() {
+        let Some(first_sentence) = rule.explanation.split('.').next() else {
+            eprintln!("FATAL: rule explanation has no first sentence");
+            std::process::exit(1);
+        };
         println!(
             "    {}: ×{:.1} ({})",
-            rule.name,
-            rule.branching_multiplier,
-            rule.explanation.split('.').next().unwrap()
+            rule.name, rule.branching_multiplier, first_sentence
         );
     }
     println!("\n  Designed-for-Commander cards that shrink the tree:");
     for design in commander_designed_cards() {
+        let Some(first_sentence) = design.explanation.split('.').next() else {
+            eprintln!("FATAL: design explanation has no first sentence");
+            std::process::exit(1);
+        };
         println!(
             "    {}: ×{:.1} ({})",
-            design.name,
-            design.branching_multiplier,
-            design.explanation.split('.').next().unwrap()
+            design.name, design.branching_multiplier, first_sentence
         );
     }
     let r = validate_commander_hypothesis();

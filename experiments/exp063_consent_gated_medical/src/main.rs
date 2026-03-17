@@ -72,7 +72,10 @@ fn validate_consent_lifecycle() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let proof = access_result.expect("validated above");
+    let Ok(proof) = access_result else {
+        eprintln!("FATAL: access_result failed (validated above as Ok)");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_proof_returned",
@@ -98,7 +101,10 @@ fn validate_consent_lifecycle() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    system.revoke_consent(&patient, consent_id).expect("revoke");
+    let Ok(()) = system.revoke_consent(&patient, consent_id) else {
+        eprintln!("FATAL: revoke_consent failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "lifecycle_consent_revoked",
@@ -203,7 +209,10 @@ fn validate_access_control() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    system.revoke_consent(&patient, consent_a).expect("revoke");
+    let Ok(()) = system.revoke_consent(&patient, consent_a) else {
+        eprintln!("FATAL: revoke_consent for consent_a failed");
+        std::process::exit(1);
+    };
     let scope_short = ConsentScope {
         record_types: vec![RecordType::Lab],
         expiry_tick: 2,
@@ -221,9 +230,10 @@ fn validate_access_control() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    system
-        .revoke_consent(&patient, consent_short)
-        .expect("revoke");
+    let Ok(()) = system.revoke_consent(&patient, consent_short) else {
+        eprintln!("FATAL: revoke_consent for consent_short failed");
+        std::process::exit(1);
+    };
     let revoked_access = system.access_record(&provider_a, lab_id, "after_revoke", RecordType::Lab);
     results.push(ValidationResult::check(
         EXP,
@@ -279,9 +289,10 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    system
-        .access_record(&provider, record_id, "legit", RecordType::Lab)
-        .expect("ok");
+    let Ok(_) = system.access_record(&provider, record_id, "legit", RecordType::Lab) else {
+        eprintln!("FATAL: access_record legit failed");
+        std::process::exit(1);
+    };
 
     let fraud_clean = system.detect_fraud();
     results.push(ValidationResult::check(
@@ -476,17 +487,22 @@ fn validate_audit_trail() -> Vec<ValidationResult> {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    system
-        .access_record(&provider, record_id, "initial", RecordType::Encounter)
-        .expect("ok");
+    let Ok(_) = system.access_record(&provider, record_id, "initial", RecordType::Encounter) else {
+        eprintln!("FATAL: access_record initial failed");
+        std::process::exit(1);
+    };
     system.advance_tick();
-    system
-        .access_record(&provider, record_id, "followup", RecordType::Encounter)
-        .expect("ok");
+    let Ok(_) = system.access_record(&provider, record_id, "followup", RecordType::Encounter)
+    else {
+        eprintln!("FATAL: access_record followup failed");
+        std::process::exit(1);
+    };
     system.advance_tick();
-    system
-        .access_record(&provider, record_id, "discharge", RecordType::Encounter)
-        .expect("ok");
+    let Ok(_) = system.access_record(&provider, record_id, "discharge", RecordType::Encounter)
+    else {
+        eprintln!("FATAL: access_record discharge failed");
+        std::process::exit(1);
+    };
 
     let audit = system.audit(record_id);
     results.push(ValidationResult::check(
@@ -566,9 +582,11 @@ fn validate_access_proof() -> Vec<ValidationResult> {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    let proof = system
-        .access_record(&provider, record_id, "verification", RecordType::Vitals)
-        .expect("access");
+    let Ok(proof) = system.access_record(&provider, record_id, "verification", RecordType::Vitals)
+    else {
+        eprintln!("FATAL: access_record verification failed");
+        std::process::exit(1);
+    };
 
     results.push(ValidationResult::check(
         EXP,
@@ -609,9 +627,11 @@ fn validate_access_proof() -> Vec<ValidationResult> {
     ));
 
     system.advance_tick();
-    let proof2 = system
-        .access_record(&provider, record_id, "second", RecordType::Vitals)
-        .expect("access");
+    let Ok(proof2) = system.access_record(&provider, record_id, "second", RecordType::Vitals)
+    else {
+        eprintln!("FATAL: access_record second failed");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "proof_different_per_access",

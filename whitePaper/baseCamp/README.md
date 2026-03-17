@@ -2,7 +2,7 @@
 
 **Date:** March 16, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + Deep Debt Evolution + **Ecosystem Absorption V22** — 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, toadStool direct dispatch, dual-format discovery, Python tolerance mirror (46 constants), Write→Absorb→Lean documented (V22)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + Deep Debt Evolution + Ecosystem Absorption + **Cross-Ecosystem Deep Debt V23** — 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, zero `#[allow()]` (`#[expect(reason)]` curated dictionary), zero-panic validation (14 experiments), `extract_rpc_result()` centralized, `deny.toml wildcards=deny`, XDG socket paths, named unit conversion constants (V23)
 
 ---
 

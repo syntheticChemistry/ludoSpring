@@ -159,9 +159,10 @@ fn validate_signed_lifecycle() -> Vec<ValidationResult> {
     chain.sign_and_append_vertex("achieve_dragon_slayer", alice.as_str());
     chain.sign_and_create_braid("Dragon Slayer achievement", alice.as_str());
 
-    chain
-        .sign_and_transfer(cert_id, &alice, &bob)
-        .expect("transfer");
+    let Ok(()) = chain.sign_and_transfer(cert_id, &alice, &bob) else {
+        eprintln!("FATAL: sign_and_transfer alice->bob failed");
+        std::process::exit(1);
+    };
     chain.sign_and_append_vertex("trade_to_bob", alice.as_str());
     chain.sign_and_create_braid("Traded sword to Bob", alice.as_str());
 
@@ -325,15 +326,17 @@ fn validate_multi_actor() -> Vec<ValidationResult> {
     chain.sign_and_append_vertex("alice_equips", alice.as_str());
     chain.sign_and_create_braid("Alice equips shield", alice.as_str());
 
-    chain
-        .sign_and_transfer(cert_id, &alice, &bob)
-        .expect("transfer A->B");
+    let Ok(()) = chain.sign_and_transfer(cert_id, &alice, &bob) else {
+        eprintln!("FATAL: sign_and_transfer A->B failed");
+        std::process::exit(1);
+    };
     chain.sign_and_append_vertex("bob_uses_shield", bob.as_str());
     chain.sign_and_create_braid("Bob blocks attack", bob.as_str());
 
-    chain
-        .sign_and_transfer(cert_id, &bob, &carol)
-        .expect("transfer B->C");
+    let Ok(()) = chain.sign_and_transfer(cert_id, &bob, &carol) else {
+        eprintln!("FATAL: sign_and_transfer B->C failed");
+        std::process::exit(1);
+    };
     chain.sign_and_append_vertex("carol_enchants", carol.as_str());
     chain.sign_and_create_braid("Carol enchants shield", carol.as_str());
 
@@ -438,8 +441,15 @@ fn validate_beardog_ipc() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let sign_roundtrip: serde_json::Value =
-        serde_json::from_str(&serde_json::to_string(&sign_req).unwrap()).unwrap();
+    let Ok(roundtrip_str) = serde_json::to_string(&sign_req) else {
+        eprintln!("FATAL: failed to serialize sign_req for roundtrip");
+        std::process::exit(1);
+    };
+    let Ok(sign_roundtrip): Result<serde_json::Value, _> = serde_json::from_str(&roundtrip_str)
+    else {
+        eprintln!("FATAL: failed to deserialize sign_req roundtrip");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_json_roundtrip",
@@ -462,8 +472,14 @@ fn validate_serialization() -> Vec<ValidationResult> {
     let message = b"provenance data";
     let sig = kp.sign(message);
 
-    let sig_json = serde_json::to_string(&sig.to_vec()).unwrap();
-    let sig_back: Vec<u8> = serde_json::from_str(&sig_json).unwrap();
+    let Ok(sig_json) = serde_json::to_string(&sig.to_vec()) else {
+        eprintln!("FATAL: failed to serialize signature");
+        std::process::exit(1);
+    };
+    let Ok(sig_back): Result<Vec<u8>, _> = serde_json::from_str(&sig_json) else {
+        eprintln!("FATAL: failed to deserialize signature");
+        std::process::exit(1);
+    };
     let mut sig_arr = [0u8; 64];
     sig_arr.copy_from_slice(&sig_back);
 
@@ -475,8 +491,14 @@ fn validate_serialization() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let pk_json = serde_json::to_string(&kp.public_key.to_vec()).unwrap();
-    let pk_back: Vec<u8> = serde_json::from_str(&pk_json).unwrap();
+    let Ok(pk_json) = serde_json::to_string(&kp.public_key.to_vec()) else {
+        eprintln!("FATAL: failed to serialize public key");
+        std::process::exit(1);
+    };
+    let Ok(pk_back): Result<Vec<u8>, _> = serde_json::from_str(&pk_json) else {
+        eprintln!("FATAL: failed to deserialize public key");
+        std::process::exit(1);
+    };
     let mut pk_arr = [0u8; 32];
     pk_arr.copy_from_slice(&pk_back);
     results.push(ValidationResult::check(

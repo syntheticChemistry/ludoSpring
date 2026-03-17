@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic, clippy::nursery)]
-#![allow(
+#![expect(
     clippy::doc_markdown,
+    reason = "validation harness: domain-specific nomenclature (game titles, primal names)"
+)]
+#![expect(
     clippy::module_name_repetitions,
+    reason = "ecosystem convention: primal modules use domain-qualified names"
+)]
+#![expect(
     clippy::cast_precision_loss,
-    clippy::vec_init_then_push
+    reason = "validation harness: counter/timing values within f64 range"
+)]
+#![expect(
+    clippy::vec_init_then_push,
+    reason = "validation harness: explicit initialization for readability"
 )]
 
 //! exp057 — Symbiont: Faction/reputation from open population dynamics.

@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
-#![allow(
+#![expect(
     clippy::cast_possible_truncation,
+    reason = "validation harness: small-range numeric conversions"
+)]
+#![expect(
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    reason = "validation harness: non-negative values cast to unsigned"
+)]
+#![expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: counter/timing values within f64 range"
 )]
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! exp028 — Fish Folk / Jumpy Telemetry Adapter

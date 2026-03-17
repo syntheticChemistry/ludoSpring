@@ -56,7 +56,7 @@ pub fn compute_engagement(snap: &EngagementSnapshot) -> EngagementMetrics {
         ENGAGEMENT_APM_CEILING, ENGAGEMENT_EXPLORATION_CEILING, ENGAGEMENT_WEIGHT,
     };
 
-    let minutes = snap.session_duration_s / 60.0;
+    let minutes = snap.session_duration_s / crate::tolerances::SECONDS_PER_MINUTE;
     let minutes = if minutes < crate::tolerances::MIN_SESSION_MINUTES {
         crate::tolerances::MIN_SESSION_MINUTES
     } else {

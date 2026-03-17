@@ -390,10 +390,13 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         type_uri: "ecoPrimals:sample".into(),
         schema_version: 1,
     };
-    phantom_sys
+    let Ok(_) = phantom_sys
         .cert_manager
         .mint(phantom_cert_type, &alice, phantom_meta)
-        .expect("mint");
+    else {
+        eprintln!("FATAL: phantom cert mint failed");
+        std::process::exit(1);
+    };
     // No collect event added - this is a phantom.
     let phantom_fraud = detect_sample_fraud(&phantom_sys);
     results.push(ValidationResult::check(
@@ -471,17 +474,17 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         .with_attribute("accession", "ACC-M")
         .with_attribute("location", "X")
         .with_attribute("condition", "fresh");
-    let (mislabel_cert, _) = mislabel_sys
-        .cert_manager
-        .mint(
-            loam_spine_core::certificate::CertificateType::Custom {
-                type_uri: "ecoPrimals:sample".into(),
-                schema_version: 1,
-            },
-            &alice,
-            mislabel_meta,
-        )
-        .expect("mint");
+    let Ok((mislabel_cert, _)) = mislabel_sys.cert_manager.mint(
+        loam_spine_core::certificate::CertificateType::Custom {
+            type_uri: "ecoPrimals:sample".into(),
+            schema_version: 1,
+        },
+        &alice,
+        mislabel_meta,
+    ) else {
+        eprintln!("FATAL: mislabel cert mint failed");
+        std::process::exit(1);
+    };
     mislabel_sys.inject_collect_event_for_test(
         mislabel_cert.id,
         alice.as_str(),
@@ -659,16 +662,19 @@ struct SampleDagAppendParams {
 fn validate_ipc_wire_format() -> Vec<ValidationResult> {
     let mut results = Vec::new();
 
+    let Ok(mint_params) = serde_json::to_value(SampleCertMintParams {
+        cert_type: "custom".into(),
+        owner_did: "did:key:alice".into(),
+        sample_type: "soil".into(),
+        accession: "ACC-001".into(),
+    }) else {
+        eprintln!("FATAL: failed to serialize mint params");
+        std::process::exit(1);
+    };
     let mint_req = SampleJsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "certificate.mint".into(),
-        params: serde_json::to_value(SampleCertMintParams {
-            cert_type: "custom".into(),
-            owner_did: "did:key:alice".into(),
-            sample_type: "soil".into(),
-            accession: "ACC-001".into(),
-        })
-        .expect("serialize"),
+        params: mint_params,
         id: 1,
     };
 
@@ -688,16 +694,19 @@ fn validate_ipc_wire_format() -> Vec<ValidationResult> {
         0.0,
     ));
 
+    let Ok(dag_params) = serde_json::to_value(SampleDagAppendParams {
+        session_id: "field_sample".into(),
+        event_type: "sample_collect".into(),
+        agent_did: "did:key:collector".into(),
+        metadata: std::collections::HashMap::new(),
+    }) else {
+        eprintln!("FATAL: failed to serialize dag append params");
+        std::process::exit(1);
+    };
     let dag_req = SampleJsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "dag.append_vertex".into(),
-        params: serde_json::to_value(SampleDagAppendParams {
-            session_id: "field_sample".into(),
-            event_type: "sample_collect".into(),
-            agent_did: "did:key:collector".into(),
-            metadata: std::collections::HashMap::new(),
-        })
-        .expect("serialize"),
+        params: dag_params,
         id: 2,
     };
 
@@ -709,8 +718,14 @@ fn validate_ipc_wire_format() -> Vec<ValidationResult> {
         0.0,
     ));
 
-    let roundtrip = serde_json::to_string(&mint_req).expect("serialize");
-    let parsed: SampleJsonRpcRequest = serde_json::from_str(&roundtrip).expect("deserialize");
+    let Ok(roundtrip) = serde_json::to_string(&mint_req) else {
+        eprintln!("FATAL: failed to serialize mint_req for roundtrip");
+        std::process::exit(1);
+    };
+    let Ok(parsed): Result<SampleJsonRpcRequest, _> = serde_json::from_str(&roundtrip) else {
+        eprintln!("FATAL: failed to deserialize mint_req roundtrip");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "ipc_wire_roundtrip",

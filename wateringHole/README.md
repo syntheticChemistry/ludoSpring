@@ -24,12 +24,12 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V22** | [LUDOSPRING_V22_ECOSYSTEM_ABSORPTION_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V22_ECOSYSTEM_ABSORPTION_HANDOFF_MAR16_2026.md) | Mar 16 | Ecosystem absorption: toadStool `compute.dispatch.*` direct dispatch, dual-format capability discovery (neuralSpring S156 fix), Python tolerance mirror (46 constants, wetSpring V121 pattern), Write→Absorb→Lean documentation, deploy graph dispatch capabilities |
+| **V23** | [LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md](handoffs/LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md) | Mar 16 | Cross-ecosystem deep debt: zero `#[allow()]` (`#[expect(reason)]` migration, wetSpring V122), zero-panic validation (14 experiments, groundSpring V109), `extract_rpc_result()` centralization (healthSpring V29), `deny.toml wildcards=deny` (barraCuda Sprint 6), XDG socket paths, unit conversion constants |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, ecosystem absorption V22)
+ludoSpring (game science, 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, cross-ecosystem deep debt V23)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders)
@@ -85,6 +85,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V22 | `handoffs/archive/LUDOSPRING_V22_ECOSYSTEM_ABSORPTION_HANDOFF_MAR16_2026.md` | V23 Cross-Ecosystem Deep Debt |
 | V21 | `handoffs/archive/LUDOSPRING_V21_BARRACUDA_TOADSTOOL_DEEP_DEBT_EVOLUTION_HANDOFF_MAR16_2026.md` | V22 Ecosystem Absorption |
 | V20 | `handoffs/archive/LUDOSPRING_V20_BARRACUDA_TOADSTOOL_DEEP_PRIMAL_INTEGRATION_HANDOFF_MAR16_2026.md` | V21 Deep Debt Evolution |
 | V19 | `handoffs/archive/LUDOSPRING_V19_BARRACUDA_TOADSTOOL_DEEP_DEBT_HANDOFF_MAR16_2026.md` | V20 Deep Primal Integration |

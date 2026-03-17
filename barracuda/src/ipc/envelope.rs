@@ -62,6 +62,28 @@ impl JsonRpcResponse {
     }
 }
 
+/// Extract a human-readable error string from a raw JSON-RPC response object.
+///
+/// Handles the common pattern where callers receive a `serde_json::Value`
+/// and need to check for an `"error"` field. Returns `Ok(result)` on success
+/// or `Err(message)` if the response contains an error or no result.
+///
+/// Follows the healthSpring V29 `extract_rpc_error()` centralization pattern.
+pub fn extract_rpc_result(response: &serde_json::Value) -> Result<serde_json::Value, String> {
+    if let Some(error) = response.get("error") {
+        let message = error
+            .get("message")
+            .and_then(|m| m.as_str())
+            .unwrap_or("unknown");
+        let code = error.get("code").and_then(|c| c.as_i64()).unwrap_or(0);
+        return Err(format!("rpc error {code}: {message}"));
+    }
+    response
+        .get("result")
+        .cloned()
+        .ok_or_else(|| "no result in response".to_owned())
+}
+
 impl JsonRpcError {
     /// Method not found (-32601). Clones `id` from the request.
     #[must_use]

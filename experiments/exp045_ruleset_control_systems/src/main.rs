@@ -97,12 +97,11 @@ fn validate_pf2e() -> Vec<ValidationResult> {
         6.0,
         0.0,
     ));
-    let str_mod = character
-        .abilities
-        .iter()
-        .find(|a| a.name == "Strength")
-        .expect("Strength ability not found")
-        .modifier;
+    let Some(str_ability) = character.abilities.iter().find(|a| a.name == "Strength") else {
+        eprintln!("FATAL: Strength ability not found");
+        std::process::exit(1);
+    };
+    let str_mod = str_ability.modifier;
     results.push(ValidationResult::check(
         EXP,
         "pf2e_str_14_gives_mod_2",
@@ -274,10 +273,10 @@ fn validate_fate() -> Vec<ValidationResult> {
         3.0,
         0.0,
     ));
-    let fate_points = character
-        .resource_tracks
-        .get("Fate Points")
-        .expect("Fate Points track not found");
+    let Some(fate_points) = character.resource_tracks.get("Fate Points") else {
+        eprintln!("FATAL: Fate Points track not found");
+        std::process::exit(1);
+    };
     results.push(ValidationResult::check(
         EXP,
         "fate_starts_with_3_fate_points",
@@ -345,20 +344,22 @@ fn cairn_damage_overflow_str_value(character: &mut Character, damage: i32) -> i3
     let overflow = damage - character.hp_current;
     character.hp_current = 0;
     if overflow > 0 {
-        let str_ability = character
+        let Some(str_ability) = character
             .abilities
             .iter_mut()
             .find(|a| a.name == "Strength")
-            .expect("Strength ability not found");
+        else {
+            eprintln!("FATAL: Strength ability not found");
+            std::process::exit(1);
+        };
         str_ability.value -= overflow;
         str_ability.modifier = str_ability.value;
     }
-    character
-        .abilities
-        .iter()
-        .find(|a| a.name == "Strength")
-        .expect("Strength ability not found")
-        .value
+    let Some(str_ability) = character.abilities.iter().find(|a| a.name == "Strength") else {
+        eprintln!("FATAL: Strength ability not found");
+        std::process::exit(1);
+    };
+    str_ability.value
 }
 
 #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]

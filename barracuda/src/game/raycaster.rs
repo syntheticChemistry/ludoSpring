@@ -281,7 +281,7 @@ pub fn cast_screen(
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[expect(clippy::unwrap_used, reason = "test module: fail-fast on setup errors")]
 mod tests {
     use super::*;
 

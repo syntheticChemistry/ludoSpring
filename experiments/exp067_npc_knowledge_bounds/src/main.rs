@@ -160,7 +160,10 @@ fn validate_maren(h: &mut ValidationHarness) {
         kb.query("old master") == KnowledgeQueryResult::Suspected,
     );
 
-    let ore_suspicion = kb.get_suspicion("strange ore").expect("suspicion exists");
+    let Some(ore_suspicion) = kb.get_suspicion("strange ore") else {
+        eprintln!("FATAL: suspicion for 'strange ore' not found");
+        std::process::exit(1);
+    };
     h.check_abs(
         "maren_ore_confidence",
         ore_suspicion.confidence,
@@ -168,7 +171,10 @@ fn validate_maren(h: &mut ValidationHarness) {
         tolerances::GAME_STATE_TOL,
     );
 
-    let master_suspicion = kb.get_suspicion("old master").expect("suspicion exists");
+    let Some(master_suspicion) = kb.get_suspicion("old master") else {
+        eprintln!("FATAL: suspicion for 'old master' not found");
+        std::process::exit(1);
+    };
     h.check_abs(
         "maren_master_confidence",
         master_suspicion.confidence,
@@ -185,7 +191,10 @@ fn validate_maren(h: &mut ValidationHarness) {
         kb.query("cellar door") == KnowledgeQueryResult::LiedAbout,
     );
 
-    let exp_lie = kb.get_lie("experiments").expect("lie exists");
+    let Some(exp_lie) = kb.get_lie("experiments") else {
+        eprintln!("FATAL: lie for 'experiments' not found");
+        std::process::exit(1);
+    };
     h.check_abs(
         "maren_experiment_dc",
         f64::from(exp_lie.detection_dc),
@@ -203,7 +212,10 @@ fn validate_maren(h: &mut ValidationHarness) {
         0.0,
     );
 
-    let cellar_lie = kb.get_lie("cellar").expect("lie exists");
+    let Some(cellar_lie) = kb.get_lie("cellar") else {
+        eprintln!("FATAL: lie for 'cellar' not found");
+        std::process::exit(1);
+    };
     h.check_abs(
         "maren_cellar_dc",
         f64::from(cellar_lie.detection_dc),
@@ -297,16 +309,23 @@ fn validate_multi_npc(h: &mut ValidationHarness) {
         professor.query("disappearances") == KnowledgeQueryResult::Unknown,
     );
 
-    let prof_lie = professor.get_lie("research").expect("lie exists");
+    let Some(prof_lie) = professor.get_lie("research") else {
+        eprintln!("FATAL: professor lie for 'research' not found");
+        std::process::exit(1);
+    };
     h.check_abs(
         "professor_research_dc",
         f64::from(prof_lie.detection_dc),
         10.0,
         0.0,
     );
+    let Some(sheriff_family_lie) = sheriff.get_lie("family") else {
+        eprintln!("FATAL: sheriff lie for 'family' not found");
+        std::process::exit(1);
+    };
     h.check_bool(
         "professor_research_dc_lower_than_sheriff",
-        prof_lie.detection_dc < sheriff.get_lie("family").expect("lie exists").detection_dc,
+        prof_lie.detection_dc < sheriff_family_lie.detection_dc,
     );
 }
 

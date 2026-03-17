@@ -37,7 +37,9 @@ pub mod toadstool;
 pub use discovery::{
     PrimalEndpoint, PrimalRegistry, call_primal, discover_by_capability, discover_primals,
 };
-pub use envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody};
+pub use envelope::{
+    JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody, extract_rpc_result,
+};
 pub use handlers::dispatch;
 pub use neural_bridge::NeuralBridge;
 pub use params::*;
