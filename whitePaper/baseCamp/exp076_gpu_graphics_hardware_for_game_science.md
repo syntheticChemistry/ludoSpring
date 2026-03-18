@@ -248,6 +248,72 @@ Successful experiments hand off to barraCuda as new dispatch ops:
 
 ---
 
+## exp076g: Infrastructure Portability — Same Math, Every Hardware Unit
+
+**Motivation**: We made math portable from CPU to GPU (Python → Rust → WGSL).
+Now make it portable across infrastructure on the card. Run the same game
+science operations on shader cores, tensor cores, RT cores, TMUs, and ROPs.
+Even the "wrong" hardware placements teach us the bounds.
+
+**Approach**: Take three well-understood ludoSpring operations and run each
+on every available hardware unit:
+
+### Target 1: Engagement batch evaluation (exp030 baseline)
+
+Currently a compute shader (`engagement_batch.wgsl`). Each invocation
+evaluates Fitts/Hick/Flow for one entity.
+
+| Hardware unit | Reformulation | Expected result |
+|---------------|--------------|-----------------|
+| Shader cores | Current WGSL compute (baseline) | Known: validated in exp030 |
+| Tensor cores | Batch entities as matrix rows, engagement params as columns, MMA | 2-4x throughput at FP16; measure precision loss vs `ENGAGEMENT_TOL` |
+| TMU | Precomputed engagement curves as 1D textures | 5-20x per lookup; precision bounded by texture resolution |
+| ROPs | N/A (not an accumulation problem) | — |
+| RT cores | N/A (not a spatial problem) | — |
+| CPU | Rust baseline (already exists) | Reference for correctness |
+
+### Target 2: Fog of war (exp076a baseline)
+
+Currently `fog_of_war.wgsl` compute shader. Per-tile visibility from
+player through wall geometry.
+
+| Hardware unit | Reformulation | Expected result |
+|---------------|--------------|-----------------|
+| Shader cores | Current WGSL ray-march (baseline) | Known |
+| Rasterizer | Wall triangles → depth buffer → visibility mask | 10-50x |
+| RT cores | Ray from player to each tile center, walls as BVH | 10-100x; natural fit |
+| Tensor cores | Visibility as matrix (player×tile×wall occlusion) | Unknown — explore bounds |
+| TMU | Precomputed visibility tables per room? | Only for static geometry |
+| ROPs | N/A | — |
+
+### Target 3: Pairwise entity interaction (influence maps)
+
+CPU loop over entity pairs. No GPU implementation yet.
+
+| Hardware unit | Reformulation | Expected result |
+|---------------|--------------|-----------------|
+| Shader cores | Compute shader, one thread per entity pair | Baseline GPU |
+| Tensor cores | Distance matrix: `diag(A^T A) + diag(B^T B) - 2A^T B` | 2-4x for N > 64 entities |
+| ROPs | Entity quads with additive blending | 5-10x, no atomics needed |
+| RT cores | BVH over entities, range query per entity | 10x for sparse influence |
+| TMU | Influence falloff as texture | Free interpolation |
+| Rasterizer | Entity as triangle at tile position | Spatial binning for free |
+
+### Validation
+
+For each (operation, hardware_unit) pair:
+1. Compare output against CPU reference
+2. Document precision: exact match, or tolerance with justification
+3. Measure throughput: operations/second
+4. Record in a **performance surface table**: operation × unit × precision × throughput
+
+The performance surface is the deliverable. It tells barraCuda's dispatch
+router where to place each operation for maximum throughput at acceptable
+precision. ludoSpring's game operations are simple enough to be good test
+cases, but the results generalize to every spring.
+
+---
+
 ## Connection to Ecosystem
 
 This exploration directly supports:
