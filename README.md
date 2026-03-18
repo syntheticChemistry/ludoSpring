@@ -2,13 +2,14 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 17, 2026
-**Version:** V24 (75 experiments, 1692 validation checks, 450+ tests + 19 proptest + 6 IPC integration)
+**Date:** March 18, 2026
+**Version:** V26 (75 experiments, 1692 validation checks, 450+ tests + 19 proptest + 6 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, 19,302+ lines Rust
+**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, ~20,000 lines Rust
+**ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance)
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 26 capabilities (24 game + 2 health probes), structured `capability_domains` registry
-**Audit Status:** Cross-ecosystem absorption — `OrExit<T>` trait (groundSpring V112), `DispatchOutcome<T>` enum (petalTongue V166), 4-format capability parsing (airSpring v0.8.7), `health.liveness`/`health.readiness` probes (healthSpring V32), resilient provenance trio IPC (circuit breaker + exponential backoff), `deny.toml yanked=deny` (toadStool S157b), 7 proptest fuzz properties (JSON-RPC + capability parsing), zero `#[allow()]`, zero-panic, `#![forbid(unsafe_code)]`
+**Audit Status:** Complete — all 71 validation experiments use `ValidationHarness` + `BaselineProvenance` (exp001–exp075 minus 4 non-validation crates), GPU tolerances centralized in `tolerances::gpu` (14 constants), exp030 uses named constants, `missing_errors_doc`/`missing_panics_doc` lints tightened to warn, zero clippy warnings workspace-wide
 
 ---
 
@@ -275,15 +276,15 @@ Nine experiments validating the Dialogue Plane of the RPGPT system — NPC perso
 knowledge bounds, internal voices, trust dynamics, and plane transition continuity:
 
 ```bash
-cargo run --release -p ludospring-exp067 -- validate  # NPC knowledge bounds
-cargo run --release -p ludospring-exp068 -- validate  # Lie detection / passive checks
-cargo run --release -p ludospring-exp069 -- validate  # NPC memory DAG
-cargo run --release -p ludospring-exp070 -- validate  # Ruleset hot-swap
-cargo run --release -p ludospring-exp071 -- validate  # Multi-voice integration
-cargo run --release -p ludospring-exp072 -- validate  # Trust dynamics arc
-cargo run --release -p ludospring-exp073 -- validate  # Dialogue skill checks
-cargo run --release -p ludospring-exp074 -- validate  # Faction cascade
-cargo run --release -p ludospring-exp075 -- validate  # Plane transition continuity
+cargo run --release -p ludospring-exp067 -- validate  # NPC knowledge bounds enforcement
+cargo run --release -p ludospring-exp068 -- validate  # Lie detection via passive checks
+cargo run --release -p ludospring-exp069 -- validate  # Internal voice personality consistency
+cargo run --release -p ludospring-exp070 -- validate  # Voice priority and concurrency
+cargo run --release -p ludospring-exp071 -- validate  # NPC memory DAG retrieval
+cargo run --release -p ludospring-exp072 -- validate  # Trust dynamics and NPC arc progression
+cargo run --release -p ludospring-exp073 -- validate  # Dialogue plane skill check resolution
+cargo run --release -p ludospring-exp074 -- validate  # Dialogue plane flow monitoring
+cargo run --release -p ludospring-exp075 -- validate  # Plane transition continuity (Dialogue <-> Tactical)
 ```
 
 Key results:
@@ -496,9 +497,36 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Files > 1000 LOC | 0 — exp030 refactored into 4 modules (was 1949 LOC) |
 | TODO/FIXME/HACK in source | 0 |
 | Structured logging | `tracing` for all library IPC/biomeOS; `ValidationSink` trait for validation output |
-| Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery |
+| Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery, `FAMILY_ID` for socket derivation |
 | Hardcoded paths | 0 — `temp_dir()` + XDG-compliant socket resolution |
 | IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
+| GPU tolerances | 10 named constants in `tolerances::gpu` (unary, Perlin, fBm, reduction, softmax, engagement, raycaster, LCG) |
+| Validation infrastructure | `check_abs_or_rel`, `exit_skipped` (exit 2), `load_baseline_f64`, `OrExit<T>` |
+
+## V26 Full Harness Migration (March 18, 2026)
+
+Completed the `ValidationHarness` migration across all 71 validation experiments (exp001–exp075, minus 4 non-validation crates: exp024, exp025, exp030, exp058):
+
+- **Full `ValidationHarness` migration** — all experiments now use `ValidationHarness` + `BaselineProvenance`; zero legacy `ValidationResult` usage remains anywhere in the codebase
+- **exp030 GPU tolerance evolution** — inline magic numbers in `validate.rs` replaced with 14 named constants from `tolerances::gpu` (4 new: `GPU_REDUCE_SUM_ABS_TOL`, `GPU_ENGAGEMENT_ABS_TOL`, `GPU_RAYCASTER_DISTANCE_ABS_TOL`, `GPU_FBM_ABS_TOL_LOOSE`)
+- **Lint tightening** — `missing_errors_doc` and `missing_panics_doc` upgraded from `allow` to `warn` workspace-wide; per-crate overrides removed from 11 experiment Cargo.tomls
+- **Shader dedup audit** — `dda_raycast.wgsl` and `perlin_2d.wgsl` already deduplicated into `barracuda/shaders/game/validated/`; 7 math primitives (abs, relu, sigmoid, softmax, reduce_sum, dot_product, lcg) documented as upstream absorption candidates; 2 domain-specific shaders (scale, engagement_batch) kept in exp030
+
+## V25 Deep Debt Sprint (March 18, 2026)
+
+Deep audit and systematic debt reduction across validation, tolerances, GPU evolution, and ecosystem compliance:
+
+- **`ValidationHarness` migration** — exp002–exp010 migrated from legacy `ValidationResult` to `ValidationHarness` + `BaselineProvenance`, eliminating manual `report()` and inline exit logic
+- **GPU tolerance centralization** — new `tolerances::gpu` module (10 constants: `GPU_UNARY_ABS_TOL`, `GPU_PERLIN_ABS_TOL`, `GPU_FBM_ABS_TOL`, `GPU_REDUCTION_ABS_TOL`, `GPU_SOFTMAX_ABS_TOL`, `GPU_ENGAGEMENT_REL_TOL`, `GPU_RAYCASTER_HIT_RATE_PP`, `GPU_LCG_ABS_TOL`)
+- **Validated shader wiring** — `PerlinTerrain` and `BatchRaycast` GPU ops now embed validated WGSL sources from exp030, pending barraCuda absorption
+- **`exit_skipped` pattern** — `exit(2)` for experiments requiring unavailable hardware (wetSpring V123 pattern)
+- **`check_abs_or_rel`** — compound tolerance check for GPU parity where values span multiple orders of magnitude
+- **`load_baseline_f64`** — runtime JSON loader for Python baseline values, enabling experiments to read from `combined_baselines.json`
+- **`--output` flag** — `run_all_baselines.py` now accepts `--output` path; `check_drift.py` uses it cleanly
+- **Capability-based socket discovery** — hardcoded primal names in exp042/exp054 evolved to derive from `FAMILY_ID` environment variable
+- **Proptest tuning** — Fitts, Hick, flow state tests bumped to 1024 cases (from default 256)
+- **`NOISE_MEAN_TOL`** — new validation tolerance for Perlin noise statistical mean checks
+- **Magic number elimination** — inline tolerance values in exp003/004/006/007/008/009/010 replaced with `check_lower`/`check_upper`/`check_bool` calls using named constants
 
 ## V24 Ecosystem Absorption Sprint (March 17, 2026)
 
@@ -581,15 +609,22 @@ resilience, fuzz testing, health probes, and structured dispatch classification:
 
 ## Benchmark Gaps (Documented)
 
-### Python Execution Timing
+### Python-vs-barraCuda CPU Execution Timing
 Python baselines validate **correctness parity** only — they produce reference
 values that the Rust implementation must match. exp034 measures Rust-only
 throughput; the "inline-python" comparison is Rust code that mirrors Python logic.
 
+The flow is: run Python → capture JSON → transcribe values into Rust tests → run Rust tests. There is no automated single-run Python-vs-barraCuda CPU comparison. `combined_baselines.json` is not loaded by Rust code at runtime (V25 adds `load_baseline_f64` for this purpose).
+
 ### Industry GPU Benchmarks
 GPU validation (exp030) confirms CPU-vs-GPU **correctness parity** via wgpu/WGSL.
-There are no benchmarks against industry GPU frameworks (Kokkos, CUDA, OpenCL).
-GPU performance parity against industry standards is a toadStool/coralReef concern.
+There are no benchmarks against industry GPU frameworks (Kokkos, CUDA, OpenCL, cuBLAS, Galaxy). GPU performance parity against industry standards is a toadStool/coralReef concern — ludoSpring validates correctness, not throughput.
+
+Industry benchmark targets for future work:
+- **Math primitives**: cuBLAS (gemm, gemv), Kokkos (parallel reduce, scan) for barraCuda GPU ops
+- **Noise generation**: libnoise, FastNoiseLite for Perlin/fBm throughput comparison
+- **Raycasting**: Vulkan raytracing extensions for DDA parity
+- **Constraint solving**: Gecode, MiniZinc for WFC propagation speed
 
 ## License
 

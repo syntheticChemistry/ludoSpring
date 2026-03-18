@@ -16,25 +16,19 @@ use ludospring_barracuda::interaction::input_laws::{
     fitts_movement_time, hick_reaction_time, steering_time,
 };
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Card et al. 1983, Fitts, Hick, Accot & Zhai)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (analytical)",
+};
 
 /// Model a complete "open inventory, select item, drag to slot" task.
 fn inventory_management_cost() -> f64 {
-    // Phase 1: Decide which item (Hick's law: 12 inventory slots)
     let decide = hick_reaction_time(12, tolerances::HICK_A_MS, tolerances::HICK_B_MS);
 
-    // Phase 2: Move to item (Fitts's law: D=200px, W=32px icon)
     let acquire = fitts_movement_time(
         200.0,
         32.0,
@@ -42,7 +36,6 @@ fn inventory_management_cost() -> f64 {
         tolerances::FITTS_B_MOUSE_MS,
     );
 
-    // Phase 3: Drag through inventory (Steering law: D=150px, W=40px lane)
     let drag = steering_time(
         150.0,
         40.0,
@@ -50,7 +43,6 @@ fn inventory_management_cost() -> f64 {
         tolerances::STEERING_B_MS,
     );
 
-    // Phase 4: GOMS operators: M(decide) + P(click) + K(grab) + P(drag) + K(drop)
     let goms_overhead = task_time(&[
         Operator::Mental,
         Operator::Point,
@@ -75,25 +67,11 @@ fn menu_navigation_cost(n_options: usize) -> f64 {
     decide + acquire + goms
 }
 
-fn validate_composite_pipeline(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Composite interaction cost pipeline");
-
+fn validate_composite_pipeline(h: &mut ValidationHarness) {
     let total = inventory_management_cost();
 
-    // Total should be positive and reasonably bounded
-    let r = ValidationResult::check(
-        "exp019_inventory_positive",
-        "inventory management cost is positive",
-        if total > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("inventory management cost is positive", total > 0.0);
 
-    println!("  Inventory management total: {total:.1}ms");
-
-    // Each component should contribute
     let decide = hick_reaction_time(12, tolerances::HICK_A_MS, tolerances::HICK_B_MS);
     let acquire = fitts_movement_time(
         200.0,
@@ -109,63 +87,32 @@ fn validate_composite_pipeline(results: &mut Vec<ValidationResult>) {
     );
     let component_sum = decide + acquire + drag;
 
-    let r = ValidationResult::check(
-        "exp019_components_add",
+    h.check_bool(
         "composite > sum of HCI components (GOMS adds overhead)",
-        if total > component_sum { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        total > component_sum,
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_menu_depth_scaling(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Menu depth scaling");
-
+fn validate_menu_depth_scaling(h: &mut ValidationHarness) {
     let cost_4 = menu_navigation_cost(4);
     let cost_8 = menu_navigation_cost(8);
     let cost_16 = menu_navigation_cost(16);
     let cost_32 = menu_navigation_cost(32);
 
-    let r = ValidationResult::check(
-        "exp019_monotonic",
+    h.check_bool(
         "more options → higher cost (monotonic)",
-        if cost_4 < cost_8 && cost_8 < cost_16 && cost_16 < cost_32 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        cost_4 < cost_8 && cost_8 < cost_16 && cost_16 < cost_32,
     );
-    report(&r);
-    results.push(r);
 
-    // Growth should be sub-linear (log₂ from Hick's law)
     let growth_4_to_16 = cost_16 - cost_4;
     let growth_16_to_32 = cost_32 - cost_16;
-    let r = ValidationResult::check(
-        "exp019_sublinear",
+    h.check_bool(
         "cost growth is sub-linear (Hick logarithmic)",
-        if growth_16_to_32 < growth_4_to_16 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        growth_16_to_32 < growth_4_to_16,
     );
-    report(&r);
-    results.push(r);
-
-    println!("  Menu costs: 4={cost_4:.0}, 8={cost_8:.0}, 16={cost_16:.0}, 32={cost_32:.0}");
 }
 
-fn validate_analytical_decomposition(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Analytical decomposition");
-
-    // Verify GOMS portion exactly matches analytical value
+fn validate_analytical_decomposition(h: &mut ValidationHarness) {
     let goms_ops = [
         Operator::Mental,
         Operator::Point,
@@ -179,43 +126,31 @@ fn validate_analytical_decomposition(results: &mut Vec<ValidationResult>) {
         2.0f64.mul_add(goms::times::POINT, goms::times::MENTAL),
     );
 
-    let r = ValidationResult::check(
-        "exp019_goms_exact",
+    h.check_abs(
         "GOMS component exactly M + 2P + 2K",
         goms_time,
         expected_goms,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
 
-    // Verify Hick component is analytically correct
     let hick_12 = hick_reaction_time(12, tolerances::HICK_A_MS, tolerances::HICK_B_MS);
     let expected_hick = tolerances::HICK_B_MS.mul_add((13.0_f64).log2(), tolerances::HICK_A_MS);
 
-    let r = ValidationResult::check(
-        "exp019_hick_exact",
+    h.check_abs(
         "Hick component exactly a + b·log₂(13)",
         hick_12,
         expected_hick,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp019: Composite Interaction Cost (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp019_composite_interaction_cost");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_composite_pipeline(&mut results);
-    validate_menu_depth_scaling(&mut results);
-    validate_analytical_decomposition(&mut results);
+    validate_composite_pipeline(&mut h);
+    validate_menu_depth_scaling(&mut h);
+    validate_analytical_decomposition(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

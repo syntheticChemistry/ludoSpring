@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 16, 2026
+**Date:** March 18, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + Deep Debt Evolution + Ecosystem Absorption + **Cross-Ecosystem Deep Debt V23** — 75 experiments, 1692 checks, 394 tests + 12 proptest + 6 IPC integration, zero `#[allow()]` (`#[expect(reason)]` curated dictionary), zero-panic validation (14 experiments), `extract_rpc_result()` centralized, `deny.toml wildcards=deny`, XDG socket paths, named unit conversion constants (V23)
+**Status:** Validated + Playable + Telemetry + Compute + Benchmarks + Controls + Cross-Spring + RPGPT + Games@Home + Provenance + Extraction Shooter + Composable Viz + Lysogeny + Fermenting + Cross-Spring Provenance + Niche Deployment + Deep Audit + Niche Self-Knowledge + NeuralBridge + RPGPT Dialogue Plane + Deep Primal Integration + Deep Debt Evolution + Ecosystem Absorption + **Cross-Ecosystem Deep Debt V26** — 75 experiments, 1692 checks, 450+ tests + 19 proptest + 6 IPC integration, zero `#[allow()]` (`#[expect(reason)]` curated dictionary), zero-panic validation (14 experiments), `extract_rpc_result()` centralized, `deny.toml wildcards=deny`, XDG socket paths, named unit conversion constants (V26)
 
 ---
 
@@ -215,7 +215,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # 394 tests (incl. 12 proptest)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # 450+ tests (incl. 19 proptest)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

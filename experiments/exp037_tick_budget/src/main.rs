@@ -17,8 +17,15 @@
 use std::process;
 use std::time::Instant;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use ludospring_benchmarks::ecs::{spawn_entities, tick_game_logic, tick_metrics};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — GAME_ENGINE_NICHE_SPECIFICATION.md)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (tick budget benchmark)",
+};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -33,17 +40,10 @@ fn main() {
     }
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp037: Game Engine Tick Budget Validation ===\n");
-    println!("  Spec: GAME_ENGINE_NICHE_SPECIFICATION.md");
-    println!("  Budget: 16.67ms total, game_logic=3ms, metrics=1ms\n");
+    let mut h = ValidationHarness::new("exp037_tick_budget");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let experiment = "exp037_tick_budget";
-    let mut results = Vec::new();
     let dt = 1.0 / 60.0;
 
     // 1. game_logic 10K entities within 3ms
@@ -51,110 +51,51 @@ fn cmd_validate() {
     let t = Instant::now();
     let result = tick_game_logic(&mut entities, dt);
     let logic_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "game_logic_10k_under_3ms",
-        if logic_us < 3000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] game_logic 10K: {logic_us}us (budget: 3000us)");
+    h.check_bool("game_logic_10k_under_3ms", logic_us < 3000);
 
     // 2. All entities processed (flow distribution sums to entity count)
     let total_flow: u32 = result.flow_distribution.iter().sum();
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_abs(
         "all_entities_processed",
         f64::from(total_flow),
         10_000.0,
         0.0,
-    ));
+    );
 
     // 3. Flow distribution has entries in flow state (challenge ≈ skill)
     let in_flow = result.flow_distribution[2]; // Flow index
-    results.push(ValidationResult::check(
-        experiment,
-        "some_entities_in_flow",
-        if in_flow > 0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Flow distribution: {:?}", result.flow_distribution);
+    h.check_bool("some_entities_in_flow", in_flow > 0);
 
     // 4. metrics node within 1ms
     let t = Instant::now();
     let engagement = tick_metrics(500, 300.0);
     let metrics_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "metrics_under_1ms",
-        if metrics_us < 1000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] metrics: {metrics_us}us (budget: 1000us), engagement={engagement:.4}");
+    h.check_bool("metrics_under_1ms", metrics_us < 1000);
 
     // 5. Engagement in valid range [0, 1]
-    results.push(ValidationResult::check(
-        experiment,
-        "engagement_in_range",
-        if (0.0..=1.0).contains(&engagement) {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("engagement_in_range", (0.0..=1.0).contains(&engagement));
 
     // 6. Combined game_logic + metrics under 4ms (their combined budget)
     let combined_us = logic_us + metrics_us;
-    results.push(ValidationResult::check(
-        experiment,
-        "combined_under_4ms",
-        if combined_us < 4000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Combined: {combined_us}us (budget: 4000us)");
+    h.check_bool("combined_under_4ms", combined_us < 4000);
 
     // 7. 1K entities within budget (easy)
     let mut e1k = spawn_entities(1_000);
     let t = Instant::now();
     tick_game_logic(&mut e1k, dt);
     let us_1k = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "game_logic_1k_under_1ms",
-        if us_1k < 1000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] game_logic 1K: {us_1k}us");
+    h.check_bool("game_logic_1k_under_1ms", us_1k < 1000);
 
     // 8. 50K entities (stress — may exceed game_logic budget, but should be under total)
     let mut e50k = spawn_entities(50_000);
     let t = Instant::now();
     tick_game_logic(&mut e50k, dt);
     let us_50k = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "game_logic_50k_under_16ms",
-        if us_50k < 16_670 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] game_logic 50K: {us_50k}us (total budget: 16670us)");
+    h.check_bool("game_logic_50k_under_16ms", us_50k < 16_670);
 
     // 9. Difficulty adjustment is bounded [-1, 1]
     let adj_bounded = result.mean_adjustment.abs() <= 1.0;
-    results.push(ValidationResult::check(
-        experiment,
-        "difficulty_adjustment_bounded",
-        if adj_bounded { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("difficulty_adjustment_bounded", adj_bounded);
 
     // 10. 60 consecutive ticks (1 second) of 10K entities under 1 second
     let mut entities = spawn_entities(10_000);
@@ -163,27 +104,9 @@ fn cmd_validate() {
         tick_game_logic(&mut entities, dt);
     }
     let second_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "60_ticks_10k_under_1s",
-        if second_us < 1_000_000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    let avg_tick = second_us / 60;
-    println!("  [INFO] 60 ticks avg: {avg_tick}us/tick ({second_us}us total)");
+    h.check_bool("60_ticks_10k_under_1s", second_us < 1_000_000);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 #[expect(

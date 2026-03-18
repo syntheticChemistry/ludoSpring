@@ -15,10 +15,15 @@
 
 use std::collections::HashSet;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use serde::Deserialize;
 
-const EXP: &str = "exp043";
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (fixture — NCBI E-utilities gene/protein)",
+    commit: "74cf9488",
+    date: "2026-03-10",
+    command: "N/A (embedded fixture data)",
+};
 
 /// Embedded NCBI fixture data — pre-fetched QS gene × gut genus search results.
 const NCBI_FIXTURE: &str = r#"{
@@ -68,38 +73,20 @@ fn parse_fixture() -> NcbiFixture {
     })
 }
 
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
-
-/// Run all validation checks and return the results (no I/O or exit).
-fn run_validation(fixture: &NcbiFixture) -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    let total_gene_hits: u64 = fixture.genus_gene_hits.iter().map(|h| h.gene_count).sum();
+/// Run all validation checks (no I/O or exit).
+fn run_validation(fixture: &NcbiFixture, h: &mut ValidationHarness) {
+    let total_gene_hits: u64 = fixture.genus_gene_hits.iter().map(|x| x.gene_count).sum();
     let total_protein_hits: u64 = fixture
         .genus_gene_hits
         .iter()
-        .map(|h| h.protein_count)
+        .map(|x| x.protein_count)
         .sum();
 
     // 1. Found QS genes in gut microbes
-    results.push(ValidationResult::check(
-        EXP,
-        "found_qs_genes_in_gut",
-        bool_f64(total_gene_hits > 0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("found_qs_genes_in_gut", total_gene_hits > 0);
 
     // 2. Found proteins for QS genes
-    results.push(ValidationResult::check(
-        EXP,
-        "found_qs_proteins",
-        bool_f64(total_protein_hits > 0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("found_qs_proteins", total_protein_hits > 0);
 
     // 3. Multiple genera have QS genes
     let distinct_genera: HashSet<&str> = fixture
@@ -107,13 +94,7 @@ fn run_validation(fixture: &NcbiFixture) -> Vec<ValidationResult> {
         .iter()
         .map(|r| r.genus.as_str())
         .collect();
-    results.push(ValidationResult::check(
-        EXP,
-        "multiple_genera_have_qs",
-        bool_f64(distinct_genera.len() >= 3),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("multiple_genera_have_qs", distinct_genera.len() >= 3);
 
     // 4. luxS is the most widespread (AI-2 is universal)
     let luxs_genera: HashSet<&str> = fixture
@@ -128,31 +109,17 @@ fn run_validation(fixture: &NcbiFixture) -> Vec<ValidationResult> {
         .filter(|r| r.gene == "luxI")
         .map(|r| r.genus.as_str())
         .collect();
-    println!(
-        "  luxS in {} genera, luxI in {} genera",
-        luxs_genera.len(),
-        luxi_genera.len()
-    );
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "luxS_most_widespread",
-        bool_f64(luxs_genera.len() >= luxi_genera.len()),
-        1.0,
-        0.0,
-    ));
+        luxs_genera.len() >= luxi_genera.len(),
+    );
 
     // 5. E. coli uses AI-2 (luxS), not AHL (luxI) as primary QS system
     let ecoli_has_luxs = fixture
         .genus_gene_hits
         .iter()
         .any(|r| r.gene == "luxS" && r.genus == "Escherichia");
-    results.push(ValidationResult::check(
-        EXP,
-        "ecoli_uses_ai2_not_ahl",
-        bool_f64(ecoli_has_luxs),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("ecoli_uses_ai2_not_ahl", ecoli_has_luxs);
 
     // 6. All 3 QS gene types found
     let gene_types_found: HashSet<&str> = fixture
@@ -160,56 +127,24 @@ fn run_validation(fixture: &NcbiFixture) -> Vec<ValidationResult> {
         .iter()
         .map(|r| r.gene.as_str())
         .collect();
-    results.push(ValidationResult::check(
-        EXP,
-        "all_3_qs_gene_types_found",
-        bool_f64(gene_types_found.len() >= 3),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("all_3_qs_gene_types_found", gene_types_found.len() >= 3);
 
     // 7. Dataset sufficient for Anderson model (need diversity)
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "dataset_sufficient_for_anderson",
-        bool_f64(fixture.genus_gene_hits.len() >= 5),
-        1.0,
-        0.0,
-    ));
+        fixture.genus_gene_hits.len() >= 5,
+    );
 
     // 8. Fixture data has provenance
-    results.push(ValidationResult::check(
-        EXP,
-        "fixture_provenance_documented",
-        1.0,
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("fixture_provenance_documented", true);
 }
 
 fn cmd_validate() {
-    println!("=== exp043: QS Gene Dataset Fetch (luxI/luxS/agrB × gut genera) ===\n");
     let fixture = parse_fixture();
-    let results = run_validation(&fixture);
-
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!("\n  === Results Summary ===");
-    println!(
-        "  Genus-gene combinations with hits: {}",
-        fixture.genus_gene_hits.len()
-    );
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        std::process::exit(1);
-    }
+    let mut h = ValidationHarness::new("exp043_qs_gene_fetch");
+    h.print_provenance(&[&PROVENANCE]);
+    run_validation(&fixture, &mut h);
+    h.finish();
 }
 
 fn main() {
@@ -235,13 +170,19 @@ mod tests {
 
     #[test]
     fn all_validation_checks_pass() {
+        use ludospring_barracuda::validation::BufferSink;
+
         let fixture = parse_fixture();
-        let results = run_validation(&fixture);
-        let failures: Vec<_> = results.iter().filter(|r| !r.passed).collect();
+        let mut h = ValidationHarness::with_sink("exp043_test", BufferSink::default());
+        run_validation(&fixture, &mut h);
         assert!(
-            failures.is_empty(),
+            h.all_passed(),
             "failed checks: {:?}",
-            failures.iter().map(|r| &r.description).collect::<Vec<_>>()
+            h.checks()
+                .iter()
+                .filter(|c| !c.passed)
+                .map(|c| &c.label)
+                .collect::<Vec<_>>()
         );
     }
 }

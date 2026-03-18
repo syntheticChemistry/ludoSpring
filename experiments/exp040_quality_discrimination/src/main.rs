@@ -26,7 +26,14 @@ use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_engagement};
 use ludospring_barracuda::metrics::fun_keys::{FunKey, FunSignals, classify_fun};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Hunicke 2005, Csikszentmihalyi 1990, Yannakakis & Togelius)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (analytical — game archetypes)",
+};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -274,35 +281,14 @@ fn analyze_session(s: &ArchetypeSession) -> SessionAnalysis {
     clippy::too_many_lines,
     reason = "validation orchestrator — sequential check groups"
 )]
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
-)]
 fn cmd_validate() {
-    println!("=== exp040: Game Quality Discrimination ===\n");
-    println!("  5 archetypes x 2 quality levels = 10 synthetic sessions");
-    println!("  Metrics: engagement, flow, fun keys, DDA\n");
+    let mut h = ValidationHarness::new("exp040_quality_discrimination");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let experiment = "exp040_quality_discrimination";
-    let mut results = Vec::new();
     let sessions = generate_archetypes();
 
     let analyses: Vec<(&ArchetypeSession, SessionAnalysis)> =
         sessions.iter().map(|s| (s, analyze_session(s))).collect();
-
-    // Print all results
-    for (s, a) in &analyses {
-        println!(
-            "  {:12} ({:4}): eng={:.3} flow={:10} fun={:11} dda={:+.2}",
-            s.name,
-            s.quality,
-            a.engagement,
-            a.flow.as_str(),
-            a.dominant_fun.as_str(),
-            a.dda_adjustment
-        );
-    }
-    println!();
 
     // 1. Good games have higher engagement than bad games (same archetype)
     let archetypes = ["idle_clicker", "roguelike", "puzzle", "fps", "souls_like"];
@@ -321,31 +307,23 @@ fn cmd_validate() {
         .filter(|(s, _)| s.quality == "bad")
         .filter(|(_, a)| !matches!(a.flow, FlowState::Flow))
         .count();
-    results.push(ValidationResult::check(
-        experiment,
+    #[expect(clippy::cast_precision_loss, reason = "counts bounded by 10")]
+    h.check_abs(
         "flow_discriminates_quality",
         (good_in_flow + bad_not_in_flow) as f64,
         8.0, // 4+ good in flow, 4+ bad not in flow
         2.0, // some tolerance (idle clicker good is in boredom by design)
-    ));
-    println!("  [INFO] Good in flow: {good_in_flow}/5, Bad not in flow: {bad_not_in_flow}/5");
+    );
 
     // 2. Roguelike good → Easy Fun dominant (exploration-driven)
     let rogue_good = analyses
         .iter()
         .find(|(s, _)| s.name == "roguelike" && s.quality == "good");
     if let Some((_, a)) = rogue_good {
-        results.push(ValidationResult::check(
-            experiment,
+        h.check_bool(
             "roguelike_good_easy_fun",
-            if matches!(a.dominant_fun, FunKey::Easy) {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-            0.0,
-        ));
+            matches!(a.dominant_fun, FunKey::Easy),
+        );
     }
 
     // 3. Puzzle good → Serious Fun dominant (completion-driven)
@@ -353,17 +331,10 @@ fn cmd_validate() {
         .iter()
         .find(|(s, _)| s.name == "puzzle" && s.quality == "good");
     if let Some((_, a)) = puzzle_good {
-        results.push(ValidationResult::check(
-            experiment,
+        h.check_bool(
             "puzzle_good_serious_fun",
-            if matches!(a.dominant_fun, FunKey::Serious) {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-            0.0,
-        ));
+            matches!(a.dominant_fun, FunKey::Serious),
+        );
     }
 
     // 4. FPS good → has social/people signal (multiplayer)
@@ -371,13 +342,7 @@ fn cmd_validate() {
         .iter()
         .find(|(s, _)| s.name == "fps" && s.quality == "good");
     if let Some((s, _)) = fps_good {
-        results.push(ValidationResult::check(
-            experiment,
-            "fps_has_social_signal",
-            if s.social_signal > 0.0 { 1.0 } else { 0.0 },
-            1.0,
-            0.0,
-        ));
+        h.check_bool("fps_has_social_signal", s.social_signal > 0.0);
     }
 
     // 5. Souls-like good → high hard fun score (challenge + retry)
@@ -385,13 +350,7 @@ fn cmd_validate() {
         .iter()
         .find(|(s, _)| s.name == "souls_like" && s.quality == "good");
     if let Some((_, a)) = souls_good {
-        results.push(ValidationResult::check(
-            experiment,
-            "souls_high_hard_fun",
-            if a.hard_fun > 0.3 { 1.0 } else { 0.0 },
-            1.0,
-            0.0,
-        ));
+        h.check_bool("souls_high_hard_fun", a.hard_fun > 0.3);
     }
 
     // 6. Idle clicker good → Easy Fun dominant (low challenge, high completion)
@@ -399,17 +358,10 @@ fn cmd_validate() {
         .iter()
         .find(|(s, _)| s.name == "idle_clicker" && s.quality == "good");
     if let Some((_, a)) = idle_good {
-        results.push(ValidationResult::check(
-            experiment,
+        h.check_bool(
             "idle_easy_or_serious_fun",
-            if matches!(a.dominant_fun, FunKey::Easy | FunKey::Serious) {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-            0.0,
-        ));
+            matches!(a.dominant_fun, FunKey::Easy | FunKey::Serious),
+        );
     }
 
     // 7. Bad games trigger anxiety or boredom flow states
@@ -418,13 +370,13 @@ fn cmd_validate() {
         .filter(|(s, _)| s.quality == "bad")
         .filter(|(_, a)| matches!(a.flow, FlowState::Anxiety | FlowState::Boredom))
         .count();
-    results.push(ValidationResult::check(
-        experiment,
+    #[expect(clippy::cast_precision_loss, reason = "count bounded")]
+    h.check_abs(
         "bad_games_in_distress",
         bad_in_distress as f64,
         5.0, // all 5 bad games should be in anxiety/boredom
         1.0, // allow 1 to be in arousal
-    ));
+    );
 
     // 8. Good roguelike is in or near flow
     if let Some((_, a)) = rogue_good {
@@ -432,24 +384,12 @@ fn cmd_validate() {
             a.flow,
             FlowState::Flow | FlowState::Relaxation | FlowState::Arousal
         );
-        results.push(ValidationResult::check(
-            experiment,
-            "roguelike_good_near_flow",
-            if near_flow { 1.0 } else { 0.0 },
-            1.0,
-            0.0,
-        ));
+        h.check_bool("roguelike_good_near_flow", near_flow);
     }
 
     // 9. DDA correctly recommends increasing difficulty for easy games
     if let Some((_, a)) = idle_good {
-        results.push(ValidationResult::check(
-            experiment,
-            "dda_says_increase_for_idle",
-            if a.dda_adjustment > 0.0 { 1.0 } else { 0.0 },
-            1.0,
-            0.0,
-        ));
+        h.check_bool("dda_says_increase_for_idle", a.dda_adjustment > 0.0);
     }
 
     // 10. DDA correctly recommends decreasing difficulty for too-hard games
@@ -457,13 +397,7 @@ fn cmd_validate() {
         .iter()
         .find(|(s, _)| s.name == "puzzle" && s.quality == "bad");
     if let Some((_, a)) = bad_puzzle {
-        results.push(ValidationResult::check(
-            experiment,
-            "dda_says_decrease_for_hard",
-            if a.dda_adjustment < 0.0 { 1.0 } else { 0.0 },
-            1.0,
-            0.0,
-        ));
+        h.check_bool("dda_says_decrease_for_hard", a.dda_adjustment < 0.0);
     }
 
     // 11. All 5 archetypes produce distinct engagement profiles
@@ -479,37 +413,15 @@ fn cmd_validate() {
     let all_distinct = good_engagements
         .windows(2)
         .all(|w| (w[0] - w[1]).abs() > 0.001);
-    results.push(ValidationResult::check(
-        experiment,
-        "archetypes_distinct_engagement",
-        if all_distinct { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("archetypes_distinct_engagement", all_distinct);
 
     // 12. Engagement scores are in valid range for all sessions
     let all_valid = analyses
         .iter()
         .all(|(_, a)| a.engagement >= 0.0 && a.engagement <= 1.0);
-    results.push(ValidationResult::check(
-        experiment,
-        "all_engagement_valid_range",
-        if all_valid { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("all_engagement_valid_range", all_valid);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 fn cmd_report() {

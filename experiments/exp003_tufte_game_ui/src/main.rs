@@ -13,18 +13,15 @@
 //! Minecraft (Mojang, 2011), `StarCraft` (Blizzard, 1998).
 
 use ludospring_barracuda::metrics::tufte_gaming::{UiElement, analyze_game_ui};
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::tolerances;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Tufte 1983, Fagerholt & Lorentzon 2009)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (screenshot-derived measurements)",
+};
 
 fn doom_hud() -> Vec<UiElement> {
     vec![
@@ -145,88 +142,43 @@ fn rts_hud() -> Vec<UiElement> {
     ]
 }
 
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "UI element counts ≤ 100; notes.len() fits in u32"
-)]
 fn main() {
-    println!("=== Exp003: Tufte Game UI Comparison (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp003_tufte_game_ui");
+    h.print_provenance(&[&PROVENANCE]);
 
     let doom = analyze_game_ui(&doom_hud());
     let mc = analyze_game_ui(&minecraft_hud());
     let rts = analyze_game_ui(&rts_hud());
 
-    // Minecraft should have highest data-ink ratio (minimal chrome)
-    let r = ValidationResult::check(
-        "exp003_mc_best_ink",
+    h.check_lower(
         "Minecraft data-ink > 0.7 (minimal chrome HUD)",
         mc.data_ink_ratio,
-        0.8,
-        0.15,
+        0.7,
     );
-    report(&r);
-    results.push(r);
-
-    // Doom should have low data-ink due to status bar chrome
-    let r = ValidationResult::check(
-        "exp003_doom_chartjunk",
+    h.check_upper(
         "Doom data-ink < 0.2 (status bar chartjunk)",
         doom.data_ink_ratio,
-        0.12,
-        0.1,
+        0.2,
     );
-    report(&r);
-    results.push(r);
-
-    // RTS should cover > 25% of screen
-    let r = ValidationResult::check(
-        "exp003_rts_coverage",
+    h.check_lower(
         "RTS HUD covers > 25% of screen",
         rts.screen_coverage,
-        0.30,
-        0.10,
+        tolerances::MAX_HUD_COVERAGE,
     );
-    report(&r);
-    results.push(r);
-
-    // Minecraft should cover < 10% of screen
-    let r = ValidationResult::check(
-        "exp003_mc_minimal",
+    h.check_upper(
         "Minecraft HUD covers < 10% of screen",
         mc.screen_coverage,
-        0.04,
-        0.06,
+        0.10,
     );
-    report(&r);
-    results.push(r);
-
-    // RTS should be most information-dense
-    let r = ValidationResult::check(
-        "exp003_rts_dense",
-        "RTS info density > Minecraft info density",
-        rts.info_density,
-        mc.info_density + 10.0,
-        200.0,
+    h.check_bool(
+        "RTS more info-dense than Minecraft",
+        rts.info_density > mc.info_density,
     );
-    report(&r);
-    results.push(r);
-
-    // Doom status bar should trigger chartjunk note
-    let r = ValidationResult::check(
-        "exp003_doom_notes",
+    h.check_lower(
         "Doom triggers at least one Tufte warning",
-        f64::from(doom.notes.len() as u32),
+        doom.notes.len() as f64,
         1.0,
-        0.5,
     );
-    report(&r);
-    results.push(r);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

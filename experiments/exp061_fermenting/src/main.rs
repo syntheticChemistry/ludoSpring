@@ -20,83 +20,35 @@
 //!   8. Composable deployment: IPC wire format for inter-primal orchestration
 
 mod ferment;
-#[expect(
-    dead_code,
-    reason = "wire format types for IPC contract — constructed by remote callers, not locally"
-)]
+#[allow(dead_code)]
+// wire format types for IPC contract — constructed by remote callers, not locally
 mod protocol;
 mod validate_objects;
 mod validate_systems;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-const EXP: &str = "exp061_fermenting";
-
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — provenance trio integration)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 fn cmd_validate() {
-    println!("=== exp061: Fermenting System ===\n");
+    let mut h = ValidationHarness::new("exp061_fermenting");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut all_results = Vec::new();
+    validate_objects::validate_cosmetic_schema(&mut h);
+    validate_objects::validate_certificate_lifecycle(&mut h);
+    validate_systems::validate_trading_protocol(&mut h);
+    validate_objects::validate_object_memory(&mut h);
+    validate_systems::validate_trio_integration(&mut h);
+    validate_objects::validate_ownership_enforcement(&mut h);
+    validate_systems::validate_full_scenario(&mut h);
+    validate_systems::validate_composable_deployment(&mut h);
 
-    let sections: Vec<(&str, Vec<ValidationResult>)> = vec![
-        (
-            "Cosmetic Schema",
-            validate_objects::validate_cosmetic_schema(),
-        ),
-        (
-            "Certificate Lifecycle",
-            validate_objects::validate_certificate_lifecycle(),
-        ),
-        (
-            "Trading Protocol",
-            validate_systems::validate_trading_protocol(),
-        ),
-        ("Object Memory", validate_objects::validate_object_memory()),
-        (
-            "Trio Integration",
-            validate_systems::validate_trio_integration(),
-        ),
-        (
-            "Ownership Enforcement",
-            validate_objects::validate_ownership_enforcement(),
-        ),
-        ("Full Scenario", validate_systems::validate_full_scenario()),
-        (
-            "Composable Deployment — IPC Wire Format",
-            validate_systems::validate_composable_deployment(),
-        ),
-    ];
-
-    for (name, results) in sections {
-        println!("--- {name} ---");
-        for v in &results {
-            println!(
-                "  [{}] {}",
-                if v.passed { "PASS" } else { "FAIL" },
-                v.description
-            );
-        }
-        all_results.extend(results);
-        println!();
-    }
-
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let total = all_results.len();
-    println!("=== SUMMARY: {passed}/{total} checks passed ===");
-
-    if passed != total {
-        println!("\nFAILED:");
-        for r in all_results.iter().filter(|r| !r.passed) {
-            println!(
-                "  {} — measured={}, expected={}",
-                r.description, r.measured, r.expected
-            );
-        }
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

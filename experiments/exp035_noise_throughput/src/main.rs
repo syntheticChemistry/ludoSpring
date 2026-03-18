@@ -19,8 +19,15 @@ use std::process;
 use std::time::Instant;
 
 use ludospring_barracuda::procedural::noise;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use ludospring_benchmarks::noise as noise_bench;
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — BM-002 spec, fastnoise-lite comparison)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (throughput benchmark)",
+};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -36,79 +43,43 @@ fn main() {
 }
 
 #[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
-#[expect(
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
 fn cmd_validate() {
-    println!("=== exp035: BM-002 Noise Throughput Validation ===\n");
-
-    let experiment = "exp035_noise_throughput";
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp035_noise_throughput");
+    h.print_provenance(&[&PROVENANCE]);
 
     // 1. Perlin 2D 1024x1024 completes
     let t = Instant::now();
     let field = noise_bench::perlin_2d_field(1024, 0.01);
     let perlin_1024_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
+    #[expect(clippy::cast_precision_loss, reason = "field len fits in f64 mantissa")]
+    h.check_abs(
         "perlin_2d_1024x1024_completes",
         field.len() as f64,
         f64::from(1024 * 1024),
         0.0,
-    ));
-    println!(
-        "  [INFO] Perlin 2D 1024x1024: {perlin_1024_us}us ({:.1}M samples/s)",
-        1_048_576.0 / perlin_1024_us as f64
     );
 
     // 2. Perlin 2D values bounded [-1, 1]
     let all_bounded = field.iter().all(|&v| (-1.0..=1.0).contains(&v));
-    results.push(ValidationResult::check(
-        experiment,
-        "perlin_2d_values_bounded",
-        if all_bounded { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("perlin_2d_values_bounded", all_bounded);
 
     // 3. Perlin 2D deterministic (same seed = same output)
     let field2 = noise_bench::perlin_2d_field(64, 0.1);
     let field3 = noise_bench::perlin_2d_field(64, 0.1);
-    let deterministic = field2 == field3;
-    results.push(ValidationResult::check(
-        experiment,
-        "perlin_2d_deterministic",
-        if deterministic { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("perlin_2d_deterministic", field2 == field3);
 
     // 4. fBm 2D 512x512 4-octave completes under 500ms
     let t = Instant::now();
     let fbm_field = noise_bench::fbm_2d_field(512, 0.01, 4);
     let fbm_512_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "fbm_2d_512x512_oct4_under_500ms",
-        if fbm_512_us < 500_000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] fBm 2D 512x512 oct4: {fbm_512_us}us");
+    h.check_bool("fbm_2d_512x512_oct4_under_500ms", fbm_512_us < 500_000);
 
     // 5. fBm values bounded (with octave headroom)
     let fbm_bounded = fbm_field.iter().all(|&v| v.abs() < 2.0);
-    results.push(ValidationResult::check(
-        experiment,
-        "fbm_2d_values_bounded",
-        if fbm_bounded { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("fbm_2d_values_bounded", fbm_bounded);
 
     // 6. fastnoise-lite comparison: Perlin 256x256
     let t_fnl = Instant::now();
@@ -141,52 +112,34 @@ fn cmd_validate() {
         0.0
     };
     // Spec target: CPU within 2x of noise-rs/fastnoise-lite
-    results.push(ValidationResult::check(
-        experiment,
-        "perlin_within_3x_fastnoise",
-        if ratio < 3.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] 256x256 Perlin: ours={our_us}us, fastnoise={fnl_us}us, ratio={ratio:.2}x");
+    h.check_bool("perlin_within_3x_fastnoise", ratio < 3.0);
 
     // 7. Perlin 3D 64x64x64 completes
     let t = Instant::now();
     let field_3d = noise_bench::perlin_3d_field(64, 64, 0.05);
-    let p3d_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
+    let _p3d_us = t.elapsed().as_micros();
+    #[expect(clippy::cast_precision_loss, reason = "field len fits in f64 mantissa")]
+    h.check_abs(
         "perlin_3d_64x64x64_completes",
         field_3d.len() as f64,
         f64::from(64 * 64 * 64),
         0.0,
-    ));
-    println!(
-        "  [INFO] Perlin 3D 64^3: {p3d_us}us ({} samples)",
-        field_3d.len()
     );
 
     // 8. fBm 3D 32x32x32 with 4 octaves
     let t = Instant::now();
     let fbm_3d = noise_bench::fbm_3d_field(32, 32, 0.05, 4);
-    let fbm3d_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
+    let _fbm3d_us = t.elapsed().as_micros();
+    #[expect(clippy::cast_precision_loss, reason = "field len fits in f64 mantissa")]
+    h.check_abs(
         "fbm_3d_32x32x32_oct4_completes",
         fbm_3d.len() as f64,
         f64::from(32 * 32 * 32),
         0.0,
-    ));
-    println!("  [INFO] fBm 3D 32^3 oct4: {fbm3d_us}us");
+    );
 
     // 9. 1024x1024 under 1 second (60 Hz game loop budget = 16.67ms per frame)
-    results.push(ValidationResult::check(
-        experiment,
-        "perlin_1024x1024_under_1s",
-        if perlin_1024_us < 1_000_000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("perlin_1024x1024_under_1s", perlin_1024_us < 1_000_000);
 
     // 10. Throughput > 500K samples/s for 2D Perlin
     let throughput = if perlin_1024_us > 0 {
@@ -194,26 +147,9 @@ fn cmd_validate() {
     } else {
         0.0
     };
-    results.push(ValidationResult::check(
-        experiment,
-        "perlin_throughput_500k_sps",
-        if throughput > 500_000.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Throughput: {throughput:.0} samples/s");
+    h.check_lower("perlin_throughput_500k_sps", throughput, 500_000.0);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 #[expect(

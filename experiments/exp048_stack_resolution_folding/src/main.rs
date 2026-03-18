@@ -26,7 +26,7 @@
 
 mod model;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use model::{
     BoardState, Stack, Target, bolt_to_face, giant_growth, lightning_bolt,
     scenario_bolt_then_growth, scenario_growth_then_bolt, scenario_murder_no_response,
@@ -34,154 +34,79 @@ use model::{
     scenario_triple_stack_growth_wins,
 };
 
-const EXP: &str = "exp048_stack_resolution_folding";
-
-// ===========================================================================
-// Validation helpers
-// ===========================================================================
-
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — MTG stack folding)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 // ===========================================================================
 // Validation
 // ===========================================================================
 
-fn validate_same_cards_different_outcome() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // Scenario 1: Bolt + Growth — same two cards, different resolution order
+fn validate_same_cards_different_outcome(h: &mut ValidationHarness) {
     let board_a = scenario_bolt_then_growth();
     let board_b = scenario_growth_then_bolt();
 
     let bear_dead_a = board_a.graveyard.contains(&"bear");
     let bear_dead_b = board_b.graveyard.contains(&"bear");
 
-    results.push(ValidationResult::check(
-        EXP,
-        "bolt_responds_to_growth_bear_dies",
-        bool_f64(bear_dead_a),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "growth_responds_to_bolt_bear_lives",
-        bool_f64(!bear_dead_b),
-        1.0,
-        0.0,
-    ));
-
-    // The fundamental finding: same cards, opposite outcomes
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("bolt_responds_to_growth_bear_dies", bear_dead_a);
+    h.check_bool("growth_responds_to_bolt_bear_lives", !bear_dead_b);
+    h.check_bool(
         "same_two_cards_opposite_outcomes",
-        bool_f64(bear_dead_a != bear_dead_b),
-        1.0,
-        0.0,
-    ));
+        bear_dead_a != bear_dead_b,
+    );
 
-    // In scenario B, bear should be 5/5 with 3 damage (alive)
     let Some(bear_b) = board_b.creatures.iter().find(|c| c.name == "bear") else {
         eprintln!("FATAL: bear must exist in growth scenario");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "pumped_bear_is_5_5",
         f64::from(bear_b.effective_power()),
         5.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "pumped_bear_has_3_damage",
         f64::from(bear_b.damage),
         3.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "pumped_bear_survives_bolt",
-        bool_f64(!bear_b.is_dead()),
-        1.0,
-        0.0,
-    ));
-
-    results
+    );
+    h.check_bool("pumped_bear_survives_bolt", !bear_b.is_dead());
 }
 
-fn validate_destroy_vs_regenerate() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_destroy_vs_regenerate(h: &mut ValidationHarness) {
     let board_regen = scenario_regen_before_murder();
     let board_no_regen = scenario_murder_no_response();
 
     let bear_lives_with_regen = !board_regen.graveyard.contains(&"bear");
     let bear_dies_without_regen = board_no_regen.graveyard.contains(&"bear");
 
-    results.push(ValidationResult::check(
-        EXP,
-        "regen_before_murder_bear_lives",
-        bool_f64(bear_lives_with_regen),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "murder_without_response_bear_dies",
-        bool_f64(bear_dies_without_regen),
-        1.0,
-        0.0,
-    ));
-
-    // Same destroy spell, opposite outcome based on response timing
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("regen_before_murder_bear_lives", bear_lives_with_regen);
+    h.check_bool("murder_without_response_bear_dies", bear_dies_without_regen);
+    h.check_bool(
         "regenerate_timing_determines_survival",
-        bool_f64(bear_lives_with_regen && bear_dies_without_regen),
-        1.0,
-        0.0,
-    ));
-
-    results
+        bear_lives_with_regen && bear_dies_without_regen,
+    );
 }
 
-fn validate_triple_stack() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_triple_stack(h: &mut ValidationHarness) {
     let board_bolt_wins = scenario_triple_stack_bolt_wins();
     let board_growth_wins = scenario_triple_stack_growth_wins();
 
     let bear_dead_bolt = board_bolt_wins.graveyard.contains(&"bear");
     let bear_dead_growth = board_growth_wins.graveyard.contains(&"bear");
 
-    results.push(ValidationResult::check(
-        EXP,
-        "triple_stack_bolt_timing_kills_bear",
-        bool_f64(bear_dead_bolt),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "triple_stack_growth_timing_saves_bear",
-        bool_f64(!bear_dead_growth),
-        1.0,
-        0.0,
-    ));
-
-    // Three cards, two orderings, opposite outcomes
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("triple_stack_bolt_timing_kills_bear", bear_dead_bolt);
+    h.check_bool("triple_stack_growth_timing_saves_bear", !bear_dead_growth);
+    h.check_bool(
         "three_cards_two_orderings_opposite_outcomes",
-        bool_f64(bear_dead_bolt != bear_dead_growth),
-        1.0,
-        0.0,
-    ));
+        bear_dead_bolt != bear_dead_growth,
+    );
 
-    // In the growth-wins scenario, bear should be 8/8 (two Giant Growths resolved)
     let Some(bear_g) = board_growth_wins
         .creatures
         .iter()
@@ -190,62 +115,34 @@ fn validate_triple_stack() -> Vec<ValidationResult> {
         eprintln!("FATAL: bear must exist in growth-wins scenario");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "double_pumped_bear_is_8_8",
         f64::from(bear_g.effective_power()),
         8.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "double_pumped_bear_has_3_damage",
         f64::from(bear_g.damage),
         3.0,
         0.0,
-    ));
+    );
 
-    // Resolution log should show 3 resolutions
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "bolt_wins_log_has_entries",
-        bool_f64(!board_bolt_wins.resolution_log.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !board_bolt_wins.resolution_log.is_empty(),
+    );
+    h.check_bool(
         "growth_wins_log_has_entries",
-        bool_f64(!board_growth_wins.resolution_log.is_empty()),
-        1.0,
-        0.0,
-    ));
-
-    results
+        !board_growth_wins.resolution_log.is_empty(),
+    );
 }
 
 #[expect(
     clippy::cast_precision_loss,
-    reason = "ValidationResult::check expects f64; integer metrics are intentional"
+    reason = "harness check expects f64; integer metrics are intentional"
 )]
-fn validate_folding_isomorphism() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // The folding isomorphism:
-    //
-    // | Concept       | MTG Stack                    | Protein Folding               |
-    // |---------------|------------------------------|-------------------------------|
-    // | Sequence      | Card text (deterministic)    | Amino acid chain (det.)       |
-    // | Structure     | Resolution order on stack    | 3D fold conformation          |
-    // | Function      | Game outcome (who wins)      | Biological function           |
-    // | Environment   | Opponent responses           | Solvent, pH, temperature      |
-    // | Misfolding    | Misplay (wrong timing)       | Disease-causing misfolding    |
-    // | Degeneracy    | Multiple paths to same win   | Multiple folds with function  |
-    //
-    // Key property: sequence does NOT determine function.
-    // Same cards (sequence) + different order (structure) = different outcome (function).
-
-    // Count unique outcomes across our scenarios
+fn validate_folding_isomorphism(h: &mut ValidationHarness) {
     let scenarios: Vec<(&str, BoardState)> = vec![
         ("bolt_responds_to_growth", scenario_bolt_then_growth()),
         ("growth_responds_to_bolt", scenario_growth_then_bolt()),
@@ -255,15 +152,8 @@ fn validate_folding_isomorphism() -> Vec<ValidationResult> {
         ("triple_growth_wins", scenario_triple_stack_growth_wins()),
     ];
 
-    results.push(ValidationResult::check(
-        EXP,
-        "six_scenarios_tested",
-        scenarios.len() as f64,
-        6.0,
-        0.0,
-    ));
+    h.check_abs("six_scenarios_tested", scenarios.len() as f64, 6.0, 0.0);
 
-    // Compute the "fold" — the outcome fingerprint
     let outcomes: Vec<(&str, bool, i32)> = scenarios
         .iter()
         .map(|(name, board)| {
@@ -277,113 +167,57 @@ fn validate_folding_isomorphism() -> Vec<ValidationResult> {
         })
         .collect();
 
-    // Same "sequence" (bolt + growth) produces two distinct "folds"
-    let bolt_growth_fold_a = &outcomes[0]; // bear dead
-    let bolt_growth_fold_b = &outcomes[1]; // bear alive at 5/5
-    results.push(ValidationResult::check(
-        EXP,
+    let bolt_growth_fold_a = &outcomes[0];
+    let bolt_growth_fold_b = &outcomes[1];
+    h.check_bool(
         "same_sequence_different_folds",
-        bool_f64(bolt_growth_fold_a.1 != bolt_growth_fold_b.1),
-        1.0,
-        0.0,
-    ));
+        bolt_growth_fold_a.1 != bolt_growth_fold_b.1,
+    );
 
-    // The "functional" difference: bear power
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "fold_a_no_function_bear_dead",
         f64::from(bolt_growth_fold_a.2),
         0.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "fold_b_functional_bear_power_5",
         f64::from(bolt_growth_fold_b.2),
         5.0,
         0.0,
-    ));
-
-    // The semantic space: with N instant-speed spells, the number of possible
-    // stack orderings grows combinatorially. Even with just 3 cards, we get
-    // dramatically different outcomes. This is why card text alone doesn't solve
-    // the game — the interaction ordering is the unsolved space.
-    //
-    // For N cards that can be ordered on the stack:
-    // - 2 cards: 2 orderings
-    // - 3 cards: 6 orderings (3!)
-    // - 4 cards: 24 orderings
-    // - 5 cards: 120 orderings
-    // - In practice, each player can respond to each item, so it's even more.
-    //
-    // This is the "folding problem": deterministic components,
-    // combinatorial interaction space.
+    );
 
     let two_card_orderings = 2;
     let three_card_orderings = 6;
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "two_card_semantic_space_2",
         f64::from(two_card_orderings),
         2.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "three_card_semantic_space_6",
         f64::from(three_card_orderings),
         6.0,
         0.0,
-    ));
+    );
 
-    // Degeneracy: multiple different resolution paths can lead to the same outcome.
-    // In scenarios 1 and 4 (bolt_then_growth, murder_no_response), the bear dies
-    // via completely different mechanisms (lethal damage vs destroy effect).
-    // Same phenotype (bear dead), different genotype path. = degenerate code.
     let death_count = outcomes.iter().filter(|o| !o.1).count();
-    results.push(ValidationResult::check(
-        EXP,
-        "multiple_paths_to_same_death_outcome",
-        bool_f64(death_count >= 2),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("multiple_paths_to_same_death_outcome", death_count >= 2);
 
-    // Similarly, bear survives in scenarios 2, 3, 6 via different mechanisms
-    // (pump, regeneration, double-pump). Same phenotype, different structure.
     let survivals: Vec<_> = outcomes.iter().filter(|o| o.1).collect();
-    results.push(ValidationResult::check(
-        EXP,
-        "multiple_paths_to_survival",
-        bool_f64(survivals.len() >= 2),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("multiple_paths_to_survival", survivals.len() >= 2);
 
-    // But the "power" of surviving bears differs — degenerate in survival,
-    // non-degenerate in final state. Like two correct protein folds with
-    // different binding affinities.
     let survival_powers: Vec<i32> = survivals.iter().map(|o| o.2).collect();
     let all_same_power = survival_powers.windows(2).all(|w| w[0] == w[1]);
-    results.push(ValidationResult::check(
-        EXP,
-        "surviving_bears_have_different_power",
-        bool_f64(!all_same_power),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("surviving_bears_have_different_power", !all_same_power);
 }
 
 #[expect(
     clippy::cast_precision_loss,
-    reason = "ValidationResult::check expects f64; integer metrics are intentional"
+    reason = "harness check expects f64; integer metrics are intentional"
 )]
-fn validate_stack_lifo_mechanics() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // Verify LIFO ordering explicitly
+fn validate_stack_lifo_mechanics(h: &mut ValidationHarness) {
     let mut stack = Stack::new();
     let id_a = stack.cast(bolt_to_face(), "bob", vec![Target::Player("bob")]);
     let id_b = stack.respond(
@@ -399,123 +233,61 @@ fn validate_stack_lifo_mechanics() -> Vec<ValidationResult> {
         id_b,
     );
 
-    // Stack should have 3 items
-    results.push(ValidationResult::check(
-        EXP,
-        "stack_has_three_items",
-        stack.items.len() as f64,
-        3.0,
-        0.0,
-    ));
+    h.check_abs("stack_has_three_items", stack.items.len() as f64, 3.0, 0.0);
 
-    // Resolve order should be C, B, A (LIFO)
     let Some(first) = stack.resolve_top() else {
         eprintln!("FATAL: stack has items to resolve");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "lifo_first_resolves_is_last_cast",
-        bool_f64(first.card.name == "Lightning Bolt"),
-        1.0,
-        0.0,
-    ));
+        first.card.name == "Lightning Bolt",
+    );
 
     let Some(second) = stack.resolve_top() else {
         eprintln!("FATAL: stack has items to resolve (second)");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "lifo_second_resolves_is_middle",
-        bool_f64(second.card.name == "Giant Growth"),
-        1.0,
-        0.0,
-    ));
+        second.card.name == "Giant Growth",
+    );
 
     let Some(third) = stack.resolve_top() else {
         eprintln!("FATAL: stack has items to resolve (third)");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "lifo_third_resolves_is_first_cast",
-        bool_f64(third.card.name == "Lightning Bolt"),
-        1.0,
-        0.0,
-    ));
+        third.card.name == "Lightning Bolt",
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
-        "stack_empty_after_full_resolution",
-        bool_f64(stack.is_empty()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("stack_empty_after_full_resolution", stack.is_empty());
 
-    // Response chain: each item knows what it's responding to
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "first_cast_has_no_response_target",
-        bool_f64(first.responding_to.is_some()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        first.responding_to.is_some(),
+    );
+    h.check_bool(
         "response_chain_is_linked",
-        bool_f64(second.responding_to == Some(id_a)),
-        1.0,
-        0.0,
-    ));
-
-    results
+        second.responding_to == Some(id_a),
+    );
 }
 
-fn validate_dag_from_stack() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // The stack creates a DAG structure:
-    //   - Each cast is a vertex
-    //   - Each "in response to" is a parent edge
-    //   - Resolution order is the reverse topological sort
-    //
-    // This DAG is structurally identical to the text adventure DAG (exp046)
-    // and the field genomics DAG. The "response chain" is the lineage.
-
+fn validate_dag_from_stack(h: &mut ValidationHarness) {
     let mut stack = Stack::new();
     let a = stack.cast(lightning_bolt(), "bob", vec![Target::Creature("bear")]);
     let b = stack.respond(giant_growth(), "alice", vec![Target::Creature("bear")], a);
     let c = stack.respond(lightning_bolt(), "bob", vec![Target::Creature("bear")], b);
 
-    // DAG structure: a ← b ← c (each responds to previous)
     let item_a = &stack.items[0];
     let item_b = &stack.items[1];
     let item_c = &stack.items[2];
 
-    results.push(ValidationResult::check(
-        EXP,
-        "root_cast_has_no_parent",
-        bool_f64(item_a.responding_to.is_none()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "response_b_parents_to_a",
-        bool_f64(item_b.responding_to == Some(a)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "response_c_parents_to_b",
-        bool_f64(item_c.responding_to == Some(b)),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("root_cast_has_no_parent", item_a.responding_to.is_none());
+    h.check_bool("response_b_parents_to_a", item_b.responding_to == Some(a));
+    h.check_bool("response_c_parents_to_b", item_c.responding_to == Some(b));
 
-    // Lineage depth = 3 (same concept as crown lineage in exp046)
     let mut depth = 0;
     let mut current = Some(c);
     while let Some(id) = current {
@@ -526,15 +298,7 @@ fn validate_dag_from_stack() -> Vec<ValidationResult> {
             .find(|i| i.id == id)
             .and_then(|i| i.responding_to);
     }
-    results.push(ValidationResult::check(
-        EXP,
-        "response_chain_depth_3",
-        f64::from(depth),
-        3.0,
-        0.0,
-    ));
-
-    results
+    h.check_abs("response_chain_depth_3", f64::from(depth), 3.0, 0.0);
 }
 
 // ===========================================================================
@@ -542,91 +306,17 @@ fn validate_dag_from_stack() -> Vec<ValidationResult> {
 // ===========================================================================
 
 fn cmd_validate() {
-    println!("=== exp048: Stack Resolution as Folding ===\n");
-    println!("Card text is the genotype. Resolution order is the phenotype.\n");
+    let mut h = ValidationHarness::new("exp048_stack_resolution_folding");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut all_results = Vec::new();
+    validate_same_cards_different_outcome(&mut h);
+    validate_destroy_vs_regenerate(&mut h);
+    validate_triple_stack(&mut h);
+    validate_folding_isomorphism(&mut h);
+    validate_stack_lifo_mechanics(&mut h);
+    validate_dag_from_stack(&mut h);
 
-    println!("--- Same Cards, Different Outcome ---");
-    let r = validate_same_cards_different_outcome();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Destroy vs Regenerate Timing ---");
-    let r = validate_destroy_vs_regenerate();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Triple Stack Complexity ---");
-    let r = validate_triple_stack();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Folding Isomorphism ---");
-    let r = validate_folding_isomorphism();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Stack LIFO Mechanics ---");
-    let r = validate_stack_lifo_mechanics();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- DAG from Stack (Response Chain) ---");
-    let r = validate_dag_from_stack();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let total = all_results.len();
-    println!("\n=== SUMMARY: {passed}/{total} checks passed ===");
-
-    if passed != total {
-        println!("\nFAILED:");
-        for r in all_results.iter().filter(|r| !r.passed) {
-            println!(
-                "  {} — measured={}, expected={}",
-                r.description, r.measured, r.expected
-            );
-        }
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

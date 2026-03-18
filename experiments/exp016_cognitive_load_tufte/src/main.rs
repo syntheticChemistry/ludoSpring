@@ -16,18 +16,14 @@
 use ludospring_barracuda::interaction::input_laws::hick_reaction_time;
 use ludospring_barracuda::metrics::tufte_gaming::{UiElement, analyze_game_ui};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Tufte 1983, Sweller 1988, Hick 1952)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (analytical)",
+};
 
 fn minimal_hud() -> Vec<UiElement> {
     vec![
@@ -140,79 +136,28 @@ fn maximal_hud() -> Vec<UiElement> {
     ]
 }
 
-fn validate_tufte_sweep(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Tufte metrics across UI complexities");
+fn validate_tufte_sweep(h: &mut ValidationHarness) {
     let min_report = analyze_game_ui(&minimal_hud());
-    let mod_report = analyze_game_ui(&moderate_hud());
+    let _mod_report = analyze_game_ui(&moderate_hud());
     let max_report = analyze_game_ui(&maximal_hud());
 
-    // Minimal HUD should have highest data-ink ratio
-    let r = ValidationResult::check(
-        "exp016_minimal_ink",
+    h.check_bool(
         "minimal HUD: highest data-ink ratio",
-        if min_report.data_ink_ratio > max_report.data_ink_ratio {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        min_report.data_ink_ratio > max_report.data_ink_ratio,
     );
-    report(&r);
-    results.push(r);
 
-    // Maximal HUD should have highest screen coverage
-    let r = ValidationResult::check(
-        "exp016_maximal_coverage",
+    h.check_bool(
         "maximal HUD: highest screen coverage",
-        if max_report.screen_coverage > min_report.screen_coverage {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        max_report.screen_coverage > min_report.screen_coverage,
     );
-    report(&r);
-    results.push(r);
 
-    // Maximal HUD should trigger more warnings
-    let r = ValidationResult::check(
-        "exp016_maximal_warnings",
+    h.check_bool(
         "maximal HUD: more Tufte warnings than minimal",
-        if max_report.notes.len() >= min_report.notes.len() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
-
-    println!(
-        "\n  Minimal: ink={:.3}, coverage={:.3}, notes={}",
-        min_report.data_ink_ratio,
-        min_report.screen_coverage,
-        min_report.notes.len()
-    );
-    println!(
-        "  Moderate: ink={:.3}, coverage={:.3}, notes={}",
-        mod_report.data_ink_ratio,
-        mod_report.screen_coverage,
-        mod_report.notes.len()
-    );
-    println!(
-        "  Maximal: ink={:.3}, coverage={:.3}, notes={}",
-        max_report.data_ink_ratio,
-        max_report.screen_coverage,
-        max_report.notes.len()
+        max_report.notes.len() >= min_report.notes.len(),
     );
 }
 
-fn validate_cognitive_load(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Cognitive load via Hick's law");
+fn validate_cognitive_load(h: &mut ValidationHarness) {
     let a = tolerances::HICK_A_MS;
     let b = tolerances::HICK_B_MS;
 
@@ -220,87 +165,44 @@ fn validate_cognitive_load(results: &mut Vec<ValidationResult>) {
     let rt_moderate = hick_reaction_time(moderate_hud().len(), a, b);
     let rt_maximal = hick_reaction_time(maximal_hud().len(), a, b);
 
-    let r = ValidationResult::check(
-        "exp016_hick_ordering",
+    h.check_bool(
         "more UI elements → slower decisions (Hick's law)",
-        if rt_minimal < rt_moderate && rt_moderate < rt_maximal {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        rt_minimal < rt_moderate && rt_moderate < rt_maximal,
     );
-    report(&r);
-    results.push(r);
 
-    let r = ValidationResult::check(
-        "exp016_hick_logarithmic",
+    h.check_abs(
         "decision time grows logarithmically, not linearly",
         rt_maximal / rt_minimal,
         1.5,
         0.5,
     );
-    report(&r);
-    results.push(r);
-
-    println!(
-        "\n  Hick RT: minimal={rt_minimal:.0}ms, moderate={rt_moderate:.0}ms, maximal={rt_maximal:.0}ms"
-    );
 }
 
-fn validate_information_density(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Information density tradeoff");
+fn validate_information_density(h: &mut ValidationHarness) {
     let min_report = analyze_game_ui(&minimal_hud());
     let max_report = analyze_game_ui(&maximal_hud());
 
-    // Both should produce finite, positive metrics
-    let r = ValidationResult::check(
-        "exp016_all_finite",
+    h.check_bool(
         "all Tufte metrics are finite and non-negative",
-        if min_report.data_ink_ratio >= 0.0
+        min_report.data_ink_ratio >= 0.0
             && max_report.data_ink_ratio >= 0.0
             && min_report.info_density >= 0.0
-            && max_report.info_density >= 0.0
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+            && max_report.info_density >= 0.0,
     );
-    report(&r);
-    results.push(r);
 
-    // Maximal HUD should have higher info density (more data values)
-    let r = ValidationResult::check(
-        "exp016_density_ordering",
+    h.check_bool(
         "maximal HUD has higher info density",
-        if max_report.info_density > min_report.info_density {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        max_report.info_density > min_report.info_density,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp016: Cognitive Load Tufte Sweep (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp016_cognitive_load_tufte");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_tufte_sweep(&mut results);
-    validate_cognitive_load(&mut results);
-    validate_information_density(&mut results);
+    validate_tufte_sweep(&mut h);
+    validate_cognitive_load(&mut h);
+    validate_information_density(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

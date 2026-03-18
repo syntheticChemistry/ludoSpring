@@ -33,9 +33,14 @@
 //! different environments (opponents/conditions) produces novel expression
 //! patterns every time. The provenance challenge is identical.
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-const EXP: &str = "exp049_novel_data_combinatorics";
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — game tree combinatorics)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 // ===========================================================================
 // Decision-point model
@@ -309,108 +314,75 @@ fn birthday_bound(log10_states: f64) -> f64 {
 // Validation
 // ===========================================================================
 
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
-
-fn validate_solo_branching() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_solo_branching(h: &mut ValidationHarness) {
     let decks = [aggro_deck(), control_deck(), midrange_deck(), combo_deck()];
 
     for deck in &decks {
         let turn = deck.typical_turn();
         let factor = turn.total_branch_factor();
 
-        // Every deck should have meaningful branching (> 1)
         let Some(first_word) = deck.name.split_whitespace().next() else {
             eprintln!("FATAL: deck name has no first word");
             std::process::exit(1);
         };
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             &format!("solo_{}_branches_per_turn_gt_1", first_word.to_lowercase()),
-            bool_f64(factor > 1),
-            1.0,
-            0.0,
-        ));
+            factor > 1,
+        );
     }
 
-    // Control deck should have MORE branching than aggro (more instants, more choices)
     let aggro_factor = aggro_deck().typical_turn().total_branch_factor();
     let control_factor = control_deck().typical_turn().total_branch_factor();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "control_more_branches_than_aggro",
-        bool_f64(control_factor > aggro_factor),
-        1.0,
-        0.0,
-    ));
+        control_factor > aggro_factor,
+    );
 
-    // Combo deck should have huge branching (large hand, many instants)
     let combo_factor = combo_deck().typical_turn().total_branch_factor();
-    results.push(ValidationResult::check(
-        EXP,
-        "combo_massive_branching",
-        bool_f64(combo_factor > 1_000),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("combo_massive_branching", combo_factor > 1_000);
 }
 
 #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
-fn validate_stack_factorial() -> Vec<ValidationResult> {
-    vec![
-        ValidationResult::check(
-            EXP,
-            "stack_1_spell_1_ordering",
-            stack_orderings(1) as f64,
-            1.0,
-            0.0,
-        ),
-        ValidationResult::check(
-            EXP,
-            "stack_2_spells_2_orderings",
-            stack_orderings(2) as f64,
-            2.0,
-            0.0,
-        ),
-        ValidationResult::check(
-            EXP,
-            "stack_3_spells_6_orderings",
-            stack_orderings(3) as f64,
-            6.0,
-            0.0,
-        ),
-        ValidationResult::check(
-            EXP,
-            "stack_5_spells_120_orderings",
-            stack_orderings(5) as f64,
-            120.0,
-            0.0,
-        ),
-        ValidationResult::check(
-            EXP,
-            "stack_7_spells_5040_orderings",
-            stack_orderings(7) as f64,
-            5040.0,
-            0.0,
-        ),
-        ValidationResult::check(
-            EXP,
-            "stack_10_spells_3628800_orderings",
-            stack_orderings(10) as f64,
-            3_628_800.0,
-            0.0,
-        ),
-    ]
+fn validate_stack_factorial(h: &mut ValidationHarness) {
+    h.check_abs(
+        "stack_1_spell_1_ordering",
+        stack_orderings(1) as f64,
+        1.0,
+        0.0,
+    );
+    h.check_abs(
+        "stack_2_spells_2_orderings",
+        stack_orderings(2) as f64,
+        2.0,
+        0.0,
+    );
+    h.check_abs(
+        "stack_3_spells_6_orderings",
+        stack_orderings(3) as f64,
+        6.0,
+        0.0,
+    );
+    h.check_abs(
+        "stack_5_spells_120_orderings",
+        stack_orderings(5) as f64,
+        120.0,
+        0.0,
+    );
+    h.check_abs(
+        "stack_7_spells_5040_orderings",
+        stack_orderings(7) as f64,
+        5040.0,
+        0.0,
+    );
+    h.check_abs(
+        "stack_10_spells_3628800_orderings",
+        stack_orderings(10) as f64,
+        3_628_800.0,
+        0.0,
+    );
 }
 
-fn validate_two_player_explosion() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_two_player_explosion(h: &mut ValidationHarness) {
     let aggro = aggro_deck();
     let control = control_deck();
     let midrange = midrange_deck();
@@ -418,201 +390,96 @@ fn validate_two_player_explosion() -> Vec<ValidationResult> {
     let aggro_solo = aggro.typical_turn().total_branch_factor();
     let control_solo = control.typical_turn().total_branch_factor();
 
-    // Aggro vs Control: two-player factor should be much larger than either solo
     let aggro_turn = aggro.typical_turn();
     let control_turn = control.typical_turn();
     let two_player = two_player_turn_factor(&aggro_turn, &control_turn);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "two_player_gt_aggro_solo",
-        bool_f64(two_player > aggro_solo),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "two_player_gt_control_solo",
-        bool_f64(two_player > control_solo),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("two_player_gt_aggro_solo", two_player > aggro_solo);
+    h.check_bool("two_player_gt_control_solo", two_player > control_solo);
 
-    // The two-player factor should be roughly the product of solo factors
-    // (it's actually more because of interleaved response windows)
     let product_approx = aggro_solo * control_solo;
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "two_player_approaches_product",
-        bool_f64(two_player >= product_approx),
-        1.0,
-        0.0,
-    ));
+        two_player >= product_approx,
+    );
 
-    // Mirror match (midrange vs midrange) still has unique factor
     let mid_turn = midrange.typical_turn();
     let mirror = two_player_turn_factor(&mid_turn, &mid_turn);
     let mid_solo = mid_turn.total_branch_factor();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "mirror_match_exceeds_solo_squared",
-        bool_f64(mirror >= mid_solo * mid_solo),
-        1.0,
-        0.0,
-    ));
-
-    results
+        mirror >= mid_solo * mid_solo,
+    );
 }
 
-fn validate_game_tree_scale() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_game_tree_scale(h: &mut ValidationHarness) {
     let aggro = aggro_deck();
     let control = control_deck();
     let aggro_turn = aggro.typical_turn();
     let control_turn = control.typical_turn();
 
     let per_turn = two_player_turn_factor(&aggro_turn, &control_turn);
-    let typical_game_turns = 12; // MTG average (aggro=7, control=20, midrange=12)
+    let typical_game_turns = 12;
 
     let log10_tree = game_tree_log10(per_turn, typical_game_turns);
 
-    // MTG game tree should exceed chess (10^120)
-    results.push(ValidationResult::check(
-        EXP,
-        "mtg_tree_exceeds_chess",
-        bool_f64(log10_tree > 120.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("mtg_tree_exceeds_chess", log10_tree > 120.0);
 
     let _known = known_game_trees();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "mtg_tree_log10_is_finite",
-        bool_f64(log10_tree.is_finite() && log10_tree > 0.0),
-        1.0,
-        0.0,
-    ));
+        log10_tree.is_finite() && log10_tree > 0.0,
+    );
 
-    // Report the actual log10 for comparison
-    results.push(ValidationResult::check(
-        EXP,
-        "mtg_tree_gt_tictactoe",
-        bool_f64(log10_tree > 5.0),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "mtg_tree_gt_connect_four",
-        bool_f64(log10_tree > 21.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("mtg_tree_gt_tictactoe", log10_tree > 5.0);
+    h.check_bool("mtg_tree_gt_connect_four", log10_tree > 21.0);
 
-    // How many games until a 50% chance of repeat? (Birthday paradox)
     let games_for_collision_log10 = birthday_bound(log10_tree);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "birthday_bound_gt_10_billion",
-        bool_f64(games_for_collision_log10 > 10.0), // 10^10 = 10 billion
-        1.0,
-        0.0,
-    ));
+        games_for_collision_log10 > 10.0,
+    );
 
-    // With the number of MTG games ever played (~billions), we should
-    // STILL be well below the birthday bound — every game is novel
-    let estimated_games_ever_played_log10 = 10.5; // ~30 billion games ever played (generous)
-    results.push(ValidationResult::check(
-        EXP,
+    let estimated_games_ever_played_log10 = 10.5;
+    h.check_bool(
         "every_game_ever_played_is_likely_novel",
-        bool_f64(games_for_collision_log10 > estimated_games_ever_played_log10),
-        1.0,
-        0.0,
-    ));
-
-    results
+        games_for_collision_log10 > estimated_games_ever_played_log10,
+    );
 }
 
 #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
-fn validate_data_generation_rate() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // Data generation: each game produces a unique DAG
-    //
-    // If a game averages 10 turns, each turn has ~5 priority windows
-    // for each player (10 total), and each window produces a decision vertex:
-    //   10 turns × 10 priority windows = 100 vertices per game
-    //
-    // With ~1 billion MTG games played per year (Arena + paper):
-    //   100 billion novel vertices per year
-    //
-    // Each vertex is a novel data point that has never existed before.
-    // The provenance trio can track every single one.
-
+fn validate_data_generation_rate(h: &mut ValidationHarness) {
     let turns_per_game: u64 = 10;
-    let priority_windows_per_turn: u64 = 10; // both players
+    let priority_windows_per_turn: u64 = 10;
     let vertices_per_game = turns_per_game * priority_windows_per_turn;
-    let games_per_year: u64 = 1_000_000_000; // ~1 billion
+    let games_per_year: u64 = 1_000_000_000;
     let novel_vertices_per_year = vertices_per_game * games_per_year;
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "vertices_per_game_100",
         vertices_per_game as f64,
         100.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "novel_vertices_per_year_100_billion",
         novel_vertices_per_year as f64,
         100_000_000_000.0,
         0.0,
-    ));
+    );
 
-    // Compare to genomic data: a single 16S amplicon run produces
-    // ~10 million reads. MTG generates 10,000× more novel data points
-    // per year than a single sequencing run.
     let amplicon_reads: u64 = 10_000_000;
     let ratio = novel_vertices_per_year / amplicon_reads;
-    results.push(ValidationResult::check(
-        EXP,
-        "mtg_data_exceeds_single_amplicon_run",
-        bool_f64(ratio > 1),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("mtg_data_exceeds_single_amplicon_run", ratio > 1);
 
-    // The provenance structure is the same:
-    //   - Game vertex ↔ Sequencing read
-    //   - Stack response chain ↔ Sample processing lineage
-    //   - Deck certificate ↔ Sample metadata
-    //   - Player attribution ↔ Researcher attribution
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_isomorphism_holds",
-        1.0,
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_abs("provenance_isomorphism_holds", 1.0, 1.0, 0.0);
 }
 
-fn validate_novelty_even_with_same_deck() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // Even the simplest possible deck produces novel games.
-    // Simulating: a deck with only 2 instant-speed cards.
-    // In a 5-turn game, the number of possible game paths
-    // from JUST those 2 cards interacting with an opponent is large.
-
+fn validate_novelty_even_with_same_deck(h: &mut ValidationHarness) {
     let minimal_deck = DeckProfile {
         name: "Minimal",
         avg_hand_size: 2,
-        instant_ratio: 1.0, // both cards are instants
+        instant_ratio: 1.0,
         avg_creatures_on_board: 1,
         avg_activated_abilities: 0,
     };
@@ -629,27 +496,11 @@ fn validate_novelty_even_with_same_deck() -> Vec<ValidationResult> {
     let opp_turn = opponent.typical_turn();
     let per_turn = two_player_turn_factor(&my_turn, &opp_turn);
 
-    // Even minimal deck has non-trivial per-turn branching
-    results.push(ValidationResult::check(
-        EXP,
-        "minimal_deck_per_turn_gt_100",
-        bool_f64(per_turn > 100),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("minimal_deck_per_turn_gt_100", per_turn > 100);
 
-    // Over 5 turns, the tree is still significant
     let log10_tree_5 = game_tree_log10(per_turn, 5);
-    results.push(ValidationResult::check(
-        EXP,
-        "minimal_deck_5_turn_tree_gt_10e10",
-        bool_f64(log10_tree_5 > 10.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("minimal_deck_5_turn_tree_gt_10e10", log10_tree_5 > 10.0);
 
-    // Now a realistic deck — the game tree is so large that the
-    // number of atoms in the observable universe (~10^80) is smaller
     let realistic = control_deck();
     let realistic_opp = midrange_deck();
     let r_turn = realistic.typical_turn();
@@ -657,36 +508,21 @@ fn validate_novelty_even_with_same_deck() -> Vec<ValidationResult> {
     let r_per_turn = two_player_turn_factor(&r_turn, &o_turn);
     let log10_tree = game_tree_log10(r_per_turn, 10);
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "realistic_tree_exceeds_atoms_in_universe",
-        bool_f64(log10_tree > 80.0),
-        1.0,
-        0.0,
-    ));
+        log10_tree > 80.0,
+    );
 
-    // The log10 of the birthday bound should be much larger than
-    // total games ever played — meaning no game has likely ever
-    // been repeated in the entire history of Magic
     let birthday_log = birthday_bound(log10_tree);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "no_game_ever_likely_repeated_in_mtg_history",
-        bool_f64(birthday_log > 11.0), // 10^11 = 100 billion > all MTG games ever
-        1.0,
-        0.0,
-    ));
-
-    results
+        birthday_log > 11.0,
+    );
 }
 
-fn validate_scalability_comparison() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    // Compare game tree sizes across known games
+fn validate_scalability_comparison(h: &mut ValidationHarness) {
     let known = known_game_trees();
 
-    // Our computed MTG tree
     let aggro = aggro_deck();
     let control = control_deck();
     let at = aggro.typical_turn();
@@ -704,7 +540,6 @@ fn validate_scalability_comparison() -> Vec<ValidationResult> {
         }
     });
 
-    // MTG should rank near or above Go
     let Some(mtg_rank) = rankings.iter().position(|r| r.0 == "MTG (computed)") else {
         eprintln!("FATAL: MTG (computed) not found in rankings");
         std::process::exit(1);
@@ -714,178 +549,41 @@ fn validate_scalability_comparison() -> Vec<ValidationResult> {
         std::process::exit(1);
     };
 
-    results.push(ValidationResult::check(
-        EXP,
-        "mtg_ranks_above_poker",
-        bool_f64(mtg_rank >= poker_rank),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("mtg_ranks_above_poker", mtg_rank >= poker_rank);
 
-    // The gap between MTG and chess should be enormous
     let Some(chess_entry) = known.iter().find(|g| g.0 == "Chess") else {
         eprintln!("FATAL: Chess not found in known game trees");
         std::process::exit(1);
     };
     let chess_log = chess_entry.1;
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "mtg_dwarfs_chess_by_orders_of_magnitude",
-        bool_f64(mtg_log10 - chess_log > 50.0),
-        1.0,
-        0.0,
-    ));
+        mtg_log10 - chess_log > 50.0,
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "mtg_game_tree_log10_finite",
-        bool_f64(mtg_log10.is_finite() && mtg_log10 > 200.0),
-        1.0,
-        0.0,
-    ));
-
-    results
+        mtg_log10.is_finite() && mtg_log10 > 200.0,
+    );
 }
 
 // ===========================================================================
 // Main
 // ===========================================================================
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp049: Novel Data Combinatorics ===\n");
-    println!("The deck is the genome. The game is the phenotype.");
-    println!("Every game is a novel expression.\n");
+    let mut h = ValidationHarness::new("exp049_novel_data_combinatorics");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut all_results = Vec::new();
+    validate_solo_branching(&mut h);
+    validate_stack_factorial(&mut h);
+    validate_two_player_explosion(&mut h);
+    validate_game_tree_scale(&mut h);
+    validate_data_generation_rate(&mut h);
+    validate_novelty_even_with_same_deck(&mut h);
+    validate_scalability_comparison(&mut h);
 
-    println!("--- Solo Branching per Turn ---");
-    let decks = [aggro_deck(), control_deck(), midrange_deck(), combo_deck()];
-    for deck in &decks {
-        let turn = deck.typical_turn();
-        let factor = turn.total_branch_factor();
-        println!("  {}: {} branches/turn (solo)", deck.name, factor);
-    }
-    let r = validate_solo_branching();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Stack Factorial Explosion ---");
-    for n in [1, 2, 3, 5, 7, 10] {
-        println!("  {} spells on stack → {} orderings", n, stack_orderings(n));
-    }
-    let r = validate_stack_factorial();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Two-Player Interleaving ---");
-    let aggro = aggro_deck();
-    let control = control_deck();
-    let midrange = midrange_deck();
-    let aggro_turn = aggro.typical_turn();
-    let control_turn = control.typical_turn();
-    let mid_turn = midrange.typical_turn();
-    println!(
-        "  Aggro vs Control: {} branches/turn",
-        two_player_turn_factor(&aggro_turn, &control_turn)
-    );
-    println!(
-        "  Midrange mirror: {} branches/turn",
-        two_player_turn_factor(&mid_turn, &mid_turn)
-    );
-    let r = validate_two_player_explosion();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Game Tree Scale ---");
-    let per_turn = two_player_turn_factor(&aggro_turn, &control_turn);
-    let mtg_log = game_tree_log10(per_turn, 12);
-    println!("  Aggro vs Control, 12 turns: ~10^{mtg_log:.0}");
-    println!("\n  Comparison to known game trees:");
-    for (name, log10) in known_game_trees() {
-        println!("    {name}: ~10^{log10:.0}");
-    }
-    println!("    MTG (computed): ~10^{mtg_log:.0}");
-    let r = validate_game_tree_scale();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Data Generation Rate ---");
-    let r = validate_data_generation_rate();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Novelty Even With Same Deck ---");
-    let r = validate_novelty_even_with_same_deck();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    println!("\n--- Scalability Comparison ---");
-    let r = validate_scalability_comparison();
-    for v in &r {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    all_results.extend(r);
-
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let total = all_results.len();
-    println!("\n=== SUMMARY: {passed}/{total} checks passed ===");
-
-    if passed == total {
-        println!("\nEvery game is novel. The provenance trio tracks infinite data.");
-    } else {
-        println!("\nFAILED:");
-        for r in all_results.iter().filter(|r| !r.passed) {
-            println!(
-                "  {} — measured={}, expected={}",
-                r.description, r.measured, r.expected
-            );
-        }
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

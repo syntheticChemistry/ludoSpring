@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
 #![expect(
-    clippy::cast_possible_truncation,
-    reason = "validation harness: small-range numeric conversions"
-)]
-#![expect(
-    clippy::cast_sign_loss,
-    reason = "validation harness: non-negative values cast to unsigned"
-)]
-#![expect(
     clippy::cast_precision_loss,
     reason = "validation harness: counter/timing values within f64 range"
 )]
-// SPDX-License-Identifier: AGPL-3.0-or-later
 //! exp028 — Fish Folk / Jumpy Telemetry Adapter
 //!
 //! Demonstrates the Bevy plugin pattern for telemetry emission.
@@ -35,7 +26,14 @@ use ludospring_barracuda::telemetry::events::{
 };
 use ludospring_barracuda::telemetry::mapper::SessionAccumulator;
 use ludospring_barracuda::telemetry::report::generate_report;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (adapter validation — synthetic Fish Folk match)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (translate_event + SessionAccumulator)",
+};
 
 /// Simulated Bevy/Bones game event (what `EventReader` would provide).
 #[expect(
@@ -421,13 +419,9 @@ fn main() {
     }
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp028: Fish Folk Adapter Validation ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp028_fishfolk_adapter");
+    h.print_provenance(&[&PROVENANCE]);
 
     let match_events = synthetic_match();
     let sid = "test";
@@ -436,105 +430,39 @@ fn cmd_validate() {
         .flat_map(|(ts, evt)| translate_event(*ts, evt, sid))
         .collect();
 
-    results.push(ValidationResult::check(
-        "exp028",
-        "events_translated",
-        telemetry.len() as f64,
-        16.0,
-        1.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp028",
+    h.check_abs("events_translated", telemetry.len() as f64, 16.0, 1.0);
+    h.check_bool(
         "has_session_start",
-        if telemetry
+        telemetry
             .iter()
-            .any(|e| e.event_type == EventType::SessionStart)
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp028",
+            .any(|e| e.event_type == EventType::SessionStart),
+    );
+    h.check_bool(
         "has_session_end",
-        if telemetry
+        telemetry
             .iter()
-            .any(|e| e.event_type == EventType::SessionEnd)
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp028",
+            .any(|e| e.event_type == EventType::SessionEnd),
+    );
+    h.check_bool(
         "has_player_death",
-        if telemetry
+        telemetry
             .iter()
-            .any(|e| e.event_type == EventType::PlayerDeath)
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp028",
+            .any(|e| e.event_type == EventType::PlayerDeath),
+    );
+    h.check_bool(
         "has_challenge_complete",
-        if telemetry
+        telemetry
             .iter()
-            .any(|e| e.event_type == EventType::ChallengeComplete)
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+            .any(|e| e.event_type == EventType::ChallengeComplete),
+    );
 
     let mut acc = SessionAccumulator::new();
     acc.ingest_all(&telemetry);
     let report = generate_report(&acc);
-    results.push(ValidationResult::check(
-        "exp028",
-        "report_generates",
-        if serde_json::to_string(&report).is_ok() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp028",
-        "engagement_positive",
-        if report.engagement.composite > 0.0 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("report_generates", serde_json::to_string(&report).is_ok());
+    h.check_bool("engagement_positive", report.engagement.composite > 0.0);
 
-    for r in &results {
-        let status = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{status}] {}", r.description);
-    }
-    let pass = results.iter().filter(|r| r.passed).count();
-    println!("\nResults: {pass}/{} passed", results.len());
-    if pass < results.len() {
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn cmd_demo() {

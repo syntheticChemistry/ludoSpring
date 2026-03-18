@@ -3,7 +3,7 @@
 **Date**: March 17, 2026
 **Status**: baseCamp — exploration direction, not yet validated
 **Depends on**: barraCuda (compute dispatch), coralReef (shader compilation), toadStool (GPU access)
-**Ecosystem guidance**: `wateringHole/GPU_FIXED_FUNCTION_SCIENCE_REPURPOSING.md`
+**Ecosystem guidance**: Pending — see hotSpring/coralReef GPU evolution handoffs in `ecoPrimals/wateringHole/handoffs/`
 
 ---
 

@@ -12,6 +12,7 @@
 //! - [`validation`] — analytical, raycaster, noise, UI tolerances
 
 pub mod game;
+pub mod gpu;
 pub mod interaction;
 pub mod ipc;
 pub mod metrics;
@@ -19,6 +20,7 @@ pub mod procedural;
 pub mod validation;
 
 pub use game::*;
+pub use gpu::*;
 pub use interaction::*;
 pub use ipc::*;
 pub use metrics::*;

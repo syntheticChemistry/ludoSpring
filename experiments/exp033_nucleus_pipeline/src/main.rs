@@ -15,12 +15,23 @@
 //! Subcommands:
 //!   validate  — run all NUCLEUS coordination checks
 //!   demo      — simulate a full gaming pipeline
+//!
+//! # Provenance
+//!
+//! N/A (analytical — gaming_niche_deploy.toml topology, toadStool wire format).
 
 use std::collections::HashMap;
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — nucleus topology)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (toadStool JSON-RPC wire format)",
+};
 use std::process;
 use std::time::Instant;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use ludospring_forge::{
     GameWorkload, GameWorkloadProfile, Substrate, SubstrateInfo, SubstrateKind,
     recommend_substrate, route,
@@ -359,15 +370,11 @@ fn run_nucleus_pipeline(gpu_available: bool) -> NucleusPipelineResult {
 
 #[expect(
     clippy::too_many_lines,
-    clippy::cast_precision_loss,
-    clippy::similar_names,
     reason = "validation orchestrator — sequential check groups"
 )]
 fn cmd_validate() {
-    println!("=== exp033: NUCLEUS Atomic Pipeline Validation ===\n");
-
-    let experiment = "exp033_nucleus_pipeline";
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp033_nucleus_pipeline");
+    h.print_provenance(&[&PROVENANCE]);
 
     // 1. Tower capability resolution for game.* namespace
     let tower = {
@@ -376,91 +383,41 @@ fn cmd_validate() {
         t
     };
     let game_noise = tower.resolve("game.generate_noise");
-    results.push(ValidationResult::check(
-        experiment,
-        "tower_resolves_game_noise",
-        if game_noise.is_some() { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("tower_resolves_game_noise", game_noise.is_some());
 
     let game_engagement = tower.resolve("game.engagement");
-    results.push(ValidationResult::check(
-        experiment,
-        "tower_resolves_game_engagement",
-        if game_engagement.is_some() { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("tower_resolves_game_engagement", game_engagement.is_some());
 
     // 2. Node dispatch routes noise to GPU substrate (when available)
     let mut node = NodeAtomic::new(true);
     let noise_sub = node.dispatch(GameWorkload::NoiseGeneration, "test");
-    results.push(ValidationResult::check(
-        experiment,
-        "node_noise_to_gpu",
-        if noise_sub == Substrate::Gpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("node_noise_to_gpu", noise_sub == Substrate::Gpu);
 
     // 3. Node dispatch routes metrics to CPU substrate
     let metrics_sub = node.dispatch(GameWorkload::MetricsBatch, "test");
-    results.push(ValidationResult::check(
-        experiment,
-        "node_metrics_to_cpu",
-        if metrics_sub == Substrate::Cpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("node_metrics_to_cpu", metrics_sub == Substrate::Cpu);
 
     // 4. Nest records provenance for each pipeline stage
     let pipeline = run_nucleus_pipeline(true);
-    results.push(ValidationResult::check(
-        experiment,
+    #[expect(clippy::cast_precision_loss, reason = "provenance_count bounded")]
+    h.check_abs(
         "nest_provenance_recorded",
         pipeline.provenance_count as f64,
         4.0,
         0.0,
-    ));
+    );
 
     // 5. Full pipeline produces output (total_us > 0)
-    results.push(ValidationResult::check(
-        experiment,
-        "pipeline_produces_result",
-        if pipeline.total_us > 0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("pipeline_produces_result", pipeline.total_us > 0);
 
     // 6. Atomic composition order enforced: Tower init before Node dispatch
     let nest_check = NestAtomic::new(false);
     let tower_init = nest_check.node.tower.initialized;
-    results.push(ValidationResult::check(
-        experiment,
-        "tower_before_node_enforced",
-        if tower_init { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("tower_before_node_enforced", tower_init);
 
     // 7. Pipeline metadata includes timing per stage
     let has_timing = pipeline.stages.iter().all(|(_, _, us)| *us > 0);
-    results.push(ValidationResult::check(
-        experiment,
-        "pipeline_stage_timings",
-        if has_timing { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("pipeline_stage_timings", has_timing);
 
     // 8. Simulated topology matches gaming_niche_deploy.toml phases
     //    Phase 1: Tower (beardog+songbird) -> Phase 2: Springs (ludospring+petaltongue)
@@ -478,13 +435,7 @@ fn cmd_validate() {
         AtomicPhase::Nest,
     ];
     let order_correct = phase_order == expected_phases;
-    results.push(ValidationResult::check(
-        experiment,
-        "topology_matches_deploy_graph",
-        if order_correct { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("topology_matches_deploy_graph", order_correct);
 
     // 9. CPU-only pipeline still works (graceful degradation)
     let cpu_pipeline = run_nucleus_pipeline(false);
@@ -492,30 +443,23 @@ fn cmd_validate() {
         .stages
         .iter()
         .all(|(_, sub, _)| *sub == Substrate::Cpu);
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "cpu_only_pipeline_works",
-        if all_cpu && cpu_pipeline.total_us > 0 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        all_cpu && cpu_pipeline.total_us > 0,
+    );
 
     // 10. Dispatch log captures all operations
     let mut node2 = NodeAtomic::new(true);
     node2.dispatch(GameWorkload::NoiseGeneration, "a");
     node2.dispatch(GameWorkload::MetricsBatch, "b");
     node2.dispatch(GameWorkload::PhysicsTick, "c");
-    results.push(ValidationResult::check(
-        experiment,
+    #[expect(clippy::cast_precision_loss, reason = "dispatch_log len bounded")]
+    h.check_abs(
         "dispatch_log_complete",
         node2.dispatch_log.len() as f64,
         3.0,
         0.0,
-    ));
+    );
 
     // 11. NodeV2 routes noise to GPU via capability routing
     let all_substrates = vec![
@@ -525,63 +469,35 @@ fn cmd_validate() {
     ];
     let mut node_v2 = NodeAtomicV2::new(all_substrates);
     let noise_kind = node_v2.dispatch(&GameWorkloadProfile::noise_generation(), "noise");
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "node_routes_via_capability",
-        if noise_kind == SubstrateKind::Gpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        noise_kind == SubstrateKind::Gpu,
+    );
 
     // 12. Quantized inference routes to NPU
     let quant_kind = node_v2.dispatch(&GameWorkloadProfile::quantized_inference(), "quantized");
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "node_npu_routes_quantized",
-        if quant_kind == SubstrateKind::Npu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        quant_kind == SubstrateKind::Npu,
+    );
 
     // 13. toadStool dispatch request JSON-RPC roundtrip
     let req = build_toadstool_request("noise_generation", 5, 256);
     let json = serde_json::to_string(&req).unwrap_or_default();
     let parsed: Result<ToadStoolDispatchRequest, _> = serde_json::from_str(&json);
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "toadstool_dispatch_request_roundtrip",
-        if parsed.as_ref().is_ok_and(|p| *p == req) {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        parsed.as_ref().is_ok_and(|p| *p == req),
+    );
 
     // 14. toadStool dispatch response wire format valid
     let resp = build_toadstool_response("job-001", "Gpu");
     let resp_json = serde_json::to_string(&resp).unwrap_or_default();
     let parsed_resp: Result<ToadStoolDispatchResponse, _> = serde_json::from_str(&resp_json);
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "toadstool_dispatch_response_roundtrip",
-        if parsed_resp.as_ref().is_ok_and(|p| *p == resp) {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        parsed_resp.as_ref().is_ok_and(|p| *p == resp),
+    );
 
     // 15. Deployment graph 5-node topology (Tower→Node→Nest→Compute→Viz)
     let graph = DeploymentGraph {
@@ -636,64 +552,34 @@ fn cmd_validate() {
         ],
         coordination_hz: 60.0,
     };
-    results.push(ValidationResult::check(
-        experiment,
+    #[expect(clippy::cast_precision_loss, reason = "nodes len bounded")]
+    h.check_abs(
         "deployment_graph_5node_topology",
         graph.nodes.len() as f64,
         5.0,
         0.0,
-    ));
+    );
 
     // 16. All stages fit in 16.67ms (60Hz frame budget)
-    results.push(ValidationResult::check(
-        experiment,
-        "deployment_graph_60hz_budget",
-        if graph.fits_in_frame() { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("deployment_graph_60hz_budget", graph.fits_in_frame());
 
     // 17. Pipeline V2 dispatch log records transfer reasoning
     let has_transfer_reason = node_v2
         .dispatch_log
         .iter()
         .any(|(_, _, reason)| reason.contains("preferred") || reason.contains("priority"));
-    results.push(ValidationResult::check(
-        experiment,
-        "transfer_cost_in_pipeline",
-        if has_transfer_reason { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("transfer_cost_in_pipeline", has_transfer_reason);
 
     // 18. CPU-only NodeV2 still works (graceful degradation)
     let cpu_only = vec![SubstrateInfo::default_cpu()];
     let mut node_cpu = NodeAtomicV2::new(cpu_only);
     let cpu_noise = node_cpu.dispatch(&GameWorkloadProfile::noise_generation(), "noise_cpu");
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "nucleus_graceful_degradation",
-        if cpu_noise == SubstrateKind::Cpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        cpu_noise == SubstrateKind::Cpu,
+    );
 
-    // Print results
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 fn cmd_demo() {

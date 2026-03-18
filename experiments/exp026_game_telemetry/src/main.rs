@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
 #![expect(
-    clippy::cast_possible_truncation,
-    reason = "validation harness: small-range numeric conversions"
-)]
-#![expect(
-    clippy::cast_sign_loss,
-    reason = "validation harness: non-negative values cast to unsigned"
-)]
-#![expect(
     clippy::cast_precision_loss,
     reason = "validation harness: counter/timing values within f64 range"
 )]
-// SPDX-License-Identifier: AGPL-3.0-or-later
 //! exp026 — Game Telemetry Protocol CLI
 //!
 //! Analyzes NDJSON telemetry files and produces gameplay analysis reports.
@@ -27,7 +18,14 @@ use ludospring_barracuda::telemetry::events::{
 };
 use ludospring_barracuda::telemetry::mapper::SessionAccumulator;
 use ludospring_barracuda::telemetry::report::generate_report;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (protocol validation — synthetic telemetry)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (NDJSON roundtrip + SessionAccumulator)",
+};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -272,29 +270,19 @@ fn generate_synthetic_session() -> Vec<TelemetryEvent> {
 // ── validate ───────────────────────────────────────────────────────
 
 fn cmd_validate() {
-    println!("=== exp026: Game Telemetry Protocol Validation ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp026_game_telemetry");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_roundtrip(&mut results);
-    validate_ndjson_parsing(&mut results);
-    validate_synthetic_analysis(&mut results);
-    validate_empty_session(&mut results);
-    validate_all_event_types(&mut results);
+    validate_roundtrip(&mut h);
+    validate_ndjson_parsing(&mut h);
+    validate_synthetic_analysis(&mut h);
+    validate_empty_session(&mut h);
+    validate_all_event_types(&mut h);
 
-    println!();
-    let pass = results.iter().filter(|r| r.passed).count();
-    let fail = results.iter().filter(|r| !r.passed).count();
-    println!(
-        "Results: {pass} passed, {fail} failed out of {} checks",
-        results.len()
-    );
-
-    if fail > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
-fn validate_roundtrip(results: &mut Vec<ValidationResult>) {
+fn validate_roundtrip(h: &mut ValidationHarness) {
     let events = generate_synthetic_session();
     let mut ndjson = String::new();
     for evt in &events {
@@ -303,130 +291,53 @@ fn validate_roundtrip(results: &mut Vec<ValidationResult>) {
     }
     let (parsed, errors) = ludospring_barracuda::telemetry::parse_ndjson(&ndjson);
 
-    let r1 = ValidationResult::check("exp026", "roundtrip_no_errors", errors as f64, 0.0, 0.0);
-    let r2 = ValidationResult::check(
-        "exp026",
+    h.check_abs("roundtrip_no_errors", errors as f64, 0.0, 0.0);
+    h.check_abs(
         "roundtrip_event_count",
         parsed.len() as f64,
         events.len() as f64,
         0.0,
     );
-    print_result(&r1);
-    print_result(&r2);
-    results.push(r1);
-    results.push(r2);
 }
 
-fn validate_ndjson_parsing(results: &mut Vec<ValidationResult>) {
+fn validate_ndjson_parsing(h: &mut ValidationHarness) {
     let input = r#"{"timestamp_ms":0,"session_id":"s","event_type":"session_start","payload":{}}
 not json
 {"timestamp_ms":1000,"session_id":"s","event_type":"player_move","payload":{"x":1.0,"y":2.0}}
 "#;
     let (events, errors) = ludospring_barracuda::telemetry::parse_ndjson(input);
-    let r1 = ValidationResult::check(
-        "exp026",
-        "ndjson_valid_count",
-        events.len() as f64,
-        2.0,
-        0.0,
-    );
-    let r2 = ValidationResult::check("exp026", "ndjson_error_count", errors as f64, 1.0, 0.0);
-    print_result(&r1);
-    print_result(&r2);
-    results.push(r1);
-    results.push(r2);
+    h.check_abs("ndjson_valid_count", events.len() as f64, 2.0, 0.0);
+    h.check_abs("ndjson_error_count", errors as f64, 1.0, 0.0);
 }
 
-fn validate_synthetic_analysis(results: &mut Vec<ValidationResult>) {
+fn validate_synthetic_analysis(h: &mut ValidationHarness) {
     let events = generate_synthetic_session();
     let mut acc = SessionAccumulator::new();
     acc.ingest_all(&events);
     let report = generate_report(&acc);
 
-    let checks = [
-        (
-            "game_name_correct",
-            if report.session.game_name == "synthetic_roguelike" {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-        ),
-        (
-            "engagement_positive",
-            if report.engagement.composite > 0.0 {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-        ),
-        (
-            "has_flow_samples",
-            if report.flow.timeline.is_empty() {
-                0.0
-            } else {
-                1.0
-            },
-            1.0,
-        ),
-        (
-            "fun_classified",
-            if report.fun.dominant.is_empty() {
-                0.0
-            } else {
-                1.0
-            },
-            1.0,
-        ),
-        ("deaths_counted", f64::from(report.session.deaths), 1.0),
-        (
-            "discoveries_positive",
-            if report.session.total_discoveries > 0 {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-        ),
-        (
-            "report_serializes",
-            if serde_json::to_string(&report).is_ok() {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-        ),
-    ];
-
-    for (name, measured, expected) in &checks {
-        let r = ValidationResult::check("exp026", name, *measured, *expected, 0.0);
-        print_result(&r);
-        results.push(r);
-    }
+    h.check_bool(
+        "game_name_correct",
+        report.session.game_name == "synthetic_roguelike",
+    );
+    h.check_bool("engagement_positive", report.engagement.composite > 0.0);
+    h.check_bool("has_flow_samples", !report.flow.timeline.is_empty());
+    h.check_bool("fun_classified", !report.fun.dominant.is_empty());
+    h.check_abs("deaths_counted", f64::from(report.session.deaths), 1.0, 0.0);
+    h.check_bool("discoveries_positive", report.session.total_discoveries > 0);
+    h.check_bool("report_serializes", serde_json::to_string(&report).is_ok());
 }
 
-fn validate_empty_session(results: &mut Vec<ValidationResult>) {
+fn validate_empty_session(h: &mut ValidationHarness) {
     let acc = SessionAccumulator::new();
     let report = generate_report(&acc);
-    let r = ValidationResult::check(
-        "exp026",
+    h.check_bool(
         "empty_session_no_panic",
-        if report.engagement.composite.is_finite() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
+        report.engagement.composite.is_finite(),
     );
-    print_result(&r);
-    results.push(r);
 }
 
-fn validate_all_event_types(results: &mut Vec<ValidationResult>) {
+fn validate_all_event_types(h: &mut ValidationHarness) {
     let types = [
         EventType::SessionStart,
         EventType::SessionEnd,
@@ -456,20 +367,7 @@ fn validate_all_event_types(results: &mut Vec<ValidationResult>) {
             all_pass = false;
         }
     }
-    let r = ValidationResult::check(
-        "exp026",
-        "all_event_types_roundtrip",
-        if all_pass { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    );
-    print_result(&r);
-    results.push(r);
-}
-
-fn print_result(r: &ValidationResult) {
-    let status = if r.passed { "PASS" } else { "FAIL" };
-    println!("  [{status}] {}", r.description);
+    h.check_bool("all_event_types_roundtrip", all_pass);
 }
 
 // ── schema ─────────────────────────────────────────────────────────

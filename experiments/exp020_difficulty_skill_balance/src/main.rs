@@ -14,73 +14,49 @@
 
 use ludospring_barracuda::interaction::difficulty::{PerformanceWindow, suggest_adjustment};
 use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
-use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Hunicke 2005, Csikszentmihalyi 1990)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (analytical)",
+};
 
-fn validate_skill_adaptation(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: DDA adapts to skill level");
-
-    // Expert player: consistently solves (outcome=0.9+)
+fn validate_skill_adaptation(h: &mut ValidationHarness) {
     let mut expert = PerformanceWindow::new(10);
     for _ in 0..10 {
         expert.record(0.95);
     }
     let expert_adj = suggest_adjustment(&expert, 0.7);
 
-    let r = ValidationResult::check(
-        "exp020_expert_harder",
+    h.check_bool(
         "expert player (95% success) gets harder challenges",
-        if expert_adj > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        expert_adj > 0.0,
     );
-    report(&r);
-    results.push(r);
 
-    // Novice player: mostly fails (outcome=0.2)
     let mut novice = PerformanceWindow::new(10);
     for _ in 0..10 {
         novice.record(0.2);
     }
     let novice_adj = suggest_adjustment(&novice, 0.7);
 
-    let r = ValidationResult::check(
-        "exp020_novice_easier",
+    h.check_bool(
         "novice player (20% success) gets easier challenges",
-        if novice_adj < 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        novice_adj < 0.0,
     );
-    report(&r);
-    results.push(r);
 
-    // At-target player: interleaved 70% success → minimal deviation
     let mut balanced = PerformanceWindow::new(10);
     for &v in &[1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0] {
         balanced.record(v);
     }
     let balanced_adj = suggest_adjustment(&balanced, 0.7);
 
-    let r = ValidationResult::check(
-        "exp020_balanced_minimal",
+    h.check_upper(
         "on-target player (70% interleaved) gets small adjustment",
         balanced_adj.abs(),
-        0.0,
         0.5,
     );
-    report(&r);
-    results.push(r);
 }
 
 #[expect(
@@ -88,11 +64,9 @@ fn validate_skill_adaptation(results: &mut Vec<ValidationResult>) {
     clippy::cast_sign_loss,
     reason = "success_prob * 10 is in [0, 10]; fits in u64"
 )]
-fn validate_flow_maintenance(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: DDA maintains flow channel");
+fn validate_flow_maintenance(h: &mut ValidationHarness) {
     let channel_width = 0.15;
 
-    // Simulate a 20-round session where DDA adjusts difficulty
     let mut difficulty = 0.5_f64;
     let player_skill = 0.6;
     let mut window = PerformanceWindow::new(5);
@@ -114,92 +88,48 @@ fn validate_flow_maintenance(results: &mut Vec<ValidationResult>) {
         }
     }
 
-    let r = ValidationResult::check(
-        "exp020_flow_maintained",
+    h.check_bool(
         "DDA keeps player in Flow for majority of session",
-        if flow_count >= 8 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        flow_count >= 8,
     );
-    report(&r);
-    results.push(r);
-
-    println!("  Flow rounds: {flow_count}/20");
 }
 
-fn validate_trend_detection(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Performance trend detection");
-
-    // Improving player: 0.2, 0.3, 0.5, 0.7, 0.9
+fn validate_trend_detection(h: &mut ValidationHarness) {
     let mut improving = PerformanceWindow::new(10);
     for &v in &[0.2, 0.3, 0.5, 0.7, 0.9] {
         improving.record(v);
     }
     let trend = improving.trend();
-    let r = ValidationResult::check(
-        "exp020_improving_trend",
-        "improving player has positive trend",
-        if trend > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("improving player has positive trend", trend > 0.0);
 
-    // Declining player: 0.9, 0.7, 0.5, 0.3, 0.1
     let mut declining = PerformanceWindow::new(10);
     for &v in &[0.9, 0.7, 0.5, 0.3, 0.1] {
         declining.record(v);
     }
     let trend = declining.trend();
-    let r = ValidationResult::check(
-        "exp020_declining_trend",
-        "declining player has negative trend",
-        if trend < 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("declining player has negative trend", trend < 0.0);
 }
 
-fn validate_adjustment_bounds(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 4: Adjustment bounds");
-
-    // Even extreme performance shouldn't produce unbounded adjustments
+fn validate_adjustment_bounds(h: &mut ValidationHarness) {
     let mut extreme_good = PerformanceWindow::new(10);
     for _ in 0..10 {
         extreme_good.record(1.0);
     }
     let adj = suggest_adjustment(&extreme_good, 0.5);
-    let r = ValidationResult::check(
-        "exp020_bounded",
+    h.check_bool(
         "adjustment is bounded to [-1, 1]",
-        if (-1.0..=1.0).contains(&adj) {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        (-1.0..=1.0).contains(&adj),
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp020: Difficulty-Skill Balance (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp020_difficulty_skill_balance");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_skill_adaptation(&mut results);
-    validate_flow_maintenance(&mut results);
-    validate_trend_detection(&mut results);
-    validate_adjustment_bounds(&mut results);
+    validate_skill_adaptation(&mut h);
+    validate_flow_maintenance(&mut h);
+    validate_trend_detection(&mut h);
+    validate_adjustment_bounds(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

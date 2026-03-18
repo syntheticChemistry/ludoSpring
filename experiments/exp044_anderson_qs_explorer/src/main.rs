@@ -6,12 +6,14 @@ use ludospring_barracuda::interaction::flow;
 use ludospring_barracuda::metrics::engagement;
 use ludospring_barracuda::metrics::fun_keys;
 use ludospring_barracuda::procedural::noise;
-use ludospring_barracuda::validation::ValidationResult;
-const EXP: &str = "exp044";
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — wetSpring Anderson QS model)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (cross-spring ludoSpring × wetSpring)",
+};
 
 #[derive(Debug, Clone)]
 #[expect(dead_code, reason = "domain model completeness")]
@@ -155,35 +157,18 @@ fn simulate_exploration_session(
     session_data
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp044: Anderson QS Interactive Explorer ===\n");
-    println!("  Cross-spring: ludoSpring (game science) x wetSpring (QS model)\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp044_anderson_qs_explorer");
+    h.print_provenance(&[&PROVENANCE]);
 
     let communities = generate_communities();
-
-    println!("  Phase 1: QS propagation across microbial communities");
     let session_data = simulate_exploration_session(&communities);
-
-    for (name, w, prop, h) in &session_data {
-        println!("    {name}: W={w:.2}, propagation={prop:.3}, H'={h:.1}");
-    }
 
     // 1. All communities produce valid propagation
     let all_valid = session_data
         .iter()
         .all(|(_, _, p, _)| (0.0..=1.0).contains(p));
-    results.push(ValidationResult::check(
-        EXP,
-        "all_propagation_valid",
-        bool_f64(all_valid),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("all_propagation_valid", all_valid);
 
     // 2. High diversity dominates O2 in W model: anaerobic (H'=3.8, O2=0) > mucosal (H'=2.5, O2=0.4)
     let anaerobic = session_data
@@ -193,17 +178,7 @@ fn cmd_validate() {
         .iter()
         .find(|(n, _, _, _)| n == "mucosal_surface");
     if let (Some(a), Some(m)) = (anaerobic, mucosal) {
-        println!(
-            "\n  Diversity vs O2: anaerobic W={:.2} (H'=3.8) vs mucosal W={:.2} (H'=2.5, O2=0.4)",
-            a.1, m.1
-        );
-        results.push(ValidationResult::check(
-            EXP,
-            "diversity_dominates_o2_in_w",
-            bool_f64(a.1 > m.1),
-            1.0,
-            0.0,
-        ));
+        h.check_bool("diversity_dominates_o2_in_w", a.1 > m.1);
     }
 
     // 3. Post-antibiotic has lowest diversity
@@ -213,14 +188,8 @@ fn cmd_validate() {
     if let Some(pa) = post_ab {
         let lowest = session_data
             .iter()
-            .all(|(n, _, _, h)| n == "post_antibiotic" || *h > pa.3);
-        results.push(ValidationResult::check(
-            EXP,
-            "post_antibiotic_lowest_diversity",
-            bool_f64(lowest),
-            1.0,
-            0.0,
-        ));
+            .all(|(n, _, _, div)| n == "post_antibiotic" || *div > pa.3);
+        h.check_bool("post_antibiotic_lowest_diversity", lowest);
     }
 
     // 4. Landscape deterministic
@@ -229,18 +198,10 @@ fn cmd_validate() {
     let det = l1
         .iter()
         .zip(l2.iter())
-        .all(|(r1, r2)| r1.iter().zip(r2.iter()).all(|(a, b)| (a - b).abs() < 1e-15));
-    results.push(ValidationResult::check(
-        EXP,
-        "landscape_deterministic",
-        bool_f64(det),
-        1.0,
-        0.0,
-    ));
+        .all(|(r1, r2)| r1.iter().zip(r2.iter()).all(|(x, y)| (x - y).abs() < 1e-15));
+    h.check_bool("landscape_deterministic", det);
 
     // --- Phase 2: Game science metrics ---
-    println!("\n  Phase 2: Game science metrics on QS exploration");
-
     let snap = engagement::EngagementSnapshot {
         session_duration_s: 300.0,
         action_count: 50,
@@ -250,34 +211,17 @@ fn cmd_validate() {
         deliberate_pauses: 5,
     };
     let eng = engagement::compute_engagement(&snap);
-    println!(
-        "    engagement: apm={:.3}, exploration={:.3}",
-        eng.actions_per_minute, eng.exploration_rate
-    );
 
     // 5. Engagement valid
-    results.push(ValidationResult::check(
-        EXP,
-        "engagement_valid",
-        bool_f64(eng.actions_per_minute > 0.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("engagement_valid", eng.actions_per_minute > 0.0);
 
     // 6. Flow state
     let flow_state = flow::evaluate_flow(0.5, 0.6, 0.15);
-    println!("    flow: {flow_state:?}");
     let in_flow = matches!(
         flow_state,
         flow::FlowState::Flow | flow::FlowState::Relaxation
     );
-    results.push(ValidationResult::check(
-        EXP,
-        "exploration_in_flow",
-        bool_f64(in_flow),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("exploration_in_flow", in_flow);
 
     // 7. Fun classification
     let signals = fun_keys::FunSignals {
@@ -288,14 +232,10 @@ fn cmd_validate() {
         retry_rate: 0.1,
     };
     let fun = fun_keys::classify_fun(&signals);
-    println!("    fun: {:?}", fun.dominant);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fun_classified",
-        bool_f64(matches!(fun.dominant, fun_keys::FunKey::Easy)),
-        1.0,
-        0.0,
-    ));
+        matches!(fun.dominant, fun_keys::FunKey::Easy),
+    );
 
     // 8. DDA suggestion
     let mut window = difficulty::PerformanceWindow::new(10);
@@ -303,80 +243,36 @@ fn cmd_validate() {
         window.outcomes.push_back(v);
     }
     let dda = difficulty::suggest_adjustment(&window, 0.75);
-    println!("    DDA: {dda:+.3}");
-    results.push(ValidationResult::check(
-        EXP,
-        "dda_bounded",
-        bool_f64(dda.abs() < 1.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("dda_bounded", dda.abs() < 1.0);
 
     // --- Phase 3: Cross-spring validation ---
-    println!("\n  Phase 3: Cross-spring validation");
 
     // 9. W model matches wetSpring Exp356
     let expected_w = 3.5f64.mul_add(3.0, 8.0 * 0.1);
     let computed_w = diversity_to_w(3.0, 0.1);
-    results.push(ValidationResult::check(
-        EXP,
-        "w_model_matches_wetspring",
-        computed_w,
-        expected_w,
-        1e-10,
-    ));
+    h.check_abs("w_model_matches_wetspring", computed_w, expected_w, 1e-10);
 
     // 10. Higher W → lower propagation
     let low_w_prop =
         simulate_qs_propagation(&generate_disorder_landscape(32, 32, 5.0, 42), 10.0, 16, 16);
     let high_w_prop =
         simulate_qs_propagation(&generate_disorder_landscape(32, 32, 25.0, 42), 10.0, 16, 16);
-    println!("    W=5 propagation: {low_w_prop:.3}, W=25 propagation: {high_w_prop:.3}");
-    results.push(ValidationResult::check(
-        EXP,
-        "higher_w_lower_propagation",
-        bool_f64(low_w_prop > high_w_prop),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("higher_w_lower_propagation", low_w_prop > high_w_prop);
 
     // 11. Five communities → five distinct W values
     let w_values: Vec<f64> = session_data.iter().map(|(_, w, _, _)| *w).collect();
     let all_distinct = w_values
         .windows(2)
         .all(|pair| (pair[0] - pair[1]).abs() > 0.01);
-    results.push(ValidationResult::check(
-        EXP,
-        "communities_distinct_w",
-        bool_f64(all_distinct),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("communities_distinct_w", all_distinct);
 
     // 12. Propagation spans from localized to extended
     let props: Vec<f64> = session_data.iter().map(|(_, _, p, _)| *p).collect();
     let range = props.iter().copied().reduce(f64::max).unwrap_or(0.0)
         - props.iter().copied().reduce(f64::min).unwrap_or(0.0);
-    println!("    propagation range: {range:.3}");
-    results.push(ValidationResult::check(
-        EXP,
-        "propagation_range_spans_regimes",
-        bool_f64(range > 0.1),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("propagation_range_spans_regimes", range > 0.1);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

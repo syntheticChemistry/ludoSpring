@@ -33,14 +33,15 @@ pub mod detection;
 pub mod raid;
 mod scenarios;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use raid::ConsumableState;
 
-const EXP: &str = "exp053_extraction_shooter_provenance";
-
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — extraction shooter fraud detection)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 // ===========================================================================
 // 1. Honest Raid — clean play, no fraud detected
@@ -50,137 +51,77 @@ const fn bool_f64(b: bool) -> f64 {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_honest_raid() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_honest_raid(h: &mut ValidationHarness) {
     let raid = scenarios::build_honest_raid();
     let report = detection::analyze_raid(&raid);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "honest_raid_is_clean",
-        bool_f64(report.is_clean()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("honest_raid_is_clean", report.is_clean());
+    h.check_abs(
         "honest_zero_violations",
         report.total_violations() as f64,
         0.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "honest_dag_vertex_count",
         raid.vertex_ids.len() as f64,
         13.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "honest_rhizo_session_active",
-        bool_f64(raid.rhizo_session_active()),
-        1.0,
-        0.0,
-    ));
+    );
+    h.check_bool("honest_rhizo_session_active", raid.rhizo_session_active());
 
     let pmc1_inv = raid.inventories.get("pmc1").map_or(0, Vec::len);
-    results.push(ValidationResult::check(
-        EXP,
-        "honest_pmc1_has_5_items",
-        pmc1_inv as f64,
-        5.0,
-        0.0,
-    ));
+    h.check_abs("honest_pmc1_has_5_items", pmc1_inv as f64, 5.0, 0.0);
 
     let cert_count = raid.certificates.len();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "honest_all_items_have_certs",
         cert_count as f64,
         raid.items.len() as f64,
         0.0,
-    ));
+    );
 
     let scav_dead = raid.entities.get("scav1").is_some_and(|e| !e.alive);
-    results.push(ValidationResult::check(
-        EXP,
-        "honest_scav1_dead",
-        bool_f64(scav_dead),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("honest_scav1_dead", scav_dead);
 }
 
 // ===========================================================================
 // 2. Fraudulent Raid — every fraud type detected
 // ===========================================================================
 
-fn validate_fraudulent_raid() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_fraudulent_raid(h: &mut ValidationHarness) {
     let raid = scenarios::build_fraudulent_raid();
     let report = detection::analyze_raid(&raid);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "fraud_raid_not_clean",
-        bool_f64(!report.is_clean()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("fraud_raid_not_clean", !report.is_clean());
+    h.check_bool(
         "fraud_orphan_items_detected",
-        bool_f64(!report.orphan_items.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !report.orphan_items.is_empty(),
+    );
+    h.check_bool(
         "fraud_duplicate_certs_detected",
-        bool_f64(!report.duplicate_certs.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !report.duplicate_certs.is_empty(),
+    );
+    h.check_bool(
         "fraud_speed_violation_detected",
-        bool_f64(!report.speed_violations.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !report.speed_violations.is_empty(),
+    );
+    h.check_bool(
         "fraud_impossible_kill_detected",
-        bool_f64(!report.impossible_kills.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !report.impossible_kills.is_empty(),
+    );
+    h.check_bool(
         "fraud_unattributed_loot_detected",
-        bool_f64(!report.unattributed_loots.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !report.unattributed_loots.is_empty(),
+    );
+    h.check_bool(
         "fraud_headshot_anomaly_detected",
-        bool_f64(!report.headshot_anomalies.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        !report.headshot_anomalies.is_empty(),
+    );
+    h.check_bool(
         "fraud_total_violations_ge_6",
-        bool_f64(report.total_violations() >= 6),
-        1.0,
-        0.0,
-    ));
-
-    results
+        report.total_violations() >= 6,
+    );
 }
 
 // ===========================================================================
@@ -191,140 +132,81 @@ fn validate_fraudulent_raid() -> Vec<ValidationResult> {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_provenance_properties() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_provenance_properties(h: &mut ValidationHarness) {
     let raid = scenarios::build_honest_raid();
 
     let all_vertex_ids_unique = {
         let unique: std::collections::HashSet<_> = raid.vertex_ids.iter().collect();
         unique.len() == raid.vertex_ids.len()
     };
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_all_vertex_ids_unique",
-        bool_f64(all_vertex_ids_unique),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("provenance_all_vertex_ids_unique", all_vertex_ids_unique);
 
     let all_certs_unique = {
         let ids: std::collections::HashSet<_> = raid.certificates.values().map(|c| c.id).collect();
         ids.len() == raid.certificates.len()
     };
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_all_cert_ids_unique",
-        bool_f64(all_certs_unique),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("provenance_all_cert_ids_unique", all_certs_unique);
 
     let all_certs_active = raid
         .certificates
         .values()
         .all(loam_spine_core::Certificate::is_active);
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_all_certs_active",
-        bool_f64(all_certs_active),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("provenance_all_certs_active", all_certs_active);
 
     let timestamps_monotonic = raid
         .action_log
         .windows(2)
         .all(|w| w[1].tick_ms >= w[0].tick_ms);
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_timestamps_monotonic",
-        bool_f64(timestamps_monotonic),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("provenance_timestamps_monotonic", timestamps_monotonic);
 
     let bullet_count = raid
         .action_log
         .iter()
         .filter(|a| matches!(a.action, raid::RaidAction::Fire(_)))
         .count();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "provenance_three_bullets_tracked",
         bullet_count as f64,
         3.0,
         0.0,
-    ));
+    );
 
     let kill_count = raid
         .action_log
         .iter()
         .filter(|a| matches!(a.action, raid::RaidAction::Kill { .. }))
         .count();
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_one_kill_tracked",
-        kill_count as f64,
-        1.0,
-        0.0,
-    ));
+    h.check_abs("provenance_one_kill_tracked", kill_count as f64, 1.0, 0.0);
 
     let loot_count = raid
         .action_log
         .iter()
         .filter(|a| matches!(a.action, raid::RaidAction::LootPickup { .. }))
         .count();
-    results.push(ValidationResult::check(
-        EXP,
-        "provenance_two_loots_tracked",
-        loot_count as f64,
-        2.0,
-        0.0,
-    ));
-
-    results
+    h.check_abs("provenance_two_loots_tracked", loot_count as f64, 2.0, 0.0);
 }
 
 // ===========================================================================
 // 4. Chain of Custody Isomorphism
 // ===========================================================================
 
-fn validate_isomorphism() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_isomorphism(h: &mut ValidationHarness) {
     let raid = scenarios::build_honest_raid();
 
     let spawn_exists = raid
         .action_log
         .iter()
         .any(|a| matches!(a.action, raid::RaidAction::Spawn { entity: "pmc1", .. }));
-    results.push(ValidationResult::check(
-        EXP,
-        "isomorphism_spawn_vertex_exists",
-        bool_f64(spawn_exists),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("isomorphism_spawn_vertex_exists", spawn_exists);
 
     let extract_exists = raid
         .action_log
         .iter()
         .any(|a| matches!(a.action, raid::RaidAction::Extract { entity: "pmc1", .. }));
-    results.push(ValidationResult::check(
-        EXP,
-        "isomorphism_extract_vertex_exists",
-        bool_f64(extract_exists),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("isomorphism_extract_vertex_exists", extract_exists);
 
     let item_has_cert = raid.certificates.contains_key("scav1_shotgun");
-    results.push(ValidationResult::check(
-        EXP,
-        "isomorphism_looted_item_has_cert",
-        bool_f64(item_has_cert),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("isomorphism_looted_item_has_cert", item_has_cert);
 
     let kill_before_loot = {
         let kill_tick = raid
@@ -359,94 +241,47 @@ fn validate_isomorphism() -> Vec<ValidationResult> {
             _ => false,
         }
     };
-    results.push(ValidationResult::check(
-        EXP,
-        "isomorphism_kill_before_loot",
-        bool_f64(kill_before_loot),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("isomorphism_kill_before_loot", kill_before_loot);
 
     let zone_transition_count = raid
         .action_log
         .iter()
         .filter(|a| matches!(a.action, raid::RaidAction::Move { .. }))
         .count();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "isomorphism_zone_transitions_tracked",
-        bool_f64(zone_transition_count > 0),
-        1.0,
-        0.0,
-    ));
-
-    results
+        zone_transition_count > 0,
+    );
 }
 
 // ===========================================================================
 // 5. Fraud Report Detail Validation
 // ===========================================================================
 
-fn validate_fraud_report_detail() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_fraud_report_detail(h: &mut ValidationHarness) {
     let raid = scenarios::build_fraudulent_raid();
     let report = detection::analyze_raid(&raid);
 
     if let Some(speed) = report.speed_violations.first() {
-        results.push(ValidationResult::check(
-            EXP,
-            "detail_speed_hack_is_cheater",
-            bool_f64(speed.player == "cheater"),
-            1.0,
-            0.0,
-        ));
-        results.push(ValidationResult::check(
-            EXP,
-            "detail_speed_hack_window_under_1s",
-            bool_f64(speed.window_ms < 1000),
-            1.0,
-            0.0,
-        ));
+        h.check_bool("detail_speed_hack_is_cheater", speed.player == "cheater");
+        h.check_bool("detail_speed_hack_window_under_1s", speed.window_ms < 1000);
     }
 
     if let Some(hs) = report.headshot_anomalies.first() {
-        results.push(ValidationResult::check(
-            EXP,
-            "detail_aimbot_is_cheater",
-            bool_f64(hs.player == "cheater"),
-            1.0,
-            0.0,
-        ));
-        results.push(ValidationResult::check(
-            EXP,
-            "detail_aimbot_ratio_above_90pct",
-            bool_f64(hs.headshot_ratio > 0.9),
-            1.0,
-            0.0,
-        ));
+        h.check_bool("detail_aimbot_is_cheater", hs.player == "cheater");
+        h.check_bool("detail_aimbot_ratio_above_90pct", hs.headshot_ratio > 0.9);
     }
 
     if let Some(impossible) = report.impossible_kills.first() {
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             "detail_impossible_kill_is_cheater",
-            bool_f64(impossible.killer == "cheater"),
-            1.0,
-            0.0,
-        ));
+            impossible.killer == "cheater",
+        );
     }
 
     if let Some(orphan) = report.orphan_items.first() {
-        results.push(ValidationResult::check(
-            EXP,
-            "detail_orphan_item_is_cheater",
-            bool_f64(orphan.player == "cheater"),
-            1.0,
-            0.0,
-        ));
+        h.check_bool("detail_orphan_item_is_cheater", orphan.player == "cheater");
     }
-
-    results
 }
 
 // ===========================================================================
@@ -457,18 +292,11 @@ fn validate_fraud_report_detail() -> Vec<ValidationResult> {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_consumable_round_lifecycle() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_consumable_round_lifecycle(h: &mut ValidationHarness) {
     let raid = scenarios::build_consumable_raid();
     let report = detection::analyze_raid(&raid);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "consumable_raid_is_clean",
-        bool_f64(report.is_clean()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("consumable_raid_is_clean", report.is_clean());
 
     let consumed_rounds = raid
         .consumable_states
@@ -477,13 +305,12 @@ fn validate_consumable_round_lifecycle() -> Vec<ValidationResult> {
             matches!(state, ConsumableState::Consumed { .. }) && id.starts_with("pmc_rnd_")
         })
         .count();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "consumable_3_rounds_consumed",
         consumed_rounds as f64,
         3.0,
         0.0,
-    ));
+    );
 
     let intact_rounds = raid
         .consumable_states
@@ -492,13 +319,7 @@ fn validate_consumable_round_lifecycle() -> Vec<ValidationResult> {
             matches!(state, ConsumableState::Intact) && id.starts_with("pmc_rnd_")
         })
         .count();
-    results.push(ValidationResult::check(
-        EXP,
-        "consumable_3_rounds_intact",
-        intact_rounds as f64,
-        3.0,
-        0.0,
-    ));
+    h.check_abs("consumable_3_rounds_intact", intact_rounds as f64, 3.0, 0.0);
 
     let found_intact = raid
         .consumable_states
@@ -507,62 +328,41 @@ fn validate_consumable_round_lifecycle() -> Vec<ValidationResult> {
             matches!(state, ConsumableState::Intact) && id.starts_with("found_rnd_")
         })
         .count();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "consumable_4_found_rounds_intact",
         found_intact as f64,
         4.0,
         0.0,
-    ));
+    );
 
-    // Started with 6, fired 3 = 3 remaining, added 4 = 7 in magazine
     let mag_round_count = raid
         .magazines
         .get("pmc_mag_0")
         .map_or(0, |m| m.round_ids.len());
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "consumable_magazine_7_rounds_after_cycle",
         mag_round_count as f64,
         7.0,
         0.0,
-    ));
+    );
 
     let all_rounds_have_certs = (0..6)
         .map(|i| format!("pmc_rnd_{i}"))
         .all(|id| raid.certificates.contains_key(&id));
-    results.push(ValidationResult::check(
-        EXP,
-        "consumable_all_rounds_retain_certs",
-        bool_f64(all_rounds_have_certs),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("consumable_all_rounds_retain_certs", all_rounds_have_certs);
 
     let found_have_certs = (0..4)
         .map(|i| format!("found_rnd_{i}"))
         .all(|id| raid.certificates.contains_key(&id));
-    results.push(ValidationResult::check(
-        EXP,
-        "consumable_found_rounds_have_certs",
-        bool_f64(found_have_certs),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("consumable_found_rounds_have_certs", found_have_certs);
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "consumable_zero_phantom_rounds",
-        bool_f64(report.phantom_rounds.is_empty()),
-        1.0,
-        0.0,
-    ));
-
-    results
+        report.phantom_rounds.is_empty(),
+    );
 }
 
-fn validate_consumable_item_lifecycle() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_consumable_item_lifecycle(h: &mut ValidationHarness) {
     let raid = scenarios::build_consumable_raid();
     let report = detection::analyze_raid(&raid);
 
@@ -570,35 +370,18 @@ fn validate_consumable_item_lifecycle() -> Vec<ValidationResult> {
         .consumable_states
         .get("pmc_ifak")
         .is_some_and(|s| matches!(s, ConsumableState::Consumed { .. }));
-    results.push(ValidationResult::check(
-        EXP,
-        "consumable_ifak_consumed",
-        bool_f64(ifak_consumed),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("consumable_ifak_consumed", ifak_consumed);
 
     let food_consumed = raid
         .consumable_states
         .get("pmc_crackers")
         .is_some_and(|s| matches!(s, ConsumableState::Consumed { .. }));
-    results.push(ValidationResult::check(
-        EXP,
-        "consumable_food_consumed",
-        bool_f64(food_consumed),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("consumable_food_consumed", food_consumed);
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "consumable_zero_overconsumption",
-        bool_f64(report.overconsumptions.is_empty()),
-        1.0,
-        0.0,
-    ));
-
-    results
+        report.overconsumptions.is_empty(),
+    );
 }
 
 // ===========================================================================
@@ -609,227 +392,109 @@ fn validate_consumable_item_lifecycle() -> Vec<ValidationResult> {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_phantom_round_fraud() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_phantom_round_fraud(h: &mut ValidationHarness) {
     let raid = scenarios::build_phantom_round_raid();
     let report = detection::analyze_raid(&raid);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "phantom_raid_not_clean",
-        bool_f64(!report.is_clean()),
-        1.0,
-        0.0,
-    ));
-
-    // 3 phantom rounds detected
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("phantom_raid_not_clean", !report.is_clean());
+    h.check_abs(
         "phantom_3_rounds_detected",
         report.phantom_rounds.len() as f64,
         3.0,
         0.0,
-    ));
+    );
 
-    // All phantoms attributed to cheater
     let all_cheater = report.phantom_rounds.iter().all(|p| p.shooter == "cheater");
-    results.push(ValidationResult::check(
-        EXP,
-        "phantom_all_attributed_to_cheater",
-        bool_f64(all_cheater),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("phantom_all_attributed_to_cheater", all_cheater);
 
-    // Overconsumption: medkit consumed twice
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "phantom_overconsumption_detected",
-        bool_f64(!report.overconsumptions.is_empty()),
-        1.0,
-        0.0,
-    ));
+        !report.overconsumptions.is_empty(),
+    );
 
-    // The overconsumption is on cheat_ifak
     let ifak_overconsumed = report
         .overconsumptions
         .iter()
         .any(|o| o.item_id == "cheat_ifak" && o.consume_count == 2);
-    results.push(ValidationResult::check(
-        EXP,
-        "phantom_ifak_consumed_twice",
-        bool_f64(ifak_overconsumed),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("phantom_ifak_consumed_twice", ifak_overconsumed);
 
-    // Real rounds were fine — no phantom flag for real_rnd_0, real_rnd_1
     let real_rounds_clean = !report
         .phantom_rounds
         .iter()
         .any(|p| p.claimed_round_id.starts_with("real_rnd_"));
-    results.push(ValidationResult::check(
-        EXP,
-        "phantom_real_rounds_not_flagged",
-        bool_f64(real_rounds_clean),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("phantom_real_rounds_not_flagged", real_rounds_clean);
 }
 
 // ===========================================================================
 // 8. Advanced Cheater — spatial fraud detection
 // ===========================================================================
 
-fn validate_advanced_cheater() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_advanced_cheater(h: &mut ValidationHarness) {
     let raid = scenarios::build_advanced_cheater_raid();
     let report = detection::analyze_raid(&raid);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "advanced_raid_not_clean",
-        bool_f64(!report.is_clean()),
-        1.0,
-        0.0,
-    ));
-
-    // Identity spoof detected
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("advanced_raid_not_clean", !report.is_clean());
+    h.check_bool(
         "advanced_identity_spoof_detected",
-        bool_f64(!report.identity_spoofs.is_empty()),
-        1.0,
-        0.0,
-    ));
+        !report.identity_spoofs.is_empty(),
+    );
     if let Some(spoof) = report.identity_spoofs.first() {
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             "advanced_spoof_claims_honest",
-            bool_f64(spoof.claimed_shooter == "honest"),
-            1.0,
-            0.0,
-        ));
+            spoof.claimed_shooter == "honest",
+        );
     }
 
-    // Ghost action detected
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "advanced_ghost_action_detected",
-        bool_f64(!report.ghost_actions.is_empty()),
-        1.0,
-        0.0,
-    ));
+        !report.ghost_actions.is_empty(),
+    );
     if let Some(ghost) = report.ghost_actions.first() {
-        results.push(ValidationResult::check(
-            EXP,
-            "advanced_ghost_is_cheater",
-            bool_f64(ghost.player == "cheater"),
-            1.0,
-            0.0,
-        ));
+        h.check_bool("advanced_ghost_is_cheater", ghost.player == "cheater");
     }
 
-    // Through-wall shot detected
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "advanced_through_wall_detected",
-        bool_f64(!report.through_wall_shots.is_empty()),
-        1.0,
-        0.0,
-    ));
+        !report.through_wall_shots.is_empty(),
+    );
     if let Some(wall) = report.through_wall_shots.first() {
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             "advanced_wall_shooter_is_cheater",
-            bool_f64(wall.shooter == "cheater"),
-            1.0,
-            0.0,
-        ));
+            wall.shooter == "cheater",
+        );
     }
 
-    // Teleport detected
-    results.push(ValidationResult::check(
-        EXP,
-        "advanced_teleport_detected",
-        bool_f64(!report.teleports.is_empty()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("advanced_teleport_detected", !report.teleports.is_empty());
     if let Some(tp) = report.teleports.first() {
-        results.push(ValidationResult::check(
-            EXP,
-            "advanced_teleport_is_cheater",
-            bool_f64(tp.player == "cheater"),
-            1.0,
-            0.0,
-        ));
+        h.check_bool("advanced_teleport_is_cheater", tp.player == "cheater");
     }
 
-    // Total advanced violations >= 4
     let advanced_count = report.identity_spoofs.len()
         + report.ghost_actions.len()
         + report.through_wall_shots.len()
         + report.teleports.len();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "advanced_total_spatial_violations_ge_4",
-        bool_f64(advanced_count >= 4),
-        1.0,
-        0.0,
-    ));
-
-    results
+        advanced_count >= 4,
+    );
 }
 
 // ===========================================================================
 // 9. Honest Topology — spatial checks pass with clean play
 // ===========================================================================
 
-fn validate_honest_topology() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_honest_topology(h: &mut ValidationHarness) {
     let raid = scenarios::build_honest_topology_raid();
     let report = detection::analyze_raid(&raid);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "topology_honest_is_clean",
-        bool_f64(report.is_clean()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "topology_zero_spoofs",
-        bool_f64(report.identity_spoofs.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "topology_zero_ghosts",
-        bool_f64(report.ghost_actions.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("topology_honest_is_clean", report.is_clean());
+    h.check_bool("topology_zero_spoofs", report.identity_spoofs.is_empty());
+    h.check_bool("topology_zero_ghosts", report.ghost_actions.is_empty());
+    h.check_bool(
         "topology_zero_wallhacks",
-        bool_f64(report.through_wall_shots.is_empty()),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "topology_zero_teleports",
-        bool_f64(report.teleports.is_empty()),
-        1.0,
-        0.0,
-    ));
-
-    results
+        report.through_wall_shots.is_empty(),
+    );
+    h.check_bool("topology_zero_teleports", report.teleports.is_empty());
 }
 
 // ===========================================================================
@@ -837,65 +502,21 @@ fn validate_honest_topology() -> Vec<ValidationResult> {
 // ===========================================================================
 
 fn cmd_validate() {
-    println!("=== exp053: Extraction Shooter Provenance + Fraud Detection ===\n");
+    let mut h = ValidationHarness::new("exp053_extraction_shooter_provenance");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut all_results = Vec::new();
+    validate_honest_raid(&mut h);
+    validate_fraudulent_raid(&mut h);
+    validate_provenance_properties(&mut h);
+    validate_isomorphism(&mut h);
+    validate_fraud_report_detail(&mut h);
+    validate_consumable_round_lifecycle(&mut h);
+    validate_consumable_item_lifecycle(&mut h);
+    validate_phantom_round_fraud(&mut h);
+    validate_advanced_cheater(&mut h);
+    validate_honest_topology(&mut h);
 
-    let sections: Vec<(&str, Vec<ValidationResult>)> = vec![
-        ("Honest Raid — Clean Play", validate_honest_raid()),
-        ("Fraudulent Raid — Detection", validate_fraudulent_raid()),
-        ("Provenance Properties", validate_provenance_properties()),
-        ("Chain-of-Custody Isomorphism", validate_isomorphism()),
-        ("Fraud Report Detail", validate_fraud_report_detail()),
-        (
-            "Consumable Lifecycle — Round Tracking",
-            validate_consumable_round_lifecycle(),
-        ),
-        (
-            "Consumable Lifecycle — Meds + Food",
-            validate_consumable_item_lifecycle(),
-        ),
-        (
-            "Phantom Rounds + Overconsumption Fraud",
-            validate_phantom_round_fraud(),
-        ),
-        (
-            "Advanced Cheater — Spatial Fraud",
-            validate_advanced_cheater(),
-        ),
-        (
-            "Honest Topology — Clean Spatial Play",
-            validate_honest_topology(),
-        ),
-    ];
-
-    for (name, results) in sections {
-        println!("--- {name} ---");
-        for v in &results {
-            println!(
-                "  [{}] {}",
-                if v.passed { "PASS" } else { "FAIL" },
-                v.description
-            );
-        }
-        all_results.extend(results);
-        println!();
-    }
-
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let total = all_results.len();
-    println!("=== SUMMARY: {passed}/{total} checks passed ===");
-
-    if passed != total {
-        println!("\nFAILED:");
-        for r in all_results.iter().filter(|r| !r.passed) {
-            println!(
-                "  {} — measured={}, expected={}",
-                r.description, r.measured, r.expected
-            );
-        }
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

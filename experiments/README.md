@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
-**Date:** March 16, 2026
-**Total:** 75 experiments, 1692 checks, 0 failures, 394 tests + 12 proptest + 6 IPC integration (V23)
+**Date:** March 18, 2026
+**Total:** 75 experiments, 1692 checks, 0 failures, 450+ tests + 19 proptest + 6 IPC integration (V26)
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---
@@ -442,4 +442,4 @@ fn main() {
 - Exit code 0 = all pass, exit code 1 = any failure
 - Summary printed to stdout with check counts
 
-Legacy experiments use `ValidationResult::check()` — migration to `ValidationHarness` is incremental (exp001 complete, remainder follows same pattern).
+All experiments use `ValidationHarness` with `BaselineProvenance` for reproducible validation.

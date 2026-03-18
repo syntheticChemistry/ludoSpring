@@ -293,10 +293,7 @@ impl SampleSystem {
             schema_version: 1,
         };
 
-        let Ok((cert, _entry_hash)) = self
-            .cert_manager
-            .mint(cert_type, collector, metadata)
-        else {
+        let Ok((cert, _entry_hash)) = self.cert_manager.mint(cert_type, collector, metadata) else {
             eprintln!("FATAL: certificate minting failed");
             std::process::exit(1);
         };

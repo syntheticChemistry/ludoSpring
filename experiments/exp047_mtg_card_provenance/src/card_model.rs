@@ -118,17 +118,41 @@ pub struct GameVertex {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameAction {
     GameStart,
-    Draw { card: &'static str },
-    PlayLand { card: &'static str },
-    TapLand { card: &'static str },
-    CastSpell { card: &'static str, mana_paid: u8 },
-    DeclareAttacker { card: &'static str },
-    DeclareBlocker { blocker: &'static str, blocking: &'static str },
-    DealDamage { source: &'static str, target: &'static str, amount: u8 },
-    CreatureDies { card: &'static str },
-    PhaseChange { phase: &'static str },
+    Draw {
+        card: &'static str,
+    },
+    PlayLand {
+        card: &'static str,
+    },
+    TapLand {
+        card: &'static str,
+    },
+    CastSpell {
+        card: &'static str,
+        mana_paid: u8,
+    },
+    DeclareAttacker {
+        card: &'static str,
+    },
+    DeclareBlocker {
+        blocker: &'static str,
+        blocking: &'static str,
+    },
+    DealDamage {
+        source: &'static str,
+        target: &'static str,
+        amount: u8,
+    },
+    CreatureDies {
+        card: &'static str,
+    },
+    PhaseChange {
+        phase: &'static str,
+    },
     PassPriority,
-    Untap { card: &'static str },
+    Untap {
+        card: &'static str,
+    },
 }
 
 // ── Board state ──────────────────────────────────────────────────────
@@ -347,25 +371,87 @@ impl GameSession {
     }
 
     pub fn simulate_turn_sequence(&mut self) {
-        self.add_action("alice", GameAction::PlayLand { card: "a_forest_1" }, "Alice plays Forest.");
+        self.add_action(
+            "alice",
+            GameAction::PlayLand { card: "a_forest_1" },
+            "Alice plays Forest.",
+        );
         self.add_action("alice", GameAction::PassPriority, "Alice passes.");
 
-        self.add_action("bob", GameAction::PlayLand { card: "b_mountain_1" }, "Bob plays Mountain.");
+        self.add_action(
+            "bob",
+            GameAction::PlayLand {
+                card: "b_mountain_1",
+            },
+            "Bob plays Mountain.",
+        );
         self.add_action("bob", GameAction::PassPriority, "Bob passes.");
 
-        self.add_action("alice", GameAction::PlayLand { card: "a_forest_2" }, "Alice plays Forest.");
-        self.add_action("alice", GameAction::TapLand { card: "a_forest_1" }, "Alice taps Forest for {G}.");
-        self.add_action("alice", GameAction::TapLand { card: "a_forest_2" }, "Alice taps Forest for {G}.");
-        self.add_action("alice", GameAction::CastSpell { card: "a_bear", mana_paid: 2 }, "Alice casts Grizzly Bears.");
+        self.add_action(
+            "alice",
+            GameAction::PlayLand { card: "a_forest_2" },
+            "Alice plays Forest.",
+        );
+        self.add_action(
+            "alice",
+            GameAction::TapLand { card: "a_forest_1" },
+            "Alice taps Forest for {G}.",
+        );
+        self.add_action(
+            "alice",
+            GameAction::TapLand { card: "a_forest_2" },
+            "Alice taps Forest for {G}.",
+        );
+        self.add_action(
+            "alice",
+            GameAction::CastSpell {
+                card: "a_bear",
+                mana_paid: 2,
+            },
+            "Alice casts Grizzly Bears.",
+        );
         self.add_action("alice", GameAction::PassPriority, "Alice passes.");
 
-        self.add_action("bob", GameAction::TapLand { card: "b_mountain_1" }, "Bob taps Mountain for {R}.");
-        self.add_action("bob", GameAction::CastSpell { card: "b_bolt", mana_paid: 1 }, "Bob casts Lightning Bolt targeting Grizzly Bears.");
-        self.add_action("bob", GameAction::DealDamage { source: "b_bolt", target: "a_bear", amount: 3 }, "Lightning Bolt deals 3 damage to Grizzly Bears.");
-        self.add_action("alice", GameAction::CreatureDies { card: "a_bear" }, "Grizzly Bears dies (3 damage, 2 toughness).");
+        self.add_action(
+            "bob",
+            GameAction::TapLand {
+                card: "b_mountain_1",
+            },
+            "Bob taps Mountain for {R}.",
+        );
+        self.add_action(
+            "bob",
+            GameAction::CastSpell {
+                card: "b_bolt",
+                mana_paid: 1,
+            },
+            "Bob casts Lightning Bolt targeting Grizzly Bears.",
+        );
+        self.add_action(
+            "bob",
+            GameAction::DealDamage {
+                source: "b_bolt",
+                target: "a_bear",
+                amount: 3,
+            },
+            "Lightning Bolt deals 3 damage to Grizzly Bears.",
+        );
+        self.add_action(
+            "alice",
+            GameAction::CreatureDies { card: "a_bear" },
+            "Grizzly Bears dies (3 damage, 2 toughness).",
+        );
 
-        self.add_action("alice", GameAction::Untap { card: "a_forest_1" }, "Alice untaps Forest.");
-        self.add_action("alice", GameAction::Untap { card: "a_forest_2" }, "Alice untaps Forest.");
+        self.add_action(
+            "alice",
+            GameAction::Untap { card: "a_forest_1" },
+            "Alice untaps Forest.",
+        );
+        self.add_action(
+            "alice",
+            GameAction::Untap { card: "a_forest_2" },
+            "Alice untaps Forest.",
+        );
         self.add_action("alice", GameAction::PassPriority, "Alice passes.");
     }
 }

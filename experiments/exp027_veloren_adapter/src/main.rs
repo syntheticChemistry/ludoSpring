@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
 #![expect(
-    clippy::cast_possible_truncation,
-    reason = "validation harness: small-range numeric conversions"
-)]
-#![expect(
-    clippy::cast_sign_loss,
-    reason = "validation harness: non-negative values cast to unsigned"
-)]
-#![expect(
     clippy::cast_precision_loss,
     reason = "validation harness: counter/timing values within f64 range"
 )]
-// SPDX-License-Identifier: AGPL-3.0-or-later
 //! exp027 — Veloren Telemetry Adapter
 //!
 //! Demonstrates parsing Veloren server log events (SPECS ECS tracing output)
@@ -41,7 +32,14 @@ use ludospring_barracuda::telemetry::events::{
 };
 use ludospring_barracuda::telemetry::mapper::SessionAccumulator;
 use ludospring_barracuda::telemetry::report::generate_report;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (adapter validation — synthetic Veloren log)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (parse_veloren_line + SessionAccumulator)",
+};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -250,13 +248,9 @@ fn cmd_parse(args: &[String]) {
     eprintln!("Parsed {count} events from Veloren log");
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp027: Veloren Adapter Validation ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp027_veloren_adapter");
+    h.print_provenance(&[&PROVENANCE]);
 
     let log = synthetic_veloren_log();
     let sid = "test";
@@ -265,40 +259,18 @@ fn cmd_validate() {
         .filter_map(|line| parse_veloren_line(line, sid))
         .collect();
 
-    results.push(ValidationResult::check(
-        "exp027",
-        "parsed_events_count",
-        events.len() as f64,
-        18.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
+    h.check_abs("parsed_events_count", events.len() as f64, 18.0, 0.0);
+    h.check_bool(
         "has_session_start",
-        if events
+        events
             .iter()
-            .any(|e| e.event_type == EventType::SessionStart)
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
+            .any(|e| e.event_type == EventType::SessionStart),
+    );
+    h.check_bool(
         "has_session_end",
-        if events.iter().any(|e| e.event_type == EventType::SessionEnd) {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
+        events.iter().any(|e| e.event_type == EventType::SessionEnd),
+    );
+    h.check_abs(
         "has_player_moves",
         events
             .iter()
@@ -306,9 +278,8 @@ fn cmd_validate() {
             .count() as f64,
         7.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
+    );
+    h.check_abs(
         "has_damage_events",
         events
             .iter()
@@ -316,9 +287,8 @@ fn cmd_validate() {
             .count() as f64,
         3.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
+    );
+    h.check_abs(
         "has_kills",
         events
             .iter()
@@ -326,9 +296,8 @@ fn cmd_validate() {
             .count() as f64,
         3.0,
         0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
+    );
+    h.check_abs(
         "has_exploration",
         events
             .iter()
@@ -336,43 +305,15 @@ fn cmd_validate() {
             .count() as f64,
         3.0,
         0.0,
-    ));
+    );
 
     let mut acc = SessionAccumulator::new();
     acc.ingest_all(&events);
     let report = generate_report(&acc);
-    results.push(ValidationResult::check(
-        "exp027",
-        "report_generates",
-        if serde_json::to_string(&report).is_ok() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        "exp027",
-        "engagement_positive",
-        if report.engagement.composite > 0.0 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("report_generates", serde_json::to_string(&report).is_ok());
+    h.check_bool("engagement_positive", report.engagement.composite > 0.0);
 
-    for r in &results {
-        let status = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{status}] {}", r.description);
-    }
-    let pass = results.iter().filter(|r| r.passed).count();
-    println!("\nResults: {pass}/{} passed", results.len());
-    if pass < results.len() {
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn cmd_demo() {

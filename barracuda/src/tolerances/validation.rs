@@ -40,3 +40,10 @@ pub const UI_COVERAGE_TOL: f64 = 0.02;
 /// produces ±5% hit-rate delta on boundary rays where fractional grid
 /// offsets determine hit/miss. Validated in exp030 GPU parity checks.
 pub const RAYCASTER_HIT_RATE_TOL: f64 = 5.0;
+
+/// Tolerance for Perlin noise mean-near-zero statistical validation.
+///
+/// Justification: Perlin noise has theoretical mean 0 over the integer
+/// lattice. Sampling 10 000 non-lattice points with step 0.137 yields an
+/// empirical mean whose magnitude stays below 0.05 due to finite sampling.
+pub const NOISE_MEAN_TOL: f64 = 0.05;

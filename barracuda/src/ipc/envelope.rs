@@ -202,13 +202,13 @@ pub fn extract_rpc_result(response: &serde_json::Value) -> Result<serde_json::Va
             .and_then(|m| m.as_str())
             .unwrap_or("unknown")
             .to_string();
-        let code = error.get("code").and_then(|c| c.as_i64()).unwrap_or(0);
+        let code = error
+            .get("code")
+            .and_then(serde_json::Value::as_i64)
+            .unwrap_or(0);
         return Err(IpcError::RpcError { code, message });
     }
-    response
-        .get("result")
-        .cloned()
-        .ok_or(IpcError::NoResult)
+    response.get("result").cloned().ok_or(IpcError::NoResult)
 }
 
 impl JsonRpcError {
@@ -318,10 +318,7 @@ mod tests {
 
         assert_eq!(IpcError::NoResult.to_string(), "no result in response");
 
-        assert_eq!(
-            IpcError::NotFound("no viz".into()).to_string(),
-            "no viz"
-        );
+        assert_eq!(IpcError::NotFound("no viz".into()).to_string(), "no viz");
     }
 
     #[test]

@@ -291,6 +291,38 @@ impl<S: ValidationSink> ValidationHarness<S> {
         i32::from(!ok)
     }
 
+    /// Absolute-or-relative tolerance check.
+    ///
+    /// Passes when *either* the absolute or relative test succeeds. Useful
+    /// when values span many orders of magnitude (e.g., GPU f32 parity).
+    pub fn check_abs_or_rel(
+        &mut self,
+        label: &str,
+        observed: f64,
+        expected: f64,
+        abs_tol: f64,
+        rel_tol: f64,
+    ) {
+        let delta = (observed - expected).abs();
+        let denom = expected.abs();
+        let abs_ok = delta <= abs_tol;
+        let rel_ok = if denom < f64::EPSILON {
+            delta <= rel_tol
+        } else {
+            (delta / denom) <= rel_tol
+        };
+        let passed = abs_ok || rel_ok;
+        let detail = if passed {
+            String::new()
+        } else {
+            format!(
+                "observed={observed}, expected={expected}, delta={delta:.2e}, \
+                 abs_tol={abs_tol:.2e}, rel_tol={rel_tol:.2e}"
+            )
+        };
+        self.record(label, passed, &detail);
+    }
+
     /// Emit summary and exit the process.
     ///
     /// Calls `std::process::exit(0)` if all checks passed, otherwise
@@ -329,14 +361,57 @@ impl<T, E: core::fmt::Display> OrExit<T> for Result<T, E> {
 
 impl<T> OrExit<T> for Option<T> {
     fn or_exit(self, context: &str) -> T {
-        match self {
-            Some(v) => v,
-            None => {
-                eprintln!("FATAL: {context}: None");
-                std::process::exit(1);
-            }
-        }
+        self.unwrap_or_else(|| {
+            eprintln!("FATAL: {context}: None");
+            std::process::exit(1);
+        })
     }
+}
+
+// ── Skip pattern (wetSpring V123) ───────────────────────────────────
+
+/// Exit code for experiments that cannot run in the current environment.
+///
+/// Distinguishes "not applicable" (e.g., GPU not available) from "fail".
+/// CI systems can treat exit code 2 as a skip rather than a failure.
+pub const EXIT_SKIPPED: i32 = 2;
+
+/// Print a skip reason to stderr and exit with [`EXIT_SKIPPED`].
+///
+/// Use this when an experiment requires hardware (GPU, NPU) or a primal
+/// (toadStool, petalTongue) that is not available at runtime.
+pub fn exit_skipped(reason: &str) -> ! {
+    eprintln!("SKIP: {reason}");
+    std::process::exit(EXIT_SKIPPED);
+}
+
+// ── Baseline JSON loader ────────────────────────────────────────────
+
+/// Load a value from `combined_baselines.json` at a dot-separated JSON path.
+///
+/// Enables experiments to read Python baseline values at runtime instead of
+/// transcribing them as hardcoded constants. The JSON file is produced by
+/// `baselines/python/run_all_baselines.py`.
+///
+/// # Errors
+///
+/// Returns an error if the file cannot be read, parsed, or the path does
+/// not resolve to a numeric value.
+pub fn load_baseline_f64(json_path: &std::path::Path, key_path: &str) -> Result<f64, String> {
+    let content = std::fs::read_to_string(json_path)
+        .map_err(|e| format!("read {}: {e}", json_path.display()))?;
+    let root: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("parse JSON: {e}"))?;
+
+    let mut current = &root;
+    for segment in key_path.split('.') {
+        current = current
+            .get(segment)
+            .ok_or_else(|| format!("key not found: {segment} in path {key_path}"))?;
+    }
+    current
+        .as_f64()
+        .ok_or_else(|| format!("value at {key_path} is not numeric: {current}"))
 }
 
 // ── Legacy API (backward-compatible) ────────────────────────────────
@@ -513,6 +588,36 @@ mod tests {
     fn or_exit_option_some_returns_value() {
         let o: Option<i32> = Some(99);
         assert_eq!(o.or_exit("should not exit"), 99);
+    }
+
+    // ── check_abs_or_rel tests ─────────────────────────────────────
+
+    #[test]
+    fn abs_or_rel_passes_on_abs() {
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
+        h.check_abs_or_rel("abs-wins", 1.000_001, 1.0, 1e-5, 1e-10);
+        assert!(h.all_passed());
+    }
+
+    #[test]
+    fn abs_or_rel_passes_on_rel() {
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
+        h.check_abs_or_rel("rel-wins", 1_000_001.0, 1_000_000.0, 1e-10, 1e-5);
+        assert!(h.all_passed());
+    }
+
+    #[test]
+    fn abs_or_rel_fails_when_both_fail() {
+        let mut h = ValidationHarness::with_sink("test", BufferSink::default());
+        h.check_abs_or_rel("both-fail", 2.0, 1.0, 0.01, 0.01);
+        assert!(!h.all_passed());
+    }
+
+    // ── exit_skipped ──────────────────────────────────────────────────
+
+    #[test]
+    fn exit_skipped_code_is_two() {
+        assert_eq!(super::EXIT_SKIPPED, 2);
     }
 
     // ── Legacy ValidationResult tests ───────────────────────────────

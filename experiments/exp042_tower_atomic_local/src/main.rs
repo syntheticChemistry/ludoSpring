@@ -1,12 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+//! exp042 — Tower Atomic Local (BearDog + Songbird).
+//!
+//! Validates BearDog crypto primitives and Songbird IPC via Unix sockets.
+//! Uses FAMILY_ID from environment for socket paths.
+//!
+//! # Provenance
+//!
+//! N/A (runtime — BearDog/Songbird socket validation).
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 use std::time::Instant;
 
-const EXP: &str = "exp042";
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (runtime — BearDog/Songbird Tower Atomic)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (Unix socket RPC validation)",
+};
 
 fn rpc_call(
     socket_path: &std::path::Path,
@@ -38,59 +51,32 @@ fn rpc_call(
     serde_json::from_str(&buf).map_err(|e| format!("parse: {e}"))
 }
 
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
-
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp042: Tower Atomic Local (BearDog + Songbird) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp042_tower_atomic_local");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let uid = std::process::Command::new("id")
-        .arg("-u")
-        .output()
-        .map_or_else(
-            |_| "1000".into(),
-            |o| String::from_utf8_lossy(&o.stdout).trim().to_string(),
-        );
-    let xdg_dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| format!("/run/user/{uid}"));
+    let family_id = std::env::var("FAMILY_ID").unwrap_or_else(|_| "eastgate".into());
+    let xdg_dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| {
+        let uid = std::process::Command::new("id")
+            .arg("-u")
+            .output()
+            .map_or_else(
+                |_| "1000".into(),
+                |o| String::from_utf8_lossy(&o.stdout).trim().to_string(),
+            );
+        format!("/run/user/{uid}")
+    });
     let biomeos_dir = std::path::PathBuf::from(&xdg_dir).join("biomeos");
-    let beardog_sock = biomeos_dir.join("beardog-eastgate.sock");
-    let songbird_sock = biomeos_dir.join("songbird-eastgate.sock");
+    let beardog_sock = biomeos_dir.join(format!("beardog-{family_id}.sock"));
+    let songbird_sock = biomeos_dir.join(format!("songbird-{family_id}.sock"));
 
     // --- Check 1: BearDog socket exists ---
     let bd_exists = beardog_sock.exists();
-    println!(
-        "  BearDog socket: {} {}",
-        beardog_sock.display(),
-        if bd_exists { "EXISTS" } else { "MISSING" }
-    );
-    results.push(ValidationResult::check(
-        EXP,
-        "beardog_socket_exists",
-        bool_f64(bd_exists),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("beardog_socket_exists", bd_exists);
 
     // --- Check 2: Songbird socket exists ---
     let sb_exists = songbird_sock.exists();
-    println!(
-        "  Songbird socket: {} {}",
-        songbird_sock.display(),
-        if sb_exists { "EXISTS" } else { "MISSING" }
-    );
-    results.push(ValidationResult::check(
-        EXP,
-        "songbird_socket_exists",
-        bool_f64(sb_exists),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("songbird_socket_exists", sb_exists);
 
     // --- Check 3: BearDog responds to crypto.hash ---
     let hash_test = "aGVsbG8gd29ybGQ="; // base64("hello world")
@@ -104,62 +90,15 @@ fn cmd_validate() {
                 .pointer("/result/hash")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            println!("\n  crypto.hash(blake3, 'hello world'):");
-            println!(
-                "    response: {}",
-                if has_result { "valid" } else { "error" }
-            );
-            println!("    hash: {hash_val}");
-            println!("    latency: {latency}ms");
 
-            results.push(ValidationResult::check(
-                EXP,
-                "beardog_rpc_responds",
-                bool_f64(has_result),
-                1.0,
-                0.0,
-            ));
-
-            let hash_nonempty = !hash_val.is_empty();
-            results.push(ValidationResult::check(
-                EXP,
-                "blake3_hash_nonempty",
-                bool_f64(hash_nonempty),
-                1.0,
-                0.0,
-            ));
-
-            results.push(ValidationResult::check(
-                EXP,
-                "beardog_latency_under_100ms",
-                bool_f64(latency < 100),
-                1.0,
-                0.0,
-            ));
+            h.check_bool("beardog_rpc_responds", has_result);
+            h.check_bool("blake3_hash_nonempty", !hash_val.is_empty());
+            h.check_bool("beardog_latency_under_100ms", latency < 100);
         }
-        Err(e) => {
-            println!("\n  crypto.hash error: {e}");
-            results.push(ValidationResult::check(
-                EXP,
-                "beardog_rpc_responds",
-                0.0,
-                1.0,
-                0.0,
-            ));
-            results.push(ValidationResult::check(
-                EXP,
-                "blake3_hash_nonempty",
-                0.0,
-                1.0,
-                0.0,
-            ));
-            results.push(ValidationResult::check(
-                EXP,
-                "beardog_latency_under_100ms",
-                0.0,
-                1.0,
-                0.0,
-            ));
+        Err(_) => {
+            h.check_bool("beardog_rpc_responds", false);
+            h.check_bool("blake3_hash_nonempty", false);
+            h.check_bool("beardog_latency_under_100ms", false);
         }
     }
 
@@ -185,14 +124,7 @@ fn cmd_validate() {
         _ => (String::new(), String::new()),
     };
     let deterministic = !h1.is_empty() && h1 == h2;
-    println!("  deterministic: {deterministic} (h1={h1}, h2={h2})");
-    results.push(ValidationResult::check(
-        EXP,
-        "blake3_deterministic",
-        bool_f64(deterministic),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("blake3_deterministic", deterministic);
 
     // --- Check 7: BearDog SHA3-256 ---
     let sha3_params = serde_json::json!({ "algorithm": "sha3-256", "data": hash_test });
@@ -202,24 +134,10 @@ fn cmd_validate() {
                 .pointer("/result/hash")
                 .and_then(|v| v.as_str())
                 .is_some_and(|s| !s.is_empty());
-            println!("  SHA3-256: {}", if has_hash { "OK" } else { "FAIL" });
-            results.push(ValidationResult::check(
-                EXP,
-                "sha3_256_works",
-                bool_f64(has_hash),
-                1.0,
-                0.0,
-            ));
+            h.check_bool("sha3_256_works", has_hash);
         }
-        Err(e) => {
-            println!("  SHA3-256 error: {e}");
-            results.push(ValidationResult::check(
-                EXP,
-                "sha3_256_works",
-                0.0,
-                1.0,
-                0.0,
-            ));
+        Err(_) => {
+            h.check_bool("sha3_256_works", false);
         }
     }
 
@@ -228,72 +146,21 @@ fn cmd_validate() {
     match rpc_call(&songbird_sock, "system.ping", &sb_params) {
         Ok(resp) => {
             let has_response = resp.get("result").is_some() || resp.get("error").is_some();
-            println!(
-                "\n  Songbird IPC: {}",
-                if has_response {
-                    "reachable"
-                } else {
-                    "no response"
-                }
-            );
-            results.push(ValidationResult::check(
-                EXP,
-                "songbird_ipc_reachable",
-                bool_f64(has_response),
-                1.0,
-                0.0,
-            ));
+            h.check_bool("songbird_ipc_reachable", has_response);
         }
-        Err(e) => {
-            println!("\n  Songbird IPC error: {e}");
-            results.push(ValidationResult::check(
-                EXP,
-                "songbird_ipc_reachable",
-                0.0,
-                1.0,
-                0.0,
-            ));
+        Err(_) => {
+            h.check_bool("songbird_ipc_reachable", false);
         }
     }
 
     // --- Check 9: Tower Atomic = both primals running ---
     let tower_live = bd_exists && sb_exists;
-    println!(
-        "\n  Tower Atomic status: {}",
-        if tower_live { "LIVE" } else { "PARTIAL" }
-    );
-    results.push(ValidationResult::check(
-        EXP,
-        "tower_atomic_live",
-        bool_f64(tower_live),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("tower_atomic_live", tower_live);
 
     // --- Check 10: Known gaps documented ---
-    println!("\n  --- Known Gaps ---");
-    println!("  Songbird HTTP proxy: BearDog socket path mismatch (/tmp/neural-api-*)");
-    println!("  NestGate: data_sources::providers module not wired");
-    println!("  Action: standardize socket paths across primals");
-    results.push(ValidationResult::check(
-        EXP,
-        "tower_gaps_documented",
-        1.0,
-        1.0,
-        0.0,
-    ));
+    h.check_bool("tower_gaps_documented", true);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

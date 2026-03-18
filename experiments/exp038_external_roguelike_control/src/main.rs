@@ -21,9 +21,16 @@ use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_engagement};
 use ludospring_barracuda::metrics::fun_keys::{FunSignals, classify_fun};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 use bracket_pathfinding::prelude::*;
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — bracket-pathfinding, drunkard's walk)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (control group — external roguelike)",
+};
 
 const MAP_W: usize = 40;
 const MAP_H: usize = 30;
@@ -328,43 +335,24 @@ fn main() {
     }
 }
 
-#[expect(clippy::too_many_lines, reason = "validation orchestrator")]
 #[expect(
     clippy::cast_possible_truncation,
     reason = "exploration count bounded by MAP_TILES"
 )]
 fn cmd_validate() {
-    println!("=== exp038: External Roguelike Control Group ===\n");
-    println!("  External libraries: bracket-pathfinding (A*, distance, FOV)");
-    println!("  Dungeon: drunkard's walk (NOT ludoSpring BSP)");
-    println!("  RNG: hand-rolled LCG (NOT barraCuda)");
-    println!("  Player: A*-guided headless simulation\n");
-
-    let experiment = "exp038_external_roguelike_control";
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp038_external_roguelike_control");
+    h.print_provenance(&[&PROVENANCE]);
 
     // Generate dungeon with external algorithm
     let map = generate_drunkards_walk(42);
 
     // 1. Dungeon has walkable tiles
     let floor_count = map.tiles.iter().filter(|t| **t != Tile::Wall).count();
-    results.push(ValidationResult::check(
-        experiment,
-        "external_dungeon_has_floors",
-        if floor_count > 100 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("external_dungeon_has_floors", floor_count > 100);
 
     // 2. Dungeon has stairs
     let has_stairs = map.tiles.contains(&Tile::Stairs);
-    results.push(ValidationResult::check(
-        experiment,
-        "external_dungeon_has_stairs",
-        if has_stairs { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("external_dungeon_has_stairs", has_stairs);
 
     // 3. A* pathfinding works on external map
     let start_idx = map.tiles.iter().position(|t| *t != Tile::Wall).unwrap_or(0);
@@ -374,30 +362,11 @@ fn cmd_validate() {
         .position(|t| *t == Tile::Stairs)
         .unwrap_or(0);
     let path = a_star_search(start_idx, stairs_idx, &map);
-    results.push(ValidationResult::check(
-        experiment,
-        "astar_finds_path_to_stairs",
-        if path.success { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] A* path length: {} steps", path.steps.len());
+    h.check_bool("astar_finds_path_to_stairs", path.success);
 
     // 4. Headless session produces actions
     let player = simulate_session(&map, 500);
-    results.push(ValidationResult::check(
-        experiment,
-        "headless_session_produces_actions",
-        if player.actions > 50 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!(
-        "  [INFO] Session: {} actions, {} items, {} explored",
-        player.actions,
-        player.items,
-        player.explored.iter().filter(|&&e| e).count()
-    );
+    h.check_bool("headless_session_produces_actions", player.actions > 50);
 
     // --- Feed session through ludoSpring metrics (THE KEY TEST) ---
 
@@ -414,30 +383,13 @@ fn cmd_validate() {
     };
     let eng = compute_engagement(&snap);
 
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "engagement_composite_valid",
-        if eng.composite >= 0.0 && eng.composite <= 1.0 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    println!(
-        "  [INFO] Engagement: composite={:.3}, APM={:.1}, exploration={:.2}",
-        eng.composite, eng.actions_per_minute, eng.exploration_rate
+        eng.composite >= 0.0 && eng.composite <= 1.0,
     );
 
     // 6. Engagement composite is non-trivial (player actually did things)
-    results.push(ValidationResult::check(
-        experiment,
-        "engagement_nontrivial",
-        if eng.composite > 0.05 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("engagement_nontrivial", eng.composite > 0.05);
 
     // 7. Flow evaluation works on external session data
     let skill = player.perf.estimated_skill();
@@ -451,17 +403,7 @@ fn cmd_validate() {
             | FlowState::Arousal
             | FlowState::Anxiety
     );
-    results.push(ValidationResult::check(
-        experiment,
-        "flow_evaluation_valid",
-        if flow_valid { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!(
-        "  [INFO] Flow: {} (skill={skill:.2}, challenge={challenge:.2})",
-        flow.as_str()
-    );
+    h.check_bool("flow_evaluation_valid", flow_valid);
 
     // 8. Fun classification works on external session data
     #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
@@ -476,43 +418,17 @@ fn cmd_validate() {
         && fun.scores.easy >= 0.0
         && fun.scores.people >= 0.0
         && fun.scores.serious >= 0.0;
-    results.push(ValidationResult::check(
-        experiment,
-        "fun_classification_valid",
-        if fun_valid { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!(
-        "  [INFO] Fun: {} (hard={:.2}, easy={:.2}, serious={:.2})",
-        fun.dominant.as_str(),
-        fun.scores.hard,
-        fun.scores.easy,
-        fun.scores.serious
-    );
+    h.check_bool("fun_classification_valid", fun_valid);
 
     // 9. DDA produces valid recommendation on external data
     let adj = suggest_adjustment(&player.perf, tolerances::DDA_TARGET_SUCCESS_RATE);
     let adj_valid = adj.abs() <= 1.5;
-    results.push(ValidationResult::check(
-        experiment,
-        "dda_recommendation_valid",
-        if adj_valid { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] DDA: adjustment={adj:+.3}");
+    h.check_bool("dda_recommendation_valid", adj_valid);
 
     // 10. Second seed produces different dungeon layout (generalization)
     let map2 = generate_drunkards_walk(999);
     let layouts_differ = map.tiles.iter().zip(map2.tiles.iter()).any(|(a, b)| a != b);
-    results.push(ValidationResult::check(
-        experiment,
-        "different_seed_different_layout",
-        if layouts_differ { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("different_seed_different_layout", layouts_differ);
 
     // 11. Metrics on second map also valid
     let player2 = simulate_session(&map2, 500);
@@ -526,45 +442,14 @@ fn cmd_validate() {
         deliberate_pauses: player2.pauses,
     };
     let eng2 = compute_engagement(&snap2);
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "metrics_valid_on_second_map",
-        if eng2.composite >= 0.0 && eng2.composite <= 1.0 {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Map2 engagement: composite={:.3}", eng2.composite);
+        eng2.composite >= 0.0 && eng2.composite <= 1.0,
+    );
 
     // 12. bracket-pathfinding FOV works on external map
     let fov = field_of_view(Point::new(player.x, player.y), 8, &map);
-    results.push(ValidationResult::check(
-        experiment,
-        "bracket_fov_produces_results",
-        if fov.len() > 1 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!(
-        "  [INFO] FOV from ({},{}): {} visible tiles",
-        player.x,
-        player.y,
-        fov.len()
-    );
+    h.check_bool("bracket_fov_produces_results", fov.len() > 1);
 
-    // Print results
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }

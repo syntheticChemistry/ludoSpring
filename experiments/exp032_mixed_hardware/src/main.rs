@@ -13,7 +13,14 @@
 
 use std::process;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — PCIe transfer model, mixed pipeline)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (sysfs PCIe detection)",
+};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -299,40 +306,20 @@ fn detect_pcie_links() -> Vec<PcieLinkInfo> {
     reason = "validation orchestrator — sequential check groups"
 )]
 fn cmd_validate() {
-    println!("=== exp032: Mixed Hardware Validation ===\n");
-
-    let experiment = "exp032_mixed_hardware";
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp032_mixed_hardware");
+    h.print_provenance(&[&PROVENANCE]);
 
     // 1. Transfer cost model: PCIe 4x16 sanity
     let pcie4_1mb = BandwidthTier::PciE4x16.transfer_time_us(1_000_000);
-    results.push(ValidationResult::check(
-        experiment,
-        "pcie4_1mb_transfer_bounded",
-        pcie4_1mb,
-        31.75,
-        50.0,
-    ));
+    h.check_abs("pcie4_1mb_transfer_bounded", pcie4_1mb, 31.75, 50.0);
 
     // 2. NvLink faster than PCIe
     let nvlink_1mb = BandwidthTier::NvLink.transfer_time_us(1_000_000);
-    results.push(ValidationResult::check(
-        experiment,
-        "nvlink_faster_than_pcie",
-        if nvlink_1mb < pcie4_1mb { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("nvlink_faster_than_pcie", nvlink_1mb < pcie4_1mb);
 
     // 3. Shared memory fastest
     let shared_1mb = BandwidthTier::SharedMemory.transfer_time_us(1_000_000);
-    results.push(ValidationResult::check(
-        experiment,
-        "shared_mem_fastest",
-        if shared_1mb < nvlink_1mb { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("shared_mem_fastest", shared_1mb < nvlink_1mb);
 
     // 4. Mixed pipeline: CPU → GPU → CPU completes
     let stages = vec![
@@ -356,35 +343,13 @@ fn cmd_validate() {
         },
     ];
     let result = run_mixed_pipeline(&stages, &[], BandwidthTier::PciE4x16);
-    results.push(ValidationResult::check(
-        experiment,
-        "mixed_pipeline_completes",
-        if result.total_us > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("mixed_pipeline_completes", result.total_us > 0.0);
 
     // 5. Transfer cost included in pipeline
-    results.push(ValidationResult::check(
-        experiment,
-        "transfer_cost_nonzero",
-        if result.transfer_us > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("transfer_cost_nonzero", result.transfer_us > 0.0);
 
     // 6. Pipeline total > compute alone
-    results.push(ValidationResult::check(
-        experiment,
-        "total_exceeds_compute",
-        if result.total_us > result.compute_us {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("total_exceeds_compute", result.total_us > result.compute_us);
 
     // 7. GPU substrate scores higher for parallel work
     let gpu_profile = SubstrateProfile {
@@ -409,30 +374,17 @@ fn cmd_validate() {
         1000.0,
         BandwidthTier::SharedMemory,
     );
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "gpu_preferred_large_parallel",
-        if large_parallel_score_gpu > large_parallel_score_cpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        large_parallel_score_gpu > large_parallel_score_cpu,
+    );
 
     // 8. Transfer cost dominance: massive data + zero parallelism → CPU wins
     let massive_transfer_gpu =
         score_substrate(&gpu_profile, 10_000_000_000, 0.0, BandwidthTier::PciE3x16);
     let zero_transfer_cpu = score_substrate(&cpu_profile, 0, 0.0, BandwidthTier::SharedMemory);
     let transfer_dominates = zero_transfer_cpu > massive_transfer_gpu;
-    results.push(ValidationResult::check(
-        experiment,
-        "transfer_cost_dominance",
-        if transfer_dominates { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("transfer_cost_dominance", transfer_dominates);
 
     // 9. NPU substrate scoring — real scoring algorithm, simulated hardware profile.
     // The BrainChip AKD1000 specs are from public datasheets. When physical NPU
@@ -446,24 +398,11 @@ fn cmd_validate() {
         flops_gflops: 50.0,
     };
     let npu_score = score_substrate(&npu_profile, 1_000, 100.0, BandwidthTier::PciE3x16);
-    results.push(ValidationResult::check(
-        experiment,
-        "npu_substrate_scores_positive",
-        if npu_score > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("npu_substrate_scores_positive", npu_score > 0.0);
 
     // 10. PCIe link detection (best-effort, pass if no crash)
-    let links = detect_pcie_links();
-    results.push(ValidationResult::check(
-        experiment,
-        "pcie_detection_no_crash",
-        1.0,
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Detected {} PCIe GPU/NPU link(s)", links.len());
+    let _links = detect_pcie_links();
+    h.check_bool("pcie_detection_no_crash", true);
 
     // 11. CPU-only pipeline works (no transfers)
     let cpu_only_stages = vec![
@@ -481,13 +420,7 @@ fn cmd_validate() {
         },
     ];
     let cpu_result = run_mixed_pipeline(&cpu_only_stages, &[], BandwidthTier::SharedMemory);
-    results.push(ValidationResult::check(
-        experiment,
-        "cpu_only_no_transfer",
-        cpu_result.transfer_us,
-        0.0,
-        0.0,
-    ));
+    h.check_abs("cpu_only_no_transfer", cpu_result.transfer_us, 0.0, 0.0);
 
     // 12. Bandwidth tier ordering is consistent
     let tiers = [
@@ -500,13 +433,7 @@ fn cmd_validate() {
     let monotonic = tiers
         .windows(2)
         .all(|w| w[0].bandwidth_gbps() < w[1].bandwidth_gbps());
-    results.push(ValidationResult::check(
-        experiment,
-        "bandwidth_tier_monotonic",
-        if monotonic { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("bandwidth_tier_monotonic", monotonic);
 
     // 13. Direct NPU→GPU is faster than via CPU
     let direct_npu_gpu =
@@ -515,27 +442,11 @@ fn cmd_validate() {
         TransferPath::ViaCpu(BandwidthTier::PciE4x16, BandwidthTier::PciE4x16),
         4_000_000,
     );
-    results.push(ValidationResult::check(
-        experiment,
-        "npu_to_gpu_direct_faster",
-        if direct_npu_gpu < via_cpu_npu_gpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("npu_to_gpu_direct_faster", direct_npu_gpu < via_cpu_npu_gpu);
 
     // 14. Direct ≈ half of via-CPU (same bandwidth on both legs)
     let ratio = direct_npu_gpu / via_cpu_npu_gpu;
-    results.push(ValidationResult::check(
-        experiment,
-        "direct_pcie_half_roundtrip",
-        ratio,
-        0.5,
-        0.01,
-    ));
+    h.check_abs("direct_pcie_half_roundtrip", ratio, 0.5, 0.01);
 
     // 15. CPU→NPU→GPU→CPU with mixed transfers
     let v2_stages = vec![
@@ -569,13 +480,7 @@ fn cmd_validate() {
         },
     ];
     let v2_result = run_mixed_pipeline_v2(&v2_stages, BandwidthTier::PciE4x16);
-    results.push(ValidationResult::check(
-        experiment,
-        "mixed_4stage_pipeline_completes",
-        if v2_result.total_us > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("mixed_4stage_pipeline_completes", v2_result.total_us > 0.0);
 
     // 16. Pipeline with direct NPU→GPU is faster than pipeline with CPU roundtrip
     let v2_via_cpu_stages = vec![
@@ -612,17 +517,10 @@ fn cmd_validate() {
         },
     ];
     let v2_via_cpu_result = run_mixed_pipeline_v2(&v2_via_cpu_stages, BandwidthTier::PciE4x16);
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "npu_gpu_bypass_saves_time",
-        if v2_result.total_us < v2_via_cpu_result.total_us {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        v2_result.total_us < v2_via_cpu_result.total_us,
+    );
 
     // 17. Direct < ViaCpu for same bandwidth
     let direct_cost =
@@ -632,17 +530,10 @@ fn cmd_validate() {
         10_000_000,
     );
     let local_cost = transfer_path_time_us(TransferPath::Local, 10_000_000);
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "transfer_path_cost_ordering",
-        if local_cost < direct_cost && direct_cost < via_cpu_cost {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        local_cost < direct_cost && direct_cost < via_cpu_cost,
+    );
 
     // 18. NPU profile can be constructed and scored with v2
     let npu_v2_score = score_substrate_v2(
@@ -651,26 +542,9 @@ fn cmd_validate() {
         100.0,
         TransferPath::Direct(BandwidthTier::PciE3x16),
     );
-    results.push(ValidationResult::check(
-        experiment,
-        "substrate_profile_npu_v2_scored",
-        if npu_v2_score > 0.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("substrate_profile_npu_v2_scored", npu_v2_score > 0.0);
 
-    // Print results
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 fn cmd_pcie() {

@@ -1328,7 +1328,7 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 
 [[package]]
 name = "loam-spine-core"
-version = "0.9.4"
+version = "0.9.5"
 dependencies = [
  "bincode",
  "blake3",
@@ -2919,7 +2919,7 @@ dependencies = [
 
 [[package]]
 name = "sweet-grass-core"
-version = "0.7.20"
+version = "0.7.21"
 dependencies = [
  "base64",
  "chrono",

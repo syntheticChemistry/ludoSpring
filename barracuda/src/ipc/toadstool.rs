@@ -144,7 +144,7 @@ pub fn query_capabilities() -> Result<SubstrateCapabilities, String> {
             |result| {
                 let gpu_available = result
                     .get("gpu_available")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false);
                 let gpu_name = result
                     .get("gpu_name")
@@ -153,7 +153,7 @@ pub fn query_capabilities() -> Result<SubstrateCapabilities, String> {
                     .to_owned();
                 let f64_supported = result
                     .get("f64_supported")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false);
                 Ok(SubstrateCapabilities {
                     gpu_available,
@@ -268,7 +268,7 @@ pub fn dispatch_capabilities() -> Result<SubstrateCapabilities, String> {
             |result| {
                 let gpu_available = result
                     .get("gpu_available")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false);
                 let gpu_name = result
                     .get("gpu_name")
@@ -277,7 +277,7 @@ pub fn dispatch_capabilities() -> Result<SubstrateCapabilities, String> {
                     .to_owned();
                 let f64_supported = result
                     .get("f64_supported")
-                    .and_then(|v| v.as_bool())
+                    .and_then(serde_json::Value::as_bool)
                     .unwrap_or(false);
                 Ok(SubstrateCapabilities {
                     gpu_available,

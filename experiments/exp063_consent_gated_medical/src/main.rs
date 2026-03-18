@@ -15,14 +15,15 @@
 mod medical;
 
 use loam_spine_core::Did;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use medical::{AccessEvent, ConsentScope, MedicalAccessSystem, MedicalFraudType, RecordType};
 
-const EXP: &str = "exp063_consent_gated_medical";
-
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — healthSpring zero-knowledge medical access)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 // ===========================================================================
 // 1. Consent Lifecycle
@@ -32,123 +33,76 @@ const fn bool_f64(b: bool) -> f64 {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_consent_lifecycle() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_consent_lifecycle(h: &mut ValidationHarness) {
     let patient = Did::new("did:key:patient_lifecycle");
     let provider = Did::new("did:key:provider_lifecycle");
 
     let mut system = MedicalAccessSystem::new(&patient);
 
     let record_id = system.create_record(&patient, RecordType::Lab, "Blood panel results");
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "lifecycle_record_created",
-        bool_f64(system.cert_manager.get_certificate(&record_id).is_some()),
-        1.0,
-        0.0,
-    ));
+        system.cert_manager.get_certificate(&record_id).is_some(),
+    );
 
     let scope = ConsentScope {
         record_types: vec![RecordType::Lab, RecordType::Vitals],
         expiry_tick: 100,
     };
     let consent_id = system.grant_consent(&patient, &provider, scope);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "lifecycle_consent_granted",
-        bool_f64(system.consents.contains_key(&consent_id)),
-        1.0,
-        0.0,
-    ));
+        system.consents.contains_key(&consent_id),
+    );
 
     system.advance_tick();
     let access_result = system.access_record(&provider, record_id, "treatment", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "lifecycle_access_succeeds",
-        bool_f64(access_result.is_ok()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("lifecycle_access_succeeds", access_result.is_ok());
 
     let Ok(proof) = access_result else {
         eprintln!("FATAL: access_result failed (validated above as Ok)");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
-        "lifecycle_proof_returned",
-        bool_f64(proof.record_id == record_id),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("lifecycle_proof_returned", proof.record_id == record_id);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "lifecycle_access_logged",
-        bool_f64(system.access_log.len() == 1),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("lifecycle_access_logged", system.access_log.len() == 1);
 
     let audit = system.audit(record_id);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "lifecycle_audit_trail_correct",
         audit.len() as f64,
         1.0,
         0.0,
-    ));
+    );
 
     let Ok(()) = system.revoke_consent(&patient, consent_id) else {
         eprintln!("FATAL: revoke_consent failed");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "lifecycle_consent_revoked",
-        bool_f64(system.consents.get(&consent_id).is_some_and(|c| c.revoked)),
-        1.0,
-        0.0,
-    ));
+        system.consents.get(&consent_id).is_some_and(|c| c.revoked),
+    );
 
     system.advance_tick();
     let post_revoke = system.access_record(&provider, record_id, "followup", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "lifecycle_post_revoke_rejected",
-        bool_f64(post_revoke.is_err()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("lifecycle_post_revoke_rejected", post_revoke.is_err());
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "lifecycle_dag_vertices_created",
         system.dag.vertices.len() as f64,
         3.0,
         0.0,
-    ));
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
-        "lifecycle_braids_created",
-        bool_f64(!system.braids.is_empty()),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("lifecycle_braids_created", !system.braids.is_empty());
 }
 
 // ===========================================================================
 // 2. Access Control
 // ===========================================================================
 
-fn validate_access_control() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_access_control(h: &mut ValidationHarness) {
     let patient = Did::new("did:key:patient_access");
     let provider_a = Did::new("did:key:provider_a");
     let provider_b = Did::new("did:key:provider_b");
@@ -172,42 +126,24 @@ fn validate_access_control() -> Vec<ValidationResult> {
 
     system.advance_tick();
     let a_access_lab = system.access_record(&provider_a, lab_id, "review", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "access_provider_a_can_access_lab",
-        bool_f64(a_access_lab.is_ok()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("access_provider_a_can_access_lab", a_access_lab.is_ok());
 
     let a_access_imaging =
         system.access_record(&provider_a, imaging_id, "review", RecordType::Imaging);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "access_provider_a_cannot_access_imaging",
-        bool_f64(a_access_imaging.is_err()),
-        1.0,
-        0.0,
-    ));
+        a_access_imaging.is_err(),
+    );
 
     let b_access_imaging =
         system.access_record(&provider_b, imaging_id, "review", RecordType::Imaging);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "access_provider_b_can_access_imaging",
-        bool_f64(b_access_imaging.is_ok()),
-        1.0,
-        0.0,
-    ));
+        b_access_imaging.is_ok(),
+    );
 
     let b_access_lab = system.access_record(&provider_b, lab_id, "review", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "access_provider_b_cannot_access_lab",
-        bool_f64(b_access_lab.is_err()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("access_provider_b_cannot_access_lab", b_access_lab.is_err());
 
     let Ok(()) = system.revoke_consent(&patient, consent_a) else {
         eprintln!("FATAL: revoke_consent for consent_a failed");
@@ -222,46 +158,20 @@ fn validate_access_control() -> Vec<ValidationResult> {
     system.advance_tick();
     system.advance_tick();
     let expired_access = system.access_record(&provider_a, lab_id, "late", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "access_expired_consent_blocks",
-        bool_f64(expired_access.is_err()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("access_expired_consent_blocks", expired_access.is_err());
 
     let Ok(()) = system.revoke_consent(&patient, consent_short) else {
         eprintln!("FATAL: revoke_consent for consent_short failed");
         std::process::exit(1);
     };
     let revoked_access = system.access_record(&provider_a, lab_id, "after_revoke", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "access_revoked_consent_blocks",
-        bool_f64(revoked_access.is_err()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("access_revoked_consent_blocks", revoked_access.is_err());
 
     let unknown = Did::new("did:key:unknown_provider");
     let unknown_access = system.access_record(&unknown, lab_id, "unauthorized", RecordType::Lab);
-    results.push(ValidationResult::check(
-        EXP,
-        "access_unknown_provider_rejected",
-        bool_f64(unknown_access.is_err()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("access_unknown_provider_rejected", unknown_access.is_err());
 
-    results.push(ValidationResult::check(
-        EXP,
-        "access_multi_provider_scopes",
-        bool_f64(system.consents.len() >= 3),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("access_multi_provider_scopes", system.consents.len() >= 3);
 }
 
 // ===========================================================================
@@ -272,9 +182,7 @@ fn validate_access_control() -> Vec<ValidationResult> {
     clippy::too_many_lines,
     reason = "validation section — sequential checks"
 )]
-fn validate_fraud_detection() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_fraud_detection(h: &mut ValidationHarness) {
     let patient = Did::new("did:key:patient_fraud");
     let provider = Did::new("did:key:provider_fraud");
     let attacker = Did::new("did:key:attacker");
@@ -295,13 +203,7 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     };
 
     let fraud_clean = system.detect_fraud();
-    results.push(ValidationResult::check(
-        EXP,
-        "fraud_clean_zero",
-        bool_f64(fraud_clean.is_empty()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("fraud_clean_zero", fraud_clean.is_empty());
 
     system.inject_access_event_for_fraud_test(
         AccessEvent {
@@ -315,17 +217,12 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         true,
     );
     let fraud_unauth = system.detect_fraud();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fraud_unauthorized_detected",
-        bool_f64(
-            fraud_unauth
-                .iter()
-                .any(|r| r.fraud_type == MedicalFraudType::UnauthorizedAccess),
-        ),
-        1.0,
-        0.0,
-    ));
+        fraud_unauth
+            .iter()
+            .any(|r| r.fraud_type == MedicalFraudType::UnauthorizedAccess),
+    );
 
     let mut system2 = MedicalAccessSystem::new(&patient);
     let rec2 = system2.create_record(&patient, RecordType::Vitals, "Vitals");
@@ -348,17 +245,12 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         true,
     );
     let fraud_expired = system2.detect_fraud();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fraud_expired_detected",
-        bool_f64(
-            fraud_expired
-                .iter()
-                .any(|r| r.fraud_type == MedicalFraudType::ExpiredConsent),
-        ),
-        1.0,
-        0.0,
-    ));
+        fraud_expired
+            .iter()
+            .any(|r| r.fraud_type == MedicalFraudType::ExpiredConsent),
+    );
 
     let mut system3 = MedicalAccessSystem::new(&patient);
     let rec3 = system3.create_record(&patient, RecordType::Lab, "Lab");
@@ -380,17 +272,12 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         true,
     );
     let fraud_scope = system3.detect_fraud();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fraud_scope_violation_detected",
-        bool_f64(
-            fraud_scope
-                .iter()
-                .any(|r| r.fraud_type == MedicalFraudType::ScopeViolation),
-        ),
-        1.0,
-        0.0,
-    ));
+        fraud_scope
+            .iter()
+            .any(|r| r.fraud_type == MedicalFraudType::ScopeViolation),
+    );
 
     let mut system4 = MedicalAccessSystem::new(&patient);
     let rec4 = system4.create_record(&patient, RecordType::Prescription, "Rx");
@@ -407,17 +294,12 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         false,
     );
     let fraud_phantom = system4.detect_fraud();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fraud_phantom_detected",
-        bool_f64(
-            fraud_phantom
-                .iter()
-                .any(|r| r.fraud_type == MedicalFraudType::PhantomAccess),
-        ),
-        1.0,
-        0.0,
-    ));
+        fraud_phantom
+            .iter()
+            .any(|r| r.fraud_type == MedicalFraudType::PhantomAccess),
+    );
 
     let mut system5 = MedicalAccessSystem::new(&patient);
     let rec5 = system5.create_record(&patient, RecordType::Lab, "Alice lab");
@@ -440,27 +322,14 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
         true,
     );
     let fraud_forgery = system5.detect_fraud();
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fraud_consent_forgery_detected",
-        bool_f64(
-            fraud_forgery
-                .iter()
-                .any(|r| r.fraud_type == MedicalFraudType::ConsentForgery),
-        ),
-        1.0,
-        0.0,
-    ));
+        fraud_forgery
+            .iter()
+            .any(|r| r.fraud_type == MedicalFraudType::ConsentForgery),
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
-        "fraud_all_five_types_testable",
-        bool_f64(true),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("fraud_all_five_types_testable", true);
 }
 
 // ===========================================================================
@@ -471,9 +340,7 @@ fn validate_fraud_detection() -> Vec<ValidationResult> {
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_audit_trail() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_audit_trail(h: &mut ValidationHarness) {
     let patient = Did::new("did:key:patient_audit");
     let provider = Did::new("did:key:provider_audit");
 
@@ -505,70 +372,37 @@ fn validate_audit_trail() -> Vec<ValidationResult> {
     };
 
     let audit = system.audit(record_id);
-    results.push(ValidationResult::check(
-        EXP,
-        "audit_full_reconstruction",
-        audit.len() as f64,
-        3.0,
-        0.0,
-    ));
+    h.check_abs("audit_full_reconstruction", audit.len() as f64, 3.0, 0.0);
 
     let ticks: Vec<u64> = audit.iter().map(|e| e.tick).collect();
-    results.push(ValidationResult::check(
-        EXP,
-        "audit_ordered_timeline",
-        bool_f64(ticks == vec![1, 2, 3]),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("audit_ordered_timeline", ticks == vec![1, 2, 3]);
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "audit_prov_o_matches_log",
-        bool_f64(
-            system
-                .dag
-                .vertices
-                .iter()
-                .filter(|v| {
-                    v.metadata.get("event").is_some_and(|m| {
-                matches!(m, rhizo_crypt_core::vertex::MetadataValue::String(s) if s == "access")
-            })
+        system
+            .dag
+            .vertices
+            .iter()
+            .filter(|v| {
+                v.metadata.get("event").is_some_and(|m| {
+                    matches!(m, rhizo_crypt_core::vertex::MetadataValue::String(s) if s == "access")
                 })
-                .count()
-                >= 3,
-        ),
-        1.0,
-        0.0,
-    ));
+            })
+            .count()
+            >= 3,
+    );
 
     let empty_audit = system.audit(loam_spine_core::types::CertificateId::now_v7());
-    results.push(ValidationResult::check(
-        EXP,
-        "audit_empty_for_unknown_record",
-        bool_f64(empty_audit.is_empty()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("audit_empty_for_unknown_record", empty_audit.is_empty());
 
-    results.push(ValidationResult::check(
-        EXP,
-        "audit_access_log_consistent",
-        bool_f64(system.access_log.len() >= 3),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("audit_access_log_consistent", system.access_log.len() >= 3);
 }
 
 // ===========================================================================
 // 5. Access Proof
 // ===========================================================================
 
-fn validate_access_proof() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_access_proof(h: &mut ValidationHarness) {
     let patient = Did::new("did:key:patient_proof");
     let provider = Did::new("did:key:provider_proof");
 
@@ -588,43 +422,20 @@ fn validate_access_proof() -> Vec<ValidationResult> {
         std::process::exit(1);
     };
 
-    results.push(ValidationResult::check(
-        EXP,
-        "proof_generation",
-        bool_f64(!proof.proof_signature.is_empty()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("proof_generation", !proof.proof_signature.is_empty());
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "proof_contains_fields",
-        bool_f64(
-            proof.accessor_did == provider.as_str()
-                && proof.record_id == record_id
-                && proof.timestamp_tick == 1,
-        ),
-        1.0,
-        0.0,
-    ));
+        proof.accessor_did == provider.as_str()
+            && proof.record_id == record_id
+            && proof.timestamp_tick == 1,
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
-        "proof_deterministic",
-        bool_f64(system.verify_proof(&proof)),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("proof_deterministic", system.verify_proof(&proof));
 
     let mut bad_proof = proof.clone();
     bad_proof.proof_signature[0] ^= 0xff;
-    results.push(ValidationResult::check(
-        EXP,
-        "proof_tampered_rejected",
-        bool_f64(!system.verify_proof(&bad_proof)),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("proof_tampered_rejected", !system.verify_proof(&bad_proof));
 
     system.advance_tick();
     let Ok(proof2) = system.access_record(&provider, record_id, "second", RecordType::Vitals)
@@ -632,15 +443,10 @@ fn validate_access_proof() -> Vec<ValidationResult> {
         eprintln!("FATAL: access_record second failed");
         std::process::exit(1);
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "proof_different_per_access",
-        bool_f64(proof.proof_signature != proof2.proof_signature),
-        1.0,
-        0.0,
-    ));
-
-    results
+        proof.proof_signature != proof2.proof_signature,
+    );
 }
 
 // ===========================================================================
@@ -648,45 +454,16 @@ fn validate_access_proof() -> Vec<ValidationResult> {
 // ===========================================================================
 
 fn cmd_validate() {
-    println!("=== exp063: Consent-Gated Medical Access ===\n");
+    let mut h = ValidationHarness::new("exp063_consent_gated_medical");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut all_results = Vec::new();
+    validate_consent_lifecycle(&mut h);
+    validate_access_control(&mut h);
+    validate_fraud_detection(&mut h);
+    validate_audit_trail(&mut h);
+    validate_access_proof(&mut h);
 
-    let sections: Vec<(&str, Vec<ValidationResult>)> = vec![
-        ("Consent Lifecycle", validate_consent_lifecycle()),
-        ("Access Control", validate_access_control()),
-        ("Fraud Detection", validate_fraud_detection()),
-        ("Audit Trail", validate_audit_trail()),
-        ("Access Proof", validate_access_proof()),
-    ];
-
-    for (name, results) in sections {
-        println!("--- {name} ---");
-        for v in &results {
-            println!(
-                "  [{}] {}",
-                if v.passed { "PASS" } else { "FAIL" },
-                v.description
-            );
-        }
-        all_results.extend(results);
-        println!();
-    }
-
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let total = all_results.len();
-    println!("=== SUMMARY: {passed}/{total} checks passed ===");
-
-    if passed != total {
-        println!("\nFAILED:");
-        for r in all_results.iter().filter(|r| !r.passed) {
-            println!(
-                "  {} — measured={}, expected={}",
-                r.description, r.measured, r.expected
-            );
-        }
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 fn main() {

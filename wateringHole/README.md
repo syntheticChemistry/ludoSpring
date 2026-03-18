@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 17, 2026
+**Last Updated:** March 18, 2026
 
 ---
 
@@ -24,7 +24,8 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V24** | [LUDOSPRING_V24_LEVERAGE_GUIDE_HANDOFF_MAR17_2026.md](handoffs/LUDOSPRING_V24_LEVERAGE_GUIDE_HANDOFF_MAR17_2026.md) | Mar 17 | Primal leverage guide + absorption sprint: OrExit\<T\>, DispatchOutcome\<T\>, 4-format capability parsing, health probes (26 capabilities), resilient trio IPC (circuit breaker + backoff), proptest fuzz, deny.toml yanked=deny, cross-primal composition catalog |
+| **V26** | [LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md](handoffs/LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md) | Mar 18 | Full ValidationHarness migration (71 experiments), GPU tolerance centralization (14 constants), shader dedup audit, lint tightening, zero legacy debt |
+| **V26** | [LUDOSPRING_V26_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR18_2026.md](handoffs/LUDOSPRING_V26_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR18_2026.md) | Mar 18 | toadStool/barraCuda absorption: f32 shader candidates, GPU tolerances, TensorSession blockers, capability_domains pattern, ecosystem learnings |
 
 ## Cross-Spring Context
 
@@ -85,6 +86,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V24 | `handoffs/archive/LUDOSPRING_V24_LEVERAGE_GUIDE_HANDOFF_MAR17_2026.md` | V26 Full Harness Migration + Absorption |
 | V23 | `handoffs/archive/LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md` | V24 Leverage Guide + Absorption Sprint |
 | V23 | `handoffs/archive/LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md` | V24 Leverage Guide + Absorption Sprint |
 | V22 | `handoffs/archive/LUDOSPRING_V22_ECOSYSTEM_ABSORPTION_HANDOFF_MAR16_2026.md` | V23 Cross-Ecosystem Deep Debt |

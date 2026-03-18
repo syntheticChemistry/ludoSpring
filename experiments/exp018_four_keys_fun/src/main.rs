@@ -12,19 +12,14 @@
 //! Python baseline: `baselines/python/fun_keys_model.py` (2026-03-11).
 
 use ludospring_barracuda::metrics::fun_keys::{FunKey, FunSignals, classify_fun};
-use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/fun_keys_model.py",
+    commit: "74cf9488",
+    date: "2026-03-11",
+    command: "python3 baselines/python/run_all_baselines.py",
+};
 
 struct Scenario {
     name: &'static str,
@@ -32,8 +27,7 @@ struct Scenario {
     expected: FunKey,
 }
 
-fn validate_archetypes(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Game scenario archetypes");
+fn validate_archetypes(h: &mut ValidationHarness) {
     let scenarios = [
         Scenario {
             name: "Dark Souls boss",
@@ -105,52 +99,21 @@ fn validate_archetypes(results: &mut Vec<ValidationResult>) {
 
     for scenario in &scenarios {
         let result = classify_fun(&scenario.signals);
-        let r = ValidationResult::check(
-            "exp018_archetype",
+        h.check_bool(
             &format!("{} → {}", scenario.name, scenario.expected),
-            if result.dominant == scenario.expected {
-                1.0
-            } else {
-                0.0
-            },
-            1.0,
-            tolerances::ANALYTICAL_TOL,
+            result.dominant == scenario.expected,
         );
-        report(&r);
-        if !r.passed {
-            println!(
-                "    got {} (H={:.2}, E={:.2}, P={:.2}, S={:.2})",
-                result.dominant,
-                result.scores.hard,
-                result.scores.easy,
-                result.scores.people,
-                result.scores.serious
-            );
-        }
-        results.push(r);
     }
 }
 
-fn validate_score_properties(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Score properties");
-
-    // Zero signals should produce non-negative scores
+fn validate_score_properties(h: &mut ValidationHarness) {
     let zero = classify_fun(&FunSignals::default());
     let all_nonneg = zero.scores.hard >= 0.0
         && zero.scores.easy >= 0.0
         && zero.scores.people >= 0.0
         && zero.scores.serious >= 0.0;
-    let r = ValidationResult::check(
-        "exp018_zero_nonneg",
-        "zero signals → non-negative scores",
-        if all_nonneg { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("zero signals → non-negative scores", all_nonneg);
 
-    // Max signals should produce bounded scores (≤ 1.0)
     let max = classify_fun(&FunSignals {
         challenge: 1.0,
         exploration: 1.0,
@@ -162,19 +125,10 @@ fn validate_score_properties(results: &mut Vec<ValidationResult>) {
         && max.scores.easy <= 1.0
         && max.scores.people <= 1.0
         && max.scores.serious <= 1.0;
-    let r = ValidationResult::check(
-        "exp018_max_bounded",
-        "max signals → all scores ≤ 1.0",
-        if all_bounded { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("max signals → all scores ≤ 1.0", all_bounded);
 }
 
-fn validate_sensitivity(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Sensitivity — dominant changes with signal shift");
+fn validate_sensitivity(h: &mut ValidationHarness) {
     let base = FunSignals {
         challenge: 0.5,
         exploration: 0.5,
@@ -183,28 +137,17 @@ fn validate_sensitivity(results: &mut Vec<ValidationResult>) {
         retry_rate: 0.5,
     };
 
-    // Boosting challenge should push toward Hard
     let boosted = FunSignals {
         challenge: 1.0,
         retry_rate: 1.0,
         ..base
     };
     let result = classify_fun(&boosted);
-    let r = ValidationResult::check(
-        "exp018_boost_hard",
+    h.check_bool(
         "boosting challenge+retry → Hard dominates",
-        if result.dominant == FunKey::Hard {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        result.dominant == FunKey::Hard,
     );
-    report(&r);
-    results.push(r);
 
-    // Boosting social should push toward People
     let social_boost = FunSignals {
         social: 1.0,
         challenge: 0.0,
@@ -213,33 +156,19 @@ fn validate_sensitivity(results: &mut Vec<ValidationResult>) {
         retry_rate: 0.0,
     };
     let result = classify_fun(&social_boost);
-    let r = ValidationResult::check(
-        "exp018_boost_people",
+    h.check_bool(
         "isolated social signal → People dominates",
-        if result.dominant == FunKey::People {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        result.dominant == FunKey::People,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp018: Four Keys to Fun Classification (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp018_four_keys_fun");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_archetypes(&mut results);
-    validate_score_properties(&mut results);
-    validate_sensitivity(&mut results);
+    validate_archetypes(&mut h);
+    validate_score_properties(&mut h);
+    validate_sensitivity(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

@@ -216,7 +216,7 @@ pub struct TransitionVerification {
 impl TransitionVerification {
     /// Whether all integrity checks passed.
     #[must_use]
-    pub fn passed(&self) -> bool {
+    pub const fn passed(&self) -> bool {
         self.issues.is_empty()
     }
 

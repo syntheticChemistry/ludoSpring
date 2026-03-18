@@ -79,32 +79,16 @@ def main():
             capture_output=True, text=True,
         )
         if proc.returncode != 0:
-            # Fall back to default behavior if --output is not supported,
-            # then read the overwritten file and restore.
-            proc = subprocess.run(
-                [sys.executable, str(base_dir / "run_all_baselines.py")],
-                capture_output=True, text=True,
-            )
-            if proc.returncode != 0:
-                print(f"ERROR: run_all_baselines.py failed (exit {proc.returncode})",
-                      file=sys.stderr)
-                if proc.stderr:
-                    print(proc.stderr, file=sys.stderr)
-                sys.exit(1)
-            fresh_path = stored_path
-        else:
-            fresh_path = tmp_path
+            print(f"ERROR: run_all_baselines.py failed (exit {proc.returncode})",
+                  file=sys.stderr)
+            if proc.stderr:
+                print(proc.stderr, file=sys.stderr)
+            sys.exit(1)
 
-        with open(fresh_path) as f:
+        with open(tmp_path) as f:
             fresh = json.load(f)
     finally:
         tmp_path.unlink(missing_ok=True)
-
-    # Restore the original if we overwrote it.
-    if fresh_path == stored_path:
-        with open(stored_path, "w") as f:
-            json.dump(stored, f, indent=2)
-            f.write("\n")
 
     stored_flat = flatten(stored)
     fresh_flat = flatten(fresh)

@@ -9,26 +9,25 @@ mod unified;
 
 use std::collections::HashMap;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use unified::{
     DomainVocabulary, GenericEvent, GenericFraudDetector, GenericFraudReport, GenericFraudType,
     GenericOp, compute_structural_similarity, gaming_vocabulary, medical_vocabulary,
     relabel_report, science_vocabulary,
 };
 
-const EXP: &str = "exp065_cross_domain_fraud";
-
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — domain-agnostic fraud detection)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 // =============================================================================
 // 1. Vocabulary mapping validation
 // =============================================================================
 
-fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_vocabulary_mapping(h: &mut ValidationHarness) {
     let all_ops = [
         GenericOp::CreateObject,
         GenericOp::TransferObject,
@@ -41,96 +40,58 @@ fn validate_vocabulary_mapping() -> Vec<ValidationResult> {
 
     let gaming = gaming_vocabulary();
     for op in all_ops {
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             &format!("gaming_covers_{op:?}"),
-            bool_f64(gaming.op_labels.contains_key(&op)),
-            1.0,
-            0.0,
-        ));
+            gaming.op_labels.contains_key(&op),
+        );
     }
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "gaming_create_maps_to_item_spawn",
-        bool_f64(gaming.op_labels.get(&GenericOp::CreateObject) == Some(&"ItemSpawn".to_string())),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        gaming.op_labels.get(&GenericOp::CreateObject) == Some(&"ItemSpawn".to_string()),
+    );
+    h.check_bool(
         "gaming_transfer_maps_to_item_trade",
-        bool_f64(
-            gaming.op_labels.get(&GenericOp::TransferObject) == Some(&"ItemTrade".to_string()),
-        ),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        gaming.op_labels.get(&GenericOp::TransferObject) == Some(&"ItemTrade".to_string()),
+    );
+    h.check_bool(
         "gaming_consume_maps_to_item_consume_fire",
-        bool_f64(
-            gaming.op_labels.get(&GenericOp::ConsumeObject)
-                == Some(&"ItemConsume/Fire".to_string()),
-        ),
-        1.0,
-        0.0,
-    ));
+        gaming.op_labels.get(&GenericOp::ConsumeObject) == Some(&"ItemConsume/Fire".to_string()),
+    );
 
     let science = science_vocabulary();
     for op in all_ops {
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             &format!("science_covers_{op:?}"),
-            bool_f64(science.op_labels.contains_key(&op)),
-            1.0,
-            0.0,
-        ));
+            science.op_labels.contains_key(&op),
+        );
     }
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "science_create_maps_to_sample_collect",
-        bool_f64(
-            science.op_labels.get(&GenericOp::CreateObject) == Some(&"SampleCollect".to_string()),
-        ),
-        1.0,
-        0.0,
-    ));
+        science.op_labels.get(&GenericOp::CreateObject) == Some(&"SampleCollect".to_string()),
+    );
 
     let medical = medical_vocabulary();
     for op in all_ops {
-        results.push(ValidationResult::check(
-            EXP,
+        h.check_bool(
             &format!("medical_covers_{op:?}"),
-            bool_f64(medical.op_labels.contains_key(&op)),
-            1.0,
-            0.0,
-        ));
+            medical.op_labels.contains_key(&op),
+        );
     }
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "medical_create_maps_to_record_creation",
-        bool_f64(
-            medical.op_labels.get(&GenericOp::CreateObject) == Some(&"RecordCreation".to_string()),
-        ),
-        1.0,
-        0.0,
-    ));
+        medical.op_labels.get(&GenericOp::CreateObject) == Some(&"RecordCreation".to_string()),
+    );
 
     for v in [&gaming, &science, &medical] {
         for op in all_ops {
             let label = v.op_labels.get(&op).map_or("", |s| s.as_str());
-            results.push(ValidationResult::check(
-                EXP,
+            h.check_bool(
                 &format!("{}_no_empty_{op:?}", v.domain_name),
-                bool_f64(!label.is_empty()),
-                1.0,
-                0.0,
-            ));
+                !label.is_empty(),
+            );
         }
     }
-
-    results
 }
 
 // =============================================================================
@@ -166,15 +127,10 @@ fn event_with_meta(
 }
 
 #[expect(
-    clippy::too_many_lines,
-    reason = "validation section — sequential checks"
-)]
-#[expect(
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_generic_fraud_detection(h: &mut ValidationHarness) {
     let vocab = gaming_vocabulary();
 
     // OrphanObject: TransformObject with no prior CreateObject
@@ -184,13 +140,7 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let has_orphan = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::OrphanObject);
-    results.push(ValidationResult::check(
-        EXP,
-        "orphan_object_detected",
-        bool_f64(has_orphan),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("orphan_object_detected", has_orphan);
 
     // OrphanObject: ConsumeObject with no prior CreateObject
     let mut det = GenericFraudDetector::new(vocab.clone());
@@ -199,13 +149,7 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let has_orphan = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::OrphanObject);
-    results.push(ValidationResult::check(
-        EXP,
-        "orphan_consume_detected",
-        bool_f64(has_orphan),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("orphan_consume_detected", has_orphan);
 
     // DuplicateIdentity: two CreateObject for same target
     let mut det = GenericFraudDetector::new(vocab.clone());
@@ -215,29 +159,17 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let has_dup = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::DuplicateIdentity);
-    results.push(ValidationResult::check(
-        EXP,
-        "duplicate_identity_detected",
-        bool_f64(has_dup),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("duplicate_identity_detected", has_dup);
 
     // UnauthorizedAction: TransformObject by actor who never had access
     let mut det = GenericFraudDetector::new(vocab.clone());
     det.add_event(event(GenericOp::CreateObject, "alice", "item_a", 1));
-    det.add_event(event(GenericOp::TransformObject, "bob", "item_a", 2)); // bob never had access
+    det.add_event(event(GenericOp::TransformObject, "bob", "item_a", 2));
     let reports = det.detect();
     let has_unauth = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::UnauthorizedAction);
-    results.push(ValidationResult::check(
-        EXP,
-        "unauthorized_action_detected",
-        bool_f64(has_unauth),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("unauthorized_action_detected", has_unauth);
 
     // ScopeViolation: ConsumeObject when scope doesn't include target
     let mut det = GenericFraudDetector::new(vocab.clone());
@@ -248,34 +180,22 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
         "item_c",
         2,
         "item_b,item_d",
-    )); // scope has item_b, item_d but not item_c
+    ));
     let reports = det.detect();
     let has_scope = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::ScopeViolation);
-    results.push(ValidationResult::check(
-        EXP,
-        "scope_violation_detected",
-        bool_f64(has_scope),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("scope_violation_detected", has_scope);
 
     // BrokenChain: TransferObject by non-holder
     let mut det = GenericFraudDetector::new(vocab.clone());
     det.add_event(event(GenericOp::CreateObject, "alice", "item_e", 1));
-    det.add_event(event(GenericOp::TransferObject, "bob", "item_e", 2)); // bob doesn't hold item_e
+    det.add_event(event(GenericOp::TransferObject, "bob", "item_e", 2));
     let reports = det.detect();
     let has_broken = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::BrokenChain);
-    results.push(ValidationResult::check(
-        EXP,
-        "broken_chain_detected",
-        bool_f64(has_broken),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("broken_chain_detected", has_broken);
 
     // Clean sequence: CreateObject -> TransferObject (valid) -> TransformObject (authorized)
     let mut det = GenericFraudDetector::new(vocab.clone());
@@ -283,13 +203,7 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     det.add_event(event(GenericOp::GrantAccess, "bob", "item_f", 2));
     det.add_event(event(GenericOp::TransformObject, "bob", "item_f", 3));
     let reports = det.detect();
-    results.push(ValidationResult::check(
-        EXP,
-        "clean_sequence_zero_fraud",
-        reports.len() as f64,
-        0.0,
-        0.0,
-    ));
+    h.check_abs("clean_sequence_zero_fraud", reports.len() as f64, 0.0, 0.0);
 
     // Clean: CreateObject -> TransferObject by creator (valid)
     let mut det = GenericFraudDetector::new(vocab.clone());
@@ -299,13 +213,7 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let has_broken = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::BrokenChain);
-    results.push(ValidationResult::check(
-        EXP,
-        "valid_transfer_no_broken_chain",
-        bool_f64(!has_broken),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("valid_transfer_no_broken_chain", !has_broken);
 
     // Clean: CreateObject -> ConsumeObject with scope including target
     let mut det = GenericFraudDetector::new(vocab);
@@ -321,15 +229,7 @@ fn validate_generic_fraud_detection() -> Vec<ValidationResult> {
     let has_scope = reports
         .iter()
         .any(|r| r.fraud_type == GenericFraudType::ScopeViolation);
-    results.push(ValidationResult::check(
-        EXP,
-        "valid_consume_in_scope",
-        bool_f64(!has_scope),
-        1.0,
-        0.0,
-    ));
-
-    results
+    h.check_bool("valid_consume_in_scope", !has_scope);
 }
 
 // =============================================================================
@@ -348,13 +248,7 @@ fn build_same_dag(vocab: &DomainVocabulary) -> GenericFraudDetector {
     det
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation section — sequential checks"
-)]
-fn validate_cross_domain_equivalence() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_cross_domain_equivalence(h: &mut ValidationHarness) {
     let gaming_det = build_same_dag(&gaming_vocabulary());
     let science_det = build_same_dag(&science_vocabulary());
     let medical_det = build_same_dag(&medical_vocabulary());
@@ -370,109 +264,74 @@ fn validate_cross_domain_equivalence() -> Vec<ValidationResult> {
     let medical_types: std::collections::HashSet<_> =
         medical_reports.iter().map(|r| r.fraud_type).collect();
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "gaming_detects_orphan",
-        bool_f64(gaming_types.contains(&GenericFraudType::OrphanObject)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        gaming_types.contains(&GenericFraudType::OrphanObject),
+    );
+    h.check_bool(
         "science_detects_orphan",
-        bool_f64(science_types.contains(&GenericFraudType::OrphanObject)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        science_types.contains(&GenericFraudType::OrphanObject),
+    );
+    h.check_bool(
         "medical_detects_orphan",
-        bool_f64(medical_types.contains(&GenericFraudType::OrphanObject)),
-        1.0,
-        0.0,
-    ));
+        medical_types.contains(&GenericFraudType::OrphanObject),
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "gaming_detects_duplicate",
-        bool_f64(gaming_types.contains(&GenericFraudType::DuplicateIdentity)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        gaming_types.contains(&GenericFraudType::DuplicateIdentity),
+    );
+    h.check_bool(
         "science_detects_duplicate",
-        bool_f64(science_types.contains(&GenericFraudType::DuplicateIdentity)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        science_types.contains(&GenericFraudType::DuplicateIdentity),
+    );
+    h.check_bool(
         "medical_detects_duplicate",
-        bool_f64(medical_types.contains(&GenericFraudType::DuplicateIdentity)),
-        1.0,
-        0.0,
-    ));
+        medical_types.contains(&GenericFraudType::DuplicateIdentity),
+    );
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "gaming_detects_broken_chain",
-        bool_f64(gaming_types.contains(&GenericFraudType::BrokenChain)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        gaming_types.contains(&GenericFraudType::BrokenChain),
+    );
+    h.check_bool(
         "science_detects_broken_chain",
-        bool_f64(science_types.contains(&GenericFraudType::BrokenChain)),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        science_types.contains(&GenericFraudType::BrokenChain),
+    );
+    h.check_bool(
         "medical_detects_broken_chain",
-        bool_f64(medical_types.contains(&GenericFraudType::BrokenChain)),
-        1.0,
-        0.0,
-    ));
+        medical_types.contains(&GenericFraudType::BrokenChain),
+    );
 
     let sim_gaming_science = compute_structural_similarity(&gaming_reports, &science_reports);
     let sim_gaming_medical = compute_structural_similarity(&gaming_reports, &medical_reports);
     let sim_science_medical = compute_structural_similarity(&science_reports, &medical_reports);
 
-    // Similarity >= 0.8: use expected=1.0, tolerance=0.2 so [0.8, 1.2] passes
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_abs(
         "similarity_gaming_science_gt_80",
         sim_gaming_science,
         1.0,
         0.2,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "similarity_gaming_medical_gt_80",
         sim_gaming_medical,
         1.0,
         0.2,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    );
+    h.check_abs(
         "similarity_science_medical_gt_80",
         sim_science_medical,
         1.0,
         0.2,
-    ));
-
-    results
+    );
 }
 
 // =============================================================================
 // 4. Unification table validation
 // =============================================================================
 
-fn validate_unification_table() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_unification_table(h: &mut ValidationHarness) {
     let gaming = gaming_vocabulary();
     let science = science_vocabulary();
     let medical = medical_vocabulary();
@@ -488,56 +347,36 @@ fn validate_unification_table() -> Vec<ValidationResult> {
     let relabeled_science = relabel_report(&base_report, &science);
     let relabeled_medical = relabel_report(&base_report, &medical);
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "orphan_maps_to_orphan_item_gaming",
-        bool_f64(relabeled_gaming.domain_label == "OrphanItem"),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        relabeled_gaming.domain_label == "OrphanItem",
+    );
+    h.check_bool(
         "orphan_maps_to_phantom_sample_science",
-        bool_f64(relabeled_science.domain_label == "PhantomSample"),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        relabeled_science.domain_label == "PhantomSample",
+    );
+    h.check_bool(
         "orphan_maps_to_phantom_access_medical",
-        bool_f64(relabeled_medical.domain_label == "PhantomAccess"),
-        1.0,
-        0.0,
-    ));
+        relabeled_medical.domain_label == "PhantomAccess",
+    );
 
     let dup_report = GenericFraudReport {
         fraud_type: GenericFraudType::DuplicateIdentity,
         description: "test".to_string(),
         domain_label: String::new(),
     };
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "duplicate_maps_to_duplicate_item_gaming",
-        bool_f64(relabel_report(&dup_report, &gaming).domain_label == "DuplicateItem"),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        relabel_report(&dup_report, &gaming).domain_label == "DuplicateItem",
+    );
+    h.check_bool(
         "duplicate_maps_to_duplicate_sample_science",
-        bool_f64(relabel_report(&dup_report, &science).domain_label == "DuplicateSample"),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        relabel_report(&dup_report, &science).domain_label == "DuplicateSample",
+    );
+    h.check_bool(
         "duplicate_maps_to_duplicate_record_medical",
-        bool_f64(relabel_report(&dup_report, &medical).domain_label == "DuplicateRecord"),
-        1.0,
-        0.0,
-    ));
-
-    results
+        relabel_report(&dup_report, &medical).domain_label == "DuplicateRecord",
+    );
 }
 
 // =============================================================================
@@ -545,25 +384,13 @@ fn validate_unification_table() -> Vec<ValidationResult> {
 // =============================================================================
 
 fn main() {
-    let mut all_results = Vec::new();
-    all_results.extend(validate_vocabulary_mapping());
-    all_results.extend(validate_generic_fraud_detection());
-    all_results.extend(validate_cross_domain_equivalence());
-    all_results.extend(validate_unification_table());
+    let mut h = ValidationHarness::new("exp065_cross_domain_fraud");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let total = all_results.len();
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let failed = total - passed;
+    validate_vocabulary_mapping(&mut h);
+    validate_generic_fraud_detection(&mut h);
+    validate_cross_domain_equivalence(&mut h);
+    validate_unification_table(&mut h);
 
-    println!("\n=== {EXP} ===");
-    println!("{passed}/{total} checks passed");
-
-    if failed > 0 {
-        for r in &all_results {
-            if !r.passed {
-                println!("  FAIL: {}", r.description);
-            }
-        }
-        std::process::exit(1);
-    }
+    h.finish();
 }

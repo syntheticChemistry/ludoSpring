@@ -13,8 +13,15 @@
 use std::process;
 use std::time::Instant;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use ludospring_benchmarks::raycaster::{arena_map, cast_full_screen, maze_map};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — BM-003 spec, Lodev DDA raycaster)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (throughput benchmark)",
+};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -30,117 +37,58 @@ fn main() {
 }
 
 #[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
-#[expect(
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-#[expect(
-    clippy::similar_names,
-    reason = "domain-specific naming: cast64_us vs cast128_us"
-)]
 fn cmd_validate() {
-    println!("=== exp036: BM-003 Raycaster Throughput Validation ===\n");
-
-    let experiment = "exp036_raycaster_throughput";
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp036_raycaster_throughput");
+    h.print_provenance(&[&PROVENANCE]);
 
     // 1. 320-column cast on 64x64 arena completes
     let map64 = arena_map(64);
     let t = Instant::now();
     let hits = cast_full_screen(&map64, 320);
     let cast64_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "cast_320col_64x64_completes",
-        hits.len() as f64,
-        320.0,
-        0.0,
-    ));
-    println!("  [INFO] 320-col 64x64: {cast64_us}us");
+    #[expect(clippy::cast_precision_loss, reason = "hits len bounded")]
+    h.check_abs("cast_320col_64x64_completes", hits.len() as f64, 320.0, 0.0);
 
     // 2. All rays hit in closed arena
     let all_hit = hits.iter().all(std::option::Option::is_some);
-    results.push(ValidationResult::check(
-        experiment,
-        "all_rays_hit_64x64_arena",
-        if all_hit { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("all_rays_hit_64x64_arena", all_hit);
 
     // 3. Sustain 60 Hz: single cast < 16.67ms (16670us)
-    results.push(ValidationResult::check(
-        experiment,
-        "cast_under_16ms_60hz",
-        if cast64_us < 16_670 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("cast_under_16ms_60hz", cast64_us < 16_670);
 
     // 4. 640-column cast (higher res)
     let t = Instant::now();
     let hits640 = cast_full_screen(&map64, 640);
-    let cast640_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "cast_640col_completes",
-        hits640.len() as f64,
-        640.0,
-        0.0,
-    ));
-    println!("  [INFO] 640-col 64x64: {cast640_us}us");
+    let _cast640_us = t.elapsed().as_micros();
+    #[expect(clippy::cast_precision_loss, reason = "hits len bounded")]
+    h.check_abs("cast_640col_completes", hits640.len() as f64, 640.0, 0.0);
 
     // 5. 128x128 arena
     let map128 = arena_map(128);
     let t = Instant::now();
     let hits128 = cast_full_screen(&map128, 320);
     let cast128_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "cast_128x128_completes",
-        hits128.len() as f64,
-        320.0,
-        0.0,
-    ));
-    println!("  [INFO] 320-col 128x128: {cast128_us}us");
+    #[expect(clippy::cast_precision_loss, reason = "hits len bounded")]
+    h.check_abs("cast_128x128_completes", hits128.len() as f64, 320.0, 0.0);
 
     // 6. 128x128 also under 16.67ms
-    results.push(ValidationResult::check(
-        experiment,
-        "cast_128x128_under_16ms",
-        if cast128_us < 16_670 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("cast_128x128_under_16ms", cast128_us < 16_670);
 
     // 7. Maze map with internal walls
     let maze = maze_map();
     let t = Instant::now();
     let hits_maze = cast_full_screen(&maze, 320);
-    let maze_us = t.elapsed().as_micros();
-    results.push(ValidationResult::check(
-        experiment,
-        "maze_cast_completes",
-        hits_maze.len() as f64,
-        320.0,
-        0.0,
-    ));
-    println!("  [INFO] 320-col maze: {maze_us}us");
+    let _maze_us = t.elapsed().as_micros();
+    #[expect(clippy::cast_precision_loss, reason = "hits len bounded")]
+    h.check_abs("maze_cast_completes", hits_maze.len() as f64, 320.0, 0.0);
 
     // 8. Deterministic: same map + position = same distances
     let hits_a = cast_full_screen(&map64, 320);
     let hits_b = cast_full_screen(&map64, 320);
-    let deterministic = hits_a == hits_b;
-    results.push(ValidationResult::check(
-        experiment,
-        "raycaster_deterministic",
-        if deterministic { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("raycaster_deterministic", hits_a == hits_b);
 
     // 9. 1000 frames at 320 cols (stress test)
     let t = Instant::now();
@@ -149,14 +97,7 @@ fn cmd_validate() {
     }
     let stress_us = t.elapsed().as_micros();
     let avg_per_frame = stress_us / 1000;
-    results.push(ValidationResult::check(
-        experiment,
-        "1000_frames_avg_under_1ms",
-        if avg_per_frame < 1000 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] 1000 frames avg: {avg_per_frame}us/frame");
+    h.check_bool("1000_frames_avg_under_1ms", avg_per_frame < 1000);
 
     // 10. Throughput: frames per second estimate
     let fps = if avg_per_frame > 0 {
@@ -164,26 +105,9 @@ fn cmd_validate() {
     } else {
         0.0
     };
-    results.push(ValidationResult::check(
-        experiment,
-        "raycast_fps_above_60",
-        if fps > 60.0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Estimated FPS: {fps:.0}");
+    h.check_lower("raycast_fps_above_60", fps, 60.0);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 #[expect(

@@ -26,14 +26,6 @@
     reason = "validation harness: small-range numeric conversions"
 )]
 #![expect(
-    clippy::cast_sign_loss,
-    reason = "validation harness: non-negative values cast to unsigned"
-)]
-#![expect(
-    clippy::cast_precision_loss,
-    reason = "validation harness: counter/timing values within f64 range"
-)]
-#![expect(
     clippy::cast_lossless,
     reason = "validation harness: explicit cast for readability"
 )]
@@ -41,51 +33,31 @@
 use ludospring_barracuda::procedural::bsp::{Rect, generate_bsp};
 use ludospring_barracuda::procedural::noise::{fbm_2d, perlin_2d};
 use ludospring_barracuda::procedural::wfc::{AdjacencyRules, WfcGrid};
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.6}, want={:.6}, tol={:.6})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Perlin, WFC, BSP)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (procedural + fastnoise-lite comparison)",
+};
 
 fn main() {
-    println!("═══════════════════════════════════════════════════════════════");
-    println!("  Exp023: Open-Systems Benchmark — ludoSpring vs Ecosystem");
-    println!("═══════════════════════════════════════════════════════════════\n");
+    let mut h = ValidationHarness::new("exp023_open_systems_benchmark");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut results = Vec::new();
+    bm_noise_correctness(&mut h);
+    bm_noise_performance(&mut h);
+    bm_wfc_correctness(&mut h);
+    bm_bsp_quality(&mut h);
+    bm_ecs_patterns(&mut h);
 
-    bm_noise_correctness(&mut results);
-    bm_noise_performance(&mut results);
-    bm_wfc_correctness(&mut results);
-    bm_bsp_quality(&mut results);
-    bm_ecs_patterns(&mut results);
-
-    println!("\n───────────────────────────────────────────────────────────────");
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!("  Result: {passed}/{total} checks passed");
-
-    if passed == total {
-        println!("  Status: ALL BENCHMARKS PASS");
-    } else {
-        println!("  Status: SOME BENCHMARKS FAILED");
-        std::process::exit(1);
-    }
+    h.finish();
 }
 
 // ── BM-Noise: Correctness ──────────────────────────────────────────────
 
-fn bm_noise_correctness(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: BM-Noise — Correctness comparison");
-    println!("  ludoSpring procedural::noise vs fastnoise-lite\n");
-
+fn bm_noise_correctness(h: &mut ValidationHarness) {
     let test_points: [(f64, f64); 6] = [
         (0.0, 0.0),
         (1.0, 0.0),
@@ -97,15 +69,12 @@ fn bm_noise_correctness(results: &mut Vec<ValidationResult>) {
 
     // Property 1: Perlin at integer lattice points should be ~0
     let ludo_lattice = perlin_2d(0.0, 0.0);
-    let r = ValidationResult::check(
-        "exp023_perlin_lattice",
+    h.check_abs(
         "ludoSpring Perlin at (0,0) ≈ 0 (lattice property)",
         ludo_lattice,
         0.0,
         1e-10,
     );
-    report(&r);
-    results.push(r);
 
     // Property 2: Perlin output bounded in [-1, 1]
     let mut max_val: f64 = 0.0;
@@ -115,15 +84,7 @@ fn bm_noise_correctness(results: &mut Vec<ValidationResult>) {
             max_val = v;
         }
     }
-    let r = ValidationResult::check(
-        "exp023_perlin_bounded",
-        "ludoSpring Perlin bounded |v| ≤ 1.0",
-        max_val,
-        0.5,
-        0.5,
-    );
-    report(&r);
-    results.push(r);
+    h.check_upper("ludoSpring Perlin bounded |v| ≤ 1.0", max_val, 1.0);
 
     // Property 3: fastnoise-lite Perlin comparison
     let mut fnl = fastnoise_lite::FastNoiseLite::new();
@@ -131,15 +92,12 @@ fn bm_noise_correctness(results: &mut Vec<ValidationResult>) {
     fnl.set_frequency(Some(1.0));
 
     let fnl_lattice = f64::from(fnl.get_noise_2d(0.0, 0.0));
-    let r = ValidationResult::check(
-        "exp023_fnl_perlin_lattice",
+    h.check_abs(
         "fastnoise-lite Perlin at (0,0) ≈ 0 (lattice property)",
         fnl_lattice,
         0.0,
         0.05,
     );
-    report(&r);
-    results.push(r);
 
     // Property 4: Both implementations produce coherent noise (nearby points similar)
     let ludo_a = perlin_2d(5.0, 5.0);
@@ -150,46 +108,29 @@ fn bm_noise_correctness(results: &mut Vec<ValidationResult>) {
     let fnl_b = f64::from(fnl.get_noise_2d(5.01, 5.01));
     let fnl_coherence = (fnl_a - fnl_b).abs();
 
-    let r = ValidationResult::check(
-        "exp023_ludo_coherence",
+    h.check_upper(
         "ludoSpring: nearby points differ < 0.1 (coherent)",
         ludo_coherence,
-        0.0,
         0.1,
     );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp023_fnl_coherence",
+    h.check_upper(
         "fastnoise-lite: nearby points differ < 0.1 (coherent)",
         fnl_coherence,
-        0.0,
         0.1,
     );
-    report(&r);
-    results.push(r);
 
     // Property 5: fBm octave accumulation
     let fbm_val = fbm_2d(5.0, 5.0, 4, 2.0, 0.5);
-    let r = ValidationResult::check(
-        "exp023_fbm_bounded",
+    h.check_upper(
         "ludoSpring fBm(4 octaves) bounded |v| < 2.0",
         fbm_val.abs(),
-        0.5,
-        1.5,
+        2.0,
     );
-    report(&r);
-    results.push(r);
-
-    println!();
 }
 
 // ── BM-Noise: Performance ──────────────────────────────────────────────
 
-fn bm_noise_performance(results: &mut Vec<ValidationResult>) {
-    println!("Part 2: BM-Noise — Performance comparison\n");
-
+fn bm_noise_performance(h: &mut ValidationHarness) {
     let n = 100_000;
 
     let start = std::time::Instant::now();
@@ -219,24 +160,12 @@ fn bm_noise_performance(results: &mut Vec<ValidationResult>) {
     let ratio = ludo_us as f64 / fnl_us.max(1) as f64;
     println!("  Ratio: ludoSpring/fastnoise = {ratio:.2}x\n");
 
-    let r = ValidationResult::check(
-        "exp023_noise_perf",
-        "both implementations complete 100K samples (no hang)",
-        1.0,
-        1.0,
-        0.0,
-    );
-    report(&r);
-    results.push(r);
-
-    println!();
+    h.check_bool("both implementations complete 100K samples (no hang)", true);
 }
 
 // ── BM-WFC: Correctness ────────────────────────────────────────────────
 
-fn bm_wfc_correctness(results: &mut Vec<ValidationResult>) {
-    println!("Part 3: BM-WFC — Wave Function Collapse comparison\n");
-
+fn bm_wfc_correctness(h: &mut ValidationHarness) {
     let n_tiles = 4;
     let width = 16;
     let height = 16;
@@ -248,29 +177,16 @@ fn bm_wfc_correctness(results: &mut Vec<ValidationResult>) {
     grid.collapse(width / 2, height / 2, 0);
     let propagated = grid.propagate(&rules);
 
-    let r = ValidationResult::check(
-        "exp023_wfc_collapse",
-        "center cell collapse succeeds",
-        1.0,
-        1.0,
-        0.0,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("center cell collapse succeeds", true);
 
     // Unconstrained propagation should change nothing (all tiles allowed everywhere)
-    let r = ValidationResult::check(
-        "exp023_wfc_propagate_unconstrained",
+    #[expect(clippy::cast_precision_loss, reason = "propagation count is small")]
+    h.check_abs(
         "unconstrained rules: propagation removes 0 options",
-        #[expect(clippy::cast_precision_loss, reason = "propagation count is small")]
-        {
-            propagated as f64
-        },
+        propagated as f64,
         0.0,
         0.0,
     );
-    report(&r);
-    results.push(r);
 
     // Full collapse with constrained rules
     let mut constrained = AdjacencyRules::unconstrained(n_tiles);
@@ -285,15 +201,10 @@ fn bm_wfc_correctness(results: &mut Vec<ValidationResult>) {
     grid2.collapse(0, 0, 0);
     let prop2 = grid2.propagate(&constrained);
 
-    let r = ValidationResult::check(
-        "exp023_wfc_constrained_propagation",
+    h.check_bool(
         "constrained rules reduce options (propagation > 0)",
-        if prop2 > 0 { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
+        prop2 > 0,
     );
-    report(&r);
-    results.push(r);
 
     // Entropy decreases after collapse
     let mut grid3 = WfcGrid::new(4, 4, n_tiles);
@@ -306,26 +217,20 @@ fn bm_wfc_correctness(results: &mut Vec<ValidationResult>) {
         .map_or(0, ludospring_barracuda::procedural::wfc::WfcCell::entropy);
 
     #[expect(clippy::cast_precision_loss, reason = "tile count fits in f64")]
-    let r = ValidationResult::check(
-        "exp023_wfc_entropy_decrease",
+    h.check_abs(
         "entropy decreases after collapse (4 → 1)",
         post_entropy as f64,
         1.0,
         0.0,
     );
-    report(&r);
-    results.push(r);
 
     #[expect(clippy::cast_precision_loss, reason = "tile count fits in f64")]
-    let r = ValidationResult::check(
-        "exp023_wfc_initial_entropy",
+    h.check_abs(
         "initial entropy equals tile count",
         initial_entropy as f64,
         n_tiles as f64,
         0.0,
     );
-    report(&r);
-    results.push(r);
 
     println!("\n  API comparison notes:");
     println!("  - ludoSpring WFC: manual collapse + propagate loop, BTreeSet options");
@@ -333,63 +238,42 @@ fn bm_wfc_correctness(results: &mut Vec<ValidationResult>) {
     println!("  - ludoSpring advantage: deterministic LCG seeding, no rand dependency");
     println!("  - Ecosystem advantage: pre-built search strategies, image-based WFC");
     println!("  - Recommendation: study entropic search pattern, keep deterministic core\n");
-
-    println!();
 }
 
 // ── BM-BSP: Quality metrics ────────────────────────────────────────────
 
-fn bm_bsp_quality(results: &mut Vec<ValidationResult>) {
-    println!("Part 4: BM-BSP — Level generation quality\n");
-
+fn bm_bsp_quality(h: &mut ValidationHarness) {
     let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
     let tree = generate_bsp(bounds, 15.0, 42);
     let leaves = tree.leaves();
 
     // Room count in reasonable range for 100x100 / 15 min-size
     #[expect(clippy::cast_precision_loss, reason = "leaf count fits in f64")]
-    let r = ValidationResult::check(
-        "exp023_bsp_room_count",
+    h.check_abs(
         "BSP produces 4-20 rooms for 100x100, min_size=15",
         leaves.len() as f64,
         10.0,
         10.0,
     );
-    report(&r);
-    results.push(r);
 
     // Area conservation
     let total_area: f64 = leaves.iter().map(Rect::area).sum();
-    let r = ValidationResult::check(
-        "exp023_bsp_area_conservation",
+    h.check_abs(
         "leaf areas sum to total area",
         total_area,
         bounds.area(),
         1e-6,
     );
-    report(&r);
-    results.push(r);
 
     // Determinism: same seed → same tree
     let tree2 = generate_bsp(bounds, 15.0, 42);
     let same = tree.leaf_count() == tree2.leaf_count() && tree.depth() == tree2.depth();
-    let r = ValidationResult::check(
-        "exp023_bsp_determinism",
-        "same seed produces identical BSP",
-        if same { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    );
-    report(&r);
-    results.push(r);
-
-    println!();
+    h.check_bool("same seed produces identical BSP", same);
 }
 
 // ── BM-ECS: Pattern study ──────────────────────────────────────────────
 
-fn bm_ecs_patterns(results: &mut Vec<ValidationResult>) {
-    println!("Part 5: BM-ECS — Bevy pattern study (no dependency)\n");
+fn bm_ecs_patterns(h: &mut ValidationHarness) {
     println!("  Bevy ECS concepts vs ludoSpring game::state:");
     println!();
     println!("  ┌─────────────────────┬─────────────────────────────────┐");
@@ -423,13 +307,5 @@ fn bm_ecs_patterns(results: &mut Vec<ValidationResult>) {
     println!("  Rendering stays in petalTongue. Physics stays in barraCuda.");
     println!();
 
-    let r = ValidationResult::check(
-        "exp023_ecs_study",
-        "ECS pattern study documented (no dependency needed)",
-        1.0,
-        1.0,
-        0.0,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("ECS pattern study documented (no dependency needed)", true);
 }

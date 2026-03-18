@@ -16,21 +16,16 @@ use ludospring_barracuda::interaction::difficulty::{PerformanceWindow, suggest_a
 use ludospring_barracuda::interaction::flow::{DifficultyCurve, FlowState, evaluate_flow};
 use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_engagement};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/flow_engagement.py",
+    commit: "74cf9488",
+    date: "2026-03-11",
+    command: "python3 baselines/python/run_all_baselines.py",
+};
 
-fn validate_dda_session(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: DDA session simulation (20 rounds)");
+fn validate_dda_session(h: &mut ValidationHarness) {
     let curve = DifficultyCurve::sigmoid(0.2, 0.9, 8.0);
     let mut window = PerformanceWindow::new(10);
     let mut player_skill = 0.3_f64;
@@ -50,22 +45,14 @@ fn validate_dda_session(results: &mut Vec<ValidationResult>) {
         player_skill = (player_skill + 0.02).min(0.95);
     }
 
-    // DDA responds to performance: with mixed outcomes, the system produces
-    // a non-zero adjustment (either harder or easier based on trend).
     let final_adj = suggest_adjustment(&window, tolerances::DDA_TARGET_SUCCESS_RATE);
-    let r = ValidationResult::check(
-        "exp004_dda_responds",
+    h.check_bool(
         "DDA produces non-zero adjustment to performance imbalance",
-        final_adj.abs(),
-        0.5,
-        0.6,
+        final_adj.abs() > f64::EPSILON,
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_flow_tracking(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Flow state tracking");
+fn validate_flow_tracking(h: &mut ValidationHarness) {
     let curve = DifficultyCurve::sigmoid(0.2, 0.9, 8.0);
     let mut flow_count = 0_u32;
     let mut skill = 0.3_f64;
@@ -79,20 +66,14 @@ fn validate_flow_tracking(results: &mut Vec<ValidationResult>) {
         skill = (skill + 0.02).min(0.95);
     }
 
-    // With sigmoid curve and rising skill, some rounds should be in flow
-    let r = ValidationResult::check(
-        "exp004_flow_maintained",
+    h.check_lower(
         "flow state in >= 5 of 20 rounds",
         f64::from(flow_count),
-        10.0,
-        5.5,
+        5.0,
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_engagement(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Engagement metrics");
+fn validate_engagement(h: &mut ValidationHarness) {
     let active = EngagementSnapshot {
         session_duration_s: 600.0,
         action_count: 180,
@@ -103,56 +84,24 @@ fn validate_engagement(results: &mut Vec<ValidationResult>) {
     };
     let metrics = compute_engagement(&active);
 
-    let r = ValidationResult::check(
-        "exp004_apm",
-        "active session APM > 10",
-        metrics.actions_per_minute,
-        18.0,
-        10.0,
-    );
-    report(&r);
-    results.push(r);
+    h.check_lower("active session APM > 10", metrics.actions_per_minute, 10.0);
+    h.check_lower("active session composite > 0.2", metrics.composite, 0.2);
 
-    let r = ValidationResult::check(
-        "exp004_composite",
-        "active session composite > 0.2",
-        metrics.composite,
-        0.4,
-        0.3,
-    );
-    report(&r);
-    results.push(r);
-
-    // Edge case: zero-duration doesn't panic
     let zero = EngagementSnapshot::default();
     let zero_metrics = compute_engagement(&zero);
-    let r = ValidationResult::check(
-        "exp004_zero_safe",
+    h.check_bool(
         "zero-duration engagement is finite",
-        if zero_metrics.composite.is_finite() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        zero_metrics.composite.is_finite(),
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp004: Folding Adversarial (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp004_folding_adversarial");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_dda_session(&mut results);
-    validate_flow_tracking(&mut results);
-    validate_engagement(&mut results);
+    validate_dda_session(&mut h);
+    validate_flow_tracking(&mut h);
+    validate_engagement(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

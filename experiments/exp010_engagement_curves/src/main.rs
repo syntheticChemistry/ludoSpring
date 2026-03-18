@@ -15,22 +15,17 @@
 use ludospring_barracuda::interaction::flow::{DifficultyCurve, FlowState, evaluate_flow};
 use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_engagement};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/flow_engagement.py",
+    commit: "74cf9488",
+    date: "2026-03-11",
+    command: "python3 baselines/python/run_all_baselines.py",
+};
 
-fn validate_flow_states(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Flow state evaluation");
-    let cw = 0.15;
+fn validate_flow_states(h: &mut ValidationHarness) {
+    let cw = tolerances::FLOW_CHANNEL_WIDTH;
 
     let cases: &[(&str, f64, f64, FlowState)] = &[
         ("equal challenge/skill", 0.5, 0.5, FlowState::Flow),
@@ -43,77 +38,43 @@ fn validate_flow_states(results: &mut Vec<ValidationResult>) {
 
     for (desc, challenge, skill, expected) in cases {
         let actual = evaluate_flow(*challenge, *skill, cw);
-        let r = ValidationResult::check(
-            "exp010_flow",
-            desc,
-            if actual == *expected { 1.0 } else { 0.0 },
-            1.0,
-            tolerances::ANALYTICAL_TOL,
-        );
-        report(&r);
-        results.push(r);
+        h.check_bool(desc, actual == *expected);
     }
 }
 
-fn validate_difficulty_curves(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Difficulty curves");
-
+fn validate_difficulty_curves(h: &mut ValidationHarness) {
     let linear = DifficultyCurve::linear(0.1, 0.9);
-    let r = ValidationResult::check(
-        "exp010_linear_start",
+    h.check_abs(
         "linear curve starts at 0.1",
         linear.sample(0.0),
         0.1,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp010_linear_end",
+    h.check_abs(
         "linear curve ends at 0.9",
         linear.sample(1.0),
         0.9,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp010_linear_mid",
+    h.check_abs(
         "linear curve midpoint is 0.5",
         linear.sample(0.5),
         0.5,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
 
     let sigmoid = DifficultyCurve::sigmoid(0.1, 0.9, 10.0);
-    let mut monotonic = true;
     let mut prev = 0.0;
-    for i in 0..=100 {
-        let t = f64::from(i) / 100.0;
-        let val = sigmoid.sample(t);
-        if val < prev - 1e-10 {
-            monotonic = false;
-        }
+    let monotonic = (0..=100).all(|i| {
+        let val = sigmoid.sample(f64::from(i) / 100.0);
+        let ok = val >= prev - tolerances::ANALYTICAL_TOL;
         prev = val;
-    }
-    let r = ValidationResult::check(
-        "exp010_sigmoid_mono",
-        "sigmoid curve is monotonically increasing",
-        if monotonic { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+        ok
+    });
+    h.check_bool("sigmoid curve is monotonically increasing", monotonic);
 }
 
-fn validate_engagement_archetypes(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Engagement archetypes");
-
+fn validate_engagement_archetypes(h: &mut ValidationHarness) {
     let hardcore = EngagementSnapshot {
         session_duration_s: 7200.0,
         action_count: 5000,
@@ -152,78 +113,29 @@ fn validate_engagement_archetypes(results: &mut Vec<ValidationResult>) {
     let met_ex = compute_engagement(&explorer);
     let met_id = compute_engagement(&idle);
 
-    let r = ValidationResult::check(
-        "exp010_hardcore_high",
+    h.check_bool(
         "hardcore scores higher than casual",
-        if met_hc.composite > met_ca.composite {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        met_hc.composite > met_ca.composite,
     );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp010_idle_low",
-        "idle player scores < 0.1",
-        if met_id.composite < 0.1 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp010_explorer_breadth",
+    h.check_upper("idle player scores < 0.1", met_id.composite, 0.1);
+    h.check_bool(
         "explorer has highest exploration_rate",
-        if met_ex.exploration_rate > met_hc.exploration_rate
-            && met_ex.exploration_rate > met_ca.exploration_rate
-        {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        met_ex.exploration_rate > met_hc.exploration_rate
+            && met_ex.exploration_rate > met_ca.exploration_rate,
     );
-    report(&r);
-    results.push(r);
-
-    let r = ValidationResult::check(
-        "exp010_hardcore_persistent",
+    h.check_bool(
         "hardcore player has highest persistence",
-        if met_hc.persistence > met_ca.persistence && met_hc.persistence > met_ex.persistence {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
-
-    println!(
-        "\n  Composites: hardcore={:.3}, casual={:.3}, explorer={:.3}, idle={:.3}",
-        met_hc.composite, met_ca.composite, met_ex.composite, met_id.composite
+        met_hc.persistence > met_ca.persistence && met_hc.persistence > met_ex.persistence,
     );
 }
 
 fn main() {
-    println!("=== Exp010: Engagement Curve Validation ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp010_engagement_curves");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_flow_states(&mut results);
-    validate_difficulty_curves(&mut results);
-    validate_engagement_archetypes(&mut results);
+    validate_flow_states(&mut h);
+    validate_difficulty_curves(&mut h);
+    validate_engagement_archetypes(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

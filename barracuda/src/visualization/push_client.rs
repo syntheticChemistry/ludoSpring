@@ -142,8 +142,8 @@ impl VisualizationPushClient {
         let mut response = String::new();
         reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-        let parsed: serde_json::Value = serde_json::from_str(&response)
-            .map_err(|e| IpcError::Serialization(e.to_string()))?;
+        let parsed: serde_json::Value =
+            serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
 
         crate::ipc::extract_rpc_result(&parsed).map(|_| ())
     }
@@ -299,8 +299,8 @@ impl VisualizationPushClient {
         let mut response = String::new();
         reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-        let parsed: serde_json::Value = serde_json::from_str(&response)
-            .map_err(|e| IpcError::Serialization(e.to_string()))?;
+        let parsed: serde_json::Value =
+            serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
 
         crate::ipc::extract_rpc_result(&parsed)
     }

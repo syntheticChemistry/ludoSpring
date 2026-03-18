@@ -294,10 +294,7 @@ impl MedicalAccessSystem {
             schema_version: 1,
         };
 
-        let Ok((cert, _entry_hash)) = self
-            .cert_manager
-            .mint(cert_type, patient, metadata)
-        else {
+        let Ok((cert, _entry_hash)) = self.cert_manager.mint(cert_type, patient, metadata) else {
             eprintln!("FATAL: certificate minting failed");
             std::process::exit(1);
         };
@@ -346,10 +343,7 @@ impl MedicalAccessSystem {
             schema_version: 1,
         };
 
-        let Ok((cert, _entry_hash)) = self
-            .cert_manager
-            .mint(cert_type, patient, metadata)
-        else {
+        let Ok((cert, _entry_hash)) = self.cert_manager.mint(cert_type, patient, metadata) else {
             eprintln!("FATAL: certificate minting failed");
             std::process::exit(1);
         };

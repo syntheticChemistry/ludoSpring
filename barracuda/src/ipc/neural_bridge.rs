@@ -50,11 +50,11 @@ impl NeuralBridge {
     ///
     /// Returns [`IpcError::NotFound`] if no Neural API socket is found.
     pub fn discover() -> Result<Self, super::envelope::IpcError> {
-        let socket = crate::niche::resolve_neural_api_socket().ok_or(
+        let socket = crate::niche::resolve_neural_api_socket().ok_or_else(|| {
             super::envelope::IpcError::NotFound(
                 "Neural API not found in any standard location".into(),
-            ),
-        )?;
+            )
+        })?;
 
         let timeout_secs = std::env::var("BIOMEOS_RPC_TIMEOUT_SECS")
             .ok()
@@ -202,8 +202,8 @@ impl NeuralBridge {
         });
 
         let mut writer = stream.try_clone().map_err(IpcError::Io)?;
-        let mut msg = serde_json::to_string(&request)
-            .map_err(|e| IpcError::Serialization(e.to_string()))?;
+        let mut msg =
+            serde_json::to_string(&request).map_err(|e| IpcError::Serialization(e.to_string()))?;
         msg.push('\n');
         writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
         writer.flush().map_err(IpcError::Io)?;
@@ -212,8 +212,8 @@ impl NeuralBridge {
         let mut response = String::new();
         reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-        let parsed: serde_json::Value = serde_json::from_str(&response)
-            .map_err(|e| IpcError::Serialization(e.to_string()))?;
+        let parsed: serde_json::Value =
+            serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
 
         super::envelope::extract_rpc_result(&parsed)
     }

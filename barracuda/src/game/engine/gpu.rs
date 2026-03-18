@@ -34,6 +34,12 @@ pub mod shaders {
     /// Pathfinding wavefront — BFS expansion step.
     pub const PATHFIND_WAVEFRONT: &str =
         include_str!("../../../shaders/game/pathfind_wavefront.wgsl");
+
+    /// Perlin 2D noise — terrain generation (validated exp030, pending barraCuda absorption).
+    pub const PERLIN_2D: &str = include_str!("../../../shaders/game/validated/perlin_2d.wgsl");
+
+    /// DDA raycaster — batch line-of-sight (validated exp030, pending barraCuda absorption).
+    pub const DDA_RAYCAST: &str = include_str!("../../../shaders/game/validated/dda_raycast.wgsl");
 }
 
 /// A named GPU compute operation the engine can dispatch.
@@ -59,7 +65,8 @@ impl GpuOp {
             Self::FogOfWar => Some(shaders::FOG_OF_WAR),
             Self::TileLighting => Some(shaders::TILE_LIGHTING),
             Self::PathfindStep => Some(shaders::PATHFIND_WAVEFRONT),
-            Self::PerlinTerrain | Self::BatchRaycast => None,
+            Self::PerlinTerrain => Some(shaders::PERLIN_2D),
+            Self::BatchRaycast => Some(shaders::DDA_RAYCAST),
         }
     }
 
@@ -368,8 +375,13 @@ mod tests {
         assert!(GpuOp::FogOfWar.wgsl_source().is_some());
         assert!(GpuOp::TileLighting.wgsl_source().is_some());
         assert!(GpuOp::PathfindStep.wgsl_source().is_some());
-        // barraCuda-owned shaders are not embedded here
-        assert!(GpuOp::PerlinTerrain.wgsl_source().is_none());
-        assert!(GpuOp::BatchRaycast.wgsl_source().is_none());
+        assert!(GpuOp::PerlinTerrain.wgsl_source().is_some());
+        assert!(GpuOp::BatchRaycast.wgsl_source().is_some());
+    }
+
+    #[test]
+    fn validated_shaders_contain_entry_points() {
+        assert!(shaders::PERLIN_2D.contains("main"));
+        assert!(shaders::DDA_RAYCAST.contains("main"));
     }
 }

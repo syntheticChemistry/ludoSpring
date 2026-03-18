@@ -6,6 +6,7 @@
 //! parity tests by catching edge cases no fixed test suite would cover.
 
 use proptest::prelude::*;
+use proptest::test_runner::Config;
 
 use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::interaction::input_laws::{
@@ -155,9 +156,11 @@ proptest! {
     }
 }
 
-// ── Fitts's law: monotonicity ──────────────────────────────────────
+// ── Fitts's law: monotonicity (cheap math — 1024 cases) ──────────
 
 proptest! {
+    #![proptest_config(Config::with_cases(1024))]
+
     #[test]
     fn fitts_mt_positive(
         distance in 1.0_f64..1000.0,
@@ -183,9 +186,11 @@ proptest! {
     }
 }
 
-// ── Flow state: exhaustive partition ───────────────────────────────
+// ── Flow state: exhaustive partition (cheap math — 1024 cases) ────
 
 proptest! {
+    #![proptest_config(Config::with_cases(1024))]
+
     #[test]
     fn flow_state_always_defined(
         challenge in 0.0_f64..1.0,

@@ -13,6 +13,7 @@ use crate::shaders::{
 use ludospring_barracuda::barcuda_math;
 use ludospring_barracuda::game::raycaster;
 use ludospring_barracuda::procedural::noise;
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::ValidationResult;
 use std::process;
 
@@ -44,7 +45,7 @@ pub fn cmd_validate() {
         "sigmoid_cpu_at_zero",
         sig_at_zero,
         0.5,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     ));
 
     let relu_neg = f64::max(-3.0, 0.0);
@@ -72,7 +73,7 @@ pub fn cmd_validate() {
         "dot_cpu_known",
         cpu_dot,
         70.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     ));
 
     let seed: u64 = 42;
@@ -122,7 +123,7 @@ pub fn cmd_validate() {
         "mean_cpu_known",
         cpu_mean,
         5.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     ));
 
     // -- GPU parity checks --
@@ -144,7 +145,7 @@ pub fn cmd_validate() {
             "sigmoid_gpu_parity",
             f64::from(sig_max_err),
             0.0,
-            1e-6,
+            tolerances::GPU_UNARY_ABS_TOL,
         ));
 
         let relu_input: Vec<f32> = vec![-3.0, -1.0, 0.0, 1.0, 3.0];
@@ -168,7 +169,7 @@ pub fn cmd_validate() {
             "dot_gpu_parity",
             f64::from(gpu_dot_sum),
             70.0,
-            1e-4,
+            tolerances::GPU_REDUCTION_ABS_TOL,
         ));
 
         let softmax_input: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
@@ -184,7 +185,7 @@ pub fn cmd_validate() {
             "softmax_gpu_parity",
             f64::from(sm_max_err),
             0.0,
-            1e-5,
+            tolerances::GPU_SOFTMAX_ABS_TOL,
         ));
 
         let scale_input: Vec<f32> = vec![0.0, 1.0, 2.0, 3.0, 4.0];
@@ -236,7 +237,7 @@ pub fn cmd_validate() {
             "reduce_sum_gpu_parity",
             f64::from((gpu_total - cpu_total).abs()),
             0.0,
-            1.0,
+            tolerances::GPU_REDUCE_SUM_ABS_TOL,
         ));
 
         // -- Tier A GPU parity: Perlin 2D noise --
@@ -272,7 +273,7 @@ pub fn cmd_validate() {
             "perlin_gpu_parity",
             f64::from(noise_max_err),
             0.0,
-            1e-3,
+            tolerances::GPU_PERLIN_ABS_TOL,
         ));
 
         // Check range bounded
@@ -326,7 +327,7 @@ pub fn cmd_validate() {
             "engagement_gpu_parity",
             f64::from(eng_max_err),
             0.0,
-            1e-4,
+            tolerances::GPU_ENGAGEMENT_ABS_TOL,
         ));
 
         // -- FBM GPU parity (use Perlin shader with multiple octave calls) --
@@ -378,7 +379,7 @@ pub fn cmd_validate() {
             "fbm_gpu_parity",
             f64::from(fbm_max_err),
             0.0,
-            0.01,
+            tolerances::GPU_FBM_ABS_TOL_LOOSE,
         ));
 
         // -- Raycaster GPU parity (simplified: DDA distance for N angles) --
@@ -446,7 +447,7 @@ pub fn cmd_validate() {
             "raycaster_gpu_parity",
             f64::from(ray_max_err),
             0.0,
-            0.5,
+            tolerances::GPU_RAYCASTER_DISTANCE_ABS_TOL,
         ));
 
         // Hit match: both agree on whether a wall was hit

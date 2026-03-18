@@ -2,20 +2,8 @@
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic, clippy::nursery)]
 #![expect(
-    clippy::doc_markdown,
-    reason = "validation harness: domain-specific nomenclature (game titles, primal names)"
-)]
-#![expect(
-    clippy::module_name_repetitions,
-    reason = "ecosystem convention: primal modules use domain-qualified names"
-)]
-#![expect(
     clippy::cast_precision_loss,
     reason = "validation harness: counter/timing values within f64 range"
-)]
-#![expect(
-    clippy::vec_init_then_push,
-    reason = "validation harness: explicit initialization for readability"
 )]
 
 //! exp057 — Symbiont: Faction/reputation from open population dynamics.
@@ -30,18 +18,19 @@ use factions::{
     ReputationVector, apply_action, frequency_dependent_fitness, keystone_faction,
     lotka_volterra_step, unlock_tier,
 };
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-const EXP: &str = "exp057";
-
-const fn bool_f64(b: bool) -> f64 {
-    if b { 1.0 } else { 0.0 }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — faction/reputation dynamics)",
+    commit: "N/A",
+    date: "N/A",
+    command: "N/A (pure Rust implementation)",
+};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(String::as_str) {
-        Some("validate") | None => std::process::exit(cmd_validate()),
+        Some("validate") | None => cmd_validate(),
         Some(other) => {
             eprintln!("unknown command: {other}");
             std::process::exit(1);
@@ -49,129 +38,58 @@ fn main() {
     }
 }
 
-fn cmd_validate() -> i32 {
-    println!("\n=== exp057: Symbiont — Faction/Reputation from Population Dynamics ===\n");
+fn cmd_validate() {
+    let mut h = ValidationHarness::new("exp057_symbiont");
+    h.print_provenance(&[&PROVENANCE]);
 
-    let mut all_results = Vec::new();
+    validate_faction_network(&mut h);
+    validate_reputation_actions(&mut h);
+    validate_access_tiers(&mut h);
+    validate_lv_step(&mut h);
+    validate_keystone(&mut h);
+    validate_frequency_fitness(&mut h);
+    validate_cross_domain(&mut h);
 
-    println!("--- Section 1: Faction Network (Multi-species LV) ---");
-    all_results.extend(validate_faction_network());
-    println!("\n--- Section 2: Reputation Actions ---");
-    all_results.extend(validate_reputation_actions());
-    println!("\n--- Section 3: Access Tiers ---");
-    all_results.extend(validate_access_tiers());
-    println!("\n--- Section 4: Multi-species LV Step ---");
-    all_results.extend(validate_lv_step());
-    println!("\n--- Section 5: Keystone Detection (Paine 1966) ---");
-    all_results.extend(validate_keystone());
-    println!("\n--- Section 6: Frequency-Dependent Fitness ---");
-    all_results.extend(validate_frequency_fitness());
-    println!("\n--- Section 7: Cross-Domain Mapping ---");
-    all_results.extend(validate_cross_domain());
-
-    let passed = all_results.iter().filter(|r| r.passed).count();
-    let total = all_results.len();
-    println!("\n=== SUMMARY: {passed}/{total} checks passed ===");
-
-    if passed != total {
-        println!("\nFAILED:");
-        for r in all_results.iter().filter(|r| !r.passed) {
-            println!(
-                "  {} — measured={}, expected={}",
-                r.description, r.measured, r.expected
-            );
-        }
-        return 1;
-    }
-    0
+    h.finish();
 }
 
 // =============================================================================
 // Section 1: Faction Network (Multi-species LV)
 // =============================================================================
 
-fn validate_faction_network() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_faction_network(h: &mut ValidationHarness) {
     let network = build_three_faction_network();
 
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "network_matrix_square",
-        bool_f64(
-            network.alphas.len() == network.factions.len()
-                && network
-                    .alphas
-                    .iter()
-                    .all(|r| r.len() == network.factions.len()),
-        ),
-        1.0,
-        0.0,
-    ));
+        network.alphas.len() == network.factions.len()
+            && network
+                .alphas
+                .iter()
+                .all(|r| r.len() == network.factions.len()),
+    );
 
     let n = network.len();
-    results.push(ValidationResult::check(
-        EXP,
-        "network_has_factions",
-        n as f64,
-        3.0,
-        0.0,
-    ));
+    h.check_abs("network_has_factions", n as f64, 3.0, 0.0);
 
     let self_ones = (0..n).all(|i| (network.alpha(i, i) - 1.0).abs() < 1e-9);
-    results.push(ValidationResult::check(
-        EXP,
-        "self_interaction_is_one",
-        bool_f64(self_ones),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("self_interaction_is_one", self_ones);
 
     let coeffs_valid = network
         .alphas
         .iter()
         .flatten()
         .all(|&a| (0.0..=2.0).contains(&a));
-    results.push(ValidationResult::check(
-        EXP,
-        "coefficients_in_valid_range",
-        bool_f64(coeffs_valid),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("coefficients_in_valid_range", coeffs_valid);
 
     let alliance = Relationship::Alliance(0.5);
     let rivalry = Relationship::Rivalry(1.5);
-    results.push(ValidationResult::check(
-        EXP,
-        "alliance_coefficient_lt_one",
-        bool_f64(alliance.coefficient() < 1.0),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "rivalry_coefficient_gt_one",
-        bool_f64(rivalry.coefficient() > 1.0),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool("alliance_coefficient_lt_one", alliance.coefficient() < 1.0);
+    h.check_bool("rivalry_coefficient_gt_one", rivalry.coefficient() > 1.0);
+    h.check_bool(
         "neutral_coefficient_is_one",
-        bool_f64((Relationship::Neutral.coefficient() - 1.0).abs() < 1e-9),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+        (Relationship::Neutral.coefficient() - 1.0).abs() < 1e-9,
+    );
 }
 
 fn build_three_faction_network() -> FactionNetwork {
@@ -204,154 +122,83 @@ fn build_three_faction_network() -> FactionNetwork {
 // Section 2: Reputation Actions
 // =============================================================================
 
-fn validate_reputation_actions() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
+fn validate_reputation_actions(h: &mut ValidationHarness) {
     let network = build_three_faction_network();
 
     let mut rep_help = ReputationVector::new(3);
     apply_action(&mut rep_help, 0, ReputationAction::Help, &network);
-    results.push(ValidationResult::check(
-        EXP,
-        "help_increases_standing",
-        bool_f64(rep_help.get(0) > 0.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("help_increases_standing", rep_help.get(0) > 0.0);
 
     let mut rep_harm = ReputationVector::new(3);
     apply_action(&mut rep_harm, 0, ReputationAction::Harm, &network);
-    results.push(ValidationResult::check(
-        EXP,
-        "harm_decreases_standing",
-        bool_f64(rep_harm.get(0) < 0.0),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("harm_decreases_standing", rep_harm.get(0) < 0.0);
 
     let mut rep_trade = ReputationVector::new(3);
     apply_action(&mut rep_trade, 0, ReputationAction::Trade, &network);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "trade_small_positive",
-        bool_f64(rep_trade.get(0) > 0.0 && rep_trade.get(0) < rep_help.get(0)),
-        1.0,
-        0.0,
-    ));
+        rep_trade.get(0) > 0.0 && rep_trade.get(0) < rep_help.get(0),
+    );
 
     let mut rep_betray = ReputationVector::new(3);
     apply_action(&mut rep_betray, 0, ReputationAction::Betray, &network);
-    results.push(ValidationResult::check(
-        EXP,
-        "betray_large_negative",
-        bool_f64(rep_betray.get(0) < rep_harm.get(0)),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("betray_large_negative", rep_betray.get(0) < rep_harm.get(0));
 
     let mut rep_help_0 = ReputationVector::new(3);
     apply_action(&mut rep_help_0, 0, ReputationAction::Help, &network);
     let ally_0_1 = network.alpha(1, 0) < 1.0;
     let standing_1_after_help_0 = rep_help_0.get(1);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "help_propagates_to_allies",
-        bool_f64(ally_0_1 && standing_1_after_help_0 > 0.0),
-        1.0,
-        0.0,
-    ));
+        ally_0_1 && standing_1_after_help_0 > 0.0,
+    );
 
     let mut rep_harm_0 = ReputationVector::new(3);
     apply_action(&mut rep_harm_0, 0, ReputationAction::Harm, &network);
     let rival_1_0 = network.alpha(1, 0) > 1.0 || network.alpha(0, 1) > 1.0;
     let standing_1_after_harm_0 = rep_harm_0.get(1);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "harm_propagates_to_rivals",
-        bool_f64(standing_1_after_harm_0 != 0.0 || !rival_1_0),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+        standing_1_after_harm_0 != 0.0 || !rival_1_0,
+    );
 }
 
 // =============================================================================
 // Section 3: Access Tiers
 // =============================================================================
 
-fn validate_access_tiers() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    results.push(ValidationResult::check(
-        EXP,
+fn validate_access_tiers(h: &mut ValidationHarness) {
+    h.check_bool(
         "tier_hostile_below_neg_half",
-        bool_f64(unlock_tier(-0.6) == AccessTier::Hostile),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        unlock_tier(-0.6) == AccessTier::Hostile,
+    );
+    h.check_bool(
         "tier_unfriendly_neg_to_zero",
-        bool_f64(unlock_tier(-0.3) == AccessTier::Unfriendly),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        unlock_tier(-0.3) == AccessTier::Unfriendly,
+    );
+    h.check_bool(
         "tier_neutral_zero_to_point3",
-        bool_f64(unlock_tier(0.1) == AccessTier::Neutral),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        unlock_tier(0.1) == AccessTier::Neutral,
+    );
+    h.check_bool(
         "tier_friendly_point3_to_point7",
-        bool_f64(unlock_tier(0.5) == AccessTier::Friendly),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
+        unlock_tier(0.5) == AccessTier::Friendly,
+    );
+    h.check_bool(
         "tier_allied_above_point7",
-        bool_f64(unlock_tier(0.8) == AccessTier::Allied),
-        1.0,
-        0.0,
-    ));
+        unlock_tier(0.8) == AccessTier::Allied,
+    );
 
     let tier_hostile = unlock_tier(-0.9);
     let tier_allied = unlock_tier(0.9);
-    results.push(ValidationResult::check(
-        EXP,
-        "actions_can_shift_tiers",
-        bool_f64(tier_hostile != tier_allied),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+    h.check_bool("actions_can_shift_tiers", tier_hostile != tier_allied);
 }
 
 // =============================================================================
 // Section 4: Multi-species LV Step
 // =============================================================================
 
-fn validate_lv_step() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_lv_step(h: &mut ValidationHarness) {
     let pops = vec![1.0, 1.0, 1.0];
     let alphas = vec![
         vec![1.0, 1.2, 1.2],
@@ -363,13 +210,7 @@ fn validate_lv_step() -> Vec<ValidationResult> {
 
     let next = lotka_volterra_step(&pops, &alphas, &r, &k, 0.1);
     let all_positive = next.iter().all(|&x| x >= 0.0);
-    results.push(ValidationResult::check(
-        EXP,
-        "lv_populations_stay_positive",
-        bool_f64(all_positive),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("lv_populations_stay_positive", all_positive);
 
     let mut strong_comp_pops = vec![1.0, 1.0, 0.01];
     let strong_alphas = vec![
@@ -381,13 +222,7 @@ fn validate_lv_step() -> Vec<ValidationResult> {
         strong_comp_pops = lotka_volterra_step(&strong_comp_pops, &strong_alphas, &r, &k, 0.1);
     }
     let weak_extinct = strong_comp_pops[2] < 0.01;
-    results.push(ValidationResult::check(
-        EXP,
-        "lv_competitive_exclusion",
-        bool_f64(weak_extinct),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("lv_competitive_exclusion", weak_extinct);
 
     let niche_alphas = vec![
         vec![1.0, 0.3, 0.3],
@@ -399,70 +234,26 @@ fn validate_lv_step() -> Vec<ValidationResult> {
         niche_pops = lotka_volterra_step(&niche_pops, &niche_alphas, &r, &k, 0.1);
     }
     let all_survive = niche_pops.iter().all(|&x| x > 0.1);
-    results.push(ValidationResult::check(
-        EXP,
-        "lv_coexistence_niche_partitioning",
-        bool_f64(all_survive),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+    h.check_bool("lv_coexistence_niche_partitioning", all_survive);
 }
 
 // =============================================================================
 // Section 5: Keystone Detection (Paine 1966)
 // =============================================================================
 
-fn validate_keystone() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_keystone(h: &mut ValidationHarness) {
     let network = build_keystone_network();
     let keystone = keystone_faction(&network, 0.5, 100, 0.1);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "keystone_identified",
-        bool_f64(keystone.is_some()),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("keystone_identified", keystone.is_some());
 
     #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
     let id_valid = keystone.is_some_and(|id| id.0 < network.factions.len() as u32);
-    results.push(ValidationResult::check(
-        EXP,
-        "keystone_faction_id_valid",
-        bool_f64(id_valid),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("keystone_faction_id_valid", id_valid);
 
     let no_keystone_network = build_no_keystone_network();
     let no_keystone = keystone_faction(&no_keystone_network, 0.5, 100, 0.1);
-    results.push(ValidationResult::check(
-        EXP,
-        "no_keystone_when_uniform",
-        bool_f64(no_keystone.is_none()),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+    h.check_bool("no_keystone_when_uniform", no_keystone.is_none());
 }
 
 fn build_keystone_network() -> FactionNetwork {
@@ -527,9 +318,7 @@ fn build_no_keystone_network() -> FactionNetwork {
 // Section 6: Frequency-Dependent Fitness
 // =============================================================================
 
-fn validate_frequency_fitness() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
+fn validate_frequency_fitness(h: &mut ValidationHarness) {
     let payoff = vec![vec![1.0, 0.0], vec![2.0, 1.0]];
     let freqs_a = vec![1.0, 0.0];
     let freqs_b = vec![0.0, 1.0];
@@ -540,110 +329,32 @@ fn validate_frequency_fitness() -> Vec<ValidationResult> {
     let fit_mid = frequency_dependent_fitness(&freqs_mid, &payoff);
 
     let comp_diff = (fit_a[0] - fit_mid[0]).abs() > 1e-9 || (fit_b[1] - fit_mid[1]).abs() > 1e-9;
-    results.push(ValidationResult::check(
-        EXP,
-        "fitness_depends_on_composition",
-        bool_f64(comp_diff),
-        1.0,
-        0.0,
-    ));
+    h.check_bool("fitness_depends_on_composition", comp_diff);
 
-    results.push(ValidationResult::check(
-        EXP,
-        "fitness_strategy_0_vs_all_0",
-        fit_a[0],
-        1.0,
-        1e-9,
-    ));
-
-    results.push(ValidationResult::check(
-        EXP,
-        "fitness_strategy_1_vs_all_1",
-        fit_b[1],
-        1.0,
-        1e-9,
-    ));
+    h.check_abs("fitness_strategy_0_vs_all_0", fit_a[0], 1.0, 1e-9);
+    h.check_abs("fitness_strategy_1_vs_all_1", fit_b[1], 1.0, 1e-9);
 
     let coop_payoff = vec![vec![3.0, 0.0], vec![5.0, 1.0]];
     let fit_coop = frequency_dependent_fitness(&[0.5, 0.5], &coop_payoff);
-    results.push(ValidationResult::check(
-        EXP,
+    h.check_bool(
         "fitness_mixed_population",
-        bool_f64(fit_coop[0] > 0.0 && fit_coop[1] > 0.0),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+        fit_coop[0] > 0.0 && fit_coop[1] > 0.0,
+    );
 }
 
 // =============================================================================
 // Section 7: Cross-Domain Mapping
 // =============================================================================
 
-fn validate_cross_domain() -> Vec<ValidationResult> {
-    let mut results = Vec::new();
-
-    results.push(ValidationResult::check(
-        EXP,
-        "cross_lotka_volterra_1925",
-        bool_f64(true),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "cross_spatial_pd_nowak_may_1992",
-        bool_f64(true),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "cross_frequency_fitness_maynard_smith_1982",
-        bool_f64(true),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "cross_keystone_paine_1966",
-        bool_f64(true),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "cross_faction_ecology_isomorphism",
-        bool_f64(true),
-        1.0,
-        0.0,
-    ));
-    results.push(ValidationResult::check(
-        EXP,
-        "cross_reputation_standing_clamped",
-        bool_f64({
-            let mut r = ReputationVector::new(1);
-            r.add(0, 10.0);
-            r.get(0) <= 1.0
-        }),
-        1.0,
-        0.0,
-    ));
-
-    for v in &results {
-        println!(
-            "  [{}] {}",
-            if v.passed { "PASS" } else { "FAIL" },
-            v.description
-        );
-    }
-    results
+fn validate_cross_domain(h: &mut ValidationHarness) {
+    h.check_bool("cross_lotka_volterra_1925", true);
+    h.check_bool("cross_spatial_pd_nowak_may_1992", true);
+    h.check_bool("cross_frequency_fitness_maynard_smith_1982", true);
+    h.check_bool("cross_keystone_paine_1966", true);
+    h.check_bool("cross_faction_ecology_isomorphism", true);
+    h.check_bool("cross_reputation_standing_clamped", {
+        let mut r = ReputationVector::new(1);
+        r.add(0, 10.0);
+        r.get(0) <= 1.0
+    });
 }

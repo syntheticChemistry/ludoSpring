@@ -8,11 +8,22 @@
 //! Subcommands:
 //!   validate  — run all dispatch routing checks
 //!   discover  — enumerate adapters and print substrate info
+//!
+//! # Provenance
+//!
+//! N/A (analytical — metalForge dispatch logic, wgpu adapter discovery).
 
 use std::process;
 
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use ludospring_forge::{GameWorkload, Substrate, recommend_substrate};
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — metalForge dispatch logic)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (wgpu adapter discovery)",
+};
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or_default();
@@ -72,34 +83,15 @@ fn has_any_gpu(substrates: &[SubstrateInfo]) -> bool {
     })
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "validation orchestrator — sequential check groups"
-)]
 fn cmd_validate() {
-    println!("=== exp031: Dispatch Routing Validation ===\n");
+    let mut h = ValidationHarness::new("exp031_dispatch_routing");
+    h.print_provenance(&[&PROVENANCE]);
 
     let substrates = discover_substrates();
     let gpu_available = has_any_gpu(&substrates);
 
-    println!(
-        "  Discovered {} adapter(s), GPU available: {}\n",
-        substrates.len(),
-        gpu_available
-    );
-
-    let experiment = "exp031_dispatch_routing";
-    let mut results = Vec::new();
-
     // 1. At least one adapter found (CPU software rasterizer counts)
-    let has_adapters = !substrates.is_empty();
-    results.push(ValidationResult::check(
-        experiment,
-        "adapter_discovery_nonzero",
-        if has_adapters { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("adapter_discovery_nonzero", !substrates.is_empty());
 
     // 2. Noise → GPU when GPU available
     let noise_sub = recommend_substrate(GameWorkload::NoiseGeneration, gpu_available);
@@ -108,56 +100,25 @@ fn cmd_validate() {
     } else {
         Substrate::Cpu
     };
-    results.push(ValidationResult::check(
-        experiment,
-        "noise_routes_correctly",
-        if noise_sub == noise_expected {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("noise_routes_correctly", noise_sub == noise_expected);
 
     // 3. WFC always CPU
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "wfc_always_cpu",
-        if recommend_substrate(GameWorkload::WaveFunctionCollapse, true) == Substrate::Cpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        recommend_substrate(GameWorkload::WaveFunctionCollapse, true) == Substrate::Cpu,
+    );
 
     // 4. MetricsBatch always CPU
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "metrics_always_cpu",
-        if recommend_substrate(GameWorkload::MetricsBatch, true) == Substrate::Cpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        recommend_substrate(GameWorkload::MetricsBatch, true) == Substrate::Cpu,
+    );
 
     // 5. UiAnalysis always CPU
-    results.push(ValidationResult::check(
-        experiment,
+    h.check_bool(
         "ui_always_cpu",
-        if recommend_substrate(GameWorkload::UiAnalysis, true) == Substrate::Cpu {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        0.0,
-    ));
+        recommend_substrate(GameWorkload::UiAnalysis, true) == Substrate::Cpu,
+    );
 
     // 6. PhysicsTick → GPU when available
     let phys_sub = recommend_substrate(GameWorkload::PhysicsTick, gpu_available);
@@ -166,13 +127,7 @@ fn cmd_validate() {
     } else {
         Substrate::Cpu
     };
-    results.push(ValidationResult::check(
-        experiment,
-        "physics_routes_correctly",
-        if phys_sub == phys_expected { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("physics_routes_correctly", phys_sub == phys_expected);
 
     // 7. Raycasting → GPU when available
     let ray_sub = recommend_substrate(GameWorkload::Raycasting, gpu_available);
@@ -181,13 +136,7 @@ fn cmd_validate() {
     } else {
         Substrate::Cpu
     };
-    results.push(ValidationResult::check(
-        experiment,
-        "raycasting_routes_correctly",
-        if ray_sub == ray_expected { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("raycasting_routes_correctly", ray_sub == ray_expected);
 
     // 8. Graceful degradation: no GPU → everything CPU
     let all_cpu_no_gpu = [
@@ -200,62 +149,19 @@ fn cmd_validate() {
     ]
     .iter()
     .all(|w| recommend_substrate(*w, false) == Substrate::Cpu);
-    results.push(ValidationResult::check(
-        experiment,
-        "graceful_degradation_all_cpu",
-        if all_cpu_no_gpu { 1.0 } else { 0.0 },
-        1.0,
-        0.0,
-    ));
+    h.check_bool("graceful_degradation_all_cpu", all_cpu_no_gpu);
 
     // 9. Discrete GPU detection (informational — pass if consistent)
-    let discrete = has_discrete_gpu(&substrates);
-    results.push(ValidationResult::check(
-        experiment,
-        "discrete_gpu_detection_consistent",
-        1.0,
-        1.0,
-        0.0,
-    ));
-    if discrete {
-        println!("  [INFO] Discrete GPU detected");
-    } else {
-        println!("  [INFO] No discrete GPU (integrated or software only)");
-    }
+    let _discrete = has_discrete_gpu(&substrates);
+    h.check_bool("discrete_gpu_detection_consistent", true);
 
-    // 10. Backend identification
-    let backends: Vec<String> = substrates
-        .iter()
-        .map(|s| format!("{:?}", s.backend))
-        .collect::<std::collections::HashSet<_>>()
-        .into_iter()
-        .collect();
-    results.push(ValidationResult::check(
-        experiment,
-        "backend_identified",
-        if backends.is_empty() { 0.0 } else { 1.0 },
-        1.0,
-        0.0,
-    ));
-    println!("  [INFO] Backends: {}", backends.join(", "));
+    // 10. Backend identification (substrates non-empty implies we identified backends)
+    h.check_bool("backend_identified", !substrates.is_empty());
 
-    // Print results
-    let passed = results.iter().filter(|r| r.passed).count();
-    let total = results.len();
-    println!();
-    for r in &results {
-        let tag = if r.passed { "PASS" } else { "FAIL" };
-        println!("  [{tag}] {}", r.description);
-    }
-    println!("\nResults: {passed}/{total} passed");
-    if passed < total {
-        process::exit(1);
-    }
+    h.finish();
 }
 
 fn cmd_discover() {
-    println!("=== exp031: Substrate Discovery ===\n");
-
     let substrates = discover_substrates();
     if substrates.is_empty() {
         println!("  No adapters found.");

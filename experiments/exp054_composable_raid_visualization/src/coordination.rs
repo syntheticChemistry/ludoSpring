@@ -200,7 +200,7 @@ pub fn player_register(player_id: &str, socket_path: &str) -> SongbirdRegisterRe
 #[must_use]
 pub fn raid_server_register(socket_path: &str) -> SongbirdRegisterRequest {
     SongbirdRegisterRequest {
-        primal_id: "ludospring-raid-server".into(),
+        primal_id: format!("ludospring-raid-server-{}", super::family_id()),
         capabilities: vec![
             "game.raid_authority".into(),
             "game.fraud_analysis".into(),
@@ -232,22 +232,25 @@ pub fn viz_register(socket_path: &str) -> SongbirdRegisterRequest {
 #[must_use]
 pub fn discover_players() -> SongbirdDiscoverResponse {
     let base = std::env::temp_dir().join("biomeos");
+    let fid = super::family_id();
+    let p1_id = format!("ludospring-player1-{fid}");
+    let p2_id = format!("ludospring-player2-{fid}");
     SongbirdDiscoverResponse {
         providers: vec![
             SongbirdProvider {
-                primal_id: "ludospring-player1".into(),
-                virtual_endpoint: "/primal/ludospring-player1".into(),
+                primal_id: p1_id.clone(),
+                virtual_endpoint: format!("/primal/{p1_id}"),
                 native_endpoint: base
-                    .join("ludospring-player1.sock")
+                    .join(format!("ludospring-player1-{fid}.sock"))
                     .to_string_lossy()
                     .into_owned(),
                 capabilities: vec!["game.player_input".into()],
             },
             SongbirdProvider {
-                primal_id: "ludospring-player2".into(),
-                virtual_endpoint: "/primal/ludospring-player2".into(),
+                primal_id: p2_id.clone(),
+                virtual_endpoint: format!("/primal/{p2_id}"),
                 native_endpoint: base
-                    .join("ludospring-player2.sock")
+                    .join(format!("ludospring-player2-{fid}.sock"))
                     .to_string_lossy()
                     .into_owned(),
                 capabilities: vec!["game.player_input".into()],

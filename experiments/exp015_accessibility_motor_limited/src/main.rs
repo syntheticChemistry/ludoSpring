@@ -15,19 +15,14 @@
 //! users' motor and vision capabilities." UIST '07.
 
 use ludospring_barracuda::interaction::input_laws::fitts_movement_time;
-use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "N/A (analytical — Fitts 1954, MacKenzie 1992, Wobbrock 2008)",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "N/A (analytical)",
+};
 
 struct DeviceProfile {
     name: &'static str,
@@ -63,8 +58,7 @@ const DEVICES: &[DeviceProfile] = &[
     },
 ];
 
-fn validate_device_predictions(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Device-specific Fitts predictions");
+fn validate_device_predictions(h: &mut ValidationHarness) {
     let d = 100.0;
     let w = 20.0;
 
@@ -72,42 +66,20 @@ fn validate_device_predictions(results: &mut Vec<ValidationResult>) {
     for device in DEVICES {
         let t = fitts_movement_time(d, w, device.a, device.b);
         times.push(t);
-        println!("  {}: {t:.0}ms", device.name);
     }
 
-    // Mouse should be fastest
-    let r = ValidationResult::check(
-        "exp015_mouse_fastest",
+    h.check_bool(
         "mouse is fastest device",
-        if times[0] < times[1] && times[0] < times[2] && times[0] < times[3] {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        times[0] < times[1] && times[0] < times[2] && times[0] < times[3],
     );
-    report(&r);
-    results.push(r);
 
-    // Switch scanning should be slowest
-    let r = ValidationResult::check(
-        "exp015_switch_slowest",
+    h.check_bool(
         "switch scanning is slowest device",
-        if times[3] > times[0] && times[3] > times[1] && times[3] > times[2] {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        times[3] > times[0] && times[3] > times[1] && times[3] > times[2],
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_target_size_impact(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Target size impact on accessibility");
+fn validate_target_size_impact(h: &mut ValidationHarness) {
     let d = 100.0;
 
     for device in DEVICES {
@@ -115,62 +87,41 @@ fn validate_target_size_impact(results: &mut Vec<ValidationResult>) {
         let large = fitts_movement_time(d, 60.0, device.a, device.b);
         let improvement = (small - large) / small;
 
-        let r = ValidationResult::check(
-            &format!("exp015_{}_size", device.name),
+        h.check_bool(
             &format!("{}: larger targets help (improvement > 0)", device.name),
-            if improvement > 0.0 { 1.0 } else { 0.0 },
-            1.0,
-            tolerances::ANALYTICAL_TOL,
+            improvement > 0.0,
         );
-        report(&r);
-        results.push(r);
     }
 }
 
-fn validate_accessibility_recommendations(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Accessibility design recommendations");
-    // For switch scanning, target must be very large to achieve usable times
+fn validate_accessibility_recommendations(h: &mut ValidationHarness) {
     let switch_small = fitts_movement_time(100.0, 10.0, 500.0, 800.0);
     let switch_huge = fitts_movement_time(100.0, 80.0, 500.0, 800.0);
 
-    let r = ValidationResult::check(
-        "exp015_switch_huge_target",
+    h.check_abs(
         "huge targets (80px) significantly help switch users",
         switch_small - switch_huge,
         1000.0,
         1500.0,
     );
-    report(&r);
-    results.push(r);
 
-    // All devices should produce finite, positive times
     let all_valid = DEVICES.iter().all(|dev| {
         let t = fitts_movement_time(50.0, 20.0, dev.a, dev.b);
         t.is_finite() && t > 0.0
     });
-    let r = ValidationResult::check(
-        "exp015_all_valid",
+    h.check_bool(
         "all device profiles produce finite positive times",
-        if all_valid { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        all_valid,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp015: Accessibility Motor-Limited Fitts (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp015_accessibility_motor_limited");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_device_predictions(&mut results);
-    validate_target_size_impact(&mut results);
-    validate_accessibility_recommendations(&mut results);
+    validate_device_predictions(&mut h);
+    validate_target_size_impact(&mut h);
+    validate_accessibility_recommendations(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

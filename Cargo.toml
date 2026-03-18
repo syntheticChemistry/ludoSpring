@@ -108,8 +108,8 @@ expect_used = "deny"
 unwrap_used = "deny"
 doc_markdown = "allow"
 module_name_repetitions = "allow"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

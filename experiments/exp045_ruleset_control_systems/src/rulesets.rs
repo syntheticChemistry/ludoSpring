@@ -382,6 +382,7 @@ const fn demote(d: DegreeOfSuccess) -> DegreeOfSuccess {
 }
 
 /// Convert bool to f64 for validation comparisons (1.0 = true, 0.0 = false).
+#[expect(dead_code, reason = "kept for potential non-harness use")]
 pub const fn bool_f64(b: bool) -> f64 {
     if b { 1.0 } else { 0.0 }
 }

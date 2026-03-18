@@ -13,21 +13,16 @@
 
 use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.4}, want={:.4}, tol={:.4})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/flow_engagement.py",
+    commit: "74cf9488",
+    date: "2026-03-11",
+    command: "python3 baselines/python/run_all_baselines.py",
+};
 
-fn validate_boundary_transitions(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Boundary transitions at cw=0.15");
+fn validate_boundary_transitions(h: &mut ValidationHarness) {
     let cw = 0.15;
 
     let transitions: &[(&str, f64, f64, FlowState)] = &[
@@ -62,21 +57,11 @@ fn validate_boundary_transitions(results: &mut Vec<ValidationResult>) {
 
     for (desc, challenge, skill, expected) in transitions {
         let actual = evaluate_flow(*challenge, *skill, cw);
-        let r = ValidationResult::check(
-            "exp012_boundary",
-            desc,
-            if actual == *expected { 1.0 } else { 0.0 },
-            1.0,
-            tolerances::ANALYTICAL_TOL,
-        );
-        report(&r);
-        results.push(r);
+        h.check_bool(desc, actual == *expected);
     }
 }
 
-fn validate_width_sweep(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Channel width sweep");
-    // Wider channel → more situations classified as Flow
+fn validate_width_sweep(h: &mut ValidationHarness) {
     let challenge = 0.65;
     let skill = 0.5;
 
@@ -84,75 +69,38 @@ fn validate_width_sweep(results: &mut Vec<ValidationResult>) {
     let medium = evaluate_flow(challenge, skill, 0.20);
     let wide = evaluate_flow(challenge, skill, 0.50);
 
-    let r = ValidationResult::check(
-        "exp012_narrow",
+    h.check_bool(
         "narrow channel (0.05): c=0.65, s=0.5 is NOT Flow",
-        if narrow == FlowState::Flow { 0.0 } else { 1.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        narrow != FlowState::Flow,
     );
-    report(&r);
-    results.push(r);
 
-    let r = ValidationResult::check(
-        "exp012_medium",
+    h.check_bool(
         "medium channel (0.20): c=0.65, s=0.5 IS Flow",
-        if medium == FlowState::Flow { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        medium == FlowState::Flow,
     );
-    report(&r);
-    results.push(r);
 
-    let r = ValidationResult::check(
-        "exp012_wide",
+    h.check_bool(
         "wide channel (0.50): c=0.65, s=0.5 IS Flow",
-        if wide == FlowState::Flow { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        wide == FlowState::Flow,
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_symmetry(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Symmetry properties");
+fn validate_symmetry(h: &mut ValidationHarness) {
     let cw = 0.15;
 
-    // Flow is symmetric: (c+d, s) and (c, s+d) should give matching
-    // states when mirrored
     let above = evaluate_flow(0.75, 0.5, cw);
     let below = evaluate_flow(0.25, 0.5, cw);
 
-    let r = ValidationResult::check(
-        "exp012_above_arousal",
+    h.check_bool(
         "c=0.75, s=0.5 → Arousal (above channel)",
-        if above == FlowState::Arousal {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        above == FlowState::Arousal,
     );
-    report(&r);
-    results.push(r);
 
-    let r = ValidationResult::check(
-        "exp012_below_relaxation",
+    h.check_bool(
         "c=0.25, s=0.5 → Relaxation (below channel)",
-        if below == FlowState::Relaxation {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        below == FlowState::Relaxation,
     );
-    report(&r);
-    results.push(r);
 
-    // All five states should be reachable
     let states = [
         evaluate_flow(0.5, 0.5, cw),
         evaluate_flow(0.3, 0.5, cw),
@@ -163,29 +111,21 @@ fn validate_symmetry(results: &mut Vec<ValidationResult>) {
     let unique: std::collections::HashSet<_> = states.iter().map(|s| s.as_str()).collect();
     #[expect(clippy::cast_precision_loss, reason = "set size ≤ 5; fits in f64")]
     let count = unique.len() as f64;
-    let r = ValidationResult::check(
-        "exp012_all_states",
+    h.check_abs(
         "all 5 flow states reachable with cw=0.15",
         count,
         5.0,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp012: Flow Channel Calibration (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp012_flow_channel_calibration");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_boundary_transitions(&mut results);
-    validate_width_sweep(&mut results);
-    validate_symmetry(&mut results);
+    validate_boundary_transitions(&mut h);
+    validate_width_sweep(&mut h);
+    validate_symmetry(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

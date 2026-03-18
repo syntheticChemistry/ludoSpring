@@ -170,6 +170,10 @@ impl GameSession {
         }
     }
 
+    #[expect(
+        clippy::unused_self,
+        reason = "resolver methods kept for API consistency and future expansion"
+    )]
     fn resolve_wait(&self, entity: EntityId) -> ActionOutcome {
         ActionOutcome {
             effect: Effect::TurnEnded { entity },
@@ -179,7 +183,11 @@ impl GameSession {
         }
     }
 
-    fn resolve_end_turn(&self, entity: EntityId) -> ActionOutcome {
+    #[expect(
+        clippy::unused_self,
+        reason = "resolver methods kept for API consistency and future expansion"
+    )]
+    const fn resolve_end_turn(&self, entity: EntityId) -> ActionOutcome {
         ActionOutcome {
             effect: Effect::TurnEnded { entity },
             cost: ActionCost::Free,
@@ -188,6 +196,10 @@ impl GameSession {
         }
     }
 
+    #[expect(
+        clippy::unused_self,
+        reason = "resolver methods kept for API consistency and future expansion"
+    )]
     fn resolve_use_item(&self, actor: EntityId, item_name: &str) -> ActionOutcome {
         ActionOutcome {
             effect: Effect::ItemUsed {
@@ -201,6 +213,10 @@ impl GameSession {
         }
     }
 
+    #[expect(
+        clippy::unused_self,
+        reason = "resolver methods kept for API consistency and future expansion"
+    )]
     fn resolve_custom(&self, verb: &str, args: &[String]) -> ActionOutcome {
         ActionOutcome {
             effect: Effect::NoEffect {

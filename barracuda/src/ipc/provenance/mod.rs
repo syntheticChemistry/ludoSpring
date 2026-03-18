@@ -68,6 +68,10 @@ fn reset_circuit() {
     CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
 }
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "milliseconds since epoch fits in u64 for thousands of years"
+)]
 fn epoch_ms() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -176,9 +180,9 @@ pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String
         "description": session_name,
     });
 
-    let Some(result) = resilient_trio_call(|bridge| {
-        bridge.capability_call("dag", "session.create", &args)
-    }) else {
+    let Some(result) =
+        resilient_trio_call(|bridge| bridge.capability_call("dag", "session.create", &args))
+    else {
         return Ok(unavailable_result());
     };
 
@@ -211,9 +215,9 @@ pub fn record_game_action(
         "event": action,
     });
 
-    let Some(result) = resilient_trio_call(|bridge| {
-        bridge.capability_call("dag", "event.append", &args)
-    }) else {
+    let Some(result) =
+        resilient_trio_call(|bridge| bridge.capability_call("dag", "event.append", &args))
+    else {
         return Ok(unavailable_result());
     };
 
@@ -272,9 +276,9 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         "vertex_count": summary.vertex_count,
         "frontier": summary.frontier,
     });
-    let Some(commit_result) = resilient_trio_call(|bridge| {
-        bridge.capability_call("session", "commit", &commit_args)
-    }) else {
+    let Some(commit_result) =
+        resilient_trio_call(|bridge| bridge.capability_call("session", "commit", &commit_args))
+    else {
         return Ok(stage_result(
             TrioStage::Dehydrated,
             session_id,
@@ -294,16 +298,15 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         "commit_ref": commit_id,
         "agents": agents,
     });
-    let braid_id = resilient_trio_call(|bridge| {
-        bridge.capability_call("braid", "create", &braid_args)
-    })
-    .and_then(|r| {
-        r.get("braid_id")
-            .or_else(|| r.get("id"))
-            .and_then(|v| v.as_str())
-            .map(str::to_string)
-    })
-    .unwrap_or_default();
+    let braid_id =
+        resilient_trio_call(|bridge| bridge.capability_call("braid", "create", &braid_args))
+            .and_then(|r| {
+                r.get("braid_id")
+                    .or_else(|| r.get("id"))
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+            })
+            .unwrap_or_default();
 
     Ok(serde_json::json!({
         "stage": "complete",

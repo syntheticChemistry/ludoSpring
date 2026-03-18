@@ -14,195 +14,111 @@
 
 use ludospring_barracuda::procedural::bsp::{Rect, generate_bsp};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationResult;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
-fn report(r: &ValidationResult) {
-    if r.passed {
-        println!("  PASS  {}: {}", r.experiment, r.description);
-    } else {
-        println!(
-            "  FAIL  {}: {} (got={:.6}, want={:.6}, tol={:.6})",
-            r.experiment, r.description, r.measured, r.expected, r.tolerance
-        );
-    }
-}
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "baselines/python/bsp_partition.py",
+    commit: "74cf9488",
+    date: "2026-03-11",
+    command: "python3 baselines/python/run_all_baselines.py",
+};
 
-fn validate_area_conservation(results: &mut Vec<ValidationResult>) {
-    println!("Part 1: Area conservation");
+fn validate_area_conservation(h: &mut ValidationHarness) {
     let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
     let tree = generate_bsp(bounds, 15.0, 42);
     let leaf_area: f64 = tree.leaves().iter().map(Rect::area).sum();
 
-    let r = ValidationResult::check(
-        "exp017_area",
+    h.check_abs(
         "leaf areas sum to total area (100x100 = 10000)",
         leaf_area,
         bounds.area(),
         1e-6,
     );
-    report(&r);
-    results.push(r);
 
     let rect = Rect::new(10.0, 20.0, 80.0, 60.0);
     let tree2 = generate_bsp(rect, 12.0, 99);
     let leaf_area2: f64 = tree2.leaves().iter().map(Rect::area).sum();
-    let r = ValidationResult::check(
-        "exp017_area_offset",
+    h.check_abs(
         "area conserved with offset rectangle",
         leaf_area2,
         rect.area(),
         1e-6,
     );
-    report(&r);
-    results.push(r);
 }
 
 #[expect(
     clippy::cast_precision_loss,
     reason = "leaf/node counts < 100; fits in f64"
 )]
-fn validate_structure(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 2: Tree structure properties");
+fn validate_structure(h: &mut ValidationHarness) {
     let tree = generate_bsp(Rect::new(0.0, 0.0, 100.0, 100.0), 15.0, 42);
 
-    let r = ValidationResult::check(
-        "exp017_multiple_rooms",
-        "generates more than 1 room",
-        if tree.leaf_count() > 1 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("generates more than 1 room", tree.leaf_count() > 1);
 
-    // Binary tree: nodes = 2*leaves - 1
     let expected_nodes = 2 * tree.leaf_count() - 1;
-    let r = ValidationResult::check(
-        "exp017_binary_property",
+    h.check_abs(
         "node_count = 2 * leaf_count - 1 (full binary tree)",
         tree.node_count() as f64,
         expected_nodes as f64,
         tolerances::ANALYTICAL_TOL,
     );
-    report(&r);
-    results.push(r);
-
-    println!(
-        "  leaves={}, nodes={}, depth={}",
-        tree.leaf_count(),
-        tree.node_count(),
-        tree.depth()
-    );
 }
 
-fn validate_spatial_query(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 3: Spatial point query");
+fn validate_spatial_query(h: &mut ValidationHarness) {
     let tree = generate_bsp(Rect::new(0.0, 0.0, 100.0, 100.0), 15.0, 42);
 
-    // Center point must be in some leaf
     let center_result = tree.query_point(50.0, 50.0);
-    let r = ValidationResult::check(
-        "exp017_center_query",
+    h.check_bool(
         "center point (50,50) found in a leaf",
-        if center_result.is_some() { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        center_result.is_some(),
     );
-    report(&r);
-    results.push(r);
 
-    // Point outside returns None
     let outside = tree.query_point(200.0, 200.0);
-    let r = ValidationResult::check(
-        "exp017_outside_query",
+    h.check_bool(
         "point (200,200) outside bounds returns None",
-        if outside.is_none() { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        outside.is_none(),
     );
-    report(&r);
-    results.push(r);
 
-    // All four corners must be queryable
     let corners = [(0.5, 0.5), (99.0, 0.5), (0.5, 99.0), (99.0, 99.0)];
     let all_found = corners
         .iter()
         .all(|&(x, y)| tree.query_point(x, y).is_some());
-    let r = ValidationResult::check(
-        "exp017_corners",
-        "all four corner regions queryable",
-        if all_found { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-    report(&r);
-    results.push(r);
+    h.check_bool("all four corner regions queryable", all_found);
 }
 
-fn validate_determinism(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 4: Determinism");
+fn validate_determinism(h: &mut ValidationHarness) {
     let a = generate_bsp(Rect::new(0.0, 0.0, 100.0, 100.0), 15.0, 42);
     let b = generate_bsp(Rect::new(0.0, 0.0, 100.0, 100.0), 15.0, 42);
 
-    let r = ValidationResult::check(
-        "exp017_deterministic",
+    h.check_bool(
         "same seed → identical tree structure",
-        if a.leaf_count() == b.leaf_count() && a.depth() == b.depth() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        a.leaf_count() == b.leaf_count() && a.depth() == b.depth(),
     );
-    report(&r);
-    results.push(r);
 
-    // Different seeds → potentially different structure
     let c = generate_bsp(Rect::new(0.0, 0.0, 100.0, 100.0), 15.0, 999);
-    let r = ValidationResult::check(
-        "exp017_seed_variation",
+    h.check_bool(
         "different seeds may produce different trees",
-        if c.leaf_count() != a.leaf_count() || c.depth() != a.depth() {
-            1.0
-        } else {
-            0.0
-        },
-        1.0,
-        1.0, // wide tolerance: structural difference is likely but not guaranteed
+        c.leaf_count() != a.leaf_count() || c.depth() != a.depth(),
     );
-    report(&r);
-    results.push(r);
 }
 
-fn validate_min_size(results: &mut Vec<ValidationResult>) {
-    println!("\nPart 5: Minimum room size enforcement");
+fn validate_min_size(h: &mut ValidationHarness) {
     let tree = generate_bsp(Rect::new(0.0, 0.0, 5.0, 5.0), 10.0, 42);
-    let r = ValidationResult::check(
-        "exp017_too_small",
+    h.check_bool(
         "space smaller than 2*min_size produces single leaf",
-        if tree.leaf_count() == 1 { 1.0 } else { 0.0 },
-        1.0,
-        tolerances::ANALYTICAL_TOL,
+        tree.leaf_count() == 1,
     );
-    report(&r);
-    results.push(r);
 }
 
 fn main() {
-    println!("=== Exp017: BSP Level Generation (Validation) ===\n");
-    let mut results = Vec::new();
+    let mut h = ValidationHarness::new("exp017_bsp_level_generation");
+    h.print_provenance(&[&PROVENANCE]);
 
-    validate_area_conservation(&mut results);
-    validate_structure(&mut results);
-    validate_spatial_query(&mut results);
-    validate_determinism(&mut results);
-    validate_min_size(&mut results);
+    validate_area_conservation(&mut h);
+    validate_structure(&mut h);
+    validate_spatial_query(&mut h);
+    validate_determinism(&mut h);
+    validate_min_size(&mut h);
 
-    let passed = results.iter().filter(|r| r.passed).count();
-    let failed = results.len() - passed;
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        std::process::exit(1);
-    }
+    h.finish();
 }

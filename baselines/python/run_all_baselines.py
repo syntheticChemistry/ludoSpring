@@ -10,6 +10,7 @@ Provenance:
   Dependencies: math, json, subprocess, sys, pathlib, platform, datetime, hashlib
 """
 
+import argparse
 import datetime
 import hashlib
 import json
@@ -31,6 +32,18 @@ def check_python_version():
         )
         sys.exit(1)
 
+
+def parse_args():
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(
+        description="Run all Python baselines and produce combined output.",
+    )
+    parser.add_argument(
+        "--output", type=Path, default=None,
+        help="Write combined JSON to this path (default: baselines/python/combined_baselines.json)",
+    )
+    return parser.parse_args()
+
 BASELINES = [
     "perlin_noise.py",
     "interaction_laws.py",
@@ -44,6 +57,7 @@ BASELINES = [
 
 def main():
     check_python_version()
+    args = parse_args()
     base_dir = Path(__file__).parent
     all_pass = True
     results = {}
@@ -98,7 +112,7 @@ def main():
         "content_sha256": content_hash,
     }
 
-    output_path = base_dir / "combined_baselines.json"
+    output_path = args.output if args.output else base_dir / "combined_baselines.json"
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
         f.write("\n")
