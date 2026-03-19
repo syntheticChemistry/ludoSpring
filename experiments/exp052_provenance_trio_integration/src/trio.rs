@@ -13,6 +13,8 @@
 
 use std::collections::HashMap;
 
+use ludospring_barracuda::validation::OrExit;
+
 // ============================================================================
 // rhizoCrypt — Game Session as Ephemeral DAG
 // ============================================================================
@@ -64,7 +66,7 @@ impl GameSessionDag {
         }
 
         let vertex = builder.build();
-        let vertex_id = vertex.compute_id().expect("vertex id computation");
+        let vertex_id = vertex.compute_id().or_exit("vertex id computation");
 
         self.session.update_frontier(vertex_id, &self.frontier);
 

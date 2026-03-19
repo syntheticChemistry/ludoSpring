@@ -58,6 +58,10 @@ impl JsonRpcRequest {
 }
 
 /// JSON-RPC 2.0 response.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
     pub jsonrpc: String,
@@ -102,6 +106,10 @@ pub struct CertTransferRequest {
 }
 
 /// `certificate.loan` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CertLoanRequest {
     pub cert_id: String,
@@ -112,6 +120,10 @@ pub struct CertLoanRequest {
 }
 
 /// `certificate.return_loan` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CertReturnRequest {
     pub cert_id: String,
@@ -119,6 +131,10 @@ pub struct CertReturnRequest {
 }
 
 /// `certificate.trade_offer` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CertTradeOfferRequest {
     pub offered_cert: String,
@@ -128,6 +144,10 @@ pub struct CertTradeOfferRequest {
 }
 
 /// `certificate.trade_accept` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CertTradeAcceptRequest {
     pub offer_id: String,
@@ -139,6 +159,10 @@ pub struct CertTradeAcceptRequest {
 // ============================================================================
 
 /// `dag.create_session` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DagCreateSessionRequest {
     pub session_type: String,
@@ -161,6 +185,10 @@ pub struct DagAppendVertexRequest {
 // ============================================================================
 
 /// `provenance.create_braid` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateBraidRequest {
     pub data_hash: String,
@@ -182,6 +210,10 @@ pub struct ObjectEventRequest {
 }
 
 /// `provenance.get_timeline` request params.
+#[expect(
+    dead_code,
+    reason = "IPC wire contract — constructed by remote callers"
+)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetTimelineRequest {
     pub object_id: String,

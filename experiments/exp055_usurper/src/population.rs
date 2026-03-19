@@ -48,7 +48,10 @@ pub enum EncounterOutcome {
 #[derive(Debug, Clone)]
 pub struct Usurper {
     pub id: u32,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — NPC identity for provenance DAG"
+    )]
     pub name: String,
     pub rank: u32,
     pub strategy: Strategy,

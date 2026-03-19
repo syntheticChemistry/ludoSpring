@@ -17,6 +17,8 @@
 
 use std::collections::HashMap;
 
+use ludospring_barracuda::validation::OrExit;
+
 // ============================================================================
 // Domain Types
 // ============================================================================
@@ -257,7 +259,7 @@ impl RaidSession {
         }
 
         let vertex = builder.build();
-        let vid = vertex.compute_id().expect("vertex id computation");
+        let vid = vertex.compute_id().or_exit("vertex id computation");
         self.rhizo_session
             .update_frontier(vid, &self.rhizo_frontier);
         self.rhizo_frontier = vec![vid];

@@ -102,6 +102,10 @@ impl<T> DispatchOutcome<T> {
     }
 
     /// Convert to `Result`, merging both error variants.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError`] for both protocol-level and application-level failures.
     pub fn into_result(self) -> Result<T, IpcError> {
         match self {
             Self::Ok(v) => Ok(v),
@@ -195,6 +199,11 @@ impl JsonRpcResponse {
 ///
 /// Follows the healthSpring V29 `extract_rpc_error()` centralization pattern,
 /// evolved to typed errors per coralReef Iter 52.
+///
+/// # Errors
+///
+/// Returns [`IpcError::RpcError`] if the response contains an `"error"` field,
+/// or [`IpcError::MissingField`] if neither `"result"` nor `"error"` is present.
 pub fn extract_rpc_result(response: &serde_json::Value) -> Result<serde_json::Value, IpcError> {
     if let Some(error) = response.get("error") {
         let message = error
@@ -430,7 +439,8 @@ mod tests {
             fn dispatch_outcome_classify_round_trips(code in -32700i64..-31999) {
                 let rpc_err = IpcError::RpcError { code, message: "test".into() };
                 let outcome = DispatchOutcome::from_ipc_error(rpc_err);
-                prop_assert!(matches!(outcome, DispatchOutcome::ApplicationError { .. }));
+                let is_app_err = matches!(outcome, DispatchOutcome::ApplicationError { .. });
+                prop_assert!(is_app_err, "expected ApplicationError, got {:?}", outcome);
             }
         }
     }

@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 18, 2026
+**Last Updated:** March 18, 2026 (V28)
 
 ---
 
@@ -24,13 +24,12 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V26** | [LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md](handoffs/LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md) | Mar 18 | Full ValidationHarness migration (71 experiments), GPU tolerance centralization (14 constants), shader dedup audit, lint tightening, zero legacy debt |
-| **V26** | [LUDOSPRING_V26_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR18_2026.md](handoffs/LUDOSPRING_V26_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR18_2026.md) | Mar 18 | toadStool/barraCuda absorption: f32 shader candidates, GPU tolerances, TensorSession blockers, capability_domains pattern, ecosystem learnings |
+| **V28** | [LUDOSPRING_V28_TOADSTOOL_BARRACUDA_DEEP_EVOLUTION_HANDOFF_MAR18_2026.md](handoffs/LUDOSPRING_V28_TOADSTOOL_BARRACUDA_DEEP_EVOLUTION_HANDOFF_MAR18_2026.md) | Mar 18 | Capability-based discovery proven at scale, IPC test hardening, zero hardcoded primal names, 150+ barraCuda primitives consumed, upstream absorption recommendations |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 75 experiments, 1692 checks, 450+ tests + 19 proptest + 6 IPC integration, ecosystem absorption V24)
+ludoSpring (game science, 75 experiments, 1692 checks, 450+ tests + 19 proptest + 6 IPC integration, capability-based discovery V28)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders)
@@ -86,6 +85,8 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V26 | `handoffs/archive/LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md` | V28 Deep Evolution |
+| V26 | `handoffs/archive/LUDOSPRING_V26_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR18_2026.md` | V28 Deep Evolution |
 | V24 | `handoffs/archive/LUDOSPRING_V24_LEVERAGE_GUIDE_HANDOFF_MAR17_2026.md` | V26 Full Harness Migration + Absorption |
 | V23 | `handoffs/archive/LUDOSPRING_V23_CROSS_ECOSYSTEM_DEEP_DEBT_HANDOFF_MAR16_2026.md` | V24 Leverage Guide + Absorption Sprint |
 | V23 | `handoffs/archive/LUDOSPRING_V23_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR16_2026.md` | V24 Leverage Guide + Absorption Sprint |

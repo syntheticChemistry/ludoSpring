@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! CPU-vs-GPU parity validation orchestration.
+//!
+//! **Validation exemption**: This experiment uses the legacy `ValidationResult`
+//! API rather than `ValidationHarness` because GPU parity checks require
+//! conditional skip logic per-check (GPU may be unavailable) and the results
+//! are aggregated across CPU and GPU sections with different exit semantics.
+//! Migration to `ValidationHarness` is tracked as a P2 item pending
+//! `exit_skipped` per-section support in the harness.
 
 use crate::gpu::{
     gpu_run_engagement_batch, gpu_run_f32_3buf, gpu_run_f32_unary, gpu_run_perlin,

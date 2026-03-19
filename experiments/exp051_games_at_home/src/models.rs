@@ -8,7 +8,10 @@
 #[derive(Debug, Clone)]
 pub struct SystemComparison {
     pub concept: &'static str,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — comparison table requires both sides"
+    )]
     pub folding_at_home: &'static str,
     pub games_at_home: &'static str,
     pub structural_match: bool,
@@ -169,7 +172,10 @@ impl HumanComputeUnit {
 
 #[derive(Debug, Clone)]
 pub struct FeedbackCycle {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — cycle index for traceability"
+    )]
     pub cycle: u32,
     /// Total unique trajectories collected so far
     pub trajectories: f64,
@@ -381,7 +387,10 @@ pub struct ScaleMetric {
     pub metric: &'static str,
     pub folding_at_home: f64,
     pub games_at_home: f64,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — unit annotation for data provenance"
+    )]
     pub unit: &'static str,
 }
 

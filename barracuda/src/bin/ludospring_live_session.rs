@@ -159,8 +159,9 @@ fn write_session_json(
     difficulty_trace: &[Value],
     flow_phase_charts: &[Value],
 ) {
-    let out_dir = Path::new("sandbox/sessions");
-    if let Err(e) = fs::create_dir_all(out_dir) {
+    let base = std::env::var("LUDOSPRING_OUTPUT_DIR").unwrap_or_else(|_| "sandbox".into());
+    let out_dir = Path::new(&base).join("sessions");
+    if let Err(e) = fs::create_dir_all(&out_dir) {
         eprintln!("ERROR: cannot create {}: {e}", out_dir.display());
         process::exit(1);
     }

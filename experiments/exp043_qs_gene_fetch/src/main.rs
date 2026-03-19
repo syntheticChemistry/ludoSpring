@@ -74,7 +74,10 @@ fn parse_fixture() -> NcbiFixture {
 }
 
 /// Run all validation checks (no I/O or exit).
-fn run_validation(fixture: &NcbiFixture, h: &mut ValidationHarness) {
+fn run_validation<S: ludospring_barracuda::validation::ValidationSink>(
+    fixture: &NcbiFixture,
+    h: &mut ValidationHarness<S>,
+) {
     let total_gene_hits: u64 = fixture.genus_gene_hits.iter().map(|x| x.gene_count).sum();
     let total_protein_hits: u64 = fixture
         .genus_gene_hits

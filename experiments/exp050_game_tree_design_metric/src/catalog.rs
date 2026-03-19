@@ -147,11 +147,17 @@ pub fn known_games() -> Vec<GameProfile> {
 /// Commander format rules and their effect on the decision space.
 #[derive(Debug, Clone)]
 pub struct FormatModifier {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — name used in white-paper tables"
+    )]
     pub name: &'static str,
     pub effect: TreeEffect,
     pub branching_multiplier: f64,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — qualitative rationale for multiplier"
+    )]
     pub explanation: &'static str,
 }
 
@@ -245,7 +251,10 @@ pub fn commander_designed_cards() -> Vec<FormatModifier> {
 
 #[derive(Debug, Clone)]
 pub struct CardDesign {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "domain model completeness — card name for white-paper reference"
+    )]
     pub name: &'static str,
     pub category: CardCategory,
     /// How much this card reduces the effective branching at its decision point.

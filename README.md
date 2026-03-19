@@ -3,13 +3,13 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 18, 2026
-**Version:** V26 (75 experiments, 1692 validation checks, 450+ tests + 19 proptest + 6 IPC integration)
+**Version:** V28 (75 experiments, 1692 validation checks, 450+ tests + 19 proptest + 6 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, ~20,000 lines Rust
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance)
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 26 capabilities (24 game + 2 health probes), structured `capability_domains` registry
-**Audit Status:** Complete — all 71 validation experiments use `ValidationHarness` + `BaselineProvenance` (exp001–exp075 minus 4 non-validation crates), GPU tolerances centralized in `tolerances::gpu` (14 constants), exp030 uses named constants, `missing_errors_doc`/`missing_panics_doc` lints tightened to warn, zero clippy warnings workspace-wide
+**Audit Status:** Complete — zero hardcoded primal names (capability-based discovery only), zero hardcoded paths (`LUDOSPRING_OUTPUT_DIR` + XDG socket chain), zero `#[allow()]`, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, all 71 validation experiments use `ValidationHarness` + `BaselineProvenance`, 14 GPU tolerance constants, `missing_errors_doc`/`missing_panics_doc` at warn, 6 IPC integration tests passing
 
 ---
 
@@ -128,7 +128,7 @@ First experiments bridging ludoSpring game science with wetSpring bioinformatics
 
 ```bash
 cargo run --release -p ludospring-exp041 -- validate  # 12/12 NCBI QS gene pipeline
-cargo run --release -p ludospring-exp042 -- validate  # 10/10 Tower Atomic (BearDog+Songbird)
+cargo run --release -p ludospring-exp042 -- validate  # Tower Atomic (capability-based crypto+IPC discovery)
 cargo run --release -p ludospring-exp043 -- validate  # 10/10 QS gene dataset (6 families × 20 genera)
 cargo run --release -p ludospring-exp044 -- validate  # 12/12 Anderson QS interactive explorer
 ```
@@ -136,7 +136,7 @@ cargo run --release -p ludospring-exp044 -- validate  # 12/12 Anderson QS intera
 Key results:
 - **Live NCBI integration**: luxI/luxS/agrB gene search, SRA metagenomes, protein databases via E-utilities
 - **Biological validation**: gut microbes use AI-2 (luxS) not AHL (luxI) — NCBI data confirms published biology
-- **Tower Atomic boot**: BearDog crypto.hash (Blake3, SHA3-256) validated via JSON-RPC over Unix sockets
+- **Tower Atomic boot**: Crypto primal discovered by `crypto.hash` capability, validated via JSON-RPC over Unix sockets
 - **Anderson QS explorer**: Perlin noise as disorder landscape, QS propagation with localization transition, engagement/flow/fun/DDA metrics on microbial exploration. Diversity dominates O2 in the W model (wetSpring Exp356).
 
 ## RPGPT — Sovereign RPG Engine (Paper 18)
@@ -497,36 +497,40 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Files > 1000 LOC | 0 — exp030 refactored into 4 modules (was 1949 LOC) |
 | TODO/FIXME/HACK in source | 0 |
 | Structured logging | `tracing` for all library IPC/biomeOS; `ValidationSink` trait for validation output |
-| Hardcoded primal names | 0 — `VisualizationPushClient` uses capability discovery, `FAMILY_ID` for socket derivation |
-| Hardcoded paths | 0 — `temp_dir()` + XDG-compliant socket resolution |
+| Hardcoded primal names | 0 — `discover_primals()` by capability, `viz_register()` parameterized, zero name literals |
+| Hardcoded paths | 0 — `LUDOSPRING_OUTPUT_DIR` env var + `temp_dir()` + XDG-compliant socket chain |
 | IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
 | GPU tolerances | 10 named constants in `tolerances::gpu` (unary, Perlin, fBm, reduction, softmax, engagement, raycaster, LCG) |
 | Validation infrastructure | `check_abs_or_rel`, `exit_skipped` (exit 2), `load_baseline_f64`, `OrExit<T>` |
 
+## V28 Capability-Based Discovery + Deep Code Quality (March 18, 2026)
+
+- **Capability-based discovery** — exp042 evolved from hardcoded `"beardog"`/`"songbird"` to `discover_primals()` → `registry.find("crypto.hash")` / `registry.find("system.ping")`; exp054 parameterized `viz_register(primal_id, ...)` removing hardcoded `"petaltongue"`
+- **Configurable output paths** — 3 dashboard binaries evolved from `Path::new("sandbox/...")` to `LUDOSPRING_OUTPUT_DIR` env var with fallback
+- **IPC integration test fixes** — 3 pre-existing failures fixed (field name mismatch, response structure, test isolation race condition)
+- **Doc completeness** — `# Errors` sections added to 2 public `Result`-returning functions in `ipc/envelope.rs`
+
+## V27 Deep Debt Sprint (March 18, 2026)
+
+- **Zero `#[allow()]`** — all 9 remaining instances migrated to `#[expect(reason)]` with curated dictionary
+- **Zero `.expect()` in validation** — 4 calls migrated to `OrExit` pattern
+- **Workspace lint centralization** — 16 experiment `Cargo.toml` files migrated to `[lints] workspace = true`
+- **Smart refactoring** — `exp062/sample.rs` monolithic `detect_sample_fraud` extracted into 6 focused functions with structural type tracking
+
 ## V26 Full Harness Migration (March 18, 2026)
 
-Completed the `ValidationHarness` migration across all 71 validation experiments (exp001–exp075, minus 4 non-validation crates: exp024, exp025, exp030, exp058):
-
-- **Full `ValidationHarness` migration** — all experiments now use `ValidationHarness` + `BaselineProvenance`; zero legacy `ValidationResult` usage remains anywhere in the codebase
-- **exp030 GPU tolerance evolution** — inline magic numbers in `validate.rs` replaced with 14 named constants from `tolerances::gpu` (4 new: `GPU_REDUCE_SUM_ABS_TOL`, `GPU_ENGAGEMENT_ABS_TOL`, `GPU_RAYCASTER_DISTANCE_ABS_TOL`, `GPU_FBM_ABS_TOL_LOOSE`)
-- **Lint tightening** — `missing_errors_doc` and `missing_panics_doc` upgraded from `allow` to `warn` workspace-wide; per-crate overrides removed from 11 experiment Cargo.tomls
-- **Shader dedup audit** — `dda_raycast.wgsl` and `perlin_2d.wgsl` already deduplicated into `barracuda/shaders/game/validated/`; 7 math primitives (abs, relu, sigmoid, softmax, reduce_sum, dot_product, lcg) documented as upstream absorption candidates; 2 domain-specific shaders (scale, engagement_batch) kept in exp030
+- **Full `ValidationHarness` migration** — all 71 validation experiments use `ValidationHarness` + `BaselineProvenance`
+- **GPU tolerance centralization** — 14 named constants in `tolerances::gpu`
+- **Shader dedup audit** — 7 upstream absorption candidates documented, 2 domain-specific retained
 
 ## V25 Deep Debt Sprint (March 18, 2026)
 
-Deep audit and systematic debt reduction across validation, tolerances, GPU evolution, and ecosystem compliance:
-
-- **`ValidationHarness` migration** — exp002–exp010 migrated from legacy `ValidationResult` to `ValidationHarness` + `BaselineProvenance`, eliminating manual `report()` and inline exit logic
-- **GPU tolerance centralization** — new `tolerances::gpu` module (10 constants: `GPU_UNARY_ABS_TOL`, `GPU_PERLIN_ABS_TOL`, `GPU_FBM_ABS_TOL`, `GPU_REDUCTION_ABS_TOL`, `GPU_SOFTMAX_ABS_TOL`, `GPU_ENGAGEMENT_REL_TOL`, `GPU_RAYCASTER_HIT_RATE_PP`, `GPU_LCG_ABS_TOL`)
-- **Validated shader wiring** — `PerlinTerrain` and `BatchRaycast` GPU ops now embed validated WGSL sources from exp030, pending barraCuda absorption
-- **`exit_skipped` pattern** — `exit(2)` for experiments requiring unavailable hardware (wetSpring V123 pattern)
-- **`check_abs_or_rel`** — compound tolerance check for GPU parity where values span multiple orders of magnitude
-- **`load_baseline_f64`** — runtime JSON loader for Python baseline values, enabling experiments to read from `combined_baselines.json`
-- **`--output` flag** — `run_all_baselines.py` now accepts `--output` path; `check_drift.py` uses it cleanly
-- **Capability-based socket discovery** — hardcoded primal names in exp042/exp054 evolved to derive from `FAMILY_ID` environment variable
-- **Proptest tuning** — Fitts, Hick, flow state tests bumped to 1024 cases (from default 256)
-- **`NOISE_MEAN_TOL`** — new validation tolerance for Perlin noise statistical mean checks
-- **Magic number elimination** — inline tolerance values in exp003/004/006/007/008/009/010 replaced with `check_lower`/`check_upper`/`check_bool` calls using named constants
+- **`ValidationHarness` migration** — exp002–exp010 migrated from legacy `ValidationResult`
+- **GPU tolerance centralization** — `tolerances::gpu` module (10 constants)
+- **`exit_skipped` pattern** — `exit(2)` for unavailable hardware
+- **`check_abs_or_rel`** — compound tolerance for multi-order GPU parity
+- **`load_baseline_f64`** — runtime JSON loader for Python baselines
+- **Proptest tuning** — Fitts, Hick, flow state bumped to 1024 cases
 
 ## V24 Ecosystem Absorption Sprint (March 17, 2026)
 

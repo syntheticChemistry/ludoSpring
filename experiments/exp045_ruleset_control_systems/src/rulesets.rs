@@ -112,12 +112,17 @@ impl Ruleset for Pathfinder2e {
 }
 
 /// `PF2e`: calculate total modifier for a skill check.
+///
+/// # Panics
+///
+/// Exits the process via [`OrExit`] if `skill_name` is not in the character's skill list.
 pub fn pf2e_skill_modifier(character: &Character, skill_name: &str) -> i32 {
+    use ludospring_barracuda::validation::OrExit;
     let skill = character
         .skills
         .iter()
         .find(|s| s.name == skill_name)
-        .expect("skill not found");
+        .or_exit(&format!("skill '{skill_name}' not found on character"));
     let ability_mod = skill
         .linked_ability
         .as_ref()

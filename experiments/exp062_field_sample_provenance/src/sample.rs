@@ -235,6 +235,8 @@ pub struct SampleSystem {
     custody_transfers: Vec<(CertificateId, String, String)>,
     /// Condition history for cold chain: (`cert_id`, `tick`, `condition`).
     condition_history: Vec<(CertificateId, u64, SampleCondition)>,
+    /// Structural record of sample type per cert (set at collection time).
+    collect_sample_types: HashMap<CertificateId, SampleType>,
 }
 
 impl SampleSystem {
@@ -260,6 +262,7 @@ impl SampleSystem {
             last_condition: HashMap::new(),
             custody_transfers: Vec::new(),
             condition_history: Vec::new(),
+            collect_sample_types: HashMap::new(),
         }
     }
 
@@ -324,6 +327,7 @@ impl SampleSystem {
             self.braids.push(braid);
         }
 
+        self.collect_sample_types.insert(cert_id, sample_type);
         self.current_holder
             .insert(cert_id, collector.as_str().into());
         self.last_condition.insert(cert_id, SampleCondition::Fresh);
@@ -632,6 +636,11 @@ impl SampleSystem {
             .push((cert_id, tick, SampleCondition::Fresh));
     }
 
+    /// Get the sample type recorded at collection time.
+    pub fn collected_sample_type(&self, cert_id: CertificateId) -> Option<SampleType> {
+        self.collect_sample_types.get(&cert_id).copied()
+    }
+
     /// Get condition history for cold chain (ordered by `tick`).
     fn condition_history_for_cert(&self, cert_id: CertificateId) -> Vec<(u64, SampleCondition)> {
         self.condition_history
@@ -670,35 +679,52 @@ pub enum SampleFraudType {
 }
 
 /// Detect sample fraud by analyzing the DAG and certificates.
-#[expect(
-    clippy::too_many_lines,
-    reason = "fraud detection requires sequential rule checks"
-)]
 pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
     let mut reports = Vec::new();
+    let certs_with_collect = certs_with_collect_events(system);
 
-    // PhantomSample: cert exists but no "collect" event
-    let certs_with_collect: HashSet<CertificateId> = system
+    detect_phantom_samples(system, &certs_with_collect, &mut reports);
+    detect_duplicate_accessions(system, &certs_with_collect, &mut reports);
+    detect_broken_cold_chain(system, &certs_with_collect, &mut reports);
+    detect_unauthorized_access(system, &mut reports);
+    detect_mislabeled_specimens(system, &certs_with_collect, &mut reports);
+    detect_contamination_gaps(system, &mut reports);
+
+    reports
+}
+
+fn certs_with_collect_events(system: &SampleSystem) -> HashSet<CertificateId> {
+    system
         .events
         .iter()
         .filter(|(_, e)| e.event_type == SampleEventType::Collect)
         .map(|(id, _)| *id)
-        .collect();
+        .collect()
+}
 
+fn detect_phantom_samples(
+    system: &SampleSystem,
+    certs_with_collect: &HashSet<CertificateId>,
+    reports: &mut Vec<FraudReport>,
+) {
     for cert in system.cert_manager.list_certificates() {
-        let cert_id = cert.id;
-        if !certs_with_collect.contains(&cert_id) {
+        if !certs_with_collect.contains(&cert.id) {
             reports.push(FraudReport {
                 fraud_type: SampleFraudType::PhantomSample,
                 description: "Certificate exists but no collect event".into(),
-                cert_id: Some(cert_id),
+                cert_id: Some(cert.id),
             });
         }
     }
+}
 
-    // DuplicateAccession: two certs share the same accession
+fn detect_duplicate_accessions(
+    system: &SampleSystem,
+    certs_with_collect: &HashSet<CertificateId>,
+    reports: &mut Vec<FraudReport>,
+) {
     let mut accession_to_certs: HashMap<String, Vec<CertificateId>> = HashMap::new();
-    for cert_id in certs_with_collect.iter().copied() {
+    for &cert_id in certs_with_collect {
         if let Some(attrs) = system.cert_attributes(cert_id) {
             if let Some(acc) = attrs.get("accession") {
                 accession_to_certs
@@ -708,20 +734,25 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
             }
         }
     }
-    for (_, certs) in accession_to_certs {
+    for certs in accession_to_certs.values() {
         if certs.len() > 1 {
-            for cert_id in &certs {
+            for &cert_id in certs {
                 reports.push(FraudReport {
                     fraud_type: SampleFraudType::DuplicateAccession,
                     description: format!("Duplicate accession across {} certs", certs.len()),
-                    cert_id: Some(*cert_id),
+                    cert_id: Some(cert_id),
                 });
             }
         }
     }
+}
 
-    // BrokenColdChain: sample goes from Frozen to Fresh without documented reason
-    for cert_id in certs_with_collect.iter().copied() {
+fn detect_broken_cold_chain(
+    system: &SampleSystem,
+    certs_with_collect: &HashSet<CertificateId>,
+    reports: &mut Vec<FraudReport>,
+) {
+    for &cert_id in certs_with_collect {
         let history = system.condition_history_for_cert(cert_id);
         let mut prev = None;
         for (_tick, cond) in history {
@@ -739,8 +770,9 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
             prev = Some(cond);
         }
     }
+}
 
-    // UnauthorizedAccess: processing step actor not in custody chain
+fn detect_unauthorized_access(system: &SampleSystem, reports: &mut Vec<FraudReport>) {
     for (cert_id, event) in &system.events {
         let is_processing = matches!(
             event.event_type,
@@ -764,56 +796,33 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
             }
         }
     }
+}
 
-    // MislabeledSpecimen: sample_type in cert != sample_type in collect event
-    for (cert_id, event) in &system.events {
-        if event.event_type == SampleEventType::Collect {
-            if let Some(attrs) = system.cert_attributes(*cert_id) {
-                let cert_sample_type = attrs.get("sample_type").map(String::as_str);
-                // Collect event description has sample type - we'd need to parse.
-                // Store sample_type in event metadata. Add sample_type to SampleEvent?
-                // Simpler: store in a map during collect. We have sample_type in collect_sample.
-                // The event doesn't store it. We could add optional sample_type to SampleEvent.
-                // For fraud detection, we need to compare cert attrs with collect event.
-                // The collect event description is "Collected {sample_type:?} at {location}".
-                // We could parse "Collected Soil at X" -> Soil. Fragile.
-                // Better: add collect_sample_type: HashMap<CertificateId, SampleType> to track
-                // what was recorded at collect. Or add to SampleEvent an optional sample_type.
-                // Let me add sample_type: Option<String> to SampleEvent for Collect events.
-                // Actually the spec says SampleEvent has event_type, actor_did, description, tick.
-                // So we can't add. Use a separate collect_records: HashMap<CertificateId, SampleType>.
-                // We don't have that. Parse from description: "Collected Soil at" -> "soil".
-                let desc = &event.description;
-                // Format is "Collected {SampleType:?} at {location}" -> "Collected Soil at X"
-                let event_sample_type = if desc.contains("Soil") {
-                    Some("soil")
-                } else if desc.contains("Water") {
-                    Some("water")
-                } else if desc.contains("Swab") {
-                    Some("swab")
-                } else if desc.contains("Tissue") {
-                    Some("tissue")
-                } else if desc.contains("Blood") {
-                    Some("blood")
-                } else if desc.contains("Isolate") {
-                    Some("isolate")
-                } else {
-                    None
-                };
-                if let (Some(cert_st), Some(ev_st)) = (cert_sample_type, event_sample_type) {
-                    if cert_st != ev_st {
-                        reports.push(FraudReport {
-                            fraud_type: SampleFraudType::MislabeledSpecimen,
-                            description: format!("Cert says {cert_st} but collect says {ev_st}"),
-                            cert_id: Some(*cert_id),
-                        });
-                    }
-                }
+/// Compares structurally recorded sample type against cert attribute.
+fn detect_mislabeled_specimens(
+    system: &SampleSystem,
+    certs_with_collect: &HashSet<CertificateId>,
+    reports: &mut Vec<FraudReport>,
+) {
+    for &cert_id in certs_with_collect {
+        let cert_type_str = system
+            .cert_attributes(cert_id)
+            .and_then(|a| a.get("sample_type").map(String::as_str));
+        let collected_type_str = system.collected_sample_type(cert_id).map(|t| t.as_str());
+
+        if let (Some(cert_st), Some(coll_st)) = (cert_type_str, collected_type_str) {
+            if cert_st != coll_st {
+                reports.push(FraudReport {
+                    fraud_type: SampleFraudType::MislabeledSpecimen,
+                    description: format!("Cert says {cert_st} but collection recorded {coll_st}"),
+                    cert_id: Some(cert_id),
+                });
             }
         }
     }
+}
 
-    // ContaminationGap: same actor processes 2 different samples without QC between
+fn detect_contamination_gaps(system: &SampleSystem, reports: &mut Vec<FraudReport>) {
     let mut actor_sample_sequence: HashMap<String, Vec<(CertificateId, bool)>> = HashMap::new();
     for (cert_id, event) in &system.events {
         let is_processing = matches!(
@@ -825,16 +834,16 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
         );
         let is_qc = event.event_type == SampleEventType::QualityControl;
         if is_processing || is_qc {
-            let seq = actor_sample_sequence
+            actor_sample_sequence
                 .entry(event.actor_did.clone())
-                .or_default();
-            seq.push((*cert_id, is_qc));
+                .or_default()
+                .push((*cert_id, is_qc));
         }
     }
-    for (_actor, seq) in actor_sample_sequence {
+    for seq in actor_sample_sequence.values() {
         let mut last_sample = None;
         let mut had_qc_since = true;
-        for (cert_id, is_qc) in seq {
+        for &(cert_id, is_qc) in seq {
             if is_qc {
                 had_qc_since = true;
             } else {
@@ -853,8 +862,6 @@ pub fn detect_sample_fraud(system: &SampleSystem) -> Vec<FraudReport> {
             }
         }
     }
-
-    reports
 }
 
 // ============================================================================

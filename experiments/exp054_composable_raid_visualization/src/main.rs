@@ -320,14 +320,14 @@ fn validate_cross_primal(h: &mut ValidationHarness) {
         .any(|n| n.capability.as_deref() == Some("game.fraud_analysis"));
     h.check_bool("e2e_graph_has_fraud_node", graph_has_fraud);
 
-    let pt_sock = std::env::temp_dir()
-        .join("petaltongue")
-        .join(format!("petaltongue-nat0-{}.sock", family_id()));
-    let viz_reg = coordination::viz_register(&pt_sock.to_string_lossy());
+    let viz_sock = std::env::temp_dir()
+        .join("biomeos")
+        .join(format!("viz-provider-{}.sock", family_id()));
+    let viz_reg = coordination::viz_register("viz-provider", &viz_sock.to_string_lossy());
     let has_viz_cap = viz_reg
         .capabilities
         .contains(&"visualization.render".into());
-    h.check_bool("e2e_songbird_finds_petaltongue", has_viz_cap);
+    h.check_bool("e2e_songbird_finds_viz_capability", has_viz_cap);
 }
 
 // ===========================================================================

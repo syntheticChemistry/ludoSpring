@@ -42,9 +42,12 @@ fn start_server() -> (
     Arc<AtomicBool>,
     std::thread::JoinHandle<()>,
 ) {
-    let dir = std::env::temp_dir().join(format!("ludospring_ipc_test_{}", std::process::id()));
+    use std::sync::atomic::AtomicU64;
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let id = COUNTER.fetch_add(1, Ordering::Relaxed);
+    let dir = std::env::temp_dir().join(format!("ludospring_ipc_test_{}_{id}", std::process::id()));
     std::fs::create_dir_all(&dir).ok();
-    let sock = dir.join("integration_test.sock");
+    let sock = dir.join("test.sock");
 
     let shutdown = Arc::new(AtomicBool::new(false));
     let shutdown_clone = Arc::clone(&shutdown);
@@ -108,8 +111,8 @@ fn evaluate_flow_returns_structured_result() {
         serde_json::json!({"challenge": 0.5, "skill": 0.5}),
     );
     let result = resp.get("result").expect("result field");
-    let state = result.get("flow_state").and_then(|v| v.as_str());
-    assert_eq!(state, Some("Flow"));
+    let state = result.get("state").and_then(|v| v.as_str());
+    assert_eq!(state, Some("flow"));
 
     drop(stream);
     cleanup(&sock, &shutdown, handle);
@@ -146,12 +149,15 @@ fn capability_list_returns_all_capabilities() {
     let resp = send_rpc(&mut stream, "capability.list", serde_json::json!({}));
     let result = resp.get("result").expect("result field");
 
-    let caps = result.get("capabilities").and_then(|v| v.as_array());
-    assert!(caps.is_some(), "should have capabilities list");
-
-    let domains = result.get("domains");
+    let total = result.get("total_capabilities").and_then(|v| v.as_u64());
     assert!(
-        domains.is_some(),
+        total.is_some_and(|n| n > 0),
+        "should have total_capabilities > 0"
+    );
+
+    let domains = result.get("domains").and_then(|v| v.as_array());
+    assert!(
+        domains.is_some_and(|d| !d.is_empty()),
         "should have domains from capability_domains"
     );
 

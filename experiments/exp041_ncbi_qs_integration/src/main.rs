@@ -58,7 +58,10 @@ fn parse_fixture() -> Result<NcbiFixture, String> {
 }
 
 /// Run all validation checks (no I/O or exit).
-fn run_validation(fixture: &NcbiFixture, h: &mut ValidationHarness) {
+fn run_validation<S: ludospring_barracuda::validation::ValidationSink>(
+    fixture: &NcbiFixture,
+    h: &mut ValidationHarness<S>,
+) {
     let qs_genes = ["luxI", "luxS", "agrB"];
 
     for gene in qs_genes {

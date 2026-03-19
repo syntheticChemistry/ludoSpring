@@ -89,7 +89,14 @@ fn python_l2_norm(data: &[f64]) -> f64 {
 // Validation
 // ---------------------------------------------------------------------------
 
-#[allow(clippy::many_single_char_names)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation orchestrator — sequential parity checks across 12 modules"
+)]
+#[expect(
+    clippy::many_single_char_names,
+    reason = "short-lived test vectors (a, b, h) in parity comparisons"
+)]
 #[expect(
     clippy::similar_names,
     reason = "domain-specific naming: fitts_rs vs fitts_us (microseconds)"

@@ -210,11 +210,14 @@ pub fn raid_server_register(socket_path: &str) -> SongbirdRegisterRequest {
     }
 }
 
-/// Build songbird registration for the visualization (petalTongue).
+/// Build songbird registration for a visualization primal.
+///
+/// The primal ID is provided by the caller — ludoSpring discovers
+/// visualization primals by capability, never by hardcoded name.
 #[must_use]
-pub fn viz_register(socket_path: &str) -> SongbirdRegisterRequest {
+pub fn viz_register(primal_id: &str, socket_path: &str) -> SongbirdRegisterRequest {
     SongbirdRegisterRequest {
-        primal_id: "petaltongue".into(),
+        primal_id: primal_id.into(),
         capabilities: vec![
             "visualization.render".into(),
             "visualization.render.stream".into(),

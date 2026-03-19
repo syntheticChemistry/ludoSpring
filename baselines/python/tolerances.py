@@ -33,6 +33,9 @@ UI_COVERAGE_TOL = 0.02
 RAYCASTER_HIT_RATE_TOL = 5.0
 """DDA ray-wall hit-rate (%). Source: f32 GPU vs f64 CPU step delta on boundary rays."""
 
+NOISE_MEAN_TOL = 0.05
+"""Perlin noise mean-near-zero statistical validation. Source: finite sampling of 10,000 non-lattice points."""
+
 # === interaction.rs ===
 
 FITTS_A_MOUSE_MS = 50.0
