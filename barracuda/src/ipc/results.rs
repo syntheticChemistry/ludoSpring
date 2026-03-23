@@ -4,17 +4,17 @@
 //! Each struct maps to the `result` field of a successful JSON-RPC response.
 //! All use f64 for numeric values (JSON number type) and String for text.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Result for `game.evaluate_flow`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FlowResult {
     /// Flow state name.
     pub state: String,
 }
 
 /// Result for `game.fitts_cost`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FittsCostResult {
     /// Movement time in milliseconds.
     pub movement_time_ms: f64,
@@ -23,7 +23,7 @@ pub struct FittsCostResult {
 }
 
 /// Result for `game.engagement`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EngagementResult {
     /// Actions per minute.
     pub actions_per_minute: f64,
@@ -40,14 +40,14 @@ pub struct EngagementResult {
 }
 
 /// Result for `game.generate_noise`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct NoiseResult {
     /// Noise value at the requested coordinates.
     pub value: f64,
 }
 
 /// Result for `game.analyze_ui`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UiAnalysisResult {
     /// Overall data-ink ratio.
     pub data_ink_ratio: f64,
@@ -60,7 +60,7 @@ pub struct UiAnalysisResult {
 }
 
 /// Result for `game.accessibility`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AccessibilityResult {
     /// Visual accessibility score (0.0–1.0).
     pub score: f64,
@@ -71,7 +71,7 @@ pub struct AccessibilityResult {
 }
 
 /// Result for `game.difficulty_adjustment`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DifficultyAdjustmentResult {
     /// Recommended adjustment in \[-1.0, 1.0\] (negative = easier, positive = harder).
     pub adjustment: f64,
@@ -82,7 +82,7 @@ pub struct DifficultyAdjustmentResult {
 }
 
 /// Result for `game.wfc_step`.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WfcStepResult {
     /// Whether the grid is fully collapsed.
     pub fully_collapsed: bool,

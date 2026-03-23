@@ -19,6 +19,24 @@
 //! - [`sweetgrass`] — attribution (braids, lineage, dehydration records)
 
 use super::neural_bridge::NeuralBridge;
+use serde::{Deserialize, Serialize};
+
+/// Capability domain for rhizoCrypt DAG operations (`dag.*`).
+pub const CAP_DAG: &str = "dag";
+/// `dag.session.create`
+const OP_DAG_SESSION_CREATE: &str = "session.create";
+/// `dag.event.append`
+const OP_DAG_EVENT_APPEND: &str = "event.append";
+/// `dag.dehydration.trigger`
+const OP_DAG_DEHYDRATION_TRIGGER: &str = "dehydration.trigger";
+/// Capability domain for loamSpine (`session.*`).
+const CAP_SESSION: &str = "session";
+/// `session.commit`
+const OP_SESSION_COMMIT: &str = "commit";
+/// Capability domain for sweetGrass braids (`braid.*`).
+pub const CAP_BRAID: &str = "braid";
+/// `braid.create`
+const OP_BRAID_CREATE: &str = "create";
 
 pub mod loamspine;
 pub mod rhizocrypt;
@@ -118,7 +136,8 @@ where
 }
 
 /// Result of a provenance operation; includes availability status.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
 pub struct ProvenanceResult {
     /// Session ID, vertex ID, or braid ID from the trio.
     pub id: String,
@@ -132,7 +151,8 @@ pub struct ProvenanceResult {
 ///
 /// Follows the `provenance-trio-types` `DehydrationSummary` wire format,
 /// extracted as a typed struct rather than raw JSON.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[allow(clippy::derive_partial_eq_without_eq)]
 pub struct DehydrationSummary {
     /// Merkle root of the dehydrated DAG.
     pub merkle_root: String,
@@ -145,7 +165,7 @@ pub struct DehydrationSummary {
 }
 
 /// Progression stage of the trio pipeline.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TrioStage {
     /// Neural API not available.
     Unavailable,
@@ -165,6 +185,136 @@ pub fn has_active_session() -> bool {
     crate::niche::resolve_neural_api_socket().is_some()
 }
 
+/// JSON-RPC args for `dag.session.create` (see [`begin_game_session`]).
+pub(crate) fn begin_game_session_args(session_name: &str) -> serde_json::Value {
+    serde_json::json!({
+        "metadata": { "type": "game_session", "name": session_name },
+        "session_type": { "Gaming": { "game_id": crate::PRIMAL_NAME } },
+        "description": session_name,
+    })
+}
+
+/// Maps a successful `session.create` response to [`ProvenanceResult`].
+pub(crate) fn parse_begin_session_response(result: &serde_json::Value) -> ProvenanceResult {
+    let session_id = result
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+    ProvenanceResult {
+        id: session_id.clone(),
+        available: true,
+        data: serde_json::json!({ "session_id": session_id }),
+    }
+}
+
+/// JSON-RPC args for `dag.event.append` (see [`record_game_action`]).
+pub(crate) fn record_game_action_args(
+    session_id: &str,
+    action: &serde_json::Value,
+) -> serde_json::Value {
+    serde_json::json!({
+        "session_id": session_id,
+        "event": action,
+    })
+}
+
+/// Maps a successful `event.append` response to [`ProvenanceResult`].
+pub(crate) fn parse_record_game_action_response(result: &serde_json::Value) -> ProvenanceResult {
+    let vertex_id = result
+        .get("vertex_id")
+        .or_else(|| result.get("id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+    ProvenanceResult {
+        id: vertex_id.clone(),
+        available: true,
+        data: serde_json::json!({ "vertex_id": vertex_id }),
+    }
+}
+
+/// JSON-RPC args for `dag.dehydration.trigger`.
+pub(crate) fn dehydration_trigger_args(session_id: &str) -> serde_json::Value {
+    serde_json::json!({ "session_id": session_id })
+}
+
+/// JSON-RPC args for `session.commit` from a parsed dehydration summary.
+pub(crate) fn session_commit_args(summary: &DehydrationSummary) -> serde_json::Value {
+    serde_json::json!({
+        "summary": summary.raw,
+        "content_hash": summary.merkle_root,
+        "vertex_count": summary.vertex_count,
+        "frontier": summary.frontier,
+    })
+}
+
+/// `agents` payload for [`sweetgrass::record_dehydration`] during [`complete_game_session`].
+pub(crate) fn game_session_dehydration_agents() -> Vec<serde_json::Value> {
+    let primal_did = format!("did:key:{}", crate::PRIMAL_NAME);
+    vec![serde_json::json!({
+        "did": primal_did,
+        "role": "author",
+        "contribution": 1.0
+    })]
+}
+
+/// `operations` payload for [`sweetgrass::record_dehydration`] during [`complete_game_session`].
+pub(crate) fn game_session_dehydration_operations(vertex_count: u64) -> Vec<serde_json::Value> {
+    vec![serde_json::json!({
+        "type": "game_session",
+        "vertex_count": vertex_count,
+    })]
+}
+
+/// JSON-RPC args for `braid.create` after a loamSpine commit.
+pub(crate) fn braid_create_commit_args(
+    commit_id: &str,
+    agents: &[serde_json::Value],
+) -> serde_json::Value {
+    serde_json::json!({
+        "commit_ref": commit_id,
+        "agents": agents,
+    })
+}
+
+/// Extracts commit id from loamSpine `session.commit` response.
+pub(crate) fn parse_commit_id_from_response(result: &serde_json::Value) -> String {
+    result
+        .get("commit_id")
+        .or_else(|| result.get("entry_id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string()
+}
+
+/// Extracts braid id from sweetGrass `braid.create` response.
+pub(crate) fn parse_braid_id_from_response(result: &serde_json::Value) -> Option<String> {
+    result
+        .get("braid_id")
+        .or_else(|| result.get("id"))
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+}
+
+/// Final JSON payload for a fully completed pipeline (see [`complete_game_session`]).
+pub(crate) fn complete_session_success_json(
+    session_id: &str,
+    summary: &DehydrationSummary,
+    commit_id: &str,
+    braid_id: &str,
+) -> serde_json::Value {
+    serde_json::json!({
+        "stage": "complete",
+        "session_id": session_id,
+        "merkle_root": summary.merkle_root,
+        "vertex_count": summary.vertex_count,
+        "frontier_size": summary.frontier.len(),
+        "commit_id": commit_id,
+        "braid_id": braid_id,
+    })
+}
+
 /// Begin a game session in the provenance trio.
 ///
 /// Creates a session via `dag.session.create`. Returns the session ID or
@@ -174,28 +324,15 @@ pub fn has_active_session() -> bool {
 ///
 /// Returns an error string only on non-recoverable failures.
 pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String> {
-    let args = serde_json::json!({
-        "metadata": { "type": "game_session", "name": session_name },
-        "session_type": { "Gaming": { "game_id": crate::PRIMAL_NAME } },
-        "description": session_name,
-    });
+    let args = begin_game_session_args(session_name);
 
     let Some(result) =
-        resilient_trio_call(|bridge| bridge.capability_call("dag", "session.create", &args))
+        resilient_trio_call(|bridge| bridge.capability_call(CAP_DAG, OP_DAG_SESSION_CREATE, &args))
     else {
         return Ok(unavailable_result());
     };
 
-    let session_id = result
-        .get("session_id")
-        .and_then(|v| v.as_str())
-        .unwrap_or("unknown")
-        .to_string();
-    Ok(ProvenanceResult {
-        id: session_id.clone(),
-        available: true,
-        data: serde_json::json!({ "session_id": session_id }),
-    })
+    Ok(parse_begin_session_response(&result))
 }
 
 /// Record a game action in the provenance trio.
@@ -210,28 +347,15 @@ pub fn record_game_action(
     session_id: &str,
     action: &serde_json::Value,
 ) -> Result<ProvenanceResult, String> {
-    let args = serde_json::json!({
-        "session_id": session_id,
-        "event": action,
-    });
+    let args = record_game_action_args(session_id, action);
 
     let Some(result) =
-        resilient_trio_call(|bridge| bridge.capability_call("dag", "event.append", &args))
+        resilient_trio_call(|bridge| bridge.capability_call(CAP_DAG, OP_DAG_EVENT_APPEND, &args))
     else {
         return Ok(unavailable_result());
     };
 
-    let vertex_id = result
-        .get("vertex_id")
-        .or_else(|| result.get("id"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("unknown")
-        .to_string();
-    Ok(ProvenanceResult {
-        id: vertex_id.clone(),
-        available: true,
-        data: serde_json::json!({ "vertex_id": vertex_id }),
-    })
+    Ok(parse_record_game_action_response(&result))
 }
 
 /// Complete a game session through the full provenance trio pipeline.
@@ -247,9 +371,9 @@ pub fn record_game_action(
 /// completion returns `Ok` with a `stage` field describing progress.
 pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, String> {
     // Step 1: Dehydrate the DAG — compute Merkle root and frontier
-    let dehydrate_args = serde_json::json!({ "session_id": session_id });
+    let dehydrate_args = dehydration_trigger_args(session_id);
     let Some(dehydration_raw) = resilient_trio_call(|bridge| {
-        bridge.capability_call("dag", "dehydration.trigger", &dehydrate_args)
+        bridge.capability_call(CAP_DAG, OP_DAG_DEHYDRATION_TRIGGER, &dehydrate_args)
     }) else {
         return Ok(stage_result(TrioStage::Unavailable, session_id, None));
     };
@@ -257,28 +381,15 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
     let summary = parse_dehydration(&dehydration_raw);
 
     // Step 2: Record dehydration with sweetGrass (who created what)
-    let primal_did = format!("did:key:{}", crate::PRIMAL_NAME);
-    let agents = vec![serde_json::json!({
-        "did": primal_did,
-        "role": "author",
-        "contribution": 1.0
-    })];
-    let operations = vec![serde_json::json!({
-        "type": "game_session",
-        "vertex_count": summary.vertex_count,
-    })];
+    let agents = game_session_dehydration_agents();
+    let operations = game_session_dehydration_operations(summary.vertex_count);
     let _ = record_dehydration(session_id, &summary.merkle_root, &agents, &operations);
 
     // Step 3: Commit to loamSpine — anchor the dehydration summary
-    let commit_args = serde_json::json!({
-        "summary": summary.raw,
-        "content_hash": summary.merkle_root,
-        "vertex_count": summary.vertex_count,
-        "frontier": summary.frontier,
-    });
-    let Some(commit_result) =
-        resilient_trio_call(|bridge| bridge.capability_call("session", "commit", &commit_args))
-    else {
+    let commit_args = session_commit_args(&summary);
+    let Some(commit_result) = resilient_trio_call(|bridge| {
+        bridge.capability_call(CAP_SESSION, OP_SESSION_COMMIT, &commit_args)
+    }) else {
         return Ok(stage_result(
             TrioStage::Dehydrated,
             session_id,
@@ -286,37 +397,20 @@ pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, Stri
         ));
     };
 
-    let commit_id = commit_result
-        .get("commit_id")
-        .or_else(|| commit_result.get("entry_id"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+    let commit_id = parse_commit_id_from_response(&commit_result);
 
     // Step 4: Create attribution braid via sweetGrass
-    let braid_args = serde_json::json!({
-        "commit_ref": commit_id,
-        "agents": agents,
-    });
-    let braid_id =
-        resilient_trio_call(|bridge| bridge.capability_call("braid", "create", &braid_args))
-            .and_then(|r| {
-                r.get("braid_id")
-                    .or_else(|| r.get("id"))
-                    .and_then(|v| v.as_str())
-                    .map(str::to_string)
-            })
-            .unwrap_or_default();
+    let braid_args = braid_create_commit_args(&commit_id, &agents);
+    let braid_id = resilient_trio_call(|bridge| {
+        bridge.capability_call(CAP_BRAID, OP_BRAID_CREATE, &braid_args)
+    })
+    .as_ref()
+    .and_then(parse_braid_id_from_response)
+    .unwrap_or_default();
 
-    Ok(serde_json::json!({
-        "stage": "complete",
-        "session_id": session_id,
-        "merkle_root": summary.merkle_root,
-        "vertex_count": summary.vertex_count,
-        "frontier_size": summary.frontier.len(),
-        "commit_id": commit_id,
-        "braid_id": braid_id,
-    }))
+    Ok(complete_session_success_json(
+        session_id, &summary, &commit_id, &braid_id,
+    ))
 }
 
 /// Parse a raw dehydration JSON response into a typed summary.
@@ -433,7 +527,7 @@ mod tests {
     fn resilient_trio_call_degrades_without_neural_api() {
         reset_circuit();
         let result = resilient_trio_call(|bridge| {
-            bridge.capability_call("dag", "session.create", &serde_json::json!({}))
+            bridge.capability_call(CAP_DAG, OP_DAG_SESSION_CREATE, &serde_json::json!({}))
         });
         assert!(result.is_none());
     }
@@ -479,5 +573,141 @@ mod tests {
         let r = stage_result(TrioStage::Dehydrated, "sess-1", None);
         assert_eq!(r["stage"], "dehydrated");
         assert_eq!(r["session_id"], "sess-1");
+    }
+
+    #[test]
+    fn trio_capability_constants_match_wire_names() {
+        assert_eq!(CAP_DAG, "dag");
+        assert_eq!(CAP_SESSION, "session");
+        assert_eq!(CAP_BRAID, "braid");
+        assert_eq!(OP_DAG_SESSION_CREATE, "session.create");
+        assert_eq!(OP_DAG_DEHYDRATION_TRIGGER, "dehydration.trigger");
+    }
+
+    #[test]
+    fn begin_game_session_args_shape() {
+        let v = begin_game_session_args("my-campaign");
+        assert_eq!(v["description"], "my-campaign");
+        assert_eq!(v["metadata"]["name"], "my-campaign");
+        assert_eq!(v["session_type"]["Gaming"]["game_id"], crate::PRIMAL_NAME);
+    }
+
+    #[test]
+    fn parse_begin_session_response_unknown_without_session_id() {
+        let p = parse_begin_session_response(&serde_json::json!({}));
+        assert_eq!(p.id, "unknown");
+        assert!(p.available);
+    }
+
+    #[test]
+    fn parse_record_game_action_response_vertex_id_and_id_fallback() {
+        let p = parse_record_game_action_response(&serde_json::json!({"vertex_id": "v1"}));
+        assert_eq!(p.id, "v1");
+        let p2 = parse_record_game_action_response(&serde_json::json!({"id": "v2"}));
+        assert_eq!(p2.id, "v2");
+    }
+
+    #[test]
+    fn dehydration_and_commit_args_helpers() {
+        let raw = serde_json::json!({"merkle_root": "m", "vertex_count": 3});
+        let summary = parse_dehydration(&raw);
+        assert_eq!(dehydration_trigger_args("s1")["session_id"], "s1");
+        let c = session_commit_args(&summary);
+        assert_eq!(c["content_hash"], "m");
+        assert_eq!(c["vertex_count"], 3);
+    }
+
+    #[test]
+    fn game_session_dehydration_agents_and_operations() {
+        let agents = game_session_dehydration_agents();
+        assert_eq!(agents.len(), 1);
+        assert_eq!(agents[0]["did"], format!("did:key:{}", crate::PRIMAL_NAME));
+        let ops = game_session_dehydration_operations(99);
+        assert_eq!(ops[0]["vertex_count"], 99);
+    }
+
+    #[test]
+    fn braid_create_commit_args_shape() {
+        let agents = vec![serde_json::json!({"did": "d"})];
+        let v = braid_create_commit_args("commit-1", &agents);
+        assert_eq!(v["commit_ref"], "commit-1");
+        assert_eq!(v["agents"], serde_json::json!(agents));
+    }
+
+    #[test]
+    fn parse_commit_id_prefers_commit_id_then_entry_id() {
+        assert_eq!(
+            parse_commit_id_from_response(&serde_json::json!({"commit_id": "a"})),
+            "a"
+        );
+        assert_eq!(
+            parse_commit_id_from_response(&serde_json::json!({"entry_id": "b"})),
+            "b"
+        );
+    }
+
+    #[test]
+    fn parse_braid_id_from_response_variants() {
+        assert_eq!(
+            parse_braid_id_from_response(&serde_json::json!({"braid_id": "x"})),
+            Some("x".to_string())
+        );
+        assert_eq!(
+            parse_braid_id_from_response(&serde_json::json!({"id": "y"})),
+            Some("y".to_string())
+        );
+    }
+
+    #[test]
+    fn complete_session_success_json_shape() {
+        let raw = serde_json::json!({"merkle_root": "mr", "vertex_count": 2});
+        let s = parse_dehydration(&raw);
+        let j = complete_session_success_json("sid", &s, "c1", "b1");
+        assert_eq!(j["stage"], "complete");
+        assert_eq!(j["commit_id"], "c1");
+        assert_eq!(j["braid_id"], "b1");
+        assert_eq!(j["frontier_size"], s.frontier.len());
+    }
+
+    #[test]
+    fn stage_result_all_variants_with_summary() {
+        let raw = serde_json::json!({"merkle_root": "x", "vertex_count": 1});
+        let summ = parse_dehydration(&raw);
+        for (stage, expected) in [
+            (TrioStage::Unavailable, "unavailable"),
+            (TrioStage::Dehydrated, "dehydrated"),
+            (TrioStage::Committed, "committed"),
+            (TrioStage::Complete, "complete"),
+        ] {
+            let r = stage_result(stage, "s", Some(&summ));
+            assert_eq!(r["stage"], expected);
+            assert_eq!(r["merkle_root"], "x");
+        }
+    }
+
+    #[test]
+    fn provenance_result_and_dehydration_serde_roundtrip() {
+        let p = ProvenanceResult {
+            id: "i".to_string(),
+            available: true,
+            data: serde_json::json!({"a": 1}),
+        };
+        let js = serde_json::to_string(&p).unwrap();
+        let back: ProvenanceResult = serde_json::from_str(&js).unwrap();
+        assert_eq!(p, back);
+
+        let d = DehydrationSummary {
+            merkle_root: "m".to_string(),
+            frontier: vec!["a".to_string()],
+            vertex_count: 2,
+            raw: serde_json::json!({}),
+        };
+        let js2 = serde_json::to_string(&d).unwrap();
+        let back2: DehydrationSummary = serde_json::from_str(&js2).unwrap();
+        assert_eq!(d, back2);
+
+        let t = serde_json::to_string(&TrioStage::Dehydrated).unwrap();
+        let back3: TrioStage = serde_json::from_str(&t).unwrap();
+        assert_eq!(back3, TrioStage::Dehydrated);
     }
 }

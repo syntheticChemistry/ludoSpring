@@ -107,6 +107,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["v7"] }
 proptest = "1"
+thiserror = "2"
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
@@ -119,6 +120,9 @@ must_use_candidate = "allow"
 return_self_not_must_use = "allow"
 missing_errors_doc = "warn"
 missing_panics_doc = "warn"
+cast_possible_truncation = "deny"
+cast_sign_loss = "deny"
+cast_precision_loss = "warn"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

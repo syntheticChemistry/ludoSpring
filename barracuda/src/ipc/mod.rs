@@ -28,6 +28,9 @@ mod params;
 mod results;
 mod server;
 
+#[cfg(feature = "tarpc-ipc")]
+pub mod tarpc_service;
+
 pub mod discovery;
 pub mod nestgate;
 pub mod provenance;
@@ -36,6 +39,7 @@ pub mod toadstool;
 
 pub use discovery::{
     PrimalEndpoint, PrimalRegistry, call_primal, discover_by_capability, discover_primals,
+    discover_primals_in_directories,
 };
 pub use envelope::{
     DispatchOutcome, IpcError, JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody,
@@ -87,3 +91,8 @@ pub const METHOD_MINT_CERTIFICATE: &str = "game.mint_certificate";
 pub const METHOD_STORAGE_PUT: &str = "game.storage_put";
 /// Retrieve game data from NestGate.
 pub const METHOD_STORAGE_GET: &str = "game.storage_get";
+
+/// MCP tools/list — enumerate AI-callable game analysis tools.
+pub const METHOD_TOOLS_LIST: &str = "tools.list";
+/// MCP tools/call — invoke a game analysis tool by name.
+pub const METHOD_TOOLS_CALL: &str = "tools.call";

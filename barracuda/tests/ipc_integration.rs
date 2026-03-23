@@ -13,11 +13,13 @@
 
 #![cfg(feature = "ipc")]
 
+mod ipc_test_util;
+
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+
+use ipc_test_util::IpcTestServer;
 
 fn send_rpc(stream: &mut UnixStream, method: &str, params: serde_json::Value) -> serde_json::Value {
     let req = serde_json::json!({
@@ -37,50 +39,11 @@ fn send_rpc(stream: &mut UnixStream, method: &str, params: serde_json::Value) ->
     serde_json::from_str(&response).expect("parse response")
 }
 
-fn start_server() -> (
-    std::path::PathBuf,
-    Arc<AtomicBool>,
-    std::thread::JoinHandle<()>,
-) {
-    use std::sync::atomic::AtomicU64;
-    static COUNTER: AtomicU64 = AtomicU64::new(0);
-    let id = COUNTER.fetch_add(1, Ordering::Relaxed);
-    let dir = std::env::temp_dir().join(format!("ludospring_ipc_test_{}_{id}", std::process::id()));
-    std::fs::create_dir_all(&dir).ok();
-    let sock = dir.join("test.sock");
-
-    let shutdown = Arc::new(AtomicBool::new(false));
-    let shutdown_clone = Arc::clone(&shutdown);
-    let sock_clone = sock.clone();
-
-    let handle = std::thread::spawn(move || {
-        let server = ludospring_barracuda::ipc::IpcServer::with_path(&sock_clone);
-        let _ = server.run_until(&shutdown_clone);
-    });
-
-    for _ in 0..100 {
-        if sock.exists() {
-            break;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-    assert!(sock.exists(), "server did not start in time");
-
-    (sock, shutdown, handle)
-}
-
-fn cleanup(sock: &std::path::Path, shutdown: &AtomicBool, handle: std::thread::JoinHandle<()>) {
-    shutdown.store(true, Ordering::Relaxed);
-    std::fs::remove_file(sock).ok();
-    std::fs::remove_dir(sock.parent().unwrap_or(sock)).ok();
-    let _ = handle.join();
-}
-
 #[test]
 fn lifecycle_status_returns_name_and_capabilities() {
-    let (sock, shutdown, handle) = start_server();
+    let server = IpcTestServer::start();
 
-    let mut stream = UnixStream::connect(&sock).expect("connect");
+    let mut stream = UnixStream::connect(&server.socket_path).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
 
     let resp = send_rpc(&mut stream, "lifecycle.status", serde_json::json!({}));
@@ -92,17 +55,20 @@ fn lifecycle_status_returns_name_and_capabilities() {
     );
     let caps = result.get("capabilities").and_then(|v| v.as_array());
     assert!(caps.is_some(), "should have capabilities array");
-    assert!(caps.unwrap().len() >= 20, "should have 20+ capabilities");
+    assert!(
+        caps.expect("caps").len() >= 20,
+        "should have 20+ capabilities"
+    );
 
     drop(stream);
-    cleanup(&sock, &shutdown, handle);
+    server.shutdown();
 }
 
 #[test]
 fn evaluate_flow_returns_structured_result() {
-    let (sock, shutdown, handle) = start_server();
+    let server = IpcTestServer::start();
 
-    let mut stream = UnixStream::connect(&sock).expect("connect");
+    let mut stream = UnixStream::connect(&server.socket_path).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
 
     let resp = send_rpc(
@@ -115,14 +81,14 @@ fn evaluate_flow_returns_structured_result() {
     assert_eq!(state, Some("flow"));
 
     drop(stream);
-    cleanup(&sock, &shutdown, handle);
+    server.shutdown();
 }
 
 #[test]
 fn fitts_cost_returns_movement_time() {
-    let (sock, shutdown, handle) = start_server();
+    let server = IpcTestServer::start();
 
-    let mut stream = UnixStream::connect(&sock).expect("connect");
+    let mut stream = UnixStream::connect(&server.socket_path).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
 
     let resp = send_rpc(
@@ -133,17 +99,17 @@ fn fitts_cost_returns_movement_time() {
     let result = resp.get("result").expect("result field");
     let mt = result.get("movement_time_ms").and_then(|v| v.as_f64());
     assert!(mt.is_some(), "should return movement_time_ms");
-    assert!(mt.unwrap() > 0.0, "movement time should be positive");
+    assert!(mt.expect("mt") > 0.0, "movement time should be positive");
 
     drop(stream);
-    cleanup(&sock, &shutdown, handle);
+    server.shutdown();
 }
 
 #[test]
 fn capability_list_returns_all_capabilities() {
-    let (sock, shutdown, handle) = start_server();
+    let server = IpcTestServer::start();
 
-    let mut stream = UnixStream::connect(&sock).expect("connect");
+    let mut stream = UnixStream::connect(&server.socket_path).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
 
     let resp = send_rpc(&mut stream, "capability.list", serde_json::json!({}));
@@ -162,14 +128,14 @@ fn capability_list_returns_all_capabilities() {
     );
 
     drop(stream);
-    cleanup(&sock, &shutdown, handle);
+    server.shutdown();
 }
 
 #[test]
 fn unknown_method_returns_error() {
-    let (sock, shutdown, handle) = start_server();
+    let server = IpcTestServer::start();
 
-    let mut stream = UnixStream::connect(&sock).expect("connect");
+    let mut stream = UnixStream::connect(&server.socket_path).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
 
     let resp = send_rpc(&mut stream, "nonexistent.method", serde_json::json!({}));
@@ -177,14 +143,14 @@ fn unknown_method_returns_error() {
     assert!(error.is_some(), "unknown method should return error");
 
     drop(stream);
-    cleanup(&sock, &shutdown, handle);
+    server.shutdown();
 }
 
 #[test]
 fn health_check_responds() {
-    let (sock, shutdown, handle) = start_server();
+    let server = IpcTestServer::start();
 
-    let mut stream = UnixStream::connect(&sock).expect("connect");
+    let mut stream = UnixStream::connect(&server.socket_path).expect("connect");
     stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
 
     let resp = send_rpc(&mut stream, "health.check", serde_json::json!({}));
@@ -194,5 +160,105 @@ fn health_check_responds() {
     );
 
     drop(stream);
-    cleanup(&sock, &shutdown, handle);
+    server.shutdown();
+}
+
+#[test]
+fn neural_bridge_rpc_round_trip_with_socket() {
+    let server = IpcTestServer::start();
+    let bridge = ludospring_barracuda::ipc::NeuralBridge::with_socket_and_timeout(
+        server.socket_path.clone(),
+        Duration::from_secs(5),
+    );
+    assert!(bridge.is_available(), "health.check should succeed");
+
+    let reg = bridge
+        .register(std::path::Path::new("/tmp/ludospring-register.sock"))
+        .expect("lifecycle.register");
+    assert_eq!(
+        reg.get("status").and_then(|v| v.as_str()),
+        Some("registered")
+    );
+
+    let disc = bridge
+        .discover_capability("game.evaluate_flow")
+        .expect("capability.discover");
+    assert!(disc.get("providers").is_some());
+
+    let cap = bridge
+        .capability_call(
+            "game",
+            "evaluate_flow",
+            &serde_json::json!({"challenge": 0.5, "skill": 0.5}),
+        )
+        .expect("capability.call");
+    assert_eq!(cap.get("state").and_then(|v| v.as_str()), Some("flow"));
+
+    let dereg = bridge.deregister().expect("deregister");
+    assert_eq!(
+        dereg.get("status").and_then(|v| v.as_str()),
+        Some("deregistered")
+    );
+
+    server.shutdown();
+}
+
+#[test]
+fn discovery_probe_socket_finds_primal() {
+    let server = IpcTestServer::start();
+    let ep = ludospring_barracuda::ipc::discovery::probe_socket(&server.socket_path);
+    assert!(ep.is_some(), "probe_socket should parse lifecycle.status");
+    let ep = ep.expect("endpoint");
+    assert_eq!(ep.name.as_str(), "ludospring");
+    assert!(!ep.capabilities.is_empty());
+
+    server.shutdown();
+}
+
+#[test]
+fn discovery_discover_primals_scans_directory() {
+    let server = IpcTestServer::start();
+    let dir = server
+        .socket_path
+        .parent()
+        .expect("socket parent")
+        .to_path_buf();
+
+    let reg = ludospring_barracuda::ipc::discover_primals_in_directories(&[dir]);
+    assert!(
+        reg.find("game.evaluate_flow").is_some(),
+        "registry should list game.evaluate_flow from scanned socket"
+    );
+
+    server.shutdown();
+}
+
+#[test]
+fn call_primal_evaluate_flow() {
+    let server = IpcTestServer::start();
+    let ep = ludospring_barracuda::ipc::discovery::probe_socket(&server.socket_path)
+        .expect("probe_socket");
+    let result = ludospring_barracuda::ipc::call_primal(
+        &ep,
+        "game.evaluate_flow",
+        &serde_json::json!({"challenge": 0.5, "skill": 0.5}),
+    )
+    .expect("call_primal");
+    assert_eq!(result.get("state").and_then(|v| v.as_str()), Some("flow"));
+
+    server.shutdown();
+}
+
+#[test]
+fn visualization_push_client_uses_explicit_socket() {
+    let server = IpcTestServer::start();
+    let client = ludospring_barracuda::visualization::VisualizationPushClient::with_socket(
+        server.socket_path.clone(),
+    );
+    client
+        .push_render("s1", "t", &serde_json::json!({}))
+        .expect("push_render");
+    client.export("s1", "svg").expect("export send_with_result");
+
+    server.shutdown();
 }

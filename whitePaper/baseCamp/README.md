@@ -2,7 +2,7 @@
 
 **Date:** March 23, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V29 — 82 experiments, 402 barracuda + 19 forge tests, 42 Python parity, 19 proptest. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All validation experiments use `ValidationHarness` + `BaselineProvenance`. `GpuContext` + `TensorSession` wired. `default-features = false` on barraCuda. 80.2% line coverage (80% floor enforced). Baselines regenerated with `content_sha256`
+**Status:** V30 — 82 experiments, 675 barracuda + 19 forge tests, 42 Python parity, 19 proptest. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All validation experiments use `ValidationHarness` + `BaselineProvenance`. `GpuContext` + `TensorSession` wired. `default-features = false` on barraCuda. 91.27% line coverage (85% floor enforced). Baselines regenerated with `content_sha256`. `thiserror` error handling, MCP `tools.list`/`tools.call`, tarpc optional feature, handlers split into 5 submodules, CI pipeline, deploy graph fragment, scyBorg triple license
 
 ---
 

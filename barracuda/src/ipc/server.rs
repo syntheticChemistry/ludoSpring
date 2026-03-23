@@ -149,31 +149,55 @@ mod tests {
     use super::*;
     use std::io::{Read, Write};
     use std::os::unix::net::UnixStream;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::thread::JoinHandle;
+    use std::time::Duration;
+
+    const REQ_FLOW: &str = r#"{"jsonrpc":"2.0","method":"game.evaluate_flow","params":{"challenge":0.5,"skill":0.5},"id":42}"#;
+
+    static TEST_SOCKET_SEQ: AtomicU64 = AtomicU64::new(0);
+
+    fn test_socket_dir() -> PathBuf {
+        let n = TEST_SOCKET_SEQ.fetch_add(1, Ordering::SeqCst);
+        std::env::temp_dir().join(format!("ludospring_test_{}_{}", std::process::id(), n))
+    }
+
+    fn spawn_test_server(sock: PathBuf) -> JoinHandle<()> {
+        std::thread::spawn(move || {
+            let server = IpcServer::with_path(&sock);
+            let _ = server.run();
+        })
+    }
+
+    fn wait_for_socket(sock: &Path) -> bool {
+        for _ in 0..50 {
+            if sock.exists() {
+                return true;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        false
+    }
+
+    fn cleanup_test_socket(sock: &Path, dir: &Path) {
+        std::fs::remove_file(sock).ok();
+        std::fs::remove_dir(dir).ok();
+    }
 
     #[test]
     fn server_round_trip() {
-        let dir = std::env::temp_dir().join(format!("ludospring_test_{}", std::process::id()));
+        let dir = test_socket_dir();
         std::fs::create_dir_all(&dir).ok();
         let sock = dir.join("test.sock");
 
         let sock_clone = sock.clone();
-        let handle = std::thread::spawn(move || {
-            let server = IpcServer::with_path(&sock_clone);
-            let _ = server.run();
-        });
+        let handle = spawn_test_server(sock_clone);
 
-        for _ in 0..50 {
-            if sock.exists() {
-                break;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(20));
-        }
-
-        if sock.exists() {
+        if wait_for_socket(&sock) {
             let mut stream = UnixStream::connect(&sock)
                 .unwrap_or_else(|e| panic!("connect to test socket: {e}"));
-            let req = r#"{"jsonrpc":"2.0","method":"game.evaluate_flow","params":{"challenge":0.5,"skill":0.5},"id":42}"#;
-            stream.write_all(req.as_bytes()).ok();
+            stream.write_all(REQ_FLOW.as_bytes()).ok();
             stream.write_all(b"\n").ok();
             stream.flush().ok();
 
@@ -184,8 +208,187 @@ mod tests {
             assert!(buf.contains("flow"), "expected flow in response: {buf}");
         }
 
-        std::fs::remove_file(&sock).ok();
-        std::fs::remove_dir(&dir).ok();
+        cleanup_test_socket(&sock, &dir);
+        drop(handle);
+    }
+
+    #[test]
+    fn malformed_json_returns_parse_error() {
+        let dir = test_socket_dir();
+        std::fs::create_dir_all(&dir).ok();
+        let sock = dir.join("test.sock");
+
+        let sock_clone = sock.clone();
+        let handle = spawn_test_server(sock_clone);
+
+        assert!(wait_for_socket(&sock), "socket did not appear");
+
+        let mut stream =
+            UnixStream::connect(&sock).unwrap_or_else(|e| panic!("connect to test socket: {e}"));
+        stream
+            .write_all(b"{not valid json}\n")
+            .unwrap_or_else(|e| panic!("write: {e}"));
+        stream.flush().ok();
+        stream.shutdown(std::net::Shutdown::Write).ok();
+
+        let mut buf = String::new();
+        stream
+            .read_to_string(&mut buf)
+            .unwrap_or_else(|e| panic!("read: {e}"));
+
+        let line = buf.lines().next().unwrap_or("");
+        let v: serde_json::Value =
+            serde_json::from_str(line).unwrap_or_else(|e| panic!("response JSON: {e} {line}"));
+        assert_eq!(v["error"]["code"], -32700);
+
+        cleanup_test_socket(&sock, &dir);
+        drop(handle);
+    }
+
+    #[test]
+    fn empty_line_is_ignored() {
+        let dir = test_socket_dir();
+        std::fs::create_dir_all(&dir).ok();
+        let sock = dir.join("test.sock");
+
+        let sock_clone = sock.clone();
+        let handle = spawn_test_server(sock_clone);
+
+        assert!(wait_for_socket(&sock), "socket did not appear");
+
+        let mut stream =
+            UnixStream::connect(&sock).unwrap_or_else(|e| panic!("connect to test socket: {e}"));
+        stream.write_all(b"\n\n").ok();
+        stream.write_all(REQ_FLOW.as_bytes()).ok();
+        stream.write_all(b"\n").ok();
+        stream.flush().ok();
+        stream.shutdown(std::net::Shutdown::Write).ok();
+
+        let mut buf = String::new();
+        stream.read_to_string(&mut buf).ok();
+        assert!(buf.contains("flow"), "expected flow in response: {buf}");
+
+        cleanup_test_socket(&sock, &dir);
+        drop(handle);
+    }
+
+    #[test]
+    fn oversized_request_does_not_crash() {
+        let dir = test_socket_dir();
+        std::fs::create_dir_all(&dir).ok();
+        let sock = dir.join("test.sock");
+
+        let sock_clone = sock.clone();
+        let handle = spawn_test_server(sock_clone);
+
+        assert!(wait_for_socket(&sock), "socket did not appear");
+
+        let pad = "x".repeat(100_000);
+        let req = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "game.evaluate_flow",
+            "params": {"challenge": 0.5, "skill": 0.5, "pad": pad},
+            "id": 42
+        });
+        let line = req.to_string();
+
+        let mut stream =
+            UnixStream::connect(&sock).unwrap_or_else(|e| panic!("connect to test socket: {e}"));
+        stream.write_all(line.as_bytes()).ok();
+        stream.write_all(b"\n").ok();
+        stream.flush().ok();
+        stream.shutdown(std::net::Shutdown::Write).ok();
+
+        let mut buf = String::new();
+        stream.read_to_string(&mut buf).ok();
+        assert!(
+            buf.contains("flow") || buf.contains("error"),
+            "expected response body: len={}",
+            buf.len()
+        );
+
+        let mut stream2 =
+            UnixStream::connect(&sock).unwrap_or_else(|e| panic!("second connect: {e}"));
+        stream2.write_all(REQ_FLOW.as_bytes()).ok();
+        stream2.write_all(b"\n").ok();
+        stream2.flush().ok();
+        stream2.shutdown(std::net::Shutdown::Write).ok();
+        let mut buf2 = String::new();
+        stream2.read_to_string(&mut buf2).ok();
+        assert!(buf2.contains("flow"), "server should still respond: {buf2}");
+
+        cleanup_test_socket(&sock, &dir);
+        drop(handle);
+    }
+
+    #[test]
+    fn concurrent_connections() {
+        let dir = test_socket_dir();
+        std::fs::create_dir_all(&dir).ok();
+        let sock = dir.join("test.sock");
+
+        let sock_clone = sock.clone();
+        let handle = spawn_test_server(sock_clone);
+
+        assert!(wait_for_socket(&sock), "socket did not appear");
+
+        let sock_path = sock.clone();
+        let clients: Vec<_> = (0..3)
+            .map(|_| {
+                let p = sock_path.clone();
+                std::thread::spawn(move || {
+                    let mut stream =
+                        UnixStream::connect(&p).unwrap_or_else(|e| panic!("connect: {e}"));
+                    stream.write_all(REQ_FLOW.as_bytes()).ok();
+                    stream.write_all(b"\n").ok();
+                    stream.flush().ok();
+                    stream.shutdown(std::net::Shutdown::Write).ok();
+                    let mut buf = String::new();
+                    stream.read_to_string(&mut buf).ok();
+                    buf
+                })
+            })
+            .collect();
+
+        for c in clients {
+            let buf = c.join().unwrap_or_else(|e| panic!("client thread: {e:?}"));
+            assert!(buf.contains("flow"), "expected flow in response: {buf}");
+        }
+
+        cleanup_test_socket(&sock, &dir);
+        drop(handle);
+    }
+
+    #[test]
+    fn partial_write_then_close() {
+        let dir = test_socket_dir();
+        std::fs::create_dir_all(&dir).ok();
+        let sock = dir.join("test.sock");
+
+        let sock_clone = sock.clone();
+        let handle = spawn_test_server(sock_clone);
+
+        assert!(wait_for_socket(&sock), "socket did not appear");
+
+        {
+            let mut stream = UnixStream::connect(&sock)
+                .unwrap_or_else(|e| panic!("connect to test socket: {e}"));
+            stream
+                .write_all(br#"{"jsonrpc":"2.0","meth"#)
+                .unwrap_or_else(|e| panic!("write: {e}"));
+        }
+
+        let mut stream2 =
+            UnixStream::connect(&sock).unwrap_or_else(|e| panic!("second connect: {e}"));
+        stream2.write_all(REQ_FLOW.as_bytes()).ok();
+        stream2.write_all(b"\n").ok();
+        stream2.flush().ok();
+        stream2.shutdown(std::net::Shutdown::Write).ok();
+        let mut buf = String::new();
+        stream2.read_to_string(&mut buf).ok();
+        assert!(buf.contains("flow"), "server should still respond: {buf}");
+
+        cleanup_test_socket(&sock, &dir);
         drop(handle);
     }
 }

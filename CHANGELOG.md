@@ -3,7 +3,36 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V29).
+This project does not use SemVer — versions are session-sequential (V1–V30).
+
+## [V30] — 2026-03-23
+
+### Added
+
+- `thiserror` 2.x for all error types — `IpcError` and all handler errors now `#[derive(thiserror::Error)]`
+- MCP `tools.list` and `tools.call` JSON-RPC methods — 8 science tool descriptors with JSON Schema input specs
+- `tarpc-ipc` optional feature with `LudoSpringService` typed RPC trait mirroring JSON-RPC surface
+- CI pipeline: `.github/workflows/ci.yml` with fmt, clippy, test, doc, cargo deny gates
+- `CONTEXT.md` per `PUBLIC_SURFACE_STANDARD`
+- `deploy/ludospring.toml` — primalSpring deploy graph fragment (26 capabilities, optional trio + viz deps)
+- `LICENSE-ORC` and `LICENSE-CC-BY-SA` — scyBorg triple license files
+- Mock IPC test harness `IpcTestServer` — spawns real `IpcServer` for integration tests
+- Neural handler methods: `lifecycle.register`, `capability.deregister`, `capability.discover`, `capability.call`
+- 273 new tests across IPC handlers, provenance trio, external clients, chaos/fault injection
+
+### Changed
+
+- Handler refactor: `ipc/handlers.rs` (1208 LOC) → `ipc/handlers/` directory with 5 submodules (`lifecycle`, `science`, `delegation`, `mcp`, `neural`) — all under 300 LOC
+- UniBin consolidation: dashboard, live-session, tufte-dashboard merged as `ludospring` subcommands (7 total); old binaries deprecated
+- Coverage: 80.2% → 91.27% line coverage (85% floor enforced, was 80%)
+- Tests: 402 → 675 barracuda tests (587 unit + 42 integration + 3 doctests + 19 proptest + extras)
+- Clippy strictness: added `cast_possible_truncation = "deny"`, `cast_sign_loss = "deny"`, `cast_precision_loss = "warn"`
+- `health.liveness` returns `{"status": "alive"}` per SEMANTIC_METHOD_NAMING_STANDARD v2.1
+- All 14 broken rustdoc intra-doc links fixed
+- Provenance trio coverage: ~40% → ~84% (param builders, response mappers, serde round-trips)
+- External client coverage: squirrel 49% → 84%, toadstool 47% → 90%, nestgate 52% → 81%
+- Handler test coverage: 70% → 95%
+- Makefile: `CARGO_TARGET_DIR` + `CARGO_HOME` overrides for `noexec` mount environments
 
 ## [V29] — 2026-03-23
 

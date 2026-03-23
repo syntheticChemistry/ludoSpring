@@ -48,7 +48,7 @@ impl NeuralBridge {
     ///
     /// # Errors
     ///
-    /// Returns [`IpcError::NotFound`] if no Neural API socket is found.
+    /// Returns [`super::IpcError::NotFound`] if no Neural API socket is found.
     pub fn discover() -> Result<Self, super::envelope::IpcError> {
         let socket = crate::niche::resolve_neural_api_socket().ok_or_else(|| {
             super::envelope::IpcError::NotFound(
@@ -74,6 +74,12 @@ impl NeuralBridge {
             socket,
             timeout: Duration::from_secs(DEFAULT_TIMEOUT_SECS),
         }
+    }
+
+    /// Bridge with explicit socket and RPC timeout (integration tests, tooling).
+    #[must_use]
+    pub const fn with_socket_and_timeout(socket: PathBuf, timeout: Duration) -> Self {
+        Self { socket, timeout }
     }
 
     /// Whether the Neural API is reachable (connect + health check).
@@ -247,5 +253,160 @@ mod tests {
         ));
         let bridge = NeuralBridge::with_socket(socket_path);
         assert_eq!(bridge.timeout, Duration::from_secs(5));
+    }
+
+    #[test]
+    fn discover_matches_socket_resolution() {
+        match crate::niche::resolve_neural_api_socket() {
+            None => assert!(NeuralBridge::discover().is_err()),
+            Some(path) => {
+                let bridge = NeuralBridge::discover().expect("Neural API socket present");
+                assert_eq!(bridge.socket_path(), path.as_path());
+            }
+        }
+    }
+
+    #[cfg(all(unix, feature = "ipc"))]
+    mod unix_ipc {
+        use super::*;
+        use std::io::{BufRead, BufReader, Write};
+        use std::os::unix::net::UnixListener;
+        use std::thread;
+        use std::time::Duration;
+
+        #[test]
+        fn connect_failure_maps_to_error() {
+            let path = std::env::temp_dir().join(format!(
+                "ludospring-neural-no-listener-{}.sock",
+                std::process::id()
+            ));
+            let bridge = NeuralBridge::with_socket_and_timeout(path, Duration::from_secs(1));
+            let err = bridge
+                .capability_call("game", "evaluate_flow", &serde_json::json!({}))
+                .expect_err("unreachable socket");
+            assert!(
+                matches!(err, crate::ipc::IpcError::Connect(_)),
+                "expected connect error, got {err:?}"
+            );
+        }
+
+        #[test]
+        fn read_timeout_on_slow_peer() {
+            let dir =
+                std::env::temp_dir().join(format!("ludospring-neural-slow-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).expect("dir");
+            let path = dir.join("neural.sock");
+            let _ = std::fs::remove_file(&path);
+            let listener = UnixListener::bind(&path).expect("bind");
+            let path_clone = path.clone();
+            let slow = thread::spawn(move || {
+                if let Ok((stream, _)) = listener.accept() {
+                    let mut line = String::new();
+                    let mut br = BufReader::new(&stream);
+                    let _ = br.read_line(&mut line);
+                    thread::sleep(Duration::from_secs(10));
+                }
+                drop(listener);
+                let _ = std::fs::remove_file(&path_clone);
+                let _ = std::fs::remove_dir(&dir);
+            });
+
+            thread::sleep(Duration::from_millis(30));
+            let bridge =
+                NeuralBridge::with_socket_and_timeout(path.clone(), Duration::from_millis(80));
+            let err = bridge
+                .capability_call(
+                    "game",
+                    "evaluate_flow",
+                    &serde_json::json!({"challenge": 0.5, "skill": 0.5}),
+                )
+                .expect_err("slow peer");
+            assert!(
+                matches!(
+                    err,
+                    crate::ipc::IpcError::Io(_) | crate::ipc::IpcError::Timeout(_)
+                ),
+                "got {err:?}"
+            );
+
+            let _ = slow.join();
+        }
+
+        #[test]
+        fn malformed_response_line_is_serialization_error() {
+            let dir = std::env::temp_dir()
+                .join(format!("ludospring-neural-badjson-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).expect("dir");
+            let path = dir.join("neural.sock");
+            let _ = std::fs::remove_file(&path);
+            let listener = UnixListener::bind(&path).expect("bind");
+            let path_clone = path.clone();
+            let dir_clone = dir.clone();
+            let bad = thread::spawn(move || {
+                if let Ok((mut stream, _)) = listener.accept() {
+                    let mut line = String::new();
+                    let _ = BufReader::new(&stream).read_line(&mut line);
+                    let _ = stream.write_all(b"not valid json rpc\n");
+                    let _ = stream.flush();
+                }
+                drop(listener);
+                let _ = std::fs::remove_file(&path_clone);
+                let _ = std::fs::remove_dir(&dir_clone);
+            });
+
+            thread::sleep(Duration::from_millis(30));
+            let bridge = NeuralBridge::with_socket_and_timeout(path, Duration::from_secs(2));
+            let err = bridge
+                .capability_call("x", "y", &serde_json::json!({}))
+                .expect_err("bad json");
+            assert!(
+                matches!(err, crate::ipc::IpcError::Serialization(_)),
+                "expected serialization error, got {err:?}"
+            );
+            let _ = bad.join();
+        }
+
+        #[test]
+        fn rpc_error_response_maps() {
+            let dir = std::env::temp_dir()
+                .join(format!("ludospring-neural-rpcerr-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).expect("dir");
+            let path = dir.join("neural.sock");
+            let _ = std::fs::remove_file(&path);
+            let listener = UnixListener::bind(&path).expect("bind");
+            let path_clone = path.clone();
+            let dir_clone = dir.clone();
+            let srv = thread::spawn(move || {
+                if let Ok((mut stream, _)) = listener.accept() {
+                    let mut line = String::new();
+                    let _ = BufReader::new(&stream).read_line(&mut line);
+                    let body = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": {"code": -32000, "message": "test rpc"},
+                        "id": 1
+                    });
+                    let mut s = body.to_string();
+                    s.push('\n');
+                    let _ = stream.write_all(s.as_bytes());
+                }
+                drop(listener);
+                let _ = std::fs::remove_file(&path_clone);
+                let _ = std::fs::remove_dir(&dir_clone);
+            });
+
+            thread::sleep(Duration::from_millis(30));
+            let bridge = NeuralBridge::with_socket_and_timeout(path, Duration::from_secs(2));
+            let err = bridge
+                .capability_call("a", "b", &serde_json::json!({}))
+                .expect_err("rpc error");
+            match err {
+                crate::ipc::IpcError::RpcError { code, message } => {
+                    assert_eq!(code, -32000);
+                    assert_eq!(message, "test rpc");
+                }
+                other => panic!("expected RpcError, got {other:?}"),
+            }
+            let _ = srv.join();
+        }
     }
 }

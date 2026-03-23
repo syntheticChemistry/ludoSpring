@@ -8,8 +8,14 @@
 #   make coverage    — line coverage via cargo-llvm-cov
 #   make deny        — supply chain audit via cargo-deny
 #   make all         — everything
+#
+# The CARGO_TARGET_DIR override ensures build scripts run on an exec-capable
+# filesystem when the global env var points at a noexec mount.
 
-.PHONY: all check fmt clippy test doc deny baselines drift coverage clean
+.PHONY: all check fmt clippy test doc deny baselines drift coverage coverage-report clean
+
+export CARGO_TARGET_DIR ?= $(HOME)/.cargo-build/ludoSpring/target
+export CARGO_HOME ?= $(HOME)/.cargo
 
 BARRACUDA_FEATURES := --features ipc
 BARRACUDA_PKG := -p ludospring-barracuda

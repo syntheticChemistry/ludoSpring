@@ -6,11 +6,11 @@
 //!
 //! Every validation binary follows the same protocol:
 //!
-//! 1. Create a [`ValidationHarness`] with a descriptive name.
-//! 2. Optionally attach [`BaselineProvenance`] records.
+//! 1. Create a `ValidationHarness` with a descriptive name.
+//! 2. Optionally attach `BaselineProvenance` records.
 //! 3. Run checks via `check_abs`, `check_rel`, `check_bool`, `check_upper`,
 //!    `check_lower`.
-//! 4. Call [`ValidationHarness::finish`] — prints a summary and calls
+//! 4. Call `ValidationHarness::finish` — prints a summary and calls
 //!    `std::process::exit(0)` on success, `std::process::exit(1)` on any failure.
 //!
 //! # Example

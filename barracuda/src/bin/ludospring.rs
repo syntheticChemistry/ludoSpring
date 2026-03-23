@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! ludoSpring UniBin — game science primal for biomeOS deployment.
 //!
-//! Per Spring-as-Niche Deployment Standard: single binary with `server`, `status`, `version`.
+//! Per Spring-as-Niche Deployment Standard: single binary with `server`, `status`,
+//! `version`, and visualization demo subcommands (`dashboard`, `live-session`,
+//! `tufte-dashboard`).
 //! Socket: `$XDG_RUNTIME_DIR/biomeos/ludospring-${FAMILY_ID}.sock` (overridable via env).
 #![forbid(unsafe_code)]
+
+mod commands;
 
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -115,6 +119,12 @@ enum Command {
     Status,
     /// Print version info.
     Version,
+    /// Run game science dashboard (push scenarios to petalTongue).
+    Dashboard,
+    /// Run live game session streaming demo.
+    LiveSession,
+    /// Run Tufte validation dashboard.
+    TufteDashboard,
 }
 
 fn main() {
@@ -137,6 +147,9 @@ fn main() {
             cmd_version();
             Ok(())
         }
+        Command::Dashboard => commands::cmd_dashboard(),
+        Command::LiveSession => commands::cmd_live_session(),
+        Command::TufteDashboard => commands::cmd_tufte_dashboard(),
     };
 
     if let Err(e) = result {

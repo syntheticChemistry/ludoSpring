@@ -26,6 +26,12 @@ pub struct VisualizationPushClient {
 }
 
 impl VisualizationPushClient {
+    /// Point the client at a specific socket (tests and explicit wiring).
+    #[must_use]
+    pub const fn with_socket(socket: PathBuf) -> Self {
+        Self { socket }
+    }
+
     /// Discover a live visualization-capable primal.
     ///
     /// Uses capability-based discovery first, then falls back to env var
@@ -33,7 +39,7 @@ impl VisualizationPushClient {
     ///
     /// # Errors
     ///
-    /// Returns [`IpcError::NotFound`] if no visualization socket is found.
+    /// Returns [`crate::ipc::IpcError::NotFound`] if no visualization socket is found.
     pub fn discover() -> Result<Self, crate::ipc::IpcError> {
         if let Ok(explicit) = std::env::var("VISUALIZATION_SOCKET") {
             let path = PathBuf::from(&explicit);
@@ -457,5 +463,125 @@ mod tests {
     #[test]
     fn type_alias_works() {
         let _: fn() -> Result<PetalTonguePushClient, _> = PetalTonguePushClient::discover;
+    }
+
+    #[test]
+    fn export_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent-export.sock"),
+        };
+        assert!(client.export("sess-1", "svg").is_err());
+    }
+
+    #[test]
+    fn subscribe_interaction_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent-subscribe.sock"),
+        };
+        assert!(client.subscribe_interaction("sess-1").is_err());
+    }
+
+    #[test]
+    fn validate_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent-validate.sock"),
+        };
+        assert!(client.validate(&serde_json::json!({"panels": []})).is_err());
+    }
+
+    #[test]
+    fn petal_tongue_alias_constructed_like_base() {
+        let client = PetalTonguePushClient {
+            socket: PathBuf::from("/nonexistent-alias.sock"),
+        };
+        assert!(client.push_scene("s", "c", &serde_json::json!({})).is_err());
+    }
+
+    #[cfg(all(unix, feature = "ipc"))]
+    mod unix_ipc {
+        use super::*;
+        use std::io::{BufRead, BufReader, Write};
+        use std::os::unix::net::UnixListener;
+        use std::thread;
+        use std::time::Duration;
+
+        #[test]
+        fn send_maps_rpc_error() {
+            let dir =
+                std::env::temp_dir().join(format!("ludospring-viz-rpc-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).expect("dir");
+            let path = dir.join("viz.sock");
+            let _ = std::fs::remove_file(&path);
+            let listener = UnixListener::bind(&path).expect("bind");
+            let path_clone = path.clone();
+            let dir_clone = dir.clone();
+            let t = thread::spawn(move || {
+                if let Ok((mut stream, _)) = listener.accept() {
+                    let mut line = String::new();
+                    let _ = BufReader::new(&stream).read_line(&mut line);
+                    let body = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": {"code": -32001, "message": "viz fault"},
+                        "id": 1
+                    });
+                    let mut s = body.to_string();
+                    s.push('\n');
+                    let _ = stream.write_all(s.as_bytes());
+                }
+                drop(listener);
+                let _ = std::fs::remove_file(&path_clone);
+                let _ = std::fs::remove_dir(&dir_clone);
+            });
+
+            thread::sleep(Duration::from_millis(30));
+            let client = VisualizationPushClient::with_socket(path);
+            let err = client
+                .push_render("s", "t", &serde_json::json!({}))
+                .expect_err("rpc");
+            match err {
+                crate::ipc::IpcError::RpcError { code, message } => {
+                    assert_eq!(code, -32001);
+                    assert_eq!(message, "viz fault");
+                }
+                e => panic!("expected RpcError, got {e:?}"),
+            }
+            let _ = t.join();
+        }
+
+        #[test]
+        fn probe_with_capability_matches_visualization_substring() {
+            let dir =
+                std::env::temp_dir().join(format!("ludospring-viz-probe-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).expect("dir");
+            let path = dir.join("viz.sock");
+            let _ = std::fs::remove_file(&path);
+            let listener = UnixListener::bind(&path).expect("bind");
+            let path_clone = path.clone();
+            let dir_clone = dir.clone();
+            let t = thread::spawn(move || {
+                if let Ok((mut stream, _)) = listener.accept() {
+                    let mut line = String::new();
+                    let _ = BufReader::new(&stream).read_line(&mut line);
+                    let body = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "result": {
+                            "name": "mock-viz",
+                            "capabilities": ["visualization.render.scene"]
+                        },
+                        "id": 1
+                    });
+                    let mut s = body.to_string();
+                    s.push('\n');
+                    let _ = stream.write_all(s.as_bytes());
+                }
+                drop(listener);
+                let _ = std::fs::remove_file(&path_clone);
+                let _ = std::fs::remove_dir(&dir_clone);
+            });
+
+            thread::sleep(Duration::from_millis(30));
+            assert!(VisualizationPushClient::probe_with_capability(&path));
+            let _ = t.join();
+        }
     }
 }

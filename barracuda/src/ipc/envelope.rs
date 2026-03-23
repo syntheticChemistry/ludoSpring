@@ -13,55 +13,38 @@ use serde::{Deserialize, Serialize};
 
 /// Structured error type for all IPC operations.
 ///
-/// Replaces `Result<T, String>` throughout the IPC layer with a typed enum
-/// that preserves the error category. Each variant maps to a failure mode
-/// observed across ecosystem IPC (connect, timeout, serialization, protocol,
-/// RPC error codes). The `Display` impl produces human-readable messages
-/// compatible with the previous `String` error format.
-#[derive(Debug)]
+/// Each variant maps to a failure mode observed across ecosystem IPC
+/// (connect, timeout, serialization, protocol, RPC error codes).
+/// Evolved to `thiserror` per ecosystem standard (rhizoCrypt, bearDog,
+/// airSpring, loamSpine pattern).
+#[derive(Debug, thiserror::Error)]
 pub enum IpcError {
     /// Socket connection failed (primal unreachable, path invalid).
-    Connect(std::io::Error),
+    #[error("connect: {0}")]
+    Connect(#[source] std::io::Error),
     /// Read/write timeout on an established connection.
-    Timeout(std::io::Error),
+    #[error("timeout: {0}")]
+    Timeout(#[source] std::io::Error),
     /// I/O error during read, write, or stream clone.
-    Io(std::io::Error),
+    #[error("io: {0}")]
+    Io(#[source] std::io::Error),
     /// JSON serialization or deserialization failed.
+    #[error("serialization: {0}")]
     Serialization(String),
     /// JSON-RPC error response from the remote primal.
+    #[error("rpc error {code}: {message}")]
     RpcError {
         /// JSON-RPC error code (-32600..-32603 standard, -32000..-32099 app).
         code: i64,
         /// Human-readable error message from the remote.
         message: String,
     },
-    /// The response was valid JSON but contained no `result` field.
+    /// The response was valid JSON but contained no `result` or `error` field.
+    #[error("no result in response")]
     NoResult,
     /// Discovery failed — no primal found for the requested capability.
+    #[error("{0}")]
     NotFound(String),
-}
-
-impl core::fmt::Display for IpcError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::Connect(e) => write!(f, "connect: {e}"),
-            Self::Timeout(e) => write!(f, "timeout: {e}"),
-            Self::Io(e) => write!(f, "io: {e}"),
-            Self::Serialization(e) => write!(f, "serialization: {e}"),
-            Self::RpcError { code, message } => write!(f, "rpc error {code}: {message}"),
-            Self::NoResult => write!(f, "no result in response"),
-            Self::NotFound(what) => write!(f, "{what}"),
-        }
-    }
-}
-
-impl std::error::Error for IpcError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Connect(e) | Self::Timeout(e) | Self::Io(e) => Some(e),
-            _ => None,
-        }
-    }
 }
 
 impl From<IpcError> for String {
@@ -203,7 +186,7 @@ impl JsonRpcResponse {
 /// # Errors
 ///
 /// Returns [`IpcError::RpcError`] if the response contains an `"error"` field,
-/// or [`IpcError::MissingField`] if neither `"result"` nor `"error"` is present.
+/// or [`IpcError::NoResult`] if neither `"result"` nor `"error"` is present.
 pub fn extract_rpc_result(response: &serde_json::Value) -> Result<serde_json::Value, IpcError> {
     if let Some(error) = response.get("error") {
         let message = error
@@ -264,6 +247,7 @@ impl JsonRpcError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
 
     #[test]
     fn extract_rpc_result_success() {
@@ -345,6 +329,28 @@ mod tests {
         assert!(as_error.source().is_some());
     }
 
+    #[test]
+    fn ipc_error_source_chain() {
+        let inner = std::io::Error::new(std::io::ErrorKind::NotFound, "nf");
+        let e = IpcError::Connect(inner);
+        let src = e
+            .source()
+            .expect("Connect should chain to io::Error source");
+        assert_eq!(src.to_string(), "nf");
+
+        let inner = std::io::Error::new(std::io::ErrorKind::TimedOut, "to");
+        let e = IpcError::Timeout(inner);
+        let src = e
+            .source()
+            .expect("Timeout should chain to io::Error source");
+        assert_eq!(src.to_string(), "to");
+
+        let inner = std::io::Error::new(std::io::ErrorKind::BrokenPipe, "bp");
+        let e = IpcError::Io(inner);
+        let src = e.source().expect("Io should chain to io::Error source");
+        assert_eq!(src.to_string(), "bp");
+    }
+
     // ── DispatchOutcome tests ────────────────────────────────────────
 
     #[test]
@@ -397,6 +403,25 @@ mod tests {
         use super::*;
         use proptest::prelude::*;
 
+        fn io_kind_from_byte(b: u8) -> std::io::ErrorKind {
+            match b % 14 {
+                0 => std::io::ErrorKind::NotFound,
+                1 => std::io::ErrorKind::PermissionDenied,
+                2 => std::io::ErrorKind::ConnectionRefused,
+                3 => std::io::ErrorKind::ConnectionReset,
+                4 => std::io::ErrorKind::ConnectionAborted,
+                5 => std::io::ErrorKind::NotConnected,
+                6 => std::io::ErrorKind::AddrInUse,
+                7 => std::io::ErrorKind::AddrNotAvailable,
+                8 => std::io::ErrorKind::BrokenPipe,
+                9 => std::io::ErrorKind::AlreadyExists,
+                10 => std::io::ErrorKind::WouldBlock,
+                11 => std::io::ErrorKind::InvalidInput,
+                12 => std::io::ErrorKind::InvalidData,
+                _ => std::io::ErrorKind::Other,
+            }
+        }
+
         proptest! {
             #[test]
             fn extract_rpc_result_never_panics(json_str in "\\PC{0,200}") {
@@ -441,6 +466,30 @@ mod tests {
                 let outcome = DispatchOutcome::from_ipc_error(rpc_err);
                 let is_app_err = matches!(outcome, DispatchOutcome::ApplicationError { .. });
                 prop_assert!(is_app_err, "expected ApplicationError, got {:?}", outcome);
+            }
+
+            #[test]
+            fn fuzz_ipc_error_display(
+                variant in 0u8..7u8,
+                msg in "\\PC{0,200}",
+                code in -200_000i64..200_000i64,
+                kind_byte in 0u8..=255u8,
+            ) {
+                let kind = io_kind_from_byte(kind_byte);
+                let err = match variant {
+                    0 => IpcError::Connect(std::io::Error::new(kind, msg.clone())),
+                    1 => IpcError::Timeout(std::io::Error::new(kind, msg.clone())),
+                    2 => IpcError::Io(std::io::Error::new(kind, msg.clone())),
+                    3 => IpcError::Serialization(msg.clone()),
+                    4 => IpcError::RpcError {
+                        code,
+                        message: msg.clone(),
+                    },
+                    5 => IpcError::NoResult,
+                    _ => IpcError::NotFound(msg),
+                };
+                let _ = format!("{err}");
+                let _ = err.to_string();
             }
         }
     }

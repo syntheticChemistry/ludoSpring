@@ -9,13 +9,13 @@
 //!
 //! # Module map
 //!
-//! - [`engine`] — 2D engine primitives (world, entities, actions, session, audio)
-//! - [`rpgpt`] — RPGPT game substrate (planes, NPCs, voices, trust, memory, scenes)
-//! - [`ruleset`] — system-agnostic ruleset trait (D20, Fudge, D6Pool, D100, RollUnder)
-//! - [`state`] — tick models, replay buffer, session phase
-//! - [`genre`] — interaction architecture taxonomy
-//! - [`raycaster`] — first-person spatial reference implementation
-//! - [`voxel`] — block-based spatial representation
+//! - `engine` — 2D engine primitives (world, entities, actions, session, audio)
+//! - `rpgpt` — RPGPT game substrate (planes, NPCs, voices, trust, memory, scenes)
+//! - `ruleset` — system-agnostic ruleset trait (D20, Fudge, D6Pool, D100, RollUnder)
+//! - `state` — tick models, replay buffer, session phase
+//! - `genre` — interaction architecture taxonomy
+//! - `raycaster` — first-person spatial reference implementation
+//! - `voxel` — block-based spatial representation
 
 pub mod engine;
 pub mod genre;

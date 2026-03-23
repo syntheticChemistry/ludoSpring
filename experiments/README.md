@@ -1,7 +1,7 @@
 # ludoSpring Experiments
 
 **Date:** March 23, 2026
-**Total:** 82 experiments, all checks pass, 402 barracuda + 19 forge tests + 42 Python parity (V29)
+**Total:** 82 experiments, all checks pass, 675 barracuda + 19 forge tests + 42 Python parity (V30)
 **Pattern:** hotSpring validation + baseCamp expeditions
 
 ---

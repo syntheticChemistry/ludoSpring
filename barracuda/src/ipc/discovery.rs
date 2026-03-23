@@ -174,16 +174,15 @@ fn extract_from_array(arr: &[serde_json::Value]) -> Vec<String> {
         .collect()
 }
 
-/// Discover all primals in the standard socket directories.
+/// Discover primals by scanning `dirs` for `*.sock` and probing each with [`probe_socket`].
 ///
-/// Probes every `.sock` file found in [`discovery_dirs`] and returns
-/// a registry of those that respond to `lifecycle.status`.
+/// Used by [`discover_primals`] and by integration tests without mutating process environment.
 #[must_use]
-pub fn discover_primals() -> PrimalRegistry {
+pub fn discover_primals_in_directories(dirs: &[PathBuf]) -> PrimalRegistry {
     let mut registry = PrimalRegistry::new();
 
-    for dir in discovery_dirs() {
-        let Ok(entries) = std::fs::read_dir(&dir) else {
+    for dir in dirs {
+        let Ok(entries) = std::fs::read_dir(dir) else {
             continue;
         };
         for entry in entries.flatten() {
@@ -198,6 +197,16 @@ pub fn discover_primals() -> PrimalRegistry {
     }
 
     registry
+}
+
+/// Discover all primals in the standard socket directories.
+///
+/// Probes every `.sock` file found in [`discovery_dirs`] and returns
+/// a registry of those that respond to `lifecycle.status`.
+#[must_use]
+pub fn discover_primals() -> PrimalRegistry {
+    let dirs = discovery_dirs();
+    discover_primals_in_directories(&dirs)
 }
 
 /// Discover a primal endpoint by capability at runtime.
@@ -311,6 +320,16 @@ mod tests {
     fn discovery_dirs_never_empty() {
         let dirs = discovery_dirs();
         assert!(!dirs.is_empty(), "should always resolve at least one dir");
+    }
+
+    #[test]
+    fn discover_primals_in_directories_empty_dir() {
+        let dir =
+            std::env::temp_dir().join(format!("ludospring-disc-empty-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("mkdir");
+        let reg = discover_primals_in_directories(&[dir.clone()]);
+        assert_eq!(reg.endpoint_count(), 0);
+        std::fs::remove_dir(&dir).ok();
     }
 
     #[test]
