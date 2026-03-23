@@ -47,3 +47,22 @@ pub const RAYCASTER_HIT_RATE_TOL: f64 = 5.0;
 /// lattice. Sampling 10 000 non-lattice points with step 0.137 yields an
 /// empirical mean whose magnitude stays below 0.05 due to finite sampling.
 pub const NOISE_MEAN_TOL: f64 = 0.05;
+
+/// Safe amplitude bound for Perlin 2D / fBm output validation.
+///
+/// Justification: Perlin 2D theoretical maximum is ±sqrt(2)/2 ≈ 0.707
+/// (dot of unit gradient with half-cell diagonal). With the fade function
+/// and multi-octave fBm summation, practical values stay well below ±1.0.
+/// 1.5 provides a conservative stress-test bound that catches any
+/// unbounded-growth bugs while accommodating fBm amplitude accumulation.
+pub const PERLIN_SAFE_BOUND: f64 = 1.5;
+
+/// Tolerance for BSP area conservation validation.
+///
+/// Justification: BSP partitioning divides a rectangle into axis-aligned
+/// sub-rectangles. Total leaf area must equal the original rectangle area
+/// exactly in infinite precision. f64 arithmetic on sums of products
+/// introduces error bounded by ~n × ε × area where n is the number of
+/// leaves. For typical BSP trees (< 100 leaves, area ≤ 10 000), 1e-6
+/// is several orders of magnitude above the actual error.
+pub const BSP_AREA_CONSERVATION_TOL: f64 = 1e-6;

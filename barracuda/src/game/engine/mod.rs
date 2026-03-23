@@ -50,5 +50,7 @@ pub mod action;
 pub mod audio;
 pub mod entity;
 pub mod gpu;
+#[cfg(feature = "gpu")]
+pub mod gpu_context;
 pub mod session;
 pub mod world;

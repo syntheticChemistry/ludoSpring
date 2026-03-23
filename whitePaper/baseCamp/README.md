@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 18, 2026
+**Date:** March 23, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V28 — 75 experiments, 1692 checks, 450+ tests, 19 proptest, 6 IPC integration. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All 71 validation experiments use `ValidationHarness` + `BaselineProvenance`. `#[expect(reason)]` curated dictionary. Workspace lint centralization. Configurable output paths (`LUDOSPRING_OUTPUT_DIR`)
+**Status:** V29 — 82 experiments, 402 barracuda + 19 forge tests, 42 Python parity, 19 proptest. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All validation experiments use `ValidationHarness` + `BaselineProvenance`. `GpuContext` + `TensorSession` wired. `default-features = false` on barraCuda. 80.2% line coverage (80% floor enforced). Baselines regenerated with `content_sha256`
 
 ---
 

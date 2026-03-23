@@ -12,9 +12,16 @@ use ludospring_barracuda::game::rpgpt::plane::PassiveCheckPriority;
 use ludospring_barracuda::game::rpgpt::voice::{
     VoiceCheckResult, VoiceId, VoiceOutput, select_voice_outputs,
 };
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp070_voice_priority_concurrency";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_INTERNAL_VOICES_SPEC.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp070_voice_priority_concurrency",
+};
 
 fn make_output(voice: VoiceId, priority: PassiveCheckPriority, roll: i32) -> VoiceOutput {
     VoiceOutput {
@@ -185,6 +192,7 @@ fn validate_large_batch(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_max_three(&mut h);
     validate_priority_order(&mut h);

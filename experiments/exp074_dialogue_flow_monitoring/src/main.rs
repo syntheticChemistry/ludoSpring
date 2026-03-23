@@ -15,9 +15,16 @@ use ludospring_barracuda::interaction::difficulty::{PerformanceWindow, suggest_a
 use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::interaction::input_laws::hick_reaction_time;
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp074_dialogue_flow_monitoring";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_DIALOGUE_PLANE_EXPERIMENTS.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp074_dialogue_flow_monitoring",
+};
 
 fn validate_flow_detection_balanced(h: &mut ValidationHarness) {
     // Scenario A: skilled player, cooperative NPC -> Flow
@@ -262,6 +269,7 @@ fn validate_cross_flow_states(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_flow_detection_balanced(&mut h);
     validate_anxiety_detection(&mut h);

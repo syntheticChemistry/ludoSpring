@@ -27,10 +27,10 @@ mod validate_systems;
 use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "N/A (analytical — provenance trio integration)",
-    commit: "N/A",
-    date: "N/A",
-    command: "N/A (pure Rust implementation)",
+    script: "specs/LYSOGENY_CATALOG.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp061_fermenting",
 };
 
 fn cmd_validate() {

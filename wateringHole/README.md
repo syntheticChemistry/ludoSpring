@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 18, 2026 (V28)
+**Last Updated:** March 23, 2026 (V29)
 
 ---
 
@@ -29,7 +29,7 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 75 experiments, 1692 checks, 450+ tests + 19 proptest + 6 IPC integration, capability-based discovery V28)
+ludoSpring (game science, 82 experiments, all checks pass, 402 barracuda + 19 forge + 42 Python parity + 2 doctests, 19 proptest + 8 IPC integration, capability-based discovery V29)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders)
@@ -65,7 +65,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `stats::dot` | `metrics::engagement` | Weighted engagement composite |
 | `rng::lcg_step` | `procedural::bsp` | Deterministic BSP generation |
 | `rng::state_to_f64` | `procedural::bsp` | Split ratio from LCG state |
-| `validation::ValidationHarness` | All 75 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
+| `validation::ValidationHarness` | All 82 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
 
 ### Absorption Opportunities
 

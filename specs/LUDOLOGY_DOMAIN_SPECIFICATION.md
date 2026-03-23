@@ -66,6 +66,17 @@ ludoSpring's outputs feed every primal that has a user interface. petalTongue co
 | Small multiples | Tufte (1990) | Minimap as small-multiple of main view |
 | Lie factor | Tufte (1983) | Visual size ≠ game-mechanical magnitude |
 
+## Game History Revalidation
+
+ludoSpring revalidates the literal history of games, from Pong (1972) to
+RPGPT, the same way hotSpring revalidated from MD to QCD. Each era
+validates the math needed for the next. See `specs/GAME_HISTORY_REVALIDATION.md`
+for the full roadmap covering 12 eras, 5 new proposed experiments
+(exp076-080), and the modality-agnostic proof (TUI Pong to VR Pong
+uses identical game logic — the game IS the math, not the pixels).
+
+---
+
 ## Experiment Agenda
 
 ### Track 1: Reference Analysis (Exp001–010)
@@ -111,6 +122,61 @@ Measure what makes science exploration engaging:
 - Difficulty-skill balance in protein folding challenges
 - Tufte constraint sweeps across game UI configurations
 - Retention modeling under different reward structures
+
+## Game Quality Profiles
+
+Beyond validating interaction models mathematically, ludoSpring maintains
+structured profiles of exemplar and anti-pattern games across genres. These
+profiles map observable game qualities to validated HCI models and establish
+quality targets for RPGPT and any system consuming ludoSpring metrics.
+
+See `specs/GAME_QUALITY_PROFILES.md` for the full catalog covering 14 genres:
+
+- **CRPG/Narrative RPG** (Disco Elysium, Esoteric Ebb, Planescape, BG3)
+- **Roguelike/Roguelite** (Hades, Slay the Spire, Caves of Qud)
+- **Investigation/Detective** (Return of the Obra Dinn, Golden Idol, Her Story)
+- **Strategy/Tactics** (Into the Breach, XCOM 2)
+- **Action/FPS** (DOOM 2016, Titanfall 2)
+- **Sandbox/Emergent** (Dwarf Fortress, Factorio)
+- **Card/Deckbuilding** (MTG Commander, Slay the Spire)
+- **Immersive Sim** (Deus Ex, Prey)
+- **JRPG** (Persona 5)
+- **Horror** (Resident Evil 4, Silent Hill 2)
+- **Extraction Shooter** (Escape from Tarkov)
+- **MOBA** (Dota 2)
+- **Looter/MMO Shooter** (Hunt: Showdown, Destiny 2)
+- **Battle Royale** (Apex Legends)
+
+Each profile includes anti-pattern analysis — what makes bad games bad,
+mapped to the same models. Cross-genre patterns identify universal quality
+signals (Flow achievable, Hick bounded, multiple Fun Keys, NPCs with hidden
+state) and universal failure modes (Pathogen patterns, Hick paralysis,
+single-Fun-Key exhaustion, procedural breadth without depth).
+
+This is the ludoSpring equivalent of wetSpring mining bioinformatics threads
+for real user pain points, or neuralSpring benchmarking against PyTorch models.
+
+## Cross-Domain Learning
+
+ludoSpring is uniquely positioned as a bidirectional bridge between game
+design and scientific domains. Games are compressed systems laboratories;
+scientific models are untapped game mechanic reservoirs.
+
+See `specs/CROSS_DOMAIN_LEARNING.md` for the full analysis covering:
+
+- **Games → Science**: Shooters teach distributed systems (netcode = consensus).
+  Strategy teaches ecology (unit counters = competitive exclusion). Roguelikes
+  teach evolutionary biology (meta-progression = HGT). Investigation games
+  teach scientific method (deduction chains = hypothesis testing).
+- **Science → Games**: Microbial communities provide 10+ untapped mechanics
+  (auxotrophy = forced cooperation, CRISPR = adaptive immunity, chemotaxis =
+  gradient-based NPC pathfinding). Epidemiology provides narrative propagation
+  (SIR = rumor spread, R₀ = virality tuning). Physics provides phase transitions,
+  resonance, percolation, and diffusion as gameplay systems.
+- **6 proposed Lysogeny targets**: Cascade, Percolant, Resonant, Diffusant,
+  Auxotroph, Catalyst — all with published prior art predating any game patent.
+
+---
 
 ## Open System References
 

@@ -42,14 +42,20 @@ fn main() {
     }
 }
 
+fn cmd_validate() {
+    let mut h = ValidationHarness::new("exp035_noise_throughput");
+    h.print_provenance(&[&PROVENANCE]);
+    run_validation_checks(&mut h);
+    h.finish();
+}
+
 #[expect(
     clippy::cast_precision_loss,
     reason = "validation counts fit in f64 mantissa"
 )]
-fn cmd_validate() {
-    let mut h = ValidationHarness::new("exp035_noise_throughput");
-    h.print_provenance(&[&PROVENANCE]);
-
+fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
+    h: &mut ValidationHarness<S>,
+) {
     // 1. Perlin 2D 1024x1024 completes
     let t = Instant::now();
     let field = noise_bench::perlin_2d_field(1024, 0.01);
@@ -148,8 +154,6 @@ fn cmd_validate() {
         0.0
     };
     h.check_lower("perlin_throughput_500k_sps", throughput, 500_000.0);
-
-    h.finish();
 }
 
 #[expect(
@@ -187,5 +191,25 @@ fn cmd_bench() {
             0.0
         };
         println!("{n:>6} {us:>12} {sps:>14.0}");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ludospring_barracuda::validation::BufferSink;
+
+    #[test]
+    fn noise_throughput_validation_passes() {
+        let mut h = ValidationHarness::with_sink("exp035_noise_throughput", BufferSink::default());
+        run_validation_checks(&mut h);
+        let total = h.total_count();
+        let passed = h.passed_count();
+        assert_eq!(
+            passed,
+            total,
+            "{} checks failed out of {total}",
+            total - passed
+        );
     }
 }

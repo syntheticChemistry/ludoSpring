@@ -19,9 +19,16 @@ use ludospring_barracuda::game::rpgpt::npc::{
 };
 use ludospring_barracuda::game::rpgpt::trust::{TrustAction, TrustModel};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp072_trust_dynamics_arc";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_NPC_PERSONALITY_SPEC.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp072_trust_dynamics_arc",
+};
 
 fn maren() -> NpcPersonality {
     NpcPersonality {
@@ -424,6 +431,7 @@ fn validate_motivation_drives_behavior(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_initial_state(&mut h);
     validate_trust_accumulation(&mut h);

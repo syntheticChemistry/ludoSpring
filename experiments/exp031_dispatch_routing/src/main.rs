@@ -90,10 +90,36 @@ fn cmd_validate() {
     let substrates = discover_substrates();
     let gpu_available = has_any_gpu(&substrates);
 
-    // 1. At least one adapter found (CPU software rasterizer counts)
+    run_discovery_checks(&mut h, &substrates, gpu_available);
+    run_routing_checks(&mut h, gpu_available);
+
+    h.finish();
+}
+
+fn run_discovery_checks<S: ludospring_barracuda::validation::ValidationSink>(
+    h: &mut ValidationHarness<S>,
+    substrates: &[SubstrateInfo],
+    gpu_available: bool,
+) {
     h.check_bool("adapter_discovery_nonzero", !substrates.is_empty());
 
-    // 2. Noise → GPU when GPU available
+    let _discrete = has_discrete_gpu(substrates);
+    h.check_bool("discrete_gpu_detection_consistent", true);
+
+    h.check_bool("backend_identified", !substrates.is_empty());
+
+    if gpu_available {
+        let has_vulkan = substrates
+            .iter()
+            .any(|s| matches!(s.backend, wgpu::Backend::Vulkan));
+        h.check_bool("gpu_has_vulkan_backend", has_vulkan);
+    }
+}
+
+fn run_routing_checks<S: ludospring_barracuda::validation::ValidationSink>(
+    h: &mut ValidationHarness<S>,
+    gpu_available: bool,
+) {
     let noise_sub = recommend_substrate(GameWorkload::NoiseGeneration, gpu_available);
     let noise_expected = if gpu_available {
         Substrate::Gpu
@@ -102,25 +128,21 @@ fn cmd_validate() {
     };
     h.check_bool("noise_routes_correctly", noise_sub == noise_expected);
 
-    // 3. WFC always CPU
     h.check_bool(
         "wfc_always_cpu",
         recommend_substrate(GameWorkload::WaveFunctionCollapse, true) == Substrate::Cpu,
     );
 
-    // 4. MetricsBatch always CPU
     h.check_bool(
         "metrics_always_cpu",
         recommend_substrate(GameWorkload::MetricsBatch, true) == Substrate::Cpu,
     );
 
-    // 5. UiAnalysis always CPU
     h.check_bool(
         "ui_always_cpu",
         recommend_substrate(GameWorkload::UiAnalysis, true) == Substrate::Cpu,
     );
 
-    // 6. PhysicsTick → GPU when available
     let phys_sub = recommend_substrate(GameWorkload::PhysicsTick, gpu_available);
     let phys_expected = if gpu_available {
         Substrate::Gpu
@@ -129,7 +151,6 @@ fn cmd_validate() {
     };
     h.check_bool("physics_routes_correctly", phys_sub == phys_expected);
 
-    // 7. Raycasting → GPU when available
     let ray_sub = recommend_substrate(GameWorkload::Raycasting, gpu_available);
     let ray_expected = if gpu_available {
         Substrate::Gpu
@@ -138,7 +159,6 @@ fn cmd_validate() {
     };
     h.check_bool("raycasting_routes_correctly", ray_sub == ray_expected);
 
-    // 8. Graceful degradation: no GPU → everything CPU
     let all_cpu_no_gpu = [
         GameWorkload::NoiseGeneration,
         GameWorkload::WaveFunctionCollapse,
@@ -150,15 +170,27 @@ fn cmd_validate() {
     .iter()
     .all(|w| recommend_substrate(*w, false) == Substrate::Cpu);
     h.check_bool("graceful_degradation_all_cpu", all_cpu_no_gpu);
+}
 
-    // 9. Discrete GPU detection (informational — pass if consistent)
-    let _discrete = has_discrete_gpu(&substrates);
-    h.check_bool("discrete_gpu_detection_consistent", true);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ludospring_barracuda::validation::BufferSink;
 
-    // 10. Backend identification (substrates non-empty implies we identified backends)
-    h.check_bool("backend_identified", !substrates.is_empty());
-
-    h.finish();
+    #[test]
+    fn routing_logic_validation_passes() {
+        let mut h = ValidationHarness::with_sink("exp031_dispatch_routing", BufferSink::default());
+        run_routing_checks(&mut h, false);
+        run_routing_checks(&mut h, true);
+        let total = h.total_count();
+        let passed = h.passed_count();
+        assert_eq!(
+            passed,
+            total,
+            "{} checks failed out of {total}",
+            total - passed
+        );
+    }
 }
 
 fn cmd_discover() {

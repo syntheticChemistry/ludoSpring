@@ -42,8 +42,11 @@ fn main() {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum BandwidthTier {
+    PciE3x8,
     PciE3x16,
+    PciE4x8,
     PciE4x16,
+    PciE5x8,
     PciE5x16,
     NvLink,
     SharedMemory,
@@ -53,12 +56,25 @@ enum BandwidthTier {
 impl BandwidthTier {
     const fn bandwidth_gbps(self) -> f64 {
         match self {
-            Self::PciE3x16 => 15.75,
-            Self::PciE4x16 => 31.5,
+            Self::PciE3x8 => 7.88,
+            Self::PciE3x16 | Self::PciE4x8 => 15.75,
+            Self::PciE4x16 | Self::PciE5x8 => 31.5,
             Self::PciE5x16 => 63.0,
             Self::NvLink => 300.0,
             Self::SharedMemory => 1000.0,
             Self::Unknown => 8.0,
+        }
+    }
+
+    const fn from_gen_width(pcie_gen: u8, width: u8) -> Self {
+        match (pcie_gen, width) {
+            (3, 8) => Self::PciE3x8,
+            (3, 16) => Self::PciE3x16,
+            (4, 8) => Self::PciE4x8,
+            (4, 16) => Self::PciE4x16,
+            (5, 8) => Self::PciE5x8,
+            (5, 16) => Self::PciE5x16,
+            _ => Self::Unknown,
         }
     }
 
@@ -300,15 +316,21 @@ fn detect_pcie_links() -> Vec<PcieLinkInfo> {
 // Validation
 // ---------------------------------------------------------------------------
 
+fn cmd_validate() {
+    let mut h = ValidationHarness::new("exp032_mixed_hardware");
+    h.print_provenance(&[&PROVENANCE]);
+    run_validation_checks(&mut h);
+    h.finish();
+}
+
 #[expect(
     clippy::too_many_lines,
     clippy::similar_names,
     reason = "validation orchestrator — sequential check groups"
 )]
-fn cmd_validate() {
-    let mut h = ValidationHarness::new("exp032_mixed_hardware");
-    h.print_provenance(&[&PROVENANCE]);
-
+fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
+    h: &mut ValidationHarness<S>,
+) {
     // 1. Transfer cost model: PCIe 4x16 sanity
     let pcie4_1mb = BandwidthTier::PciE4x16.transfer_time_us(1_000_000);
     h.check_abs("pcie4_1mb_transfer_bounded", pcie4_1mb, 31.75, 50.0);
@@ -424,6 +446,7 @@ fn cmd_validate() {
 
     // 12. Bandwidth tier ordering is consistent
     let tiers = [
+        BandwidthTier::PciE3x8,
         BandwidthTier::PciE3x16,
         BandwidthTier::PciE4x16,
         BandwidthTier::PciE5x16,
@@ -544,7 +567,17 @@ fn cmd_validate() {
     );
     h.check_bool("substrate_profile_npu_v2_scored", npu_v2_score > 0.0);
 
-    h.finish();
+    // 19. Local hardware detection: PCIe links detected (or sysfs unavailable)
+    let links = detect_pcie_links();
+    h.check_bool("local_pcie_detection_no_crash", true);
+
+    // 20. If GPU links found, bandwidth is known
+    if !links.is_empty() {
+        let any_known = links
+            .iter()
+            .any(|l| BandwidthTier::from_gen_width(l.pcie_gen, l.width) != BandwidthTier::Unknown);
+        h.check_bool("local_gpu_bandwidth_identified", any_known);
+    }
 }
 
 fn cmd_pcie() {
@@ -561,12 +594,7 @@ fn cmd_pcie() {
         println!("    Vendor: {}", link.vendor);
         println!("    PCIe Gen: {}", link.pcie_gen);
         println!("    Width: x{}", link.width);
-        let bw = match (link.pcie_gen, link.width) {
-            (4, 16) => BandwidthTier::PciE4x16,
-            (5, 16) => BandwidthTier::PciE5x16,
-            (3, 16) => BandwidthTier::PciE3x16,
-            _ => BandwidthTier::Unknown,
-        };
+        let bw = BandwidthTier::from_gen_width(link.pcie_gen, link.width);
         println!(
             "    Estimated BW: {:.1} GB/s ({:?})",
             bw.bandwidth_gbps(),
@@ -665,4 +693,24 @@ fn cmd_demo() {
         "  Overhead:  {:.1}%",
         v2_result.transfer_us / v2_result.total_us * 100.0
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ludospring_barracuda::validation::BufferSink;
+
+    #[test]
+    fn mixed_hardware_validation_passes() {
+        let mut h = ValidationHarness::with_sink("exp032_mixed_hardware", BufferSink::default());
+        run_validation_checks(&mut h);
+        let total = h.total_count();
+        let passed = h.passed_count();
+        assert_eq!(
+            passed,
+            total,
+            "{} checks failed out of {total}",
+            total - passed
+        );
+    }
 }

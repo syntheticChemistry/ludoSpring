@@ -15,7 +15,7 @@ References:
 Provenance:
   Script: baselines/python/interaction_laws.py
   Date: 2026-03-11
-  Python: 3.x (stdlib only)
+  Python: CPython 3.10+ (stdlib only)
   Command: python3 baselines/python/interaction_laws.py
 """
 

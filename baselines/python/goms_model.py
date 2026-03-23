@@ -13,7 +13,7 @@ References:
 Provenance:
   Script: baselines/python/goms_model.py
   Date: 2026-03-11
-  Python: 3.x (stdlib only)
+  Python: CPython 3.10+ (stdlib only)
   Command: python3 baselines/python/goms_model.py
 """
 

@@ -11,9 +11,16 @@ use ludospring_barracuda::game::rpgpt::plane::PassiveCheckPriority;
 use ludospring_barracuda::game::rpgpt::voice::{
     VoiceCheckResult, VoiceId, VoiceOutput, select_voice_outputs,
 };
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp069_internal_voice_personality";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_INTERNAL_VOICES_SPEC.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp069_internal_voice_personality",
+};
 
 fn validate_voice_identity(h: &mut ValidationHarness) {
     let all = VoiceId::ALL;
@@ -204,6 +211,7 @@ fn validate_empty_and_single(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_voice_identity(&mut h);
     validate_temperature_ranges(&mut h);

@@ -89,6 +89,13 @@ fn python_l2_norm(data: &[f64]) -> f64 {
 // Validation
 // ---------------------------------------------------------------------------
 
+fn cmd_validate() {
+    let mut h = ValidationHarness::new("exp034_python_parity_bench");
+    h.print_provenance(&[&PROVENANCE]);
+    run_validation_checks(&mut h);
+    h.finish();
+}
+
 #[expect(
     clippy::too_many_lines,
     reason = "validation orchestrator — sequential parity checks across 12 modules"
@@ -101,10 +108,9 @@ fn python_l2_norm(data: &[f64]) -> f64 {
     clippy::similar_names,
     reason = "domain-specific naming: fitts_rs vs fitts_us (microseconds)"
 )]
-fn cmd_validate() {
-    let mut h = ValidationHarness::new("exp034_python_parity_bench");
-    h.print_provenance(&[&PROVENANCE]);
-
+fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
+    h: &mut ValidationHarness<S>,
+) {
     // --- Parity checks: Python result == Rust result ---
 
     // 1. Sigmoid parity
@@ -256,8 +262,6 @@ fn cmd_validate() {
     let fbm_us = t_fbm.elapsed().as_micros();
     h.check_bool("fbm_128x128_oct4_under_50ms", fbm_us < 50_000);
     std::hint::black_box(fbm_sum);
-
-    h.finish();
 }
 
 #[expect(clippy::cast_sign_loss, reason = "n is positive from size array")]
@@ -305,5 +309,26 @@ fn cmd_bench() {
         }
         println!("{n:>10} {:>12}", t.elapsed().as_micros());
         std::hint::black_box(state);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ludospring_barracuda::validation::BufferSink;
+
+    #[test]
+    fn python_parity_validation_passes() {
+        let mut h =
+            ValidationHarness::with_sink("exp034_python_parity_bench", BufferSink::default());
+        run_validation_checks(&mut h);
+        let total = h.total_count();
+        let passed = h.passed_count();
+        assert_eq!(
+            passed,
+            total,
+            "{} checks failed out of {total}",
+            total - passed
+        );
     }
 }

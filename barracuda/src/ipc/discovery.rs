@@ -271,7 +271,10 @@ mod tests {
     fn register_and_find_by_capability() {
         let mut reg = PrimalRegistry::new();
         reg.register(&PrimalEndpoint {
-            socket: PathBuf::from("/tmp/test.sock"),
+            socket: std::env::temp_dir().join(format!(
+                "ludospring-test-disc-register-{}.sock",
+                std::process::id()
+            )),
             name: "test-primal".into(),
             capabilities: vec!["security".into(), "crypto".into()],
         });
@@ -285,12 +288,18 @@ mod tests {
     fn multiple_endpoints_tracked() {
         let mut reg = PrimalRegistry::new();
         reg.register(&PrimalEndpoint {
-            socket: PathBuf::from("/tmp/a.sock"),
+            socket: std::env::temp_dir().join(format!(
+                "ludospring-test-disc-a-{}.sock",
+                std::process::id()
+            )),
             name: "primal-a".into(),
             capabilities: vec!["security".into()],
         });
         reg.register(&PrimalEndpoint {
-            socket: PathBuf::from("/tmp/b.sock"),
+            socket: std::env::temp_dir().join(format!(
+                "ludospring-test-disc-b-{}.sock",
+                std::process::id()
+            )),
             name: "primal-b".into(),
             capabilities: vec!["storage".into()],
         });

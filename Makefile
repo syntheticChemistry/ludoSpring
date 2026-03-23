@@ -39,9 +39,15 @@ baselines: drift
 drift:
 	python3 baselines/python/check_drift.py
 
+COV_ARGS := $(BARRACUDA_FEATURES) $(BARRACUDA_PKG) --lib --tests --ignore-filename-regex 'bin/'
+
 coverage:
-	cargo llvm-cov $(BARRACUDA_FEATURES) $(BARRACUDA_PKG) --lib --tests --html
+	cargo llvm-cov $(COV_ARGS) --html --fail-under-lines 80
 	@echo "Coverage report: target/llvm-cov/html/index.html"
+	@echo "Target: 90%+ (raise --fail-under-lines as coverage improves)"
+
+coverage-report:
+	cargo llvm-cov $(COV_ARGS) --summary-only
 
 clean:
 	cargo clean

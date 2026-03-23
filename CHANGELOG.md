@@ -3,7 +3,31 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V28).
+This project does not use SemVer — versions are session-sequential (V1–V29).
+
+## [V29] — 2026-03-23
+
+### Added
+
+- `GpuContext` module (`game::engine::gpu_context`) — shared `WgpuDevice` lifecycle with `TensorSession` access, behind `#[cfg(feature = "gpu")]`
+- Shader absorption handoff for barraCuda: `LUDOSPRING_V29_PERLIN_DDA_SHADER_ABSORPTION_HANDOFF_MAR23_2026.md`
+- `cargo-llvm-cov` gating: `make coverage` at 80% floor, `cargo coverage` / `cargo coverage-html` aliases in `.cargo/config.toml`
+- `make coverage-report` target for summary-only output
+- 7 new experiments: exp076 (Pong), exp077 (Spacewar), exp078 (Tetris), exp079 (Civilization), exp080 (Diablo Loot), exp081 (Procedural Generation), exp082 (Symphony Pipeline)
+- `PERLIN_SAFE_BOUND` and `BSP_AREA_CONSERVATION_TOL` in `tolerances::validation`
+- Python parity tests expanded from 25 to 42 (fun_keys, Doom Fitts, Hick sweep, flow, engagement, GOMS extended, BSP offset)
+
+### Changed
+
+- barraCuda dependency: `default-features = false` (upstream feature-gating bug fixed — `plasma_dispersion` and `spectral::stats` now properly gated behind `gpu`)
+- `barcuda_math` re-exports expanded from 8 to 22 CPU primitives
+- `metalForge/forge` refactored from monolithic `lib.rs` (911 LOC) into 4 domain modules: `substrate`, `workload`, `routing`, `pipeline` (19 tests)
+- `baselines/python/run_all_baselines.py` relaxed Python requirement from 3.12 to 3.10+ (matches existing provenance)
+- All Python baseline scripts: provenance headers updated to "CPython 3.10+"
+- `combined_baselines.json` regenerated with `content_sha256` field
+- Hardcoded test socket paths replaced with `temp_dir()` + process-unique slugs in `ipc/neural_bridge.rs` and `ipc/discovery.rs`
+- Coverage target: 80% floor enforced (80.2% actual, bins excluded)
+- Experiments provenance: exp061, exp067–exp075 now include `BaselineProvenance` with specs/ references
 
 ## [V28] — 2026-03-18
 

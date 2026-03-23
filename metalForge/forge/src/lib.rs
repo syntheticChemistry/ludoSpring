@@ -16,314 +16,25 @@
 //! Both lean on `ToadStool` independently — `ludoSpring` evolves game/interaction
 //! shaders, `wetSpring` evolves bio shaders, and `ToadStool` absorbs both.
 
-/// Game science workload types for dispatch routing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GameWorkload {
-    /// Perlin/simplex noise field generation.
-    NoiseGeneration,
-    /// Wave function collapse (constraint propagation).
-    WaveFunctionCollapse,
-    /// Physics tick (N-body, collision broadphase).
-    PhysicsTick,
-    /// Raycasting (screen-width ray batch).
-    Raycasting,
-    /// Engagement metric batch evaluation.
-    MetricsBatch,
-    /// Tufte analysis of UI layout.
-    UiAnalysis,
-}
+mod pipeline;
+mod routing;
+mod substrate;
+mod workload;
 
-/// Dispatch recommendation (legacy, for exp031/exp033 compatibility).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Substrate {
-    /// CPU (single-threaded reference).
-    Cpu,
-    /// GPU via barraCuda.
-    Gpu,
-}
-
-/// Substrate kind for capability-based routing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SubstrateKind {
-    /// CPU substrate (general-purpose, SIMD).
-    Cpu,
-    /// GPU substrate (shader dispatch, high throughput).
-    Gpu,
-    /// NPU substrate (quantized inference).
-    Npu,
-}
-
-/// Hardware capability flags for substrate matching.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Capability {
-    /// Double-precision floating-point compute.
-    F64Compute,
-    /// Single-precision floating-point compute.
-    F32Compute,
-    /// GPU shader dispatch (compute/vertex/fragment).
-    ShaderDispatch,
-    /// SIMD vector operations.
-    SimdVector,
-    /// PCIe host-device transfer.
-    PcieTransfer,
-    /// Quantized integer inference.
-    QuantizedInference {
-        /// Bit width for quantized weights/activations (e.g. 8 for int8).
-        bits: u8,
-    },
-}
-
-/// Rich substrate descriptor with capabilities and performance hints.
-#[derive(Debug, Clone)]
-pub struct SubstrateInfo {
-    /// Substrate type (CPU, GPU, NPU).
-    pub kind: SubstrateKind,
-    /// Human-readable device name.
-    pub name: String,
-    /// Supported hardware capabilities.
-    pub capabilities: Vec<Capability>,
-    /// Peak throughput in GFLOPS.
-    pub flops_gflops: f64,
-}
-
-impl SubstrateInfo {
-    /// Default CPU substrate (F64, F32, SIMD).
-    #[must_use]
-    pub fn default_cpu() -> Self {
-        Self {
-            kind: SubstrateKind::Cpu,
-            name: "CPU".to_string(),
-            capabilities: vec![
-                Capability::F64Compute,
-                Capability::F32Compute,
-                Capability::SimdVector,
-            ],
-            flops_gflops: 200.0,
-        }
-    }
-
-    /// Default GPU substrate (F32, shaders, `PCIe`).
-    #[must_use]
-    pub fn default_gpu() -> Self {
-        Self {
-            kind: SubstrateKind::Gpu,
-            name: "GPU".to_string(),
-            capabilities: vec![
-                Capability::F32Compute,
-                Capability::ShaderDispatch,
-                Capability::PcieTransfer,
-            ],
-            flops_gflops: 29_000.0,
-        }
-    }
-
-    /// Default NPU substrate (F32, quantized inference, `PCIe`).
-    #[must_use]
-    pub fn default_npu() -> Self {
-        Self {
-            kind: SubstrateKind::Npu,
-            name: "NPU".to_string(),
-            capabilities: vec![
-                Capability::F32Compute,
-                Capability::QuantizedInference { bits: 8 },
-                Capability::PcieTransfer,
-            ],
-            flops_gflops: 50.0,
-        }
-    }
-}
-
-/// Workload profile describing required capabilities and substrate preference.
-#[derive(Debug, Clone)]
-pub struct GameWorkloadProfile {
-    /// Profile identifier (e.g. `"noise_generation"`).
-    pub name: String,
-    /// Capabilities the substrate must provide.
-    pub required: Vec<Capability>,
-    /// Preferred substrate kind when multiple are capable.
-    pub preferred_substrate: Option<SubstrateKind>,
-}
-
-impl GameWorkloadProfile {
-    /// Noise generation: F32 + shaders, prefers GPU.
-    #[must_use]
-    pub fn noise_generation() -> Self {
-        Self {
-            name: "noise_generation".to_string(),
-            required: vec![Capability::F32Compute, Capability::ShaderDispatch],
-            preferred_substrate: Some(SubstrateKind::Gpu),
-        }
-    }
-
-    /// Raycasting: F32 + shaders, prefers GPU.
-    #[must_use]
-    pub fn raycasting() -> Self {
-        Self {
-            name: "raycasting".to_string(),
-            required: vec![Capability::F32Compute, Capability::ShaderDispatch],
-            preferred_substrate: Some(SubstrateKind::Gpu),
-        }
-    }
-
-    /// Physics tick: F32 + shaders, prefers GPU.
-    #[must_use]
-    pub fn physics_tick() -> Self {
-        Self {
-            name: "physics_tick".to_string(),
-            required: vec![Capability::F32Compute, Capability::ShaderDispatch],
-            preferred_substrate: Some(SubstrateKind::Gpu),
-        }
-    }
-
-    /// WFC step: F32 only, prefers CPU (barrier sync).
-    #[must_use]
-    pub fn wfc_step() -> Self {
-        Self {
-            name: "wfc_step".to_string(),
-            required: vec![Capability::F32Compute],
-            preferred_substrate: Some(SubstrateKind::Cpu),
-        }
-    }
-
-    /// Metrics batch: F32, prefers CPU.
-    #[must_use]
-    pub fn metrics_batch() -> Self {
-        Self {
-            name: "metrics_batch".to_string(),
-            required: vec![Capability::F32Compute],
-            preferred_substrate: Some(SubstrateKind::Cpu),
-        }
-    }
-
-    /// UI analysis: F32, no preference.
-    #[must_use]
-    pub fn ui_analysis() -> Self {
-        Self {
-            name: "ui_analysis".to_string(),
-            required: vec![Capability::F32Compute],
-            preferred_substrate: None,
-        }
-    }
-
-    /// Fraud batch: F32, no preference.
-    #[must_use]
-    pub fn fraud_batch() -> Self {
-        Self {
-            name: "fraud_batch".to_string(),
-            required: vec![Capability::F32Compute],
-            preferred_substrate: None,
-        }
-    }
-
-    /// Quantized inference: F32 + int8 inference, prefers NPU.
-    #[must_use]
-    pub fn quantized_inference() -> Self {
-        Self {
-            name: "quantized_inference".to_string(),
-            required: vec![
-                Capability::F32Compute,
-                Capability::QuantizedInference { bits: 8 },
-            ],
-            preferred_substrate: Some(SubstrateKind::Npu),
-        }
-    }
-}
-
-/// Routing decision with substrate and reason.
-#[derive(Debug, Clone)]
-pub struct Decision<'a> {
-    /// Selected substrate for the workload.
-    pub substrate: &'a SubstrateInfo,
-    /// Human-readable selection rationale.
-    pub reason: String,
-}
-
-/// Route a workload to the best capable substrate.
-#[must_use]
-pub fn route<'a>(
-    workload: &GameWorkloadProfile,
-    substrates: &'a [SubstrateInfo],
-) -> Option<Decision<'a>> {
-    let capable: Vec<&SubstrateInfo> = substrates
-        .iter()
-        .filter(|s| {
-            workload
-                .required
-                .iter()
-                .all(|req| s.capabilities.contains(req))
-        })
-        .collect();
-
-    if capable.is_empty() {
-        return None;
-    }
-
-    if let Some(preferred) = workload.preferred_substrate {
-        if let Some(s) = capable.iter().find(|s| s.kind == preferred) {
-            return Some(Decision {
-                substrate: s,
-                reason: "preferred substrate".to_string(),
-            });
-        }
-    }
-
-    let priority = [SubstrateKind::Gpu, SubstrateKind::Npu, SubstrateKind::Cpu];
-    for kind in &priority {
-        if let Some(s) = capable.iter().find(|s| s.kind == *kind) {
-            return Some(Decision {
-                substrate: s,
-                reason: format!("{kind:?} selected by priority"),
-            });
-        }
-    }
-
-    capable.first().map(|s| Decision {
-        substrate: s,
-        reason: "last resort".to_string(),
-    })
-}
-
-/// Return substrates in fallback order: GPU > NPU > CPU.
-#[must_use]
-pub fn fallback_chain(substrates: &[SubstrateInfo]) -> Vec<&SubstrateInfo> {
-    let priority = [SubstrateKind::Gpu, SubstrateKind::Npu, SubstrateKind::Cpu];
-    let mut result = Vec::new();
-    for kind in &priority {
-        for s in substrates {
-            if s.kind == *kind {
-                result.push(s);
-            }
-        }
-    }
-    result
-}
-
-/// Recommend a substrate for a given workload (legacy API for exp031/exp033).
-///
-/// Builds synthetic substrates internally and uses capability-based routing.
-/// Returns `Substrate::Gpu` only when GPU is selected; NPU maps to `Substrate::Cpu`.
-#[must_use]
-pub fn recommend_substrate(workload: GameWorkload, gpu_available: bool) -> Substrate {
-    let profile = match workload {
-        GameWorkload::NoiseGeneration => GameWorkloadProfile::noise_generation(),
-        GameWorkload::WaveFunctionCollapse => GameWorkloadProfile::wfc_step(),
-        GameWorkload::PhysicsTick => GameWorkloadProfile::physics_tick(),
-        GameWorkload::Raycasting => GameWorkloadProfile::raycasting(),
-        GameWorkload::MetricsBatch => GameWorkloadProfile::metrics_batch(),
-        GameWorkload::UiAnalysis => GameWorkloadProfile::ui_analysis(),
-    };
-    let mut substrates = vec![SubstrateInfo::default_cpu()];
-    if gpu_available {
-        substrates.push(SubstrateInfo::default_gpu());
-    }
-    match route(&profile, &substrates) {
-        Some(d) if d.substrate.kind == SubstrateKind::Gpu => Substrate::Gpu,
-        _ => Substrate::Cpu,
-    }
-}
+pub use pipeline::{
+    BandTarget, BudgetEstimate, BufferSlot, DoubleBuffer, ExecutionBand, FramePlan,
+    HardwareProfile, PipelineDepth, estimate_budget, plan_frame,
+};
+pub use routing::{Decision, Substrate, fallback_chain, recommend_substrate, route};
+pub use substrate::{Capability, SubstrateInfo, SubstrateKind};
+pub use workload::{GameWorkload, GameWorkloadProfile};
 
 #[cfg(test)]
 #[expect(clippy::expect_used, reason = "test assertions use expect for clarity")]
+#[expect(
+    clippy::similar_names,
+    reason = "t_1kb/t_1mb are intentionally similar"
+)]
 mod tests {
     use super::*;
 
@@ -416,5 +127,160 @@ mod tests {
         let d = route(&profile, &substrates).expect("should route with preference");
         assert_eq!(d.substrate.kind, SubstrateKind::Gpu);
         assert_eq!(d.reason, "preferred substrate");
+    }
+
+    // --- Symphony pipeline tests ---
+
+    #[test]
+    fn pipeline_depth_frames_in_flight() {
+        assert_eq!(PipelineDepth::Single.frames_in_flight(), 1);
+        assert_eq!(PipelineDepth::Double.frames_in_flight(), 2);
+        assert_eq!(PipelineDepth::Triple.frames_in_flight(), 3);
+    }
+
+    #[test]
+    fn double_buffer_swap_invariant() {
+        let mut db = DoubleBuffer::new();
+        assert!(db.is_valid());
+        assert_ne!(db.cpu_write, db.gpu_read);
+
+        for _ in 0..100 {
+            db.swap();
+            assert!(db.is_valid());
+            assert_ne!(db.cpu_write, db.gpu_read);
+        }
+        assert_eq!(db.swap_count, 100);
+    }
+
+    #[test]
+    fn buffer_slot_swap_roundtrip() {
+        assert_eq!(BufferSlot::A.swap(), BufferSlot::B);
+        assert_eq!(BufferSlot::B.swap(), BufferSlot::A);
+        assert_eq!(BufferSlot::A.swap().swap(), BufferSlot::A);
+    }
+
+    #[test]
+    fn plan_frame_routes_mixed_workloads() {
+        let workloads = vec![
+            GameWorkloadProfile::noise_generation(),
+            GameWorkloadProfile::physics_tick(),
+            GameWorkloadProfile::wfc_step(),
+            GameWorkloadProfile::ui_analysis(),
+        ];
+        let substrates = vec![SubstrateInfo::default_cpu(), SubstrateInfo::default_gpu()];
+        let hw = HardwareProfile::local_rtx4060();
+        let plan = plan_frame(&workloads, &substrates, &hw, PipelineDepth::Double);
+
+        assert!(
+            plan.band_count() >= 3,
+            "need CPU + GPU compute + render bands"
+        );
+
+        let cpu_bands = plan.bands_for(BandTarget::Cpu);
+        assert!(!cpu_bands.is_empty(), "WFC and UI should route to CPU");
+
+        let gpu_bands = plan.bands_for(BandTarget::GpuCompute);
+        assert!(
+            !gpu_bands.is_empty(),
+            "noise and physics should route to GPU"
+        );
+
+        let render_bands = plan.bands_for(BandTarget::GpuRender);
+        assert_eq!(render_bands.len(), 1, "always one render band");
+    }
+
+    #[test]
+    fn estimate_budget_fits_60hz() {
+        let workloads = vec![
+            GameWorkloadProfile::noise_generation(),
+            GameWorkloadProfile::physics_tick(),
+            GameWorkloadProfile::wfc_step(),
+        ];
+        let substrates = vec![SubstrateInfo::default_cpu(), SubstrateInfo::default_gpu()];
+        let hw = HardwareProfile::local_rtx4060();
+        let plan = plan_frame(&workloads, &substrates, &hw, PipelineDepth::Double);
+        let budget = estimate_budget(&plan, &hw, 60.0);
+
+        assert!(budget.fits, "local hardware should fit 60 Hz");
+        assert!(budget.headroom_ms > 0.0, "should have positive headroom");
+        assert!(
+            (budget.target_frame_ms - 16.666_666).abs() < 0.01,
+            "60 Hz = ~16.67ms"
+        );
+    }
+
+    #[test]
+    fn concurrent_compute_render_reduces_gpu_time() {
+        let workloads = vec![GameWorkloadProfile::noise_generation()];
+        let substrates = vec![SubstrateInfo::default_cpu(), SubstrateInfo::default_gpu()];
+
+        let hw_concurrent = HardwareProfile {
+            concurrent_compute_render: true,
+            ..HardwareProfile::local_rtx4060()
+        };
+        let hw_sequential = HardwareProfile {
+            concurrent_compute_render: false,
+            ..HardwareProfile::local_rtx4060()
+        };
+
+        let plan = plan_frame(
+            &workloads,
+            &substrates,
+            &hw_concurrent,
+            PipelineDepth::Double,
+        );
+        let budget_concurrent = estimate_budget(&plan, &hw_concurrent, 60.0);
+        let budget_sequential = estimate_budget(&plan, &hw_sequential, 60.0);
+
+        assert!(
+            budget_concurrent.effective_frame_ms <= budget_sequential.effective_frame_ms,
+            "concurrent GPU should be at least as fast"
+        );
+    }
+
+    #[test]
+    fn pcie_transfer_time_scales_linearly() {
+        let hw = HardwareProfile::local_rtx4060();
+        let t_1kb = hw.pcie_transfer_ms(1024);
+        let t_1mb = hw.pcie_transfer_ms(1024 * 1024);
+        let ratio = t_1mb / t_1kb;
+        assert!(
+            (ratio - 1024.0).abs() < 1.0,
+            "1MB should take ~1024x longer than 1KB, got {ratio}x"
+        );
+    }
+
+    #[test]
+    fn hardware_profile_pcie_matches_spec() {
+        let hw = HardwareProfile::local_rtx4060();
+        let t_1mb = hw.pcie_transfer_ms(1024 * 1024);
+        assert!(
+            t_1mb < 0.1,
+            "1MB at 15.8 GB/s should be <0.1ms, got {t_1mb}ms"
+        );
+    }
+
+    #[test]
+    fn plan_cpu_only_no_gpu_bands() {
+        let workloads = vec![
+            GameWorkloadProfile::wfc_step(),
+            GameWorkloadProfile::ui_analysis(),
+        ];
+        let substrates = vec![SubstrateInfo::default_cpu()];
+        let hw = HardwareProfile::local_rtx4060();
+        let plan = plan_frame(&workloads, &substrates, &hw, PipelineDepth::Single);
+
+        let gpu_compute = plan.bands_for(BandTarget::GpuCompute);
+        assert!(
+            gpu_compute.is_empty(),
+            "no GPU compute when CPU-only substrates"
+        );
+    }
+
+    #[test]
+    fn substrate_info_concurrent_flag() {
+        assert!(!SubstrateInfo::default_cpu().concurrent_compute_render);
+        assert!(SubstrateInfo::default_gpu().concurrent_compute_render);
+        assert!(!SubstrateInfo::default_npu().concurrent_compute_render);
     }
 }

@@ -12,7 +12,7 @@ References:
 Provenance:
   Script: baselines/python/perlin_noise.py
   Date: 2026-03-11
-  Python: 3.x (stdlib only, no dependencies)
+  Python: CPython 3.10+ (stdlib only, no dependencies)
   Command: python3 baselines/python/perlin_noise.py
 """
 

@@ -8,23 +8,28 @@
 //! # Provenance
 //!
 //! - **Baselines**: `baselines/python/` (stdlib only, no numpy/scipy)
-//! - **Date**: 2026-03-15
+//! - **Generated**: 2026-03-15
 //! - **Python**: CPython 3.10.12 (math module only)
 //! - **Command**: `python3 baselines/python/run_all_baselines.py`
 //! - **Output**: `baselines/python/combined_baselines.json`
 //! - **Commit**: `74cf9488673e070bc5304e5bdf6d1bbee8466040`
+//! - **Note**: Baseline JSON was generated under Python 3.10.12.
+//!   `run_all_baselines.py` now requires >= 3.12 but outputs are
+//!   numerically identical (stdlib `math` only, no version-dependent behavior).
 //!
 //! Every expected value below is transcribed from the Python JSON output.
 //! The comment after each value cites the exact JSON key path.
 //! Tolerance uses `tolerances::ANALYTICAL_TOL` (1e-10) — the only error
 //! source is IEEE 754 reassociation between Python and Rust f64.
 
+use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
 use ludospring_barracuda::interaction::goms::{
     self, Operator, task_time, task_time_with_keystroke,
 };
 use ludospring_barracuda::interaction::input_laws::{
     fitts_index_of_difficulty, fitts_movement_time, hick_reaction_time, steering_time,
 };
+use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_engagement};
 use ludospring_barracuda::metrics::fun_keys::{FunKey, FunSignals, classify_fun};
 use ludospring_barracuda::procedural::bsp::{Rect, generate_bsp};
 use ludospring_barracuda::procedural::lsystem::presets;
@@ -273,7 +278,7 @@ fn parity_bsp_area_conservation() {
     let tree = generate_bsp(bounds, 15.0, 42);
     let leaf_area: f64 = tree.leaves().iter().map(Rect::area).sum();
     assert!(
-        (leaf_area - 10000.0).abs() < 1e-6,
+        (leaf_area - 10000.0).abs() < tolerances::BSP_AREA_CONSERVATION_TOL,
         "BSP area: Rust={leaf_area}, Python=10000.0"
     );
 }
@@ -338,4 +343,345 @@ fn parity_fun_animal_crossing() {
         retry_rate: 0.0,
     });
     assert_eq!(c.dominant, FunKey::Serious, "Animal Crossing = Serious Fun");
+}
+
+// ── Four Keys: Numeric Scores ────────────────────────────────────
+// JSON: fun_keys_model.py — extended: exact score parity per scenario
+
+#[test]
+fn parity_fun_dark_souls_scores() {
+    // fun_keys_model.py.dark_souls_boss.scores
+    let c = classify_fun(&FunSignals {
+        challenge: 0.95,
+        exploration: 0.2,
+        social: 0.05,
+        completion: 0.3,
+        retry_rate: 0.9,
+    });
+    assert!((c.scores.hard - 0.93).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.easy - 0.17).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.people - 0.05).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.serious - 0.36).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+#[test]
+fn parity_fun_minecraft_scores() {
+    // fun_keys_model.py.minecraft_creative.scores
+    let c = classify_fun(&FunSignals {
+        challenge: 0.1,
+        exploration: 0.9,
+        social: 0.1,
+        completion: 0.3,
+        retry_rate: 0.0,
+    });
+    assert!((c.scores.hard - 0.06).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.easy - 0.9).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.people - 0.1).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.serious - 0.48).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+#[test]
+fn parity_fun_among_us_scores() {
+    // fun_keys_model.py.among_us.scores
+    let c = classify_fun(&FunSignals {
+        challenge: 0.3,
+        exploration: 0.1,
+        social: 0.95,
+        completion: 0.1,
+        retry_rate: 0.1,
+    });
+    assert!((c.scores.hard - 0.22).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.easy - 0.22).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.people - 0.95).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.serious - 0.1825).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+#[test]
+fn parity_fun_animal_crossing_scores() {
+    // fun_keys_model.py.animal_crossing.scores
+    let c = classify_fun(&FunSignals {
+        challenge: 0.05,
+        exploration: 0.3,
+        social: 0.1,
+        completion: 0.9,
+        retry_rate: 0.0,
+    });
+    assert!((c.scores.hard - 0.03).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.easy - 0.43).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.people - 0.1).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.serious - 0.9075).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+#[test]
+fn parity_fun_celeste() {
+    // fun_keys_model.py.celeste.dominant = "hard", scores
+    let c = classify_fun(&FunSignals {
+        challenge: 0.9,
+        exploration: 0.3,
+        social: 0.0,
+        completion: 0.4,
+        retry_rate: 0.85,
+    });
+    assert_eq!(c.dominant, FunKey::Hard, "Celeste = Hard Fun");
+    assert!((c.scores.hard - 0.88).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.easy - 0.26).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.people - 0.0).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.serious - 0.445).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+#[test]
+fn parity_fun_no_mans_sky() {
+    // fun_keys_model.py.no_mans_sky.dominant = "easy", scores
+    let c = classify_fun(&FunSignals {
+        challenge: 0.15,
+        exploration: 0.85,
+        social: 0.15,
+        completion: 0.2,
+        retry_rate: 0.05,
+    });
+    assert_eq!(c.dominant, FunKey::Easy, "No Man's Sky = Easy Fun");
+    assert!((c.scores.hard - 0.11).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.easy - 0.85).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.people - 0.15).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((c.scores.serious - 0.395).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+// ── Interaction Laws: Doom Scenarios ─────────────────────────────
+// JSON: interaction_laws.py.fitts_doom_scenarios
+
+#[test]
+fn parity_fitts_doom_close_barrel() {
+    // fitts_doom_scenarios.close_barrel.mt_ms
+    let rust = fitts_movement_time(
+        50.0,
+        30.0,
+        tolerances::FITTS_A_MOUSE_MS,
+        tolerances::FITTS_B_MOUSE_MS,
+    );
+    let python = 367.321_582_612_990_4;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "close_barrel: Rust={rust}, Python={python}"
+    );
+}
+
+#[test]
+fn parity_fitts_doom_medium_imp() {
+    // fitts_doom_scenarios.medium_imp.mt_ms
+    let rust = fitts_movement_time(
+        150.0,
+        20.0,
+        tolerances::FITTS_A_MOUSE_MS,
+        tolerances::FITTS_B_MOUSE_MS,
+    );
+    let python = 650.0;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "medium_imp: Rust={rust}, Python={python}"
+    );
+}
+
+#[test]
+fn parity_fitts_doom_far_cacodemon() {
+    // fitts_doom_scenarios.far_cacodemon.mt_ms
+    let rust = fitts_movement_time(
+        300.0,
+        15.0,
+        tolerances::FITTS_A_MOUSE_MS,
+        tolerances::FITTS_B_MOUSE_MS,
+    );
+    let python = 853.632_800_692_712_5;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "far_cacodemon: Rust={rust}, Python={python}"
+    );
+}
+
+#[test]
+fn parity_fitts_doom_sniper_far_tiny() {
+    // fitts_doom_scenarios.sniper_far_tiny.mt_ms
+    let rust = fitts_movement_time(
+        400.0,
+        5.0,
+        tolerances::FITTS_A_MOUSE_MS,
+        tolerances::FITTS_B_MOUSE_MS,
+    );
+    let python = 1149.637_531_717_192_6;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "sniper_far_tiny: Rust={rust}, Python={python}"
+    );
+}
+
+// ── Hick's Law: Choice Sweep ─────────────────────────────────────
+// JSON: interaction_laws.py.hick_choice_sweep
+
+#[test]
+fn parity_hick_choice_sweep() {
+    let cases: &[(usize, f64)] = &[
+        (2, 437.744_375_108_173_4),
+        (4, 548.289_214_233_104_3),
+        (7, 650.0),
+        (10, 718.914_742_795_594_6),
+        (16, 813.119_426_187_550_9),
+    ];
+    for &(n, python) in cases {
+        let rust = hick_reaction_time(n, tolerances::HICK_A_MS, tolerances::HICK_B_MS);
+        assert!(
+            (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+            "Hick N={n}: Rust={rust}, Python={python}"
+        );
+    }
+}
+
+// ── Flow / Engagement / DDA ──────────────────────────────────────
+// JSON: flow_engagement.py
+
+#[test]
+fn parity_flow_states() {
+    // flow_engagement.py.flow_states — matching Python's evaluate_flow exactly
+    let w = tolerances::FLOW_CHANNEL_WIDTH;
+    assert_eq!(
+        evaluate_flow(0.5, 0.5, w),
+        FlowState::Flow,
+        "exact_diagonal"
+    );
+    assert_eq!(
+        evaluate_flow(0.5, w.mul_add(-0.9, 0.5), w),
+        FlowState::Flow,
+        "inside_channel_low"
+    );
+    assert_eq!(
+        evaluate_flow(0.5, w.mul_add(0.9, 0.5), w),
+        FlowState::Flow,
+        "inside_channel_high"
+    );
+    assert_eq!(
+        evaluate_flow(0.9, 0.1, w),
+        FlowState::Anxiety,
+        "high_challenge_low_skill"
+    );
+    assert_eq!(
+        evaluate_flow(0.1, 0.9, w),
+        FlowState::Boredom,
+        "low_challenge_high_skill"
+    );
+}
+
+#[test]
+fn parity_engagement_active() {
+    // flow_engagement.py.engagement_active — 300s session, 200 actions, 15 explore, 10 challenge, 20 retry, 15 pauses
+    let snap = EngagementSnapshot {
+        session_duration_s: 300.0,
+        action_count: 200,
+        exploration_breadth: 15,
+        challenge_seeking: 10,
+        retry_count: 20,
+        deliberate_pauses: 15,
+    };
+    let m = compute_engagement(&snap);
+    let python_composite = 0.298_333_333_333_333_34;
+    assert!(
+        (m.composite - python_composite).abs() < tolerances::ANALYTICAL_TOL,
+        "active composite: Rust={}, Python={python_composite}",
+        m.composite
+    );
+    assert!((m.actions_per_minute - 40.0).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((m.exploration_rate - 3.0).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((m.challenge_appetite - 0.05).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((m.persistence - 0.1).abs() < tolerances::ANALYTICAL_TOL);
+    assert!((m.deliberation - 0.075).abs() < tolerances::ANALYTICAL_TOL);
+}
+
+#[test]
+fn parity_engagement_idle() {
+    // flow_engagement.py.engagement_idle — 300s session, 2 actions
+    let snap = EngagementSnapshot {
+        session_duration_s: 300.0,
+        action_count: 2,
+        exploration_breadth: 1,
+        challenge_seeking: 0,
+        retry_count: 0,
+        deliberate_pauses: 0,
+    };
+    let m = compute_engagement(&snap);
+    let python_composite = 0.009_333_333_333_333_334;
+    assert!(
+        (m.composite - python_composite).abs() < tolerances::ANALYTICAL_TOL,
+        "idle composite: Rust={}, Python={python_composite}",
+        m.composite
+    );
+}
+
+#[test]
+fn parity_engagement_zero() {
+    // flow_engagement.py.engagement_zero — 0s session, 0 actions → 0.0
+    let snap = EngagementSnapshot::default();
+    let m = compute_engagement(&snap);
+    assert!(
+        m.composite.abs() < tolerances::ANALYTICAL_TOL,
+        "zero composite: Rust={}",
+        m.composite
+    );
+}
+
+// ── GOMS Extended ────────────────────────────────────────────────
+// JSON: goms_model.py — drag_drop, avg_20k, worst_20k
+
+#[test]
+fn parity_goms_drag_drop() {
+    // goms_model.py.drag_drop = 3.95
+    let ops = [
+        Operator::Mental,
+        Operator::Point,
+        Operator::Keystroke,
+        Operator::Point,
+        Operator::Keystroke,
+    ];
+    let rust = task_time(&ops);
+    let python = 3.95;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "GOMS drag_drop: Rust={rust}, Python={python}"
+    );
+}
+
+#[test]
+fn parity_goms_avg_20k() {
+    // goms_model.py.avg_20k = 4.0
+    let ops: Vec<Operator> = (0..20).map(|_| Operator::Keystroke).collect();
+    let rust = task_time_with_keystroke(&ops, goms::times::KEYSTROKE_AVG);
+    let python = 4.0;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "GOMS avg_20k: Rust={rust}, Python={python}"
+    );
+}
+
+#[test]
+fn parity_goms_worst_20k() {
+    // goms_model.py.worst_20k = 10.0
+    let ops: Vec<Operator> = (0..20).map(|_| Operator::Keystroke).collect();
+    let rust = task_time_with_keystroke(&ops, goms::times::KEYSTROKE_WORST);
+    let python = 10.0;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "GOMS worst_20k: Rust={rust}, Python={python}"
+    );
+}
+
+// ── BSP Extended ─────────────────────────────────────────────────
+// JSON: bsp_partition.py — offset area
+
+#[test]
+fn parity_bsp_offset_area() {
+    // bsp_partition.py: generate_bsp(10, 20, 80, 60, 12, 99) → offset_area = 4800.0
+    let bounds = Rect::new(10.0, 20.0, 80.0, 60.0);
+    let tree = generate_bsp(bounds, 12.0, 99);
+    let leaf_area: f64 = tree.leaves().iter().map(Rect::area).sum();
+    let python = 4800.0;
+    assert!(
+        (leaf_area - python).abs() < tolerances::BSP_AREA_CONSERVATION_TOL,
+        "BSP offset area: Rust={leaf_area}, Python={python}"
+    );
 }

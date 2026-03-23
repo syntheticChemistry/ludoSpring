@@ -350,6 +350,36 @@ campaign proves that story transcends mechanics.
 
 ---
 
+## Part 5.5: Quality Targets and Cross-Domain Learning
+
+RPGPT design decisions are grounded in the structured analysis of what makes
+real games good and bad. See `GAME_QUALITY_PROFILES.md` for the full catalog
+of exemplar and anti-pattern games across 14 genres, mapped to validated models.
+
+Key design targets derived from profiles:
+
+- **Disco Elysium + Esoteric Ebb intersection**: Internal voices + real tabletop mechanics
+- **Obra Dinn bounding principle**: Core clues are automatic, investigation has walls
+- **Hades progression loop**: Death is progress (Conjugant mechanic)
+- **Into the Breach information design**: Perfect information, bounded decisions, player-driven DDA
+- **Anti-Shadows of Doubt**: Authored scaffolds with procedural flesh, not pure generation
+
+Anti-patterns to detect and prevent:
+
+- **Chatbot swill** (no knowledge bounds, no hidden state) → Pathogen score for design quality
+- **Hick paralysis** (unbounded choices) → Hick's law monitoring per decision point
+- **Single Fun Key exhaustion** → Four Keys diversity tracking
+- **Procedural breadth without depth** → Exploration breadth / narrative depth ratio
+
+RPGPT also benefits from cross-domain learning — scientific models that
+become game mechanics, and game patterns that inform scientific tools.
+See `CROSS_DOMAIN_LEARNING.md` for the full bidirectional analysis:
+epidemiology → rumor propagation, microbial auxotrophy → forced party
+cooperation, percolation theory → map solvability guarantees, and 6
+proposed Lysogeny targets beyond the existing 7.
+
+---
+
 ## Part 6: What Makes This Not Chatbot Swill
 
 1. **Structural memory, not context window** — NPC memory is a DAG

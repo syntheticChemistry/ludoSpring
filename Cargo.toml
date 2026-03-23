@@ -88,6 +88,13 @@ members = [
     "experiments/exp073_dialogue_skill_checks",
     "experiments/exp074_dialogue_flow_monitoring",
     "experiments/exp075_plane_transition_continuity",
+    "experiments/exp076_pong",
+    "experiments/exp077_spacewar",
+    "experiments/exp078_tetris",
+    "experiments/exp079_civilization",
+    "experiments/exp080_diablo_loot",
+    "experiments/exp081_procedural_generation",
+    "experiments/exp082_symphony_pipeline",
 ]
 
 [workspace.package]

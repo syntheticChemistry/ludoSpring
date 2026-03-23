@@ -140,7 +140,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "barracuda"
-version = "0.3.5"
+version = "0.3.7"
 dependencies = [
  "blake3",
  "bytemuck",
@@ -1328,13 +1328,12 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 
 [[package]]
 name = "loam-spine-core"
-version = "0.9.5"
+version = "0.9.10"
 dependencies = [
  "bincode",
  "blake3",
  "bytes",
  "hickory-resolver",
- "provenance-trio-types",
  "redb",
  "serde",
  "serde_bytes",
@@ -2025,6 +2024,56 @@ dependencies = [
 ]
 
 [[package]]
+name = "ludospring-exp076"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp077"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp078"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp079"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp080"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp081"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+]
+
+[[package]]
+name = "ludospring-exp082"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "ludospring-forge",
+]
+
+[[package]]
 name = "ludospring-forge"
 version = "0.1.0"
 dependencies = [
@@ -2386,14 +2435,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "provenance-trio-types"
-version = "0.1.1"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2620,9 +2661,6 @@ dependencies = [
  "dashmap",
  "hashbrown 0.14.5",
  "hex",
- "lru",
- "parking_lot",
- "provenance-trio-types",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -2919,12 +2957,11 @@ dependencies = [
 
 [[package]]
 name = "sweet-grass-core"
-version = "0.7.21"
+version = "0.7.24"
 dependencies = [
  "base64",
  "chrono",
  "indexmap",
- "provenance-trio-types",
  "serde",
  "serde_json",
  "sha2",

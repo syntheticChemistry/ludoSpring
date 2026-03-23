@@ -231,13 +231,21 @@ mod tests {
 
     #[test]
     fn with_socket_sets_path() {
-        let bridge = NeuralBridge::with_socket(PathBuf::from("/tmp/test-neural.sock"));
-        assert_eq!(bridge.socket_path().to_str(), Some("/tmp/test-neural.sock"));
+        let socket_path = std::env::temp_dir().join(format!(
+            "ludospring-test-neural-with-socket-sets-path-{}.sock",
+            std::process::id()
+        ));
+        let bridge = NeuralBridge::with_socket(socket_path.clone());
+        assert_eq!(bridge.socket_path().to_str(), socket_path.to_str());
     }
 
     #[test]
     fn timeout_default_is_5_seconds() {
-        let bridge = NeuralBridge::with_socket(PathBuf::from("/tmp/test.sock"));
+        let socket_path = std::env::temp_dir().join(format!(
+            "ludospring-test-neural-timeout-default-{}.sock",
+            std::process::id()
+        ));
+        let bridge = NeuralBridge::with_socket(socket_path);
         assert_eq!(bridge.timeout, Duration::from_secs(5));
     }
 }

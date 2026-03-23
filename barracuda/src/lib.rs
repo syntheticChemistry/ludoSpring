@@ -119,10 +119,31 @@ pub mod biomeos;
 /// These are the shared math operations from the barraCuda primal.
 /// Using them instead of hand-rolling ensures consistent behavior
 /// across the Python → Rust CPU → GPU evolution path.
+///
+/// # Available primitives
+///
+/// | Category | Functions |
+/// |----------|-----------|
+/// | Activations | `sigmoid`, `relu`, `gelu`, `swish`, `leaky_relu`, `softplus`, `mish` |
+/// | Batch activations | `sigmoid_batch`, `relu_batch`, `gelu_batch`, `swish_batch` |
+/// | Statistics | `mean`, `dot`, `l2_norm`, `mae`, `rmse`, `percentile` |
+/// | Correlation | `variance`, `std_dev`, `pearson_correlation`, `covariance` |
+/// | RNG | `lcg_step`, `state_to_f64`, `uniform_f64_sequence` |
 pub mod barcuda_math {
-    pub use barracuda::activations::{sigmoid, sigmoid_batch};
+    // ── Activations ──────────────────────────────────────────────
+    pub use barracuda::activations::{
+        gelu, gelu_batch, leaky_relu, mish, relu, relu_batch, sigmoid, sigmoid_batch, softplus,
+        swish, swish_batch,
+    };
+
+    // ── RNG ──────────────────────────────────────────────────────
     pub use barracuda::rng::{lcg_step, state_to_f64, uniform_f64_sequence};
-    pub use barracuda::stats::{dot, l2_norm, mean};
+
+    // ── Core statistics (metrics) ────────────────────────────────
+    pub use barracuda::stats::{dot, l2_norm, mae, mean, percentile, rmse};
+
+    // ── Correlation / variance ───────────────────────────────────
+    pub use barracuda::stats::correlation::{covariance, pearson_correlation, std_dev, variance};
 }
 
 /// Primal identity — delegates to [`niche::NICHE_NAME`].

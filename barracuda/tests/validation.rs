@@ -17,7 +17,8 @@
 //!   - `interaction_laws.py` — Fitts, Hick, steering (stdlib only)
 //!   - `flow_engagement.py` — flow state, engagement composite (stdlib only)
 //!   - Run: `python3 baselines/python/run_all_baselines.py`
-//!   - Date: 2026-03-11, Python 3.x, no external dependencies
+//!   - Generated: 2026-03-15, Python 3.10.12, no external dependencies
+//!   - Commit: `74cf9488673e070bc5304e5bdf6d1bbee8466040`
 //!   - Output: `baselines/python/combined_baselines.json`
 
 use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};
@@ -151,14 +152,14 @@ fn perlin_3d_at_integer_lattice_is_zero() {
 
 #[test]
 fn perlin_bounded() {
-    // Perlin noise output is bounded by approximately [-1, 1] for 2D.
-    // Theoretical maximum is ±sqrt(2)/2 ≈ 0.707 but with fade function
-    // practical bounds are tighter. We use ±1.5 as a safe bound.
     for i in 0..1000_i32 {
         let x = f64::from(i) * 0.037;
         let y = f64::from(i) * 0.043;
         let v = perlin_2d(x, y);
-        assert!(v.abs() <= 1.5, "perlin_2d({x}, {y}) = {v}, exceeds bounds");
+        assert!(
+            v.abs() <= tolerances::PERLIN_SAFE_BOUND,
+            "perlin_2d({x}, {y}) = {v}, exceeds bounds"
+        );
     }
 }
 
@@ -169,7 +170,10 @@ fn fbm_normalized() {
         let x = f64::from(i) * 0.1;
         let y = f64::from(i) * 0.07;
         let v = fbm_2d(x, y, 6, 2.0, 0.5);
-        assert!(v.abs() <= 1.5, "fbm_2d = {v}, exceeds expected bounds");
+        assert!(
+            v.abs() <= tolerances::PERLIN_SAFE_BOUND,
+            "fbm_2d = {v}, exceeds expected bounds"
+        );
     }
 }
 

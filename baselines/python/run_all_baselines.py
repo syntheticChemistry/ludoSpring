@@ -6,7 +6,7 @@ Provenance:
   Script: baselines/python/run_all_baselines.py
   Date: 2026-03-11 (initial), updated 2026-03-17
   Command: python3 baselines/python/run_all_baselines.py
-  Python: CPython 3.12+ (stdlib only — no numpy/scipy)
+  Python: CPython 3.10+ (stdlib only — no numpy/scipy)
   Dependencies: math, json, subprocess, sys, pathlib, platform, datetime, hashlib
 """
 
@@ -19,7 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REQUIRED_PYTHON_MIN = (3, 12)
+REQUIRED_PYTHON_MIN = (3, 10)
 
 
 def check_python_version():

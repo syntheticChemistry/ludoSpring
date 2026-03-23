@@ -13,9 +13,16 @@ use ludospring_barracuda::game::rpgpt::dialogue::{
     D6PoolResult, DialogueCheck, DialogueModifiers, effective_pool_size, resolve_d6_pool,
 };
 use ludospring_barracuda::game::ruleset::DegreeOfSuccess;
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp073_dialogue_skill_checks";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_DIALOGUE_PLANE_EXPERIMENTS.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp073_dialogue_skill_checks",
+};
 
 fn validate_pool_resolution_mapping(h: &mut ValidationHarness) {
     h.check_bool(
@@ -279,6 +286,7 @@ fn validate_partial_success_meaning(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_pool_resolution_mapping(&mut h);
     validate_d6_pool_counting(&mut h);

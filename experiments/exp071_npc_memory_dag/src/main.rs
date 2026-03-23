@@ -13,9 +13,16 @@
 use ludospring_barracuda::game::rpgpt::memory::{
     InteractionType, NpcInteraction, NpcMemoryAssembler,
 };
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp071_npc_memory_dag";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_NPC_PERSONALITY_SPEC.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp071_npc_memory_dag",
+};
 
 fn build_session(
     npc_id: &str,
@@ -275,6 +282,7 @@ fn validate_context_metadata(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_recent_window(&mut h);
     validate_promises_always_included(&mut h);

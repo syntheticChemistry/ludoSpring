@@ -1,6 +1,7 @@
 # Lysogeny Catalog — Open Recreation of Proprietary Game Mechanics
 
 **Date**: March 13, 2026
+**Status**: Active — 7 targets validated, 6 proposed
 **License**: AGPL-3.0-or-later
 **Strategy**: Identify proprietary game mechanics, trace the underlying math to
 published open research (prior art), recreate from first principles, cross-validate
@@ -370,6 +371,23 @@ See `whitePaper/gen3/baseCamp/20_novel_ferment_transcript_economics.md` for the
 full sunCloud connection: radiating attribution activation through optional public
 chain anchoring. Value flows backward through the sweetGrass attribution chain
 to every contributor, proportionally.
+
+---
+
+## Future Lysogeny Targets (from Cross-Domain Learning)
+
+Six additional targets identified from physics, epidemiology, ecology, and
+chemistry. Each has published prior art predating any game patent. See
+`CROSS_DOMAIN_LEARNING.md` Part 3 for full analysis.
+
+| Target | Source Science | Game Mechanic |
+|--------|---------------|---------------|
+| **Cascade** | Trophic cascades (Paine 1966) | Removing key actor triggers chain reaction through system |
+| **Percolant** | Percolation theory (Broadbent & Hammersley 1957) | Network connectivity at critical thresholds |
+| **Resonant** | Physical resonance (Euler 1744) | Frequency-matched actions amplify effects |
+| **Diffusant** | Fick's laws + SIR model (Fick 1855, Kermack 1927) | Information/influence spread through populations |
+| **Auxotroph** | Metabolic dependency (Davis 1950) | Forced cooperation from incompleteness |
+| **Catalyst** | Chemical catalysis (Berzelius 1835) | Rare enablers that aren't consumed |
 
 ---
 

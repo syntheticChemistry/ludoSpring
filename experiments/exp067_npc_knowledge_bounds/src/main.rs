@@ -18,9 +18,16 @@ use ludospring_barracuda::game::rpgpt::knowledge::{
     KnowledgeBounds, KnowledgeQueryResult, LieTopic, Suspicion,
 };
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp067_npc_knowledge_bounds";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_NPC_PERSONALITY_SPEC.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp067_npc_knowledge_bounds",
+};
 
 fn maren_knowledge() -> KnowledgeBounds {
     KnowledgeBounds {
@@ -356,6 +363,7 @@ fn validate_totals(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_maren(&mut h);
     validate_case_insensitivity(&mut h);

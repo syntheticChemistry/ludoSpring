@@ -2,14 +2,14 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 18, 2026
-**Version:** V28 (75 experiments, 1692 validation checks, 450+ tests + 19 proptest + 6 IPC integration)
+**Date:** March 23, 2026
+**Version:** V29 (82 experiments, 402 barracuda tests + 19 forge + 42 Python parity + 2 doctests, 19 proptest + 8 IPC integration)
 **License:** AGPL-3.0-or-later
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.5 (standalone, 150+ primitives) — 75 .rs files, ~20,000 lines Rust
+**barraCuda:** v0.3.7 (standalone, default-features = false — CPU-only default, GPU opt-in)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance)
 **Niche Status:** Deployable — UniBin, deploy graph, niche YAML, Neural API domain registration, 26 capabilities (24 game + 2 health probes), structured `capability_domains` registry
-**Audit Status:** Complete — zero hardcoded primal names (capability-based discovery only), zero hardcoded paths (`LUDOSPRING_OUTPUT_DIR` + XDG socket chain), zero `#[allow()]`, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, all 71 validation experiments use `ValidationHarness` + `BaselineProvenance`, 14 GPU tolerance constants, `missing_errors_doc`/`missing_panics_doc` at warn, 6 IPC integration tests passing
+**Audit Status:** Complete — zero hardcoded primal names (capability-based discovery only), zero hardcoded paths (`LUDOSPRING_OUTPUT_DIR` + XDG socket chain), zero `#[allow()]`, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, all validation experiments use `ValidationHarness` + `BaselineProvenance`, `GpuContext` + `TensorSession` wired behind `gpu` feature, `metalForge/forge` refactored into 4 domain modules (19 tests), `cargo-llvm-cov` gated at 80% floor (80.2% library coverage), baselines regenerated with `content_sha256` provenance
 
 ---
 
@@ -433,10 +433,10 @@ ludoSpring/
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring, dashboard, live_session, tufte_dashboard
 │   └── tests/             # python_parity, validation, determinism, proptest_invariants, ipc_integration
-├── experiments/           # 75 experiments
+├── experiments/           # 82 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
-├── metalForge/forge/      # Capability-based routing (9 tests, GPU>NPU>CPU)
+├── metalForge/forge/      # Capability-based routing (19 tests, 4 domain modules, GPU>NPU>CPU)
 ├── graphs/                # Deploy graphs (ludospring_deploy.toml, gaming_niche.toml)
 ├── niches/                # Niche YAML (ludospring-game.yaml)
 ├── specs/                 # 6 domain specifications
@@ -484,15 +484,15 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy -W pedantic -W nursery` | 0 warnings (lib + tests) |
-| `cargo test --features ipc` (barracuda) | 450+ tests + 6 IPC integration, 0 failures |
+| `cargo test` (barracuda + forge) | 402 barracuda + 19 forge tests, 0 failures |
 | `cargo doc --no-deps` | 0 warnings |
-| 75 validation binaries | 1692 checks, 0 failures |
+| 82 validation binaries | All checks pass, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 19 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick, JSON-RPC, capability parsing, DispatchOutcome) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
 | `#[allow()]` in codebase | 0 — all exceptions use `#[expect(reason)]` with curated dictionary (V23) |
-| `llvm-cov` (library) | All 22 modules ≥ 90% (floor: 90.8% `interaction::flow`) |
+| `llvm-cov` (library) | 80.2% line coverage (80% floor enforced, target 90%+, binaries excluded) |
 | SPDX headers | All `.rs` + all `Cargo.toml` |
 | Files > 1000 LOC | 0 — exp030 refactored into 4 modules (was 1949 LOC) |
 | TODO/FIXME/HACK in source | 0 |
@@ -500,7 +500,7 @@ cargo doc --features ipc -p ludospring-barracuda --no-deps
 | Hardcoded primal names | 0 — `discover_primals()` by capability, `viz_register()` parameterized, zero name literals |
 | Hardcoded paths | 0 — `LUDOSPRING_OUTPUT_DIR` env var + `temp_dir()` + XDG-compliant socket chain |
 | IPC integration tests | 6 tests (lifecycle, capability list, game methods, error handling) |
-| GPU tolerances | 10 named constants in `tolerances::gpu` (unary, Perlin, fBm, reduction, softmax, engagement, raycaster, LCG) |
+| GPU tolerances | 10+ named constants in `tolerances::gpu` + `tolerances::validation` (Perlin, fBm, BSP, engagement, raycaster, LCG) |
 | Validation infrastructure | `check_abs_or_rel`, `exit_skipped` (exit 2), `load_baseline_f64`, `OrExit<T>` |
 
 ## V28 Capability-Based Discovery + Deep Code Quality (March 18, 2026)

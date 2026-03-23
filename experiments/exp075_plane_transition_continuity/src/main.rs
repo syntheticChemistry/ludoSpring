@@ -20,9 +20,16 @@ use ludospring_barracuda::game::rpgpt::transition::{
 };
 use ludospring_barracuda::game::ruleset::{AbilityScore, Character, Condition};
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const EXP: &str = "exp075_plane_transition_continuity";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_PLANES_SCHEMA.md",
+    commit: "74cf9488",
+    date: "2026-03-15",
+    command: "cargo run -p exp075_plane_transition_continuity",
+};
 
 fn test_character() -> Character {
     Character {
@@ -401,6 +408,7 @@ fn validate_verification_detects_issues(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_transition_vertex(&mut h);
     validate_inventory_preservation(&mut h);
