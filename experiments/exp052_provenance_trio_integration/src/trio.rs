@@ -306,7 +306,7 @@ impl GameActionBraid {
             .ecop(ecop)
             .build()?;
 
-        braid.metadata.description = Some(description);
+        braid.metadata.description = Some(description.into());
 
         Ok(Self { braid })
     }

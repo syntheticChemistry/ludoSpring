@@ -38,6 +38,7 @@
 //! 8. Cross-primal round-trip: simulation → viz payload → JSON → deserialize
 
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 
 mod coordination;
 mod protocol;

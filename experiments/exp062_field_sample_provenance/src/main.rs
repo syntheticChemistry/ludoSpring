@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 //! exp062 — Field Sample Provenance
 //!
 //! Scaffolds wetSpring's sample chain-of-custody using the provenance trio.
@@ -344,6 +345,7 @@ fn validate_fraud_detection(h: &mut ValidationHarness) {
         alice.as_str(),
         "Collected Water at X",
         0,
+        SampleType::Water,
     );
 
     let mislabel_fraud = detect_sample_fraud(&mislabel_sys);

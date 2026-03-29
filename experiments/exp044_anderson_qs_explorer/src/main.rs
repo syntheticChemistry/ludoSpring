@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+//! Anderson QS explorer — cross-spring disorder landscape with game metrics.
 #![forbid(unsafe_code)]
 
 use ludospring_barracuda::interaction::difficulty;

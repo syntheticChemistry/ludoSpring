@@ -616,6 +616,7 @@ impl SampleSystem {
         actor_did: &str,
         description: &str,
         tick: u64,
+        actual_sample_type: SampleType,
     ) {
         self.events.push((
             cert_id,
@@ -630,6 +631,7 @@ impl SampleSystem {
         self.last_condition.insert(cert_id, SampleCondition::Fresh);
         self.condition_history
             .push((cert_id, tick, SampleCondition::Fresh));
+        self.collect_sample_types.insert(cert_id, actual_sample_type);
     }
 
     /// Get the sample type recorded at collection time.

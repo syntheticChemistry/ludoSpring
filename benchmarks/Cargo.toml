@@ -29,7 +29,3 @@ harness = false
 
 [lints]
 workspace = true
-
-[lints.clippy]
-cast_precision_loss = "allow"
-suboptimal_flops = "allow"

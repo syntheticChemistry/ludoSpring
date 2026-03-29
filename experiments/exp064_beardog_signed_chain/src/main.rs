@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 //! exp064 — BearDog-Signed Provenance Chain
 //!
 //! Wires `BearDog` `crypto.sign_ed25519` and `crypto.verify_ed25519` into

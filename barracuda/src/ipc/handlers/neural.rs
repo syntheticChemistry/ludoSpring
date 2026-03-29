@@ -312,7 +312,7 @@ pub(super) fn handle_visualization_delegation(req: &JsonRpcRequest) -> HandlerRe
                 let panels: Vec<serde_json::Value> = params
                     .get("panels")
                     .and_then(|p| p.as_array())
-                    .map(std::vec::Vec::to_vec)
+                    .map(|v| v.clone())
                     .unwrap_or_default();
                 client
                     .push_dashboard(session_id, &panels)

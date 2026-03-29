@@ -283,12 +283,15 @@ pub struct GpuPointLightParam {
 /// Parameters for `game.gpu.tile_lighting`.
 #[derive(Debug, Deserialize)]
 pub struct GpuTileLightingParams {
+    /// Grid width in tiles.
     pub grid_w: u32,
+    /// Grid height in tiles.
     pub grid_h: u32,
     /// Ambient level \[0, 1\].
     pub ambient: f64,
     /// Active lights (up to 8 used).
     pub lights: Vec<GpuPointLightParam>,
+    /// Optional terrain heights for line-of-sight shadowing.
     #[serde(default)]
     pub terrain: Option<Vec<f64>>,
 }
@@ -296,13 +299,18 @@ pub struct GpuTileLightingParams {
 /// Parameters for `game.gpu.pathfind` (one BFS wavefront step).
 #[derive(Debug, Deserialize)]
 pub struct GpuPathfindParams {
+    /// Grid width in tiles.
     pub grid_w: u32,
+    /// Grid height in tiles.
     pub grid_h: u32,
+    /// Start tile X coordinate.
     pub start_x: u32,
+    /// Start tile Y coordinate.
     pub start_y: u32,
     /// Distance ring the shader expands from (default `0` for a fresh search).
     #[serde(default)]
     pub current_dist: Option<u32>,
+    /// Optional terrain heights for passability checks.
     #[serde(default)]
     pub terrain: Option<Vec<f64>>,
     /// Full distance map; when omitted, unvisited tiles start at `u32::MAX` and the start cell is seeded.
@@ -313,7 +321,9 @@ pub struct GpuPathfindParams {
 /// Parameters for `game.gpu.perlin_terrain`.
 #[derive(Debug, Deserialize)]
 pub struct GpuPerlinTerrainParams {
+    /// Grid width in tiles.
     pub grid_w: u32,
+    /// Grid height in tiles.
     pub grid_h: u32,
     /// Optional coordinate offset seed for sample positions.
     #[serde(default)]

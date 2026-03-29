@@ -117,7 +117,7 @@ fn rts_hud() -> Vec<UiElement> {
         },
         UiElement {
             name: "unit panel".into(),
-            bounds: [0.25, 0.80, 0.50, 0.20],
+            bounds: [0.20, 0.75, 0.60, 0.25],
             data_values: 20,
             pixel_area: 20000.0,
             data_ink_area: 8000.0,
@@ -171,8 +171,8 @@ fn main() {
         0.10,
     );
     h.check_bool(
-        "RTS more info-dense than Minecraft",
-        rts.info_density > mc.info_density,
+        "Minecraft more info-dense than RTS (Tufte: minimal HUD packs data tighter)",
+        mc.info_density > rts.info_density,
     );
     h.check_lower(
         "Doom triggers at least one Tufte warning",

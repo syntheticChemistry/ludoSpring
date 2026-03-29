@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 //! exp053 — Extraction Shooter Provenance + Fraud Detection
 //!
 //! Extraction shooters (Tarkov, DMZ, The Cycle) have a fundamental problem:

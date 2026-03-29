@@ -241,7 +241,7 @@ pub(super) fn handle_gpu_pathfind(req: &JsonRpcRequest) -> HandlerResult {
 pub(super) fn handle_gpu_perlin_terrain(req: &JsonRpcRequest) -> HandlerResult {
     let p: GpuPerlinTerrainParams = parse_params(req)?;
     let n = tile_count_or_err(&req.id, p.grid_w, p.grid_h)? as usize;
-    let perm = perlin_perm_table_u32();
+    let perm: Vec<u32> = perlin_perm_table_u32().to_vec();
     let seed_off = p.seed.unwrap_or(0) as f32 * 0.001;
     let mut coords = Vec::with_capacity(n * 2);
     for ty in 0..p.grid_h {

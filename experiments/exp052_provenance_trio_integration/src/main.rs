@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 //! exp052 — Provenance Trio Integration
 //!
 //! First experiment to import and exercise the three provenance primals

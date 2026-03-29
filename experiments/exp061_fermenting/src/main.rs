@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 //! exp061 — Fermenting System
 //!
 //! Memory-bound digital objects with full provenance: NFT without crypto.

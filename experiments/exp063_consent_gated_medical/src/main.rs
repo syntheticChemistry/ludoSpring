@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
+#![allow(missing_docs)]
 //! exp063 — Consent-Gated Medical Access
 //!
 //! Scaffolds `healthSpring`'s zero-knowledge medical data access using the

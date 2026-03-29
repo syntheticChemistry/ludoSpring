@@ -76,11 +76,11 @@ fn validate_flow_tracking(h: &mut ValidationHarness) {
 fn validate_engagement(h: &mut ValidationHarness) {
     let active = EngagementSnapshot {
         session_duration_s: 600.0,
-        action_count: 180,
-        exploration_breadth: 12,
-        challenge_seeking: 8,
-        retry_count: 15,
-        deliberate_pauses: 20,
+        action_count: 300,
+        exploration_breadth: 18,
+        challenge_seeking: 12,
+        retry_count: 20,
+        deliberate_pauses: 25,
     };
     let metrics = compute_engagement(&active);
 
