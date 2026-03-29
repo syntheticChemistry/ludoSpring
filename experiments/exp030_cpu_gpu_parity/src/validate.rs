@@ -7,8 +7,9 @@
 //! GPU checks are conditionally skipped when no adapter is available.
 
 use crate::gpu::{
-    gpu_run_engagement_batch, gpu_run_f32_3buf, gpu_run_f32_unary, gpu_run_perlin,
-    gpu_run_raycaster, gpu_run_u32_unary, try_create_gpu,
+    gpu_run_engagement_batch, gpu_run_f32_3buf, gpu_run_f32_unary, gpu_run_fog_of_war,
+    gpu_run_pathfind_step, gpu_run_perlin, gpu_run_raycaster, gpu_run_tile_lighting,
+    gpu_run_u32_unary, try_create_gpu,
 };
 use crate::shaders::{
     ABS_WGSL, DOT_PRODUCT_WGSL, LCG_WGSL, PERM_TABLE, REDUCE_SUM_WGSL, RELU_WGSL, SCALE_WGSL,
@@ -336,6 +337,66 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let cpu_hits: Vec<bool> = cpu_distances.iter().map(|&d| d < 19.0).collect();
     h.check_bool("raycaster_gpu_hit_match", gpu_hits == cpu_hits);
 
+    // -- Game shader parity: Fog of War --
+    let fog_w = 8_u32;
+    let fog_h = 8_u32;
+    let fog_n = (fog_w * fog_h) as usize;
+    let fog_terrain: Vec<f32> = (0..fog_n).map(|_| 0.0_f32).collect();
+    let fog_prev: Vec<u32> = vec![0; fog_n];
+    let fog_vx = 4.0_f32;
+    let fog_vy = 4.0_f32;
+    let sight_r_sq = 9.0_f32;
+
+    let gpu_fog = gpu_run_fog_of_war(ctx, fog_w, fog_h, fog_vx, fog_vy, sight_r_sq, &fog_terrain, &fog_prev);
+    let cpu_fog = cpu_fog_of_war(fog_w, fog_h, fog_vx, fog_vy, sight_r_sq, &fog_terrain, &fog_prev);
+    h.check_bool("fog_of_war_gpu_parity", gpu_fog == cpu_fog);
+
+    let fog_visible_count = gpu_fog.iter().filter(|&&v| v == 2).count();
+    h.check_bool("fog_of_war_has_visible_tiles", fog_visible_count > 0);
+    h.check_bool("fog_of_war_has_hidden_tiles", gpu_fog.iter().any(|&v| v == 0));
+
+    // -- Game shader parity: Tile Lighting --
+    let light_w = 8_u32;
+    let light_h = 8_u32;
+    let light_n = (light_w * light_h) as usize;
+    let light_terrain: Vec<f32> = (0..light_n).map(|_| 0.0_f32).collect();
+    let lights: Vec<[f32; 4]> = vec![
+        [4.0, 4.0, 1.0, 5.0],
+        [1.0, 1.0, 0.5, 3.0],
+    ];
+    let ambient = 0.1_f32;
+
+    let gpu_light = gpu_run_tile_lighting(ctx, light_w, light_h, 2, ambient, &light_terrain, &lights);
+    let cpu_light = cpu_tile_lighting(light_w, light_h, 2, ambient, &light_terrain, &lights);
+    let light_max_err = gpu_light
+        .iter()
+        .zip(cpu_light.iter())
+        .map(|(g, c)| (g - c).abs())
+        .fold(0.0_f32, f32::max);
+    h.check_abs("lighting_gpu_parity", f64::from(light_max_err), 0.0, tolerances::GPU_LIGHTING_ABS_TOL);
+    h.check_bool("lighting_center_bright", gpu_light[(4 * light_w + 4) as usize] > ambient);
+    h.check_bool("lighting_clamped", gpu_light.iter().all(|&v| (0.0..=1.0).contains(&v)));
+
+    // -- Game shader parity: Pathfind Wavefront --
+    let pf_w = 8_u32;
+    let pf_h = 8_u32;
+    let pf_n = (pf_w * pf_h) as usize;
+    let pf_terrain: Vec<f32> = (0..pf_n).map(|_| 0.0_f32).collect();
+    let start_idx = (3 * pf_w + 3) as usize;
+    let mut gpu_dist: Vec<u32> = vec![0xFFFF_FFFF; pf_n];
+    gpu_dist[start_idx] = 0;
+    let mut cpu_dist = gpu_dist.clone();
+
+    for step in 0..4_u32 {
+        let (new_dist, _frontier) = gpu_run_pathfind_step(ctx, pf_w, pf_h, step, &pf_terrain, &gpu_dist);
+        gpu_dist = new_dist;
+        cpu_dist = cpu_pathfind_step(pf_w, pf_h, step, &pf_terrain, &cpu_dist);
+    }
+    h.check_bool("pathfind_gpu_parity", gpu_dist == cpu_dist);
+    let reached = gpu_dist.iter().filter(|&&d| d != 0xFFFF_FFFF).count();
+    h.check_bool("pathfind_reaches_tiles", reached > 10);
+
+    // -- Benchmark --
     let bench_n = 65536usize;
     let bench_input: Vec<f32> = (0..bench_n)
         .map(|i| (i as f32).mul_add(0.001, -0.5))
@@ -350,6 +411,105 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let _gpu = gpu_run_f32_unary(ctx, SIGMOID_WGSL, &bench_input);
     let gpu_bench_us = gpu_start.elapsed().as_micros();
     h.check_bool("batch_speedup_nonnegative", gpu_bench_us <= cpu_bench_us + 10000);
+}
+
+// ── CPU reference implementations for game shader parity ───────────
+
+fn cpu_fog_of_war(
+    grid_w: u32,
+    grid_h: u32,
+    viewer_x: f32,
+    viewer_y: f32,
+    sight_radius_sq: f32,
+    _terrain: &[f32],
+    prev_vis: &[u32],
+) -> Vec<u32> {
+    let n = (grid_w * grid_h) as usize;
+    let mut out = vec![0_u32; n];
+    for idx in 0..n {
+        let tile_x = (idx as u32 % grid_w) as f32 + 0.5;
+        let tile_y = (idx as u32 / grid_w) as f32 + 0.5;
+        let dx = tile_x - viewer_x;
+        let dy = tile_y - viewer_y;
+        let dist_sq = dx * dx + dy * dy;
+
+        if dist_sq <= sight_radius_sq {
+            out[idx] = 2;
+        } else if prev_vis[idx] >= 1 {
+            out[idx] = 1;
+        }
+    }
+    out
+}
+
+fn cpu_tile_lighting(
+    grid_w: u32,
+    grid_h: u32,
+    num_lights: u32,
+    ambient: f32,
+    terrain: &[f32],
+    lights: &[[f32; 4]],
+) -> Vec<f32> {
+    let n = (grid_w * grid_h) as usize;
+    let mut out = vec![0.0_f32; n];
+    for idx in 0..n {
+        if terrain[idx] >= 0.9 {
+            out[idx] = 0.0;
+            continue;
+        }
+        let tile_x = (idx as u32 % grid_w) as f32 + 0.5;
+        let tile_y = (idx as u32 / grid_w) as f32 + 0.5;
+        let mut total = ambient;
+        let count = (num_lights as usize).min(8).min(lights.len());
+        for light in &lights[..count] {
+            let dx = tile_x - light[0];
+            let dy = tile_y - light[1];
+            let dist_sq = dx * dx + dy * dy;
+            let radius_sq = light[3] * light[3];
+            if dist_sq < radius_sq {
+                let attenuation = 1.0 / (1.0 + dist_sq);
+                total += light[2] * attenuation;
+            }
+        }
+        out[idx] = total.clamp(0.0, 1.0);
+    }
+    out
+}
+
+fn cpu_pathfind_step(
+    grid_w: u32,
+    grid_h: u32,
+    current_dist: u32,
+    terrain: &[f32],
+    dist_map: &[u32],
+) -> Vec<u32> {
+    let n = (grid_w * grid_h) as usize;
+    let mut out = dist_map.to_vec();
+    let next_dist = current_dist + 1;
+    let offsets: [(i32, i32); 4] = [(0, -1), (0, 1), (1, 0), (-1, 0)];
+
+    for idx in 0..n {
+        if dist_map[idx] != current_dist {
+            continue;
+        }
+        let x = (idx as u32) % grid_w;
+        let y = (idx as u32) / grid_w;
+        for &(ox, oy) in &offsets {
+            let nx = x as i32 + ox;
+            let ny = y as i32 + oy;
+            if nx < 0 || ny < 0 || nx >= grid_w as i32 || ny >= grid_h as i32 {
+                continue;
+            }
+            let nidx = (ny as u32 * grid_w + nx as u32) as usize;
+            if terrain[nidx] >= 0.9 {
+                continue;
+            }
+            if out[nidx] == 0xFFFF_FFFF {
+                out[nidx] = next_dist;
+            }
+        }
+    }
+    out
 }
 
 /// f32 softmax reference for GPU parity — matches the WGSL shader's precision.

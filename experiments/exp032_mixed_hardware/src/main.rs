@@ -578,6 +578,47 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
             .any(|l| BandwidthTier::from_gen_width(l.pcie_gen, l.width) != BandwidthTier::Unknown);
         h.check_bool("local_gpu_bandwidth_identified", any_known);
     }
+
+    // 21. Forge integration: NPU routing via recommend_substrate_full
+    let npu_sub = ludospring_forge::recommend_substrate_full(
+        ludospring_forge::GameWorkload::QuantizedInference,
+        true,
+        true,
+    );
+    h.check_bool(
+        "forge_routes_inference_to_npu",
+        npu_sub == ludospring_forge::Substrate::Npu,
+    );
+
+    // 22. Forge integration: mixed pipeline creates NPU band
+    let mixed_workloads = vec![
+        ludospring_forge::GameWorkloadProfile::noise_generation(),
+        ludospring_forge::GameWorkloadProfile::quantized_inference(),
+    ];
+    let mixed_substrates = vec![
+        ludospring_forge::SubstrateInfo::default_cpu(),
+        ludospring_forge::SubstrateInfo::default_gpu(),
+        ludospring_forge::SubstrateInfo::default_npu(),
+    ];
+    let hw = ludospring_forge::HardwareProfile::mixed_gpu_npu();
+    let plan = ludospring_forge::plan_frame(
+        &mixed_workloads,
+        &mixed_substrates,
+        &hw,
+        ludospring_forge::PipelineDepth::Double,
+    );
+    let has_npu_band = !plan
+        .bands_for(ludospring_forge::BandTarget::NpuCompute)
+        .is_empty();
+    h.check_bool("forge_mixed_plan_has_npu_band", has_npu_band);
+
+    // 23. Forge direct NPU→GPU transfer faster than CPU roundtrip
+    let forge_direct = ludospring_forge::npu_to_gpu_transfer_ms(&hw, 4 * 1024);
+    let forge_cpu_rt = hw.pcie_transfer_ms(4 * 1024) * 2.0;
+    h.check_bool(
+        "forge_npu_gpu_direct_faster_than_cpu_roundtrip",
+        forge_direct < forge_cpu_rt,
+    );
 }
 
 fn cmd_pcie() {

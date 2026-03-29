@@ -33,8 +33,9 @@ use std::time::Instant;
 
 use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use ludospring_forge::{
-    GameWorkload, GameWorkloadProfile, Substrate, SubstrateInfo, SubstrateKind,
-    recommend_substrate, route,
+    BandTarget, GameWorkload, GameWorkloadProfile, HardwareProfile, PipelineDepth, Substrate,
+    SubstrateInfo, SubstrateKind, estimate_budget, plan_frame, recommend_substrate,
+    recommend_substrate_full, route,
 };
 use serde::{Deserialize, Serialize};
 
@@ -578,6 +579,113 @@ fn cmd_validate() {
         "nucleus_graceful_degradation",
         cpu_noise == SubstrateKind::Cpu,
     );
+
+    // 19. Forge mixed pipeline: NPU + GPU + CPU frame plan
+    let mixed_workloads = vec![
+        GameWorkloadProfile::noise_generation(),
+        GameWorkloadProfile::physics_tick(),
+        GameWorkloadProfile::quantized_inference(),
+        GameWorkloadProfile::wfc_step(),
+    ];
+    let mixed_substrates = vec![
+        SubstrateInfo::default_cpu(),
+        SubstrateInfo::default_gpu(),
+        SubstrateInfo::default_npu(),
+    ];
+    let hw = HardwareProfile::mixed_gpu_npu();
+    let plan = plan_frame(&mixed_workloads, &mixed_substrates, &hw, PipelineDepth::Double);
+
+    h.check_bool(
+        "forge_mixed_has_npu_band",
+        !plan.bands_for(BandTarget::NpuCompute).is_empty(),
+    );
+    h.check_bool(
+        "forge_mixed_has_gpu_band",
+        !plan.bands_for(BandTarget::GpuCompute).is_empty(),
+    );
+    h.check_bool(
+        "forge_mixed_has_cpu_band",
+        !plan.bands_for(BandTarget::Cpu).is_empty(),
+    );
+
+    // 20. Mixed pipeline fits 60 Hz budget
+    let budget = estimate_budget(&plan, &hw, 60.0);
+    h.check_bool("forge_mixed_pipeline_fits_60hz", budget.fits);
+
+    // 21. NPU→GPU direct transfer band present
+    h.check_bool(
+        "forge_npu_to_gpu_direct_transfer",
+        !plan.bands_for(BandTarget::NpuToGpuTransfer).is_empty(),
+    );
+
+    // 22. recommend_substrate_full routes inference to NPU
+    let npu_sub = recommend_substrate_full(GameWorkload::QuantizedInference, true, true);
+    h.check_bool("recommend_full_npu", npu_sub == Substrate::Npu);
+
+    // 23. biomeOS deployment graph with NPU node
+    let graph_with_npu = DeploymentGraph {
+        nodes: vec![
+            DeploymentNode {
+                id: "tower".to_string(),
+                node_type: DeploymentNodeType::Tower,
+                budget_us: 500.0,
+            },
+            DeploymentNode {
+                id: "node_gpu".to_string(),
+                node_type: DeploymentNodeType::Compute,
+                budget_us: 4000.0,
+            },
+            DeploymentNode {
+                id: "node_npu".to_string(),
+                node_type: DeploymentNodeType::Compute,
+                budget_us: 2000.0,
+            },
+            DeploymentNode {
+                id: "nest".to_string(),
+                node_type: DeploymentNodeType::Nest,
+                budget_us: 1000.0,
+            },
+            DeploymentNode {
+                id: "viz".to_string(),
+                node_type: DeploymentNodeType::Viz,
+                budget_us: 3000.0,
+            },
+        ],
+        edges: vec![
+            DeploymentEdge {
+                from: "tower".to_string(),
+                to: "node_gpu".to_string(),
+                edge_type: DeploymentEdgeType::ControlFlow,
+            },
+            DeploymentEdge {
+                from: "tower".to_string(),
+                to: "node_npu".to_string(),
+                edge_type: DeploymentEdgeType::ControlFlow,
+            },
+            DeploymentEdge {
+                from: "node_npu".to_string(),
+                to: "node_gpu".to_string(),
+                edge_type: DeploymentEdgeType::DataFlow { bytes: 256_000 },
+            },
+            DeploymentEdge {
+                from: "node_gpu".to_string(),
+                to: "nest".to_string(),
+                edge_type: DeploymentEdgeType::DataFlow { bytes: 4_000_000 },
+            },
+            DeploymentEdge {
+                from: "nest".to_string(),
+                to: "viz".to_string(),
+                edge_type: DeploymentEdgeType::DataFlow { bytes: 2_000_000 },
+            },
+        ],
+        coordination_hz: 60.0,
+    };
+    h.check_bool("npu_graph_fits_60hz", graph_with_npu.fits_in_frame());
+    let has_npu_node = graph_with_npu
+        .nodes
+        .iter()
+        .any(|n| n.id.contains("npu"));
+    h.check_bool("biome_graph_includes_npu_node", has_npu_node);
 
     h.finish();
 }

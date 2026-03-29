@@ -5,7 +5,10 @@
 //! consolidate the repetitive wgpu pipeline boilerplate. Each public
 //! `gpu_run_*` function remains a focused orchestrator.
 
-use crate::shaders::{DDA_RAYCAST_WGSL, ENGAGEMENT_BATCH_WGSL, PERLIN_2D_WGSL};
+use crate::shaders::{
+    DDA_RAYCAST_WGSL, ENGAGEMENT_BATCH_WGSL, FOG_OF_WAR_WGSL, PATHFIND_WAVEFRONT_WGSL,
+    PERLIN_2D_WGSL, TILE_LIGHTING_WGSL,
+};
 
 pub struct GpuContext {
     pub device: wgpu::Device,
@@ -68,11 +71,12 @@ const fn storage_entry(binding: u32, read_only: bool) -> wgpu::BindGroupLayoutEn
 }
 
 fn create_storage_buf(ctx: &GpuContext, label: &str, size: u64, writable: bool) -> wgpu::Buffer {
-    let usage = if writable {
-        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC
+    let mut usage = wgpu::BufferUsages::STORAGE;
+    if writable {
+        usage |= wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST;
     } else {
-        wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST
-    };
+        usage |= wgpu::BufferUsages::COPY_DST;
+    }
     ctx.device.create_buffer(&wgpu::BufferDescriptor {
         label: Some(label),
         size,
@@ -460,4 +464,266 @@ pub fn gpu_run_raycaster(
         ],
     });
     dispatch_and_read_f32(ctx, &pipeline, &bg, &output_buf, n_rays, 64, 20.0)
+}
+
+// ── Uniform buffer helpers ─────────────────────────────────────────
+
+const fn uniform_entry(binding: u32) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::COMPUTE,
+        ty: wgpu::BindingType::Buffer {
+            ty: wgpu::BufferBindingType::Uniform,
+            has_dynamic_offset: false,
+            min_binding_size: None,
+        },
+        count: None,
+    }
+}
+
+fn create_uniform_buf(ctx: &GpuContext, label: &str, data: &[u8]) -> wgpu::Buffer {
+    let buf = ctx.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some(label),
+        size: data.len() as u64,
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    ctx.queue.write_buffer(&buf, 0, data);
+    buf
+}
+
+fn dispatch_and_read_u32(
+    ctx: &GpuContext,
+    pipeline: &wgpu::ComputePipeline,
+    bg: &wgpu::BindGroup,
+    output_buf: &wgpu::Buffer,
+    n: usize,
+    workgroup_size: u32,
+) -> Vec<u32> {
+    let output_size = (n * 4) as u64;
+    let staging_buf = create_staging_buf(ctx, output_size);
+
+    let mut encoder = ctx
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("enc") });
+    {
+        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            label: Some("pass"),
+            timestamp_writes: None,
+        });
+        pass.set_pipeline(pipeline);
+        pass.set_bind_group(0, bg, &[]);
+        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
+        let workgroups = (n as u32).div_ceil(workgroup_size);
+        pass.dispatch_workgroups(workgroups, 1, 1);
+    }
+    encoder.copy_buffer_to_buffer(output_buf, 0, &staging_buf, 0, output_size);
+    ctx.queue.submit(std::iter::once(encoder.finish()));
+
+    read_staging_u32(ctx, &staging_buf, n)
+}
+
+// ── Game shader GPU runners ────────────────────────────────────────
+
+/// Fog-of-war: per-tile visibility from viewer position.
+pub fn gpu_run_fog_of_war(
+    ctx: &GpuContext,
+    grid_w: u32,
+    grid_h: u32,
+    viewer_x: f32,
+    viewer_y: f32,
+    sight_radius_sq: f32,
+    terrain: &[f32],
+    prev_vis: &[u32],
+) -> Vec<u32> {
+    let n = (grid_w * grid_h) as usize;
+    let mut params_bytes = Vec::with_capacity(24);
+    params_bytes.extend_from_slice(&viewer_x.to_le_bytes());
+    params_bytes.extend_from_slice(&viewer_y.to_le_bytes());
+    params_bytes.extend_from_slice(&grid_w.to_le_bytes());
+    params_bytes.extend_from_slice(&grid_h.to_le_bytes());
+    params_bytes.extend_from_slice(&sight_radius_sq.to_le_bytes());
+    params_bytes.extend_from_slice(&0_f32.to_le_bytes());
+    let entries = [
+        uniform_entry(0),
+        storage_entry(1, true),
+        storage_entry(2, true),
+        storage_entry(3, false),
+    ];
+    let (pipeline, bgl) = build_pipeline(ctx, "fog", FOG_OF_WAR_WGSL, &entries);
+
+    let params_buf = create_uniform_buf(ctx, "fog_params", &params_bytes);
+    let terrain_buf = create_storage_buf(ctx, "fog_terrain", (n * 4) as u64, false);
+    ctx.queue
+        .write_buffer(&terrain_buf, 0, bytemuck::cast_slice(terrain));
+    let prev_buf = create_storage_buf(ctx, "fog_prev", (n * 4) as u64, false);
+    ctx.queue
+        .write_buffer(&prev_buf, 0, bytemuck::cast_slice(prev_vis));
+    let out_buf = create_storage_buf(ctx, "fog_out", (n * 4) as u64, true);
+
+    let bg = ctx.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("fog_bg"),
+        layout: &bgl,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: params_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: terrain_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: prev_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 3,
+                resource: out_buf.as_entire_binding(),
+            },
+        ],
+    });
+    dispatch_and_read_u32(ctx, &pipeline, &bg, &out_buf, n, 64)
+}
+
+/// Tile lighting: per-tile light intensity from point sources.
+#[expect(clippy::cast_precision_loss, reason = "grid dims fit in f32")]
+pub fn gpu_run_tile_lighting(
+    ctx: &GpuContext,
+    grid_w: u32,
+    grid_h: u32,
+    num_lights: u32,
+    ambient: f32,
+    terrain: &[f32],
+    lights: &[[f32; 4]],
+) -> Vec<f32> {
+    let n = (grid_w * grid_h) as usize;
+
+    let mut params_bytes = Vec::with_capacity(16);
+    params_bytes.extend_from_slice(&grid_w.to_le_bytes());
+    params_bytes.extend_from_slice(&grid_h.to_le_bytes());
+    params_bytes.extend_from_slice(&num_lights.to_le_bytes());
+    params_bytes.extend_from_slice(&ambient.to_le_bytes());
+
+    let entries = [
+        uniform_entry(0),
+        storage_entry(1, true),
+        storage_entry(2, true),
+        storage_entry(3, false),
+    ];
+    let (pipeline, bgl) = build_pipeline(ctx, "lighting", TILE_LIGHTING_WGSL, &entries);
+
+    let params_buf = create_uniform_buf(ctx, "light_params", &params_bytes);
+    let terrain_buf = create_storage_buf(ctx, "light_terrain", (n * 4) as u64, false);
+    ctx.queue
+        .write_buffer(&terrain_buf, 0, bytemuck::cast_slice(terrain));
+
+    let mut lights_flat: Vec<f32> = Vec::with_capacity(lights.len() * 4);
+    for l in lights {
+        lights_flat.extend_from_slice(l);
+    }
+    let lights_buf =
+        create_storage_buf(ctx, "lights", (lights_flat.len() * 4).max(16) as u64, false);
+    ctx.queue
+        .write_buffer(&lights_buf, 0, bytemuck::cast_slice(&lights_flat));
+    let out_buf = create_storage_buf(ctx, "light_out", (n * 4) as u64, true);
+
+    let bg = ctx.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("light_bg"),
+        layout: &bgl,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: params_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: terrain_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: lights_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 3,
+                resource: out_buf.as_entire_binding(),
+            },
+        ],
+    });
+    dispatch_and_read_f32(ctx, &pipeline, &bg, &out_buf, n, 64, 0.0)
+}
+
+/// Pathfind wavefront: single BFS expansion step on a 2D grid.
+/// Returns the dist_map after one expansion from the given dist_map state.
+pub fn gpu_run_pathfind_step(
+    ctx: &GpuContext,
+    grid_w: u32,
+    grid_h: u32,
+    current_dist: u32,
+    terrain: &[f32],
+    dist_map_in: &[u32],
+) -> (Vec<u32>, u32) {
+    let n = (grid_w * grid_h) as usize;
+
+    let mut params_bytes = Vec::with_capacity(16);
+    params_bytes.extend_from_slice(&grid_w.to_le_bytes());
+    params_bytes.extend_from_slice(&grid_h.to_le_bytes());
+    params_bytes.extend_from_slice(&current_dist.to_le_bytes());
+    params_bytes.extend_from_slice(&0_u32.to_le_bytes());
+
+    let entries = [
+        uniform_entry(0),
+        storage_entry(1, true),
+        storage_entry(2, false),
+        storage_entry(3, false),
+    ];
+    let (pipeline, bgl) = build_pipeline(ctx, "pathfind", PATHFIND_WAVEFRONT_WGSL, &entries);
+
+    let params_buf = create_uniform_buf(ctx, "pf_params", &params_bytes);
+    let terrain_buf = create_storage_buf(ctx, "pf_terrain", (n * 4) as u64, false);
+    ctx.queue
+        .write_buffer(&terrain_buf, 0, bytemuck::cast_slice(terrain));
+
+    let dist_buf = create_storage_buf(ctx, "pf_dist", (n * 4) as u64, true);
+    ctx.queue
+        .write_buffer(&dist_buf, 0, bytemuck::cast_slice(dist_map_in));
+
+    let frontier_buf = create_storage_buf(ctx, "pf_frontier", 4, true);
+    ctx.queue
+        .write_buffer(&frontier_buf, 0, &0_u32.to_le_bytes());
+
+    let bg = ctx.device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("pf_bg"),
+        layout: &bgl,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: params_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: terrain_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: dist_buf.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 3,
+                resource: frontier_buf.as_entire_binding(),
+            },
+        ],
+    });
+
+    let dist_result = dispatch_and_read_u32(ctx, &pipeline, &bg, &dist_buf, n, 64);
+
+    let frontier_staging = create_staging_buf(ctx, 4);
+    let mut encoder = ctx
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("enc") });
+    encoder.copy_buffer_to_buffer(&frontier_buf, 0, &frontier_staging, 0, 4);
+    ctx.queue.submit(std::iter::once(encoder.finish()));
+    let frontier_val = read_staging_u32(ctx, &frontier_staging, 1);
+
+    (dist_result, frontier_val.first().copied().unwrap_or(0))
 }

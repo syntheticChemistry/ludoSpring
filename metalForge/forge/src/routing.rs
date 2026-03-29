@@ -5,13 +5,15 @@
 use crate::substrate::{SubstrateInfo, SubstrateKind};
 use crate::workload::{GameWorkload, GameWorkloadProfile};
 
-/// Dispatch recommendation (legacy, for exp031/exp033 compatibility).
+/// Dispatch recommendation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Substrate {
-    /// CPU (single-threaded reference).
+    /// CPU (general-purpose, SIMD).
     Cpu,
-    /// GPU via barraCuda.
+    /// GPU via barraCuda shader dispatch.
     Gpu,
+    /// NPU for quantized inference workloads.
+    Npu,
 }
 
 /// Routing decision with substrate and reason.
@@ -87,12 +89,22 @@ pub fn fallback_chain(substrates: &[SubstrateInfo]) -> Vec<&SubstrateInfo> {
 // Legacy per-workload routing (preserved for backward compat)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// Recommend a substrate for a given workload (legacy API for exp031/exp033).
+/// Recommend a substrate for a given workload, with full substrate discovery.
 ///
-/// Builds synthetic substrates internally and uses capability-based routing.
-/// Returns `Substrate::Gpu` only when GPU is selected; NPU maps to `Substrate::Cpu`.
+/// Builds synthetic substrates from available hardware flags and uses
+/// capability-based routing. Maps `SubstrateKind` to `Substrate` 1:1.
 #[must_use]
 pub fn recommend_substrate(workload: GameWorkload, gpu_available: bool) -> Substrate {
+    recommend_substrate_full(workload, gpu_available, false)
+}
+
+/// Extended recommendation that includes NPU discovery.
+#[must_use]
+pub fn recommend_substrate_full(
+    workload: GameWorkload,
+    gpu_available: bool,
+    npu_available: bool,
+) -> Substrate {
     let profile = match workload {
         GameWorkload::NoiseGeneration => GameWorkloadProfile::noise_generation(),
         GameWorkload::WaveFunctionCollapse => GameWorkloadProfile::wfc_step(),
@@ -100,13 +112,21 @@ pub fn recommend_substrate(workload: GameWorkload, gpu_available: bool) -> Subst
         GameWorkload::Raycasting => GameWorkloadProfile::raycasting(),
         GameWorkload::MetricsBatch => GameWorkloadProfile::metrics_batch(),
         GameWorkload::UiAnalysis => GameWorkloadProfile::ui_analysis(),
+        GameWorkload::QuantizedInference => GameWorkloadProfile::quantized_inference(),
     };
     let mut substrates = vec![SubstrateInfo::default_cpu()];
     if gpu_available {
         substrates.push(SubstrateInfo::default_gpu());
     }
+    if npu_available {
+        substrates.push(SubstrateInfo::default_npu());
+    }
     match route(&profile, &substrates) {
-        Some(d) if d.substrate.kind == SubstrateKind::Gpu => Substrate::Gpu,
-        _ => Substrate::Cpu,
+        Some(d) => match d.substrate.kind {
+            SubstrateKind::Gpu => Substrate::Gpu,
+            SubstrateKind::Npu => Substrate::Npu,
+            SubstrateKind::Cpu => Substrate::Cpu,
+        },
+        None => Substrate::Cpu,
     }
 }

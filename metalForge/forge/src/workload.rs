@@ -19,6 +19,8 @@ pub enum GameWorkload {
     MetricsBatch,
     /// Tufte analysis of UI layout.
     UiAnalysis,
+    /// Quantized int8 inference (NPC behavior, dialogue, predictions).
+    QuantizedInference,
 }
 
 /// Workload profile describing required capabilities and substrate preference.

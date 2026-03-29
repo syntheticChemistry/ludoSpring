@@ -23,9 +23,11 @@ mod workload;
 
 pub use pipeline::{
     BandTarget, BudgetEstimate, BufferSlot, DoubleBuffer, ExecutionBand, FramePlan,
-    HardwareProfile, PipelineDepth, estimate_budget, plan_frame,
+    HardwareProfile, PipelineDepth, estimate_budget, npu_to_gpu_transfer_ms, plan_frame,
 };
-pub use routing::{Decision, Substrate, fallback_chain, recommend_substrate, route};
+pub use routing::{
+    Decision, Substrate, fallback_chain, recommend_substrate, recommend_substrate_full, route,
+};
 pub use substrate::{Capability, SubstrateInfo, SubstrateKind};
 pub use workload::{GameWorkload, GameWorkloadProfile};
 
@@ -282,5 +284,105 @@ mod tests {
         assert!(!SubstrateInfo::default_cpu().concurrent_compute_render);
         assert!(SubstrateInfo::default_gpu().concurrent_compute_render);
         assert!(!SubstrateInfo::default_npu().concurrent_compute_render);
+    }
+
+    // --- NPU routing tests ---
+
+    #[test]
+    fn recommend_npu_inference_with_npu() {
+        assert_eq!(
+            recommend_substrate_full(GameWorkload::QuantizedInference, true, true),
+            Substrate::Npu
+        );
+    }
+
+    #[test]
+    fn recommend_npu_inference_without_npu_falls_to_cpu() {
+        assert_eq!(
+            recommend_substrate_full(GameWorkload::QuantizedInference, true, false),
+            Substrate::Cpu
+        );
+    }
+
+    #[test]
+    fn recommend_noise_still_gpu_with_npu_present() {
+        assert_eq!(
+            recommend_substrate_full(GameWorkload::NoiseGeneration, true, true),
+            Substrate::Gpu
+        );
+    }
+
+    // --- Mixed hardware pipeline tests ---
+
+    #[test]
+    fn plan_frame_with_npu_adds_npu_band() {
+        let workloads = vec![
+            GameWorkloadProfile::noise_generation(),
+            GameWorkloadProfile::quantized_inference(),
+        ];
+        let substrates = vec![
+            SubstrateInfo::default_cpu(),
+            SubstrateInfo::default_gpu(),
+            SubstrateInfo::default_npu(),
+        ];
+        let hw = HardwareProfile::mixed_gpu_npu();
+        let plan = plan_frame(&workloads, &substrates, &hw, PipelineDepth::Double);
+
+        let npu_bands = plan.bands_for(BandTarget::NpuCompute);
+        assert_eq!(npu_bands.len(), 1, "should have NPU compute band");
+
+        let gpu_bands = plan.bands_for(BandTarget::GpuCompute);
+        assert!(!gpu_bands.is_empty(), "should still have GPU compute band");
+    }
+
+    #[test]
+    fn npu_to_gpu_direct_transfer_created() {
+        let workloads = vec![
+            GameWorkloadProfile::noise_generation(),
+            GameWorkloadProfile::quantized_inference(),
+        ];
+        let substrates = vec![
+            SubstrateInfo::default_cpu(),
+            SubstrateInfo::default_gpu(),
+            SubstrateInfo::default_npu(),
+        ];
+        let hw = HardwareProfile::mixed_gpu_npu();
+        let plan = plan_frame(&workloads, &substrates, &hw, PipelineDepth::Double);
+
+        let xfer = plan.bands_for(BandTarget::NpuToGpuTransfer);
+        assert_eq!(xfer.len(), 1, "direct NPU→GPU transfer band");
+        assert!(xfer[0].estimated_ms > 0.0, "transfer time is positive");
+    }
+
+    #[test]
+    fn npu_to_gpu_bypasses_cpu_roundtrip() {
+        let hw = HardwareProfile::mixed_gpu_npu();
+        let direct_ms = pipeline::npu_to_gpu_transfer_ms(&hw, 4 * 1024);
+        let cpu_roundtrip_ms = hw.pcie_transfer_ms(4 * 1024) * 2.0;
+        assert!(
+            direct_ms < cpu_roundtrip_ms,
+            "direct NPU→GPU should be faster than CPU roundtrip: {direct_ms} vs {cpu_roundtrip_ms}"
+        );
+    }
+
+    #[test]
+    fn mixed_hardware_budget_fits_60hz() {
+        let workloads = vec![
+            GameWorkloadProfile::noise_generation(),
+            GameWorkloadProfile::physics_tick(),
+            GameWorkloadProfile::quantized_inference(),
+        ];
+        let substrates = vec![
+            SubstrateInfo::default_cpu(),
+            SubstrateInfo::default_gpu(),
+            SubstrateInfo::default_npu(),
+        ];
+        let hw = HardwareProfile::mixed_gpu_npu();
+        let plan = plan_frame(&workloads, &substrates, &hw, PipelineDepth::Double);
+        let budget = estimate_budget(&plan, &hw, 60.0);
+
+        assert!(budget.fits, "mixed hardware should fit 60 Hz");
+        assert!(budget.npu_total_ms > 0.0, "NPU should have work");
+        assert!(budget.npu_gpu_transfer_ms > 0.0, "should have NPU→GPU transfer");
     }
 }

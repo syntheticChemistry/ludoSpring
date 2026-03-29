@@ -21,6 +21,10 @@ pub enum BandTarget {
     GpuRender,
     /// PCIe transfer (upload uniforms, download results).
     PcieTransfer,
+    /// NPU inference dispatch (quantized NPC models, predictions).
+    NpuCompute,
+    /// Direct NPU→GPU PCIe transfer (bypassing CPU roundtrip).
+    NpuToGpuTransfer,
 }
 
 /// A band of concurrent workloads within a frame pipeline.
@@ -78,8 +82,12 @@ pub struct HardwareProfile {
     pub gpu_compute_budget_ms: f64,
     /// GPU render budget estimate (ms per frame).
     pub gpu_render_budget_ms: f64,
-    /// PCIe one-way bandwidth in GB/s.
+    /// NPU inference budget estimate (ms per frame).
+    pub npu_budget_ms: f64,
+    /// PCIe one-way bandwidth in GB/s (CPU↔GPU).
     pub pcie_bandwidth_gbps: f64,
+    /// Direct NPU↔GPU PCIe bandwidth in GB/s (0 if no direct path).
+    pub npu_gpu_bandwidth_gbps: f64,
     /// Whether the GPU supports concurrent compute and render.
     pub concurrent_compute_render: bool,
 }
@@ -92,7 +100,23 @@ impl HardwareProfile {
             cpu_budget_ms: 4.0,
             gpu_compute_budget_ms: 4.0,
             gpu_render_budget_ms: 8.0,
+            npu_budget_ms: 0.0,
             pcie_bandwidth_gbps: 15.8,
+            npu_gpu_bandwidth_gbps: 0.0,
+            concurrent_compute_render: true,
+        }
+    }
+
+    /// Mixed hardware profile: GPU + NPU with direct PCIe link.
+    #[must_use]
+    pub const fn mixed_gpu_npu() -> Self {
+        Self {
+            cpu_budget_ms: 4.0,
+            gpu_compute_budget_ms: 4.0,
+            gpu_render_budget_ms: 8.0,
+            npu_budget_ms: 2.0,
+            pcie_bandwidth_gbps: 15.8,
+            npu_gpu_bandwidth_gbps: 12.0,
             concurrent_compute_render: true,
         }
     }
@@ -155,6 +179,10 @@ pub struct BudgetEstimate {
     pub gpu_render_total_ms: f64,
     /// PCIe transfer total time (ms).
     pub pcie_total_ms: f64,
+    /// NPU compute total time (ms).
+    pub npu_total_ms: f64,
+    /// Direct NPU→GPU transfer time (ms).
+    pub npu_gpu_transfer_ms: f64,
     /// Effective frame time = max(CPU, GPU_compute + GPU_render) when not
     /// concurrent, or max(CPU, max(GPU_compute, GPU_render)) when concurrent.
     pub effective_frame_ms: f64,
@@ -182,11 +210,15 @@ pub fn plan_frame(
 ) -> FramePlan {
     let mut cpu_workloads = Vec::new();
     let mut gpu_compute_workloads = Vec::new();
+    let mut npu_workloads = Vec::new();
 
     for w in workloads {
         match route(w, substrates) {
             Some(d) if d.substrate.kind == SubstrateKind::Gpu => {
                 gpu_compute_workloads.push(w.name.clone());
+            }
+            Some(d) if d.substrate.kind == SubstrateKind::Npu => {
+                npu_workloads.push(w.name.clone());
             }
             _ => {
                 cpu_workloads.push(w.name.clone());
@@ -196,7 +228,10 @@ pub fn plan_frame(
 
     let cpu_count = cpu_workloads.len();
     let gpu_count = gpu_compute_workloads.len();
+    let npu_count = npu_workloads.len();
     let has_gpu_work = !gpu_compute_workloads.is_empty();
+    let has_npu_work = !npu_workloads.is_empty();
+    let has_npu_gpu_direct = has_npu_work && has_gpu_work && hardware.npu_gpu_bandwidth_gbps > 0.0;
 
     let mut bands = Vec::new();
 
@@ -228,18 +263,53 @@ pub fn plan_frame(
         });
     }
 
+    if has_npu_work {
+        let npu_compute_idx = bands.len();
+        bands.push(ExecutionBand {
+            target: BandTarget::NpuCompute,
+            workloads: npu_workloads,
+            estimated_ms: hardware.npu_budget_ms
+                * (npu_count as f64 / workloads.len().max(1) as f64),
+            depends_on: vec![],
+        });
+
+        if has_npu_gpu_direct {
+            bands.push(ExecutionBand {
+                target: BandTarget::NpuToGpuTransfer,
+                workloads: vec!["npu_result_to_gpu".to_string()],
+                estimated_ms: npu_to_gpu_transfer_ms(hardware, 4 * 1024),
+                depends_on: vec![npu_compute_idx],
+            });
+        }
+    }
+
+    let render_deps = if has_gpu_work {
+        vec![pcie_upload_idx + 1]
+    } else {
+        vec![]
+    };
     bands.push(ExecutionBand {
         target: BandTarget::GpuRender,
         workloads: vec!["scene_draw".to_string(), "present".to_string()],
         estimated_ms: hardware.gpu_render_budget_ms,
-        depends_on: if has_gpu_work {
-            vec![pcie_upload_idx + 1]
-        } else {
-            vec![]
-        },
+        depends_on: render_deps,
     });
 
     FramePlan { bands, depth }
+}
+
+/// Estimate NPU→GPU direct PCIe transfer time (bypasses CPU roundtrip).
+#[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "transfer sizes are well within f64 mantissa range"
+)]
+pub fn npu_to_gpu_transfer_ms(hardware: &HardwareProfile, bytes: usize) -> f64 {
+    if hardware.npu_gpu_bandwidth_gbps <= 0.0 {
+        return hardware.pcie_transfer_ms(bytes) * 2.0;
+    }
+    let gb = bytes as f64 / (1024.0 * 1024.0 * 1024.0);
+    (gb / hardware.npu_gpu_bandwidth_gbps) * 1000.0
 }
 
 /// Estimate whether a frame plan fits within a target frame rate.
@@ -255,6 +325,8 @@ pub fn estimate_budget(
     let gpu_compute_total_ms = plan.domain_time_ms(BandTarget::GpuCompute);
     let gpu_render_total_ms = plan.domain_time_ms(BandTarget::GpuRender);
     let pcie_total_ms = plan.domain_time_ms(BandTarget::PcieTransfer);
+    let npu_total_ms = plan.domain_time_ms(BandTarget::NpuCompute);
+    let npu_gpu_transfer_ms = plan.domain_time_ms(BandTarget::NpuToGpuTransfer);
 
     let gpu_effective_ms = if hardware.concurrent_compute_render {
         gpu_compute_total_ms.max(gpu_render_total_ms)
@@ -262,7 +334,9 @@ pub fn estimate_budget(
         gpu_compute_total_ms + gpu_render_total_ms
     };
 
-    let effective_frame_ms = cpu_total_ms.max(gpu_effective_ms + pcie_total_ms);
+    let gpu_path_ms = gpu_effective_ms + pcie_total_ms;
+    let npu_path_ms = npu_total_ms + npu_gpu_transfer_ms;
+    let effective_frame_ms = cpu_total_ms.max(gpu_path_ms).max(npu_path_ms);
 
     let headroom_ms = target_frame_ms - effective_frame_ms;
 
@@ -272,6 +346,8 @@ pub fn estimate_budget(
         gpu_compute_total_ms,
         gpu_render_total_ms,
         pcie_total_ms,
+        npu_total_ms,
+        npu_gpu_transfer_ms,
         effective_frame_ms,
         headroom_ms,
         fits: headroom_ms >= 0.0,

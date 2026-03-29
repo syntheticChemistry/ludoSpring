@@ -84,3 +84,9 @@ pub const GPU_ENGAGEMENT_ABS_TOL: f64 = 1e-4;
 /// Justification: DDA raycasting accumulates per-step f32 rounding. ±0.5
 /// accommodates sub-cell positioning error. Validated in exp030.
 pub use super::validation::RAYCASTER_DISTANCE_TOL as GPU_RAYCASTER_DISTANCE_ABS_TOL;
+
+/// Absolute tolerance for tile lighting GPU parity.
+///
+/// Justification: 1/r² attenuation + multi-light accumulation in f32 produces
+/// ~1e-5 absolute error versus f64 reference. Validated in exp030 `lighting_gpu_parity`.
+pub const GPU_LIGHTING_ABS_TOL: f64 = 1e-5;
