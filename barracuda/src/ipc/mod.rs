@@ -7,9 +7,22 @@
 //! Per wateringHole `UNIVERSAL_IPC_STANDARD_V3`, each primal implements
 //! IPC independently (~500–1000 lines).
 //!
-//! Methods: `game.analyze_ui`, `game.evaluate_flow`, `game.fitts_cost`,
-//! `game.engagement`, `game.generate_noise`, `game.wfc_step`,
-//! `game.accessibility`, `game.difficulty_adjustment`.
+//! **Domain capabilities** (27 FQNs in [`crate::niche::CAPABILITIES`]): game science
+//! (`game.evaluate_flow`, `game.fitts_cost`, `game.engagement`, `game.analyze_ui`,
+//! `game.accessibility`, `game.wfc_step`, `game.difficulty_adjustment`,
+//! `game.generate_noise`); provenance and telemetry (`game.begin_session`,
+//! `game.record_action`, `game.complete_session`, `game.poll_telemetry`); Squirrel
+//! delegation (`game.npc_dialogue`, `game.narrate_action`, `game.voice_check`);
+//! petalTongue (`game.push_scene`); rhizoCrypt (`game.query_vertices`); loamSpine
+//! (`game.mint_certificate`); NestGate (`game.storage_put`, `game.storage_get`);
+//! GPU (`game.gpu.fog_of_war`, `game.gpu.tile_lighting`, `game.gpu.pathfind`,
+//! `game.gpu.perlin_terrain`, `game.gpu.batch_raycast`); health probes (`health.liveness`, `health.readiness`).
+//!
+//! **MCP**: `tools.list` / `tools.call` expose the same game operations for AI discovery
+//! and invocation (science plus key delegation entry points).
+//!
+//! **Additional routes** (not counted in the 27): `health.check` (and legacy aliases),
+//! `lifecycle.*`, `capability.*`, neural visualization delegation to petalTongue, and optional tarpc.
 //!
 //! ## Client (Discovery)
 //!

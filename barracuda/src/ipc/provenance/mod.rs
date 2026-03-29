@@ -137,7 +137,7 @@ where
 
 /// Result of a provenance operation; includes availability status.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[allow(clippy::derive_partial_eq_without_eq)]
+#[expect(clippy::derive_partial_eq_without_eq, reason = "wire types with Value field — Eq is not meaningful")]
 pub struct ProvenanceResult {
     /// Session ID, vertex ID, or braid ID from the trio.
     pub id: String,
@@ -152,7 +152,7 @@ pub struct ProvenanceResult {
 /// Follows the `provenance-trio-types` `DehydrationSummary` wire format,
 /// extracted as a typed struct rather than raw JSON.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[allow(clippy::derive_partial_eq_without_eq)]
+#[expect(clippy::derive_partial_eq_without_eq, reason = "wire types with Value field — Eq is not meaningful")]
 pub struct DehydrationSummary {
     /// Merkle root of the dehydrated DAG.
     pub merkle_root: String,

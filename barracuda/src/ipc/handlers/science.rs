@@ -15,17 +15,20 @@ use crate::ipc::envelope::JsonRpcRequest;
 use super::{HandlerResult, parse_params, to_json};
 
 pub(super) fn handle_evaluate_flow(req: &JsonRpcRequest) -> HandlerResult {
-    use crate::interaction::flow::evaluate_flow;
+    use crate::interaction::flow::{evaluate_flow, flow_channel_metrics};
     use crate::tolerances::FLOW_CHANNEL_WIDTH;
 
     let p: EvaluateFlowParams = parse_params(req)?;
     let width = p.channel_width.unwrap_or(FLOW_CHANNEL_WIDTH);
     let state = evaluate_flow(p.challenge, p.skill, width);
+    let (flow_score, in_flow) = flow_channel_metrics(p.challenge, p.skill, width);
 
     to_json(
         &req.id,
         FlowResult {
             state: state.as_str().to_owned(),
+            flow_score,
+            in_flow,
         },
     )
 }
@@ -66,10 +69,12 @@ pub(super) fn handle_engagement(req: &JsonRpcRequest) -> HandlerResult {
         EngagementResult {
             actions_per_minute: m.actions_per_minute,
             exploration_rate: m.exploration_rate,
+            exploration_ratio: m.exploration_rate,
             challenge_appetite: m.challenge_appetite,
             persistence: m.persistence,
             deliberation: m.deliberation,
             composite: m.composite,
+            engagement_score: m.composite,
         },
     )
 }
@@ -179,13 +184,47 @@ pub(super) fn handle_difficulty_adjustment(req: &JsonRpcRequest) -> HandlerResul
 
     let target = p.target_success_rate.unwrap_or(DDA_TARGET_SUCCESS_RATE);
     let adjustment = suggest_adjustment(&window, target);
+    let estimated_skill = window.estimated_skill();
+    let trend = window.trend();
+    let reason = difficulty_adjustment_reason(adjustment, estimated_skill, trend, target);
 
     to_json(
         &req.id,
         DifficultyAdjustmentResult {
             adjustment,
-            estimated_skill: window.estimated_skill(),
-            trend: window.trend(),
+            estimated_skill,
+            trend,
+            reason,
         },
     )
+}
+
+fn difficulty_adjustment_reason(
+    adjustment: f64,
+    estimated_skill: f64,
+    trend: f64,
+    target_success_rate: f64,
+) -> String {
+    if adjustment.abs() < 1e-6 {
+        format!(
+            "Estimated success rate {:.0}% matches target {:.0}% (trend {:.2}); hold difficulty.",
+            estimated_skill * 100.0,
+            target_success_rate * 100.0,
+            trend
+        )
+    } else if adjustment > 0.0 {
+        format!(
+            "Player outperforming target (success ~{:.0}% vs {:.0}%, trend {:.2}); suggest harder content.",
+            estimated_skill * 100.0,
+            target_success_rate * 100.0,
+            trend
+        )
+    } else {
+        format!(
+            "Player below target (success ~{:.0}% vs {:.0}%, trend {:.2}); suggest easier content.",
+            estimated_skill * 100.0,
+            target_success_rate * 100.0,
+            trend
+        )
+    }
 }

@@ -21,3 +21,6 @@ rhizo-crypt-core = { path = "../../../../phase2/rhizoCrypt/crates/rhizo-crypt-co
 loam-spine-core = { path = "../../../../phase2/loamSpine/crates/loam-spine-core" }
 sweet-grass-core = { path = "../../../../phase2/sweetGrass/crates/sweet-grass-core" }
 blake3 = "1.5"
+
+[lints]
+workspace = true

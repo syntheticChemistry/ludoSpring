@@ -11,6 +11,10 @@ use serde::{Deserialize, Serialize};
 pub struct FlowResult {
     /// Flow state name.
     pub state: String,
+    /// Continuous flow alignment score (0.0–1.0); 1.0 inside the flow channel.
+    pub flow_score: f64,
+    /// True when challenge and skill sit within the flow channel.
+    pub in_flow: bool,
 }
 
 /// Result for `game.fitts_cost`.
@@ -29,6 +33,8 @@ pub struct EngagementResult {
     pub actions_per_minute: f64,
     /// Exploration rate.
     pub exploration_rate: f64,
+    /// Same as `exploration_rate` (Webb / JSON-RPC alias).
+    pub exploration_ratio: f64,
     /// Challenge appetite.
     pub challenge_appetite: f64,
     /// Persistence score.
@@ -37,6 +43,8 @@ pub struct EngagementResult {
     pub deliberation: f64,
     /// Composite engagement (0.0–1.0).
     pub composite: f64,
+    /// Same as `composite` (Webb / JSON-RPC alias).
+    pub engagement_score: f64,
 }
 
 /// Result for `game.generate_noise`.
@@ -79,6 +87,8 @@ pub struct DifficultyAdjustmentResult {
     pub estimated_skill: f64,
     /// Trend: positive = improving, negative = declining.
     pub trend: f64,
+    /// Human-readable rationale for `adjustment`.
+    pub reason: String,
 }
 
 /// Result for `game.wfc_step`.

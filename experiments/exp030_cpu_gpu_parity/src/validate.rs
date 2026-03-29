@@ -511,6 +511,11 @@ pub fn cmd_validate() {
     }
 }
 
+/// f32 softmax reference for GPU parity — matches the WGSL shader's precision.
+///
+/// barraCuda's `ops::softmax` operates on Tensor types at f64 precision;
+/// this local implementation intentionally uses f32 to match the GPU shader
+/// for parity validation. Not a duplication — different precision domain.
 fn cpu_softmax_f32(input: &[f32]) -> Vec<f32> {
     let max_val = input.iter().copied().fold(f32::NEG_INFINITY, f32::max);
     let exps: Vec<f32> = input.iter().map(|&x| (x - max_val).exp()).collect();

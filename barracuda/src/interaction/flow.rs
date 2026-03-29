@@ -65,6 +65,25 @@ pub fn evaluate_flow(challenge: f64, skill: f64, channel_width: f64) -> FlowStat
     }
 }
 
+/// Continuous flow score in \[0.0, 1.0\] and whether the player sits in the flow channel.
+///
+/// Score is 1.0 when \|challenge − skill\| ≤ `channel_width` (matches [`FlowState::Flow`]),
+/// then falls off linearly toward 0 as the gap grows toward the normalized extremes.
+#[must_use]
+pub fn flow_channel_metrics(challenge: f64, skill: f64, channel_width: f64) -> (f64, bool) {
+    let d = (challenge - skill).abs();
+    let w = channel_width.max(1e-9);
+    let in_flow = d <= w;
+    let flow_score = if in_flow {
+        1.0
+    } else {
+        let excess = d - w;
+        let span = (1.0_f64 - w).max(1e-6);
+        (1.0 - excess / span).clamp(0.0, 1.0)
+    };
+    (flow_score, in_flow)
+}
+
 /// A difficulty curve that maps progress (0.0–1.0) to challenge level.
 #[derive(Debug, Clone)]
 pub struct DifficultyCurve {

@@ -57,7 +57,7 @@ pub const GPU_ENGAGEMENT_REL_TOL: f64 = 1e-4;
 /// Justification: DDA raycasting accumulates per-step f32 rounding that
 /// can flip boundary-ray hit/miss decisions. ±5pp accommodates the worst
 /// case for 64-ray FOV sweeps in an 8×8 arena. Validated in exp030.
-pub const GPU_RAYCASTER_HIT_RATE_PP: f64 = 5.0;
+pub use super::validation::RAYCASTER_HIT_RATE_TOL as GPU_RAYCASTER_HIT_RATE_PP;
 
 /// Absolute tolerance for LCG pseudo-random GPU parity.
 ///
@@ -83,4 +83,4 @@ pub const GPU_ENGAGEMENT_ABS_TOL: f64 = 1e-4;
 ///
 /// Justification: DDA raycasting accumulates per-step f32 rounding. ±0.5
 /// accommodates sub-cell positioning error. Validated in exp030.
-pub const GPU_RAYCASTER_DISTANCE_ABS_TOL: f64 = 0.5;
+pub use super::validation::RAYCASTER_DISTANCE_TOL as GPU_RAYCASTER_DISTANCE_ABS_TOL;

@@ -49,6 +49,12 @@ const PERM: [u8; 512] = {
     table
 };
 
+/// Permutation table as `u32` for WGSL `array<u32>` bindings (matches [`PERM`]).
+#[must_use]
+pub fn perlin_perm_table_u32() -> [u32; 512] {
+    std::array::from_fn(|i| u32::from(PERM[i]))
+}
+
 fn fade(t: f64) -> f64 {
     t * t * t * t.mul_add(t.mul_add(6.0, -15.0), 10.0)
 }

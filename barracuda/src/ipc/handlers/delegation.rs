@@ -12,6 +12,23 @@ use crate::ipc::envelope::{JsonRpcError, JsonRpcRequest};
 
 use super::{HandlerResult, parse_params, to_json};
 
+/// `model` and `tokens` for Webb-compatible chat payloads; reads Squirrel `data` when present.
+fn squirrel_chat_metadata(data: &serde_json::Value) -> (String, u32) {
+    let model = data
+        .get("model")
+        .and_then(serde_json::Value::as_str)
+        .map(str::to_owned)
+        .unwrap_or_else(|| "local".to_owned());
+    let tokens = data
+        .pointer("/usage/total_tokens")
+        .or_else(|| data.get("total_tokens"))
+        .or_else(|| data.get("tokens"))
+        .and_then(serde_json::Value::as_u64)
+        .map(|n| n.min(u64::from(u32::MAX)) as u32)
+        .unwrap_or(0);
+    (model, tokens)
+}
+
 pub(super) fn handle_begin_session(req: &JsonRpcRequest) -> HandlerResult {
     let p: BeginSessionParams = parse_params(req)?;
     let result = provenance::begin_game_session(&p.session_name)
@@ -62,6 +79,9 @@ pub(super) fn handle_npc_dialogue(req: &JsonRpcRequest) -> HandlerResult {
             "text": result.text,
             "available": result.available,
             "data": result.data,
+            "voice_notes": [],
+            "passive_checks_fired": false,
+            "degraded": !result.available,
         }),
     )
 }
@@ -70,11 +90,14 @@ pub(super) fn handle_narrate_action(req: &JsonRpcRequest) -> HandlerResult {
     let p: NarrateActionParams = parse_params(req)?;
     let result = squirrel::narrate_action(&p.action, &p.context)
         .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    let (model, tokens) = squirrel_chat_metadata(&result.data);
     to_json(
         &req.id,
         serde_json::json!({
             "text": result.text,
             "available": result.available,
+            "model": model,
+            "tokens": tokens,
         }),
     )
 }

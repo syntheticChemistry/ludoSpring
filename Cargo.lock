@@ -1415,7 +1415,7 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 
 [[package]]
 name = "loam-spine-core"
-version = "0.9.11"
+version = "0.9.14"
 dependencies = [
  "bincode",
  "blake3",
@@ -2792,7 +2792,7 @@ checksum = "1e061d1b48cb8d38042de4ae0a7a6401009d6143dc80d2e2d6f31f0bdd6470c7"
 
 [[package]]
 name = "rhizo-crypt-core"
-version = "0.13.0-dev"
+version = "0.14.0-dev"
 dependencies = [
  "async-trait",
  "blake3",
@@ -3097,7 +3097,7 @@ dependencies = [
 
 [[package]]
 name = "sweet-grass-core"
-version = "0.7.26"
+version = "0.7.27"
 dependencies = [
  "base64",
  "chrono",

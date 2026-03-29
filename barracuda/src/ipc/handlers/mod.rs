@@ -6,6 +6,7 @@
 //! return value — ludoSpring is a pure-function primal.
 
 mod delegation;
+mod gpu;
 mod lifecycle;
 mod mcp;
 mod neural;
@@ -49,7 +50,7 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         | "visualization.render.dashboard"
         | "visualization.export"
         | "visualization.validate"
-        | "interaction.subscribe" => neural::handle_visualization_stub(req),
+        | "interaction.subscribe" => neural::handle_visualization_delegation(req),
         METHOD_EVALUATE_FLOW => science::handle_evaluate_flow(req),
         METHOD_FITTS_COST => science::handle_fitts_cost(req),
         METHOD_ENGAGEMENT => science::handle_engagement(req),
@@ -72,6 +73,10 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         METHOD_STORAGE_GET => delegation::handle_storage_get(req),
         METHOD_TOOLS_LIST => mcp::handle_tools_list(req),
         METHOD_TOOLS_CALL => mcp::handle_tools_call(req),
+        "game.gpu.fog_of_war" => gpu::handle_gpu_fog_of_war(req),
+        "game.gpu.tile_lighting" => gpu::handle_gpu_tile_lighting(req),
+        "game.gpu.pathfind" => gpu::handle_gpu_pathfind(req),
+        "game.gpu.perlin_terrain" => gpu::handle_gpu_perlin_terrain(req),
         _ => {
             return serialize_error(&JsonRpcError::method_not_found(&req.id, &req.method));
         }
@@ -229,13 +234,15 @@ mod tests {
     }
 
     #[test]
-    fn visualization_render_stub_accepts() {
+    fn visualization_render_delegation_degraded_without_peer() {
         let req = make_request(
             "visualization.render",
             serde_json::json!({"session_id": "s", "title": "t", "data": {}}),
         );
         let resp = dispatch(&req);
-        assert!(resp.contains("accepted"));
+        let result = result_json(&resp);
+        assert_eq!(result["degraded"], true);
+        assert_eq!(result["delegated"], false);
     }
 
     #[test]
@@ -284,13 +291,18 @@ mod tests {
             "game.accessibility",
             "game.wfc_step",
             "game.difficulty_adjustment",
+            "game.begin_session",
+            "game.complete_session",
+            "game.npc_dialogue",
+            "game.narrate_action",
+            "game.push_scene",
         ] {
             assert!(
                 names.contains(&expected),
                 "missing tool {expected} in {names:?}"
             );
         }
-        assert_eq!(tools.len(), 8);
+        assert_eq!(tools.len(), 13);
         let first = &tools[0];
         assert!(first.get("description").is_some());
         assert!(first.get("input_schema").is_some());
@@ -378,6 +390,7 @@ mod tests {
         assert!(resp.contains("adjustment"));
         assert!(resp.contains("estimated_skill"));
         assert!(resp.contains("trend"));
+        assert!(resp.contains("reason"));
     }
 
     #[test]
@@ -652,5 +665,26 @@ mod tests {
         let req = make_request(METHOD_STORAGE_GET, serde_json::json!({ "key": "k1" }));
         let result = result_json(&dispatch(&req));
         assert_eq!(result["available"], false);
+    }
+
+    #[test]
+    fn gpu_fog_of_war_degrades_without_toadstool() {
+        let req = make_request(
+            "game.gpu.fog_of_war",
+            serde_json::json!({
+                "grid_w": 4,
+                "grid_h": 4,
+                "viewer_x": 2.0,
+                "viewer_y": 2.0,
+                "sight_radius": 3
+            }),
+        );
+        let result = result_json(&dispatch(&req));
+        assert_eq!(result["available"], false);
+        assert_eq!(result["fallback"], "cpu");
+        assert_eq!(
+            result["reason"],
+            "toadStool unavailable — use CPU implementation"
+        );
     }
 }

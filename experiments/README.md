@@ -1,8 +1,9 @@
 # ludoSpring Experiments
 
-**Date:** March 23, 2026
-**Total:** 82 experiments, all checks pass, 675 barracuda + 19 forge tests + 42 Python parity (V30)
+**Date:** March 28, 2026
+**Total:** 82 experiments, all checks pass, 675 barracuda + 19 forge tests + 42 Python parity (V31)
 **Pattern:** hotSpring validation + baseCamp expeditions
+**Lints:** All 82 experiment Cargo.toml files inherit `[lints] workspace = true` (V31)
 
 ---
 

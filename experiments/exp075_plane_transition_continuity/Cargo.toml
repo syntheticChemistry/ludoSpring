@@ -12,3 +12,6 @@ path = "src/main.rs"
 
 [dependencies]
 ludospring-barracuda = { path = "../../barracuda" }
+
+[lints]
+workspace = true

@@ -2,6 +2,8 @@
 
 # ludoSpring — Context
 
+**Last updated:** March 28, 2026 (V31)
+
 ## What is this?
 
 ludoSpring is an ecoSprings spring — the science of play, interaction, and game
@@ -24,7 +26,7 @@ experiments, and GPU-accelerated computation where it matters.
 - **Transport**: XDG-compliant socket path resolution, capability-based discovery
 - **No cross-primal Rust imports**: all coordination via runtime IPC
 
-## Capabilities (26 JSON-RPC methods + MCP tools)
+## Capabilities (27 JSON-RPC methods + MCP tools)
 
 Game science: `game.evaluate_flow`, `game.fitts_cost`, `game.engagement`,
 `game.generate_noise`, `game.wfc_step`, `game.analyze_ui`,
@@ -38,10 +40,14 @@ AI (via Squirrel): `game.npc_dialogue`, `game.narrate_action`, `game.voice_check
 Coordination: `game.poll_telemetry`, `game.push_scene`, `game.storage_put`,
 `game.storage_get`
 
+GPU (via toadStool delegation, CPU fallback): `game.gpu.fog_of_war`,
+`game.gpu.tile_lighting`, `game.gpu.pathfind`, `game.gpu.perlin_terrain`,
+`game.gpu.batch_raycast`
+
 Health/lifecycle: `health.check`, `health.liveness`, `health.readiness`,
 `lifecycle.status`, `capability.list`
 
-MCP: `tools.list` (8 science tool descriptors), `tools.call` (dispatch to science handlers)
+MCP: `tools.list` (13 tool descriptors: 8 science + 5 delegation), `tools.call` (dispatch to handlers)
 
 Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirroring JSON-RPC.
 
@@ -71,3 +77,4 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `PRIMAL_IPC_PROTOCOL.md` v3
 - wateringHole `SPRING_AS_NICHE_DEPLOYMENT_STANDARD.md`
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
+- **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Validation binary: dispatch routing for game science workloads.
 //!
-//! Follows the hotSpring validation pattern:
-//! - Hardcoded expected values with provenance
-//! - Explicit pass/fail for each check
-//! - Exit code 0 = all passed, 1 = any failure
+//! Follows the hotSpring validation pattern via `ValidationHarness`:
+//! hardcoded expected values with provenance, structured checks, and
+//! deterministic exit codes (`finish()` → exit 0/1).
 //!
 //! # Provenance
 //!
@@ -14,13 +13,18 @@
 //! Commit: initial scaffold (Mar 2026). No Python baseline required
 //! as routing is a design decision, not a numerical result.
 
-use std::process;
+use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 fn main() {
-    println!("=== ludoSpring Forge: Dispatch Routing Validation ===\n");
+    let design_provenance = BaselineProvenance {
+        script: "metalForge/forge/src/lib.rs (recommend_substrate design)",
+        commit: "design",
+        date: "2026-03",
+        command: "N/A — expected routing is by design, not from Python baselines",
+    };
 
-    let mut passed = 0_u32;
-    let mut failed = 0_u32;
+    let mut h = ValidationHarness::new("ludoSpring Forge: Dispatch Routing Validation");
+    h.print_provenance(&[&design_provenance]);
 
     let checks: &[(
         ludospring_forge::GameWorkload,
@@ -74,17 +78,9 @@ fn main() {
 
     for (workload, gpu_available, expected, description) in checks {
         let actual = ludospring_forge::recommend_substrate(*workload, *gpu_available);
-        if actual == *expected {
-            println!("  PASS  {description}");
-            passed += 1;
-        } else {
-            println!("  FAIL  {description}: expected {expected:?}, got {actual:?}");
-            failed += 1;
-        }
+        let label = format!("{description} — expected {expected:?}, actual {actual:?}");
+        h.check_bool(&label, actual == *expected);
     }
 
-    println!("\n{passed} passed, {failed} failed");
-    if failed > 0 {
-        process::exit(1);
-    }
+    h.finish();
 }

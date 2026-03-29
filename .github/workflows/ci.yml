@@ -29,11 +29,13 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
-      - name: Test (barracuda, ipc)
-        run: cargo test -p ludospring-barracuda --features ipc --lib --tests
+      - name: Test (barracuda + forge)
+        run: |
+          cargo test -p ludospring-barracuda --features ipc --lib --tests
+          cargo test -p ludospring-forge --lib --tests
 
-      - name: Doc check (barracuda, ipc)
-        run: cargo doc -p ludospring-barracuda --features ipc --no-deps
+      - name: Doc check
+        run: cargo doc --workspace --no-deps
 
       - name: Install cargo-deny
         uses: taiki-e/install-action@cargo-deny

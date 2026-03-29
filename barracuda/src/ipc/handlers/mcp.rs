@@ -4,10 +4,16 @@
 use crate::ipc::envelope::{JsonRpcError, JsonRpcRequest};
 use crate::ipc::params::ToolsCallParams;
 use crate::ipc::{
-    METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT,
-    METHOD_EVALUATE_FLOW, METHOD_FITTS_COST, METHOD_GENERATE_NOISE, METHOD_WFC_STEP,
+    METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
+    METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
+    METHOD_GENERATE_NOISE, METHOD_NARRATE_ACTION, METHOD_NPC_DIALOGUE, METHOD_PUSH_SCENE,
+    METHOD_WFC_STEP,
 };
 
+use super::delegation::{
+    handle_begin_session, handle_complete_session, handle_narrate_action, handle_npc_dialogue,
+    handle_push_scene,
+};
 use super::science::{
     handle_accessibility, handle_analyze_ui, handle_difficulty_adjustment, handle_engagement,
     handle_evaluate_flow, handle_fitts_cost, handle_generate_noise, handle_wfc_step,
@@ -37,12 +43,17 @@ pub(super) fn handle_tools_call(req: &JsonRpcRequest) -> HandlerResult {
         METHOD_ACCESSIBILITY => handle_accessibility(&inner),
         METHOD_WFC_STEP => handle_wfc_step(&inner),
         METHOD_DIFFICULTY_ADJUSTMENT => handle_difficulty_adjustment(&inner),
+        METHOD_BEGIN_SESSION => handle_begin_session(&inner),
+        METHOD_COMPLETE_SESSION => handle_complete_session(&inner),
+        METHOD_NPC_DIALOGUE => handle_npc_dialogue(&inner),
+        METHOD_NARRATE_ACTION => handle_narrate_action(&inner),
+        METHOD_PUSH_SCENE => handle_push_scene(&inner),
         _ => Err(JsonRpcError::method_not_found(&req.id, &p.name)),
     }
 }
 
 /// JSON array of MCP tool descriptors (name, description, `input_schema` per tool).
-#[allow(
+#[expect(
     clippy::too_many_lines,
     reason = "large declarative JSON Schema catalog for MCP tools.list"
 )]
@@ -195,6 +206,71 @@ pub(super) fn mcp_tools_descriptors() -> serde_json::Value {
                     "target_success_rate": { "type": "number", "description": "Optional DDA target (default from tolerances)." }
                 },
                 "required": ["outcomes"]
+            }
+        },
+        {
+            "name": METHOD_BEGIN_SESSION,
+            "description": "Begin a provenance-tracked game session.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "session_name": { "type": "string", "description": "Human-readable session name." }
+                },
+                "required": ["session_name"]
+            }
+        },
+        {
+            "name": METHOD_COMPLETE_SESSION,
+            "description": "Complete and seal a game session.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "session_id": { "type": "string", "description": "Session ID from game.begin_session." }
+                },
+                "required": ["session_id"]
+            }
+        },
+        {
+            "name": METHOD_NPC_DIALOGUE,
+            "description": "NPC dialogue via Squirrel AI delegation.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "npc_name": { "type": "string", "description": "NPC name for logging and context." },
+                    "personality_prompt": { "type": "string", "description": "System prompt for personality and knowledge bounds." },
+                    "player_input": { "type": "string", "description": "Player dialogue input." },
+                    "history": {
+                        "type": "array",
+                        "description": "Optional conversation history (role/content objects).",
+                        "items": { "type": "object" }
+                    }
+                },
+                "required": ["npc_name", "personality_prompt", "player_input"]
+            }
+        },
+        {
+            "name": METHOD_NARRATE_ACTION,
+            "description": "Narrate a game action via Squirrel AI.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "action": { "type": "string", "description": "Description of the action to narrate." },
+                    "context": { "type": "string", "description": "Surrounding context for the narration." }
+                },
+                "required": ["action", "context"]
+            }
+        },
+        {
+            "name": METHOD_PUSH_SCENE,
+            "description": "Push a scene to petalTongue visualization.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "session_id": { "type": "string", "description": "Session ID for petalTongue routing." },
+                    "channel": { "type": "string", "description": "Channel name (e.g. DialogueTree, CombatGrid)." },
+                    "scene": { "description": "Scene payload (any JSON value)." }
+                },
+                "required": ["session_id", "channel", "scene"]
             }
         }
     ])

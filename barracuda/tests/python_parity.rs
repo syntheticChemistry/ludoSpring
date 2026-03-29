@@ -14,8 +14,8 @@
 //! - **Output**: `baselines/python/combined_baselines.json`
 //! - **Commit**: `74cf9488673e070bc5304e5bdf6d1bbee8466040`
 //! - **Note**: Baseline JSON was generated under Python 3.10.12.
-//!   `run_all_baselines.py` now requires >= 3.12 but outputs are
-//!   numerically identical (stdlib `math` only, no version-dependent behavior).
+//!   `run_all_baselines.py` requires >= 3.10 (`REQUIRED_PYTHON_MIN`); outputs use
+//!   stdlib `math` only with no version-dependent behavior in the parity range.
 //!
 //! Every expected value below is transcribed from the Python JSON output.
 //! The comment after each value cites the exact JSON key path.

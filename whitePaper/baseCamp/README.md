@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 23, 2026
+**Date:** March 28, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V30 — 82 experiments, 675 barracuda + 19 forge tests, 42 Python parity, 19 proptest. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All validation experiments use `ValidationHarness` + `BaselineProvenance`. `GpuContext` + `TensorSession` wired. `default-features = false` on barraCuda. 91.27% line coverage (85% floor enforced). Baselines regenerated with `content_sha256`. `thiserror` error handling, MCP `tools.list`/`tools.call`, tarpc optional feature, handlers split into 5 submodules, CI pipeline, deploy graph fragment, scyBorg triple license
+**Status:** V31 — 82 experiments, 27 IPC capabilities, 675 barracuda + 19 forge tests, 42 Python parity, 19 proptest. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All validation experiments use `ValidationHarness` + `BaselineProvenance`. All 86 workspace members inherit `[lints] workspace = true`. `GpuContext` + `TensorSession` wired. `default-features = false` on barraCuda. 91.27% line coverage (85% floor enforced). Baselines regenerated with `content_sha256`. `thiserror` error handling, 13 MCP tool descriptors (8 science + 5 delegation), tarpc optional feature, handlers split into 6 submodules (+ gpu.rs), CI pipeline, deploy graph fragment, scyBorg triple license. esotericWebb response shape alignment. Fog-of-war Bresenham LOS with wall occlusion. Visualization delegation to petalTongue
 
 ---
 

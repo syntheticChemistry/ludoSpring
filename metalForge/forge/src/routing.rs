@@ -2,8 +2,7 @@
 
 //! Capability-based routing, fallback ordering, and legacy per-workload substrate hints.
 
-#[allow(unused_imports)]
-use crate::substrate::{Capability, SubstrateInfo, SubstrateKind};
+use crate::substrate::{SubstrateInfo, SubstrateKind};
 use crate::workload::{GameWorkload, GameWorkloadProfile};
 
 /// Dispatch recommendation (legacy, for exp031/exp033 compatibility).
