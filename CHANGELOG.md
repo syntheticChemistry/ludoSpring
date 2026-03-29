@@ -5,6 +5,43 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V32.2).
 
+## [V33] — 2026-03-29
+
+### Added — Neural API E2E Pipeline
+
+- **exp083_neural_api_e2e**: 10-check validation of full biomeOS Neural API pipeline
+  - Blake3 + SHA3-256 hashing via `capability.call` → BearDog
+  - ChaCha20-Poly1305 encrypt/decrypt roundtrip through Neural API routing
+  - Songbird network primal reachability via Neural API
+  - Capability listing verification (crypto, network domains)
+  - Sub-200ms latency assertion for routed crypto calls
+- **barracuda discovery evolution**: multi-probe fallback (`lifecycle.status` → `health.check` + `capabilities.list`)
+  - Format E: BearDog `provided_capabilities` (type + methods objects)
+  - Format F: Songbird flat capability arrays
+  - Semantic alias generation (`crypto` → `crypto.hash`, `crypto.encrypt`, `crypto.sign`)
+  - Auto-injection of `system.ping`, `health.check`, `health.liveness` for responsive primals
+  - 4 new unit tests for new formats (discovery tests 15→19)
+- **esotericWebb Neural API wiring**: `PrimalBridge.neural_api` field, `neural_api_call()` method,
+  `resilient_call()` fallback to `capability.call` when direct domain client absent
+  - `resolve_neural_api_socket()` in niche.rs now consumed by bridge `discover()`
+  - 322 esotericWebb tests pass with zero regressions
+
+### Validated — Live Primal E2E
+
+- BearDog v0.9.0 server on Unix socket (real Blake3, SHA3-256, ChaCha20-Poly1305, Ed25519)
+- Songbird v0.2.1 server on Unix socket (network discovery, federation)
+- biomeOS neural-api with 16 registered capabilities routing to live primals
+- ToadStool compute dispatch through Neural API (RTX 4060 detected, DRM mode)
+- exp042 9/9 against live BearDog + Songbird (first real-primal run)
+- exp083 10/10 full Neural API pipeline validation
+
+### Test counts
+
+- barracuda lib: 343 (discovery 19)
+- metalForge/forge: 26
+- esotericWebb: 322
+- Experiments: 83 (82 structural + exp083 live)
+
 ## [V32.2] — 2026-03-29
 
 ### Added

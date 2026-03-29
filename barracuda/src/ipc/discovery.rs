@@ -88,10 +88,8 @@ pub fn discovery_dirs() -> Vec<PathBuf> {
         .collect()
 }
 
-/// Probe a Unix socket to check if it hosts a JSON-RPC primal.
-///
-/// Sends `lifecycle.status` and parses the response for name and capabilities.
-pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
+/// Send a single JSON-RPC request on a fresh connection and return the parsed response.
+fn rpc_probe(path: &Path, method: &str) -> Option<serde_json::Value> {
     let stream = UnixStream::connect(path).ok()?;
     let probe = Duration::from_millis(crate::tolerances::PROBE_TIMEOUT_MS);
     stream.set_read_timeout(Some(probe)).ok()?;
@@ -99,7 +97,7 @@ pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
 
     let request = serde_json::json!({
         "jsonrpc": "2.0",
-        "method": "lifecycle.status",
+        "method": method,
         "id": 1
     });
 
@@ -113,7 +111,28 @@ pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
     let mut response = String::new();
     reader.read_line(&mut response).ok()?;
 
-    let parsed: serde_json::Value = serde_json::from_str(&response).ok()?;
+    serde_json::from_str(&response).ok()
+}
+
+/// Probe a Unix socket to check if it hosts a JSON-RPC primal.
+///
+/// Tries `lifecycle.status` first (biomeOS standard), then falls back to
+/// `health.check` + `capabilities.list` (BearDog/Songbird convention).
+/// Any responsive primal also gets `health.check` and `system.ping`
+/// auto-registered since reachability implies ping-ability.
+pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
+    // Strategy 1: lifecycle.status (biomeOS standard — name + capabilities in one call)
+    if let Some(ep) = probe_lifecycle_status(path) {
+        return Some(ep);
+    }
+
+    // Strategy 2: health.check for identity, capabilities.list for capabilities
+    probe_health_then_capabilities(path)
+}
+
+/// Try `lifecycle.status` — the original biomeOS-standard probe.
+fn probe_lifecycle_status(path: &Path) -> Option<PrimalEndpoint> {
+    let parsed = rpc_probe(path, "lifecycle.status")?;
     let result = parsed.get("result")?;
 
     let name = result
@@ -122,13 +141,140 @@ pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
         .unwrap_or("unknown")
         .to_owned();
 
-    let capabilities = extract_capabilities(result);
+    let mut capabilities = extract_capabilities(result);
+    inject_base_capabilities(&mut capabilities);
 
     Some(PrimalEndpoint {
         socket: path.to_owned(),
         name,
         capabilities,
     })
+}
+
+/// Fallback probe: `health.check` for primal name, `capabilities.list` for capabilities.
+fn probe_health_then_capabilities(path: &Path) -> Option<PrimalEndpoint> {
+    let health = rpc_probe(path, "health.check")?;
+    let health_result = health.get("result")?;
+
+    let name = health_result
+        .get("primal")
+        .or_else(|| health_result.get("name"))
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("unknown")
+        .to_owned();
+
+    let mut capabilities = Vec::new();
+
+    if let Some(caps_resp) = rpc_probe(path, "capabilities.list") {
+        if let Some(result) = caps_resp.get("result") {
+            capabilities = extract_capabilities_from_any(result);
+        }
+    }
+
+    inject_base_capabilities(&mut capabilities);
+
+    Some(PrimalEndpoint {
+        socket: path.to_owned(),
+        name,
+        capabilities,
+    })
+}
+
+/// Extract capabilities from any known primal response format.
+///
+/// Handles 6 formats observed across the ecosystem:
+///
+/// - **Format A**: Flat string array `["cap1", "cap2"]`
+/// - **Format B**: Object array with `name` `[{"name": "cap1"}]`
+/// - **Format C**: Nested wrapper `{"capabilities": [...]}`
+/// - **Format D**: Double-nested `{"capabilities": {"capabilities": [...]}}`
+/// - **Format E**: BearDog `provided_capabilities` `[{"type": "crypto", "methods": [...]}]`
+/// - **Format F**: Top-level flat array (Songbird)
+fn extract_capabilities_from_any(value: &serde_json::Value) -> Vec<String> {
+    // Format F: top-level array (Songbird capabilities.list returns a direct array)
+    if let Some(arr) = value.as_array() {
+        return extract_from_array(arr);
+    }
+
+    let mut caps = Vec::new();
+
+    // Format E: BearDog provided_capabilities
+    if let Some(provided) = value
+        .get("provided_capabilities")
+        .and_then(serde_json::Value::as_array)
+    {
+        for entry in provided {
+            if let Some(cap_type) = entry.get("type").and_then(serde_json::Value::as_str) {
+                caps.push(cap_type.to_owned());
+                if let Some(methods) = entry.get("methods").and_then(serde_json::Value::as_array) {
+                    for m in methods {
+                        if let Some(method_name) = m.as_str() {
+                            caps.push(format!("{cap_type}.{method_name}"));
+                        }
+                    }
+                }
+            }
+        }
+        if !caps.is_empty() {
+            generate_semantic_aliases(&mut caps);
+            return caps;
+        }
+    }
+
+    // Formats A-D: delegate to existing extractor
+    let extracted = extract_capabilities(value);
+    if !extracted.is_empty() {
+        return extracted;
+    }
+
+    caps
+}
+
+/// Generate well-known semantic aliases from capability types.
+///
+/// When a primal advertises `crypto` with method-level capabilities like
+/// `crypto.blake3_hash`, also register `crypto.hash` since the primal
+/// likely implements the generic hash dispatcher.
+fn generate_semantic_aliases(caps: &mut Vec<String>) {
+    let has = |name: &str, list: &[String]| list.iter().any(|c| c == name);
+
+    let snapshot = caps.clone();
+    let mut additions = Vec::new();
+
+    if has("crypto", &snapshot) && !has("crypto.hash", &snapshot) {
+        additions.push("crypto.hash".to_owned());
+    }
+    if has("crypto", &snapshot) && !has("crypto.encrypt", &snapshot) {
+        if has("crypto.chacha20_poly1305_encrypt", &snapshot) {
+            additions.push("crypto.encrypt".to_owned());
+        }
+    }
+    if has("crypto", &snapshot) && !has("crypto.decrypt", &snapshot) {
+        if has("crypto.chacha20_poly1305_decrypt", &snapshot) {
+            additions.push("crypto.decrypt".to_owned());
+        }
+    }
+    if has("crypto", &snapshot) && !has("crypto.sign", &snapshot) {
+        if has("crypto.sign_ed25519", &snapshot) {
+            additions.push("crypto.sign".to_owned());
+        }
+    }
+    if has("crypto", &snapshot) && !has("crypto.verify", &snapshot) {
+        if has("crypto.verify_ed25519", &snapshot) {
+            additions.push("crypto.verify".to_owned());
+        }
+    }
+
+    caps.extend(additions);
+}
+
+/// Auto-register base capabilities for any responsive primal.
+fn inject_base_capabilities(caps: &mut Vec<String>) {
+    for base in ["system.ping", "health.check", "health.liveness"] {
+        if !caps.iter().any(|c| c == base) {
+            caps.push(base.to_owned());
+        }
+    }
 }
 
 /// Extract capabilities from a `lifecycle.status` or `capability.list` response.
@@ -398,6 +544,71 @@ mod tests {
         });
         let caps = extract_capabilities(&result);
         assert_eq!(caps, vec!["valid", "also_valid"]);
+    }
+
+    #[test]
+    fn extract_format_e_beardog_provided_capabilities() {
+        let result = serde_json::json!({
+            "provided_capabilities": [
+                {
+                    "type": "crypto",
+                    "version": "1.0",
+                    "methods": ["blake3_hash", "hmac_sha256", "chacha20_poly1305_encrypt",
+                                "chacha20_poly1305_decrypt", "sign_ed25519", "verify_ed25519"]
+                },
+                {
+                    "type": "security",
+                    "methods": ["evaluate", "lineage"]
+                }
+            ]
+        });
+        let caps = extract_capabilities_from_any(&result);
+        assert!(caps.contains(&"crypto".to_owned()));
+        assert!(caps.contains(&"crypto.blake3_hash".to_owned()));
+        assert!(caps.contains(&"crypto.hash".to_owned()), "semantic alias");
+        assert!(caps.contains(&"crypto.encrypt".to_owned()), "semantic alias");
+        assert!(caps.contains(&"crypto.sign".to_owned()), "semantic alias");
+        assert!(caps.contains(&"security".to_owned()));
+        assert!(caps.contains(&"security.evaluate".to_owned()));
+    }
+
+    #[test]
+    fn extract_format_f_songbird_flat_array() {
+        let result = serde_json::json!([
+            "network.discovery",
+            "network.federation",
+            "ipc.jsonrpc",
+            "crypto.delegate"
+        ]);
+        let caps = extract_capabilities_from_any(&result);
+        assert_eq!(
+            caps,
+            vec![
+                "network.discovery",
+                "network.federation",
+                "ipc.jsonrpc",
+                "crypto.delegate"
+            ]
+        );
+    }
+
+    #[test]
+    fn inject_base_capabilities_adds_ping() {
+        let mut caps = vec!["crypto".to_owned()];
+        inject_base_capabilities(&mut caps);
+        assert!(caps.contains(&"system.ping".to_owned()));
+        assert!(caps.contains(&"health.check".to_owned()));
+        assert!(caps.contains(&"health.liveness".to_owned()));
+    }
+
+    #[test]
+    fn inject_base_capabilities_does_not_duplicate() {
+        let mut caps = vec!["system.ping".to_owned(), "health.check".to_owned()];
+        inject_base_capabilities(&mut caps);
+        assert_eq!(
+            caps.iter().filter(|c| c.as_str() == "system.ping").count(),
+            1
+        );
     }
 
     // ── Proptest fuzz (airSpring v0.8.7 pattern) ────────────────────

@@ -288,6 +288,16 @@ Core types: `barracuda/src/game/rpgpt/` (56 unit tests)
 - Plane transitions preserve complete world state with verified condition mapping
 - Round-trip (Dialogue->Tactical->Dialogue) demonstrates ruleset-agnostic state preservation
 
+### Track 25: Neural API End-to-End Pipeline (V33)
+
+First live e2e validation against real primal processes through biomeOS Neural API routing.
+
+| # | Package | Checks | Status | Reference | What it proves |
+|---|---------|--------|--------|-----------|----------------|
+| 083 | `ludospring-exp083` | 10 | PASS (live) | biomeOS capability_registry.toml | Neural API socket discovery, Blake3/SHA3-256 hash through `capability.call`, ChaCha20-Poly1305 encrypt/decrypt roundtrip, Songbird reachability, capability listing verification, sub-200ms routed latency |
+
+**Requires live primals**: BearDog server, Songbird server, biomeOS neural-api. Not structural — talks to real processes.
+
 ### metalForge Dispatch (Capability-Based Routing)
 
 | Binary | Checks | Status | Modules Validated |

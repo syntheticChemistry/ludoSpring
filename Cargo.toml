@@ -95,6 +95,7 @@ members = [
     "experiments/exp080_diablo_loot",
     "experiments/exp081_procedural_generation",
     "experiments/exp082_symphony_pipeline",
+    "experiments/exp083_neural_api_e2e",
 ]
 
 [workspace.package]
