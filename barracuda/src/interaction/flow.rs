@@ -71,14 +71,16 @@ pub fn evaluate_flow(challenge: f64, skill: f64, channel_width: f64) -> FlowStat
 /// then falls off linearly toward 0 as the gap grows toward the normalized extremes.
 #[must_use]
 pub fn flow_channel_metrics(challenge: f64, skill: f64, channel_width: f64) -> (f64, bool) {
+    use crate::tolerances::{NUMERICAL_FLOOR, SPAN_FLOOR};
+
     let d = (challenge - skill).abs();
-    let w = channel_width.max(1e-9);
+    let w = channel_width.max(NUMERICAL_FLOOR);
     let in_flow = d <= w;
     let flow_score = if in_flow {
         1.0
     } else {
         let excess = d - w;
-        let span = (1.0_f64 - w).max(1e-6);
+        let span = (1.0_f64 - w).max(SPAN_FLOOR);
         (1.0 - excess / span).clamp(0.0, 1.0)
     };
     (flow_score, in_flow)
@@ -142,6 +144,7 @@ impl DifficultyCurve {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn equal_challenge_skill_is_flow() {
@@ -161,9 +164,9 @@ mod tests {
     #[test]
     fn linear_curve_endpoints() {
         let curve = DifficultyCurve::linear(0.1, 0.9);
-        assert!((curve.sample(0.0) - 0.1).abs() < 1e-10);
-        assert!((curve.sample(1.0) - 0.9).abs() < 1e-10);
-        assert!((curve.sample(0.5) - 0.5).abs() < 1e-10);
+        assert!((curve.sample(0.0) - 0.1).abs() < ANALYTICAL_TOL);
+        assert!((curve.sample(1.0) - 0.9).abs() < ANALYTICAL_TOL);
+        assert!((curve.sample(0.5) - 0.5).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
@@ -173,7 +176,7 @@ mod tests {
         for i in 0..=100 {
             let t = f64::from(i) / 100.0;
             let val = curve.sample(t);
-            assert!(val >= prev - 1e-10);
+            assert!(val >= prev - ANALYTICAL_TOL);
             prev = val;
         }
     }

@@ -11,12 +11,12 @@
 //! uses embedded fixture data for offline validation of the NCBI data parsing
 //! pipeline. The experiment proves parsing and validation logic, not transport.
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use serde::Deserialize;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (fixture — NCBI E-utilities offline validation)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-10",
     command: "N/A (embedded fixture data)",
 };
@@ -110,13 +110,7 @@ fn run_validation<S: ludospring_barracuda::validation::ValidationSink>(
 }
 
 fn cmd_validate() {
-    let fixture = match parse_fixture() {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!("Fixture parse error: {e}");
-            std::process::exit(1);
-        }
-    };
+    let fixture = parse_fixture().or_exit("parse NCBI fixture");
 
     let mut h = ValidationHarness::new("exp041_ncbi_qs_integration");
     h.print_provenance(&[&PROVENANCE]);

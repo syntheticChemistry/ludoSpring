@@ -113,28 +113,29 @@ pub struct OperatorCounts {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn empty_task_is_zero() {
-        assert!((task_time(&[]) - 0.0).abs() < 1e-10);
+        assert!((task_time(&[]) - 0.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn single_keystroke() {
-        assert!((task_time(&[Operator::Keystroke]) - times::KEYSTROKE_AVG).abs() < 1e-10);
+        assert!((task_time(&[Operator::Keystroke]) - times::KEYSTROKE_AVG).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn point_click_sequence() {
         let ops = [Operator::Mental, Operator::Point, Operator::Keystroke];
         let expected = times::MENTAL + times::POINT + times::KEYSTROKE_AVG;
-        assert!((task_time(&ops) - expected).abs() < 1e-10);
+        assert!((task_time(&ops) - expected).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn response_uses_given_duration() {
         let ops = [Operator::Response(2.5)];
-        assert!((task_time(&ops) - 2.5).abs() < 1e-10);
+        assert!((task_time(&ops) - 2.5).abs() < ANALYTICAL_TOL);
     }
 
     #[test]

@@ -55,6 +55,16 @@ pub const TRIGGER_DETECTION_RANGE: u32 = 1;
 /// while absorbing floating-point arithmetic noise.
 pub const GAME_STATE_TOL: f64 = 0.01;
 
+/// Tolerance for NPC trust value equality across plane transitions.
+///
+/// Justification: trust values are computed from discrete integer events
+/// (faction + personal + relationship + debt). `f64::EPSILON` (~2.2e-16)
+/// is correct for exact bit-equality, but intermediate rounding during
+/// serialization/deserialization can introduce error up to ~1e-14.
+/// Using `f64::EPSILON` is overly strict; 1e-12 absorbs serialization
+/// noise while remaining tight enough to catch real trust drift.
+pub const TRUST_EQUALITY_TOL: f64 = 1e-12;
+
 /// Milliseconds per second — unit conversion constant.
 ///
 /// Used in telemetry timestamp-to-duration calculations.

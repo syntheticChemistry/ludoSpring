@@ -26,12 +26,12 @@
 
 mod trio;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — provenance trio integration)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust — crate types)",
 };
 
@@ -164,10 +164,7 @@ fn validate_sweetgrass_attribution(h: &mut ValidationHarness) {
         trio::GameActionBraid::new(&alice, "cast_spell", Some("Grizzly Bears"), vertex_hex);
     h.check_bool("sweet_cast_braid_created", cast_braid.is_ok());
 
-    let Ok(braid) = cast_braid else {
-        eprintln!("FATAL: cast_braid creation failed (validated above as Ok)");
-        std::process::exit(1);
-    };
+    let braid = cast_braid.or_exit("cast_braid creation failed (validated above as Ok)");
     h.check_bool(
         "sweet_braid_attributed_to_alice",
         braid.braid.was_attributed_to == alice,
@@ -185,15 +182,13 @@ fn validate_sweetgrass_attribution(h: &mut ValidationHarness) {
         !braid.braid.data_hash.as_str().is_empty(),
     );
 
-    let Ok(bolt_braid) = trio::GameActionBraid::new(
+    let bolt_braid = trio::GameActionBraid::new(
         &bob,
         "cast_spell",
         Some("Lightning Bolt"),
         "f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3",
-    ) else {
-        eprintln!("FATAL: bolt braid creation failed");
-        std::process::exit(1);
-    };
+    )
+    .or_exit("bolt braid creation failed");
 
     h.check_bool(
         "sweet_bolt_attributed_to_bob",
@@ -289,12 +284,13 @@ fn validate_cross_primal_roundtrip(h: &mut ValidationHarness) {
     let card_cert = trio::CardCertificate::new(&alice_loam, "Grizzly Bears", "10E", 268, spine_id);
 
     let cast_hex = cast_id.to_hex();
-    let Ok(action_braid) =
-        trio::GameActionBraid::new(&alice_sweet, "cast_spell", Some("Grizzly Bears"), &cast_hex)
-    else {
-        eprintln!("FATAL: action braid creation from vertex hex failed");
-        std::process::exit(1);
-    };
+    let action_braid = trio::GameActionBraid::new(
+        &alice_sweet,
+        "cast_spell",
+        Some("Grizzly Bears"),
+        &cast_hex,
+    )
+    .or_exit("action braid creation from vertex hex failed");
 
     h.check_bool(
         "roundtrip_dag_vertex_exists",

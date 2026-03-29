@@ -16,6 +16,7 @@ use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
+use ludospring_barracuda::validation::OrExit;
 
 // ============================================================================
 // Domain Model
@@ -155,10 +156,7 @@ impl MedicalDag {
         }
 
         let vertex = builder.build();
-        let Ok(vertex_id) = vertex.compute_id() else {
-            eprintln!("FATAL: vertex id computation failed");
-            std::process::exit(1);
-        };
+        let vertex_id = vertex.compute_id().or_exit("vertex id computation");
         self.session.update_frontier(vertex_id, &self.frontier);
         self.frontier = vec![vertex_id];
         self.vertices.push(vertex);
@@ -248,14 +246,12 @@ pub struct MedicalAccessSystem {
 impl MedicalAccessSystem {
     /// Create a new medical access system.
     pub fn new(owner: &Did) -> Self {
-        let Ok(spine) = Spine::new(
+        let spine = Spine::new(
             owner.clone(),
             Some("MedicalAccess".into()),
             SpineConfig::default(),
-        ) else {
-            eprintln!("FATAL: spine creation failed");
-            std::process::exit(1);
-        };
+        )
+        .or_exit("spine creation");
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -294,10 +290,10 @@ impl MedicalAccessSystem {
             schema_version: 1,
         };
 
-        let Ok((cert, _entry_hash)) = self.cert_manager.mint(cert_type, patient, metadata) else {
-            eprintln!("FATAL: certificate minting failed");
-            std::process::exit(1);
-        };
+        let (cert, _entry_hash) = self
+            .cert_manager
+            .mint(cert_type, patient, metadata)
+            .or_exit("certificate minting");
 
         let cert_id = cert.id;
 
@@ -343,10 +339,10 @@ impl MedicalAccessSystem {
             schema_version: 1,
         };
 
-        let Ok((cert, _entry_hash)) = self.cert_manager.mint(cert_type, patient, metadata) else {
-            eprintln!("FATAL: certificate minting failed");
-            std::process::exit(1);
-        };
+        let (cert, _entry_hash) = self
+            .cert_manager
+            .mint(cert_type, patient, metadata)
+            .or_exit("certificate minting");
 
         let consent_id = cert.id;
 

@@ -18,8 +18,8 @@ use unified::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — domain-agnostic fraud detection)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 

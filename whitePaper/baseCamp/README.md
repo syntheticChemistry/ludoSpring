@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 28, 2026
+**Date:** March 29, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V31 — 82 experiments, 27 IPC capabilities, 675 barracuda + 19 forge tests, 42 Python parity, 19 proptest. Zero `#[allow()]`, zero `unsafe`, zero hardcoded primal names (capability-based discovery), zero TODO/FIXME, clippy pedantic+nursery clean. All validation experiments use `ValidationHarness` + `BaselineProvenance`. All 86 workspace members inherit `[lints] workspace = true`. `GpuContext` + `TensorSession` wired. `default-features = false` on barraCuda. 91.27% line coverage (85% floor enforced). Baselines regenerated with `content_sha256`. `thiserror` error handling, 13 MCP tool descriptors (8 science + 5 delegation), tarpc optional feature, handlers split into 6 submodules (+ gpu.rs), CI pipeline, deploy graph fragment, scyBorg triple license. esotericWebb response shape alignment. Fog-of-war Bresenham LOS with wall occlusion. Visualization delegation to petalTongue
+**Status:** V32 — 82 experiments, 27 IPC capabilities, 674 barracuda + 19 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration. Full audit + deep debt evolution (110 files changed). All provenance hashes aligned (`4b683e3e`), all tolerances centralized (named constants with citations), zero manual FATAL patterns (27 files migrated to `OrExit`), zero hardcoded primal names (capability-based discovery via `niche::ECOSYSTEM_SOCKET_DIR`), zero `#[allow()]`, zero `unsafe`, zero TODO/FIXME. exp030 rewritten to `ValidationHarness`. CI hardened with baseline drift check. `deny.toml` fixed for cargo-deny 0.19. 3 deprecated binaries removed. `specs/BARRACUDA_REQUIREMENTS.md` created. 5 new parity tests
 
 ---
 
@@ -103,7 +103,7 @@ Nine experiments implementing the first playable plane of the RPGPT system:
 
 ### Cross-Spring Provenance
 
-- **Python baselines** (7 scripts, stdlib only) → `barracuda/tests/python_parity.rs` (22 tests) + `check_drift.py` (automated drift detection)
+- **Python baselines** (7 scripts, stdlib only) → `barracuda/tests/python_parity.rs` (47 tests) + `check_drift.py` (automated drift detection)
 - **barraCuda primitives** consumed: `sigmoid`, `dot`, `lcg_step`, `state_to_f64`
 - **Tolerances** centralized with citations in `tolerances/mod.rs` (20 named constants, `RAYCASTER_HIT_RATE_TOL` tightened 20→5)
 - **Proptest invariants** (12 tests): BSP area conservation, WFC entropy monotonicity, noise boundedness, engagement normalization, Fitts/Hick monotonicity, flow exhaustive partition
@@ -215,7 +215,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # 450+ tests (incl. 19 proptest)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # 674 barracuda + 47 parity + 19 proptest + 11 IPC integration
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike
@@ -269,7 +269,7 @@ cargo run -p ludospring-exp072                        # Trust dynamics: 45/45 ch
 cargo run -p ludospring-exp073                        # Dialogue skill checks: 34/34 checks
 cargo run -p ludospring-exp074                        # Dialogue flow: 26/26 checks
 cargo run -p ludospring-exp075                        # Plane transitions: 31/31 checks
-cargo run --features ipc --bin ludospring_dashboard  # petalTongue visualization
+cargo run --features ipc --bin ludospring -- dashboard  # petalTongue visualization
 ```
 
 ---

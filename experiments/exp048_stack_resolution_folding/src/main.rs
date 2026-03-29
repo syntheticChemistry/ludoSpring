@@ -26,7 +26,7 @@
 
 mod model;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use model::{
     BoardState, Stack, Target, bolt_to_face, giant_growth, lightning_bolt,
     scenario_bolt_then_growth, scenario_growth_then_bolt, scenario_murder_no_response,
@@ -36,8 +36,8 @@ use model::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — MTG stack folding)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -59,10 +59,11 @@ fn validate_same_cards_different_outcome(h: &mut ValidationHarness) {
         bear_dead_a != bear_dead_b,
     );
 
-    let Some(bear_b) = board_b.creatures.iter().find(|c| c.name == "bear") else {
-        eprintln!("FATAL: bear must exist in growth scenario");
-        std::process::exit(1);
-    };
+    let bear_b = board_b
+        .creatures
+        .iter()
+        .find(|c| c.name == "bear")
+        .or_exit("bear must exist in growth scenario");
     h.check_abs(
         "pumped_bear_is_5_5",
         f64::from(bear_b.effective_power()),
@@ -107,14 +108,11 @@ fn validate_triple_stack(h: &mut ValidationHarness) {
         bear_dead_bolt != bear_dead_growth,
     );
 
-    let Some(bear_g) = board_growth_wins
+    let bear_g = board_growth_wins
         .creatures
         .iter()
         .find(|c| c.name == "bear")
-    else {
-        eprintln!("FATAL: bear must exist in growth-wins scenario");
-        std::process::exit(1);
-    };
+        .or_exit("bear must exist in growth-wins scenario");
     h.check_abs(
         "double_pumped_bear_is_8_8",
         f64::from(bear_g.effective_power()),
@@ -235,28 +233,23 @@ fn validate_stack_lifo_mechanics(h: &mut ValidationHarness) {
 
     h.check_abs("stack_has_three_items", stack.items.len() as f64, 3.0, 0.0);
 
-    let Some(first) = stack.resolve_top() else {
-        eprintln!("FATAL: stack has items to resolve");
-        std::process::exit(1);
-    };
+    let first = stack.resolve_top().or_exit("stack has items to resolve");
     h.check_bool(
         "lifo_first_resolves_is_last_cast",
         first.card.name == "Lightning Bolt",
     );
 
-    let Some(second) = stack.resolve_top() else {
-        eprintln!("FATAL: stack has items to resolve (second)");
-        std::process::exit(1);
-    };
+    let second = stack
+        .resolve_top()
+        .or_exit("stack has items to resolve (second)");
     h.check_bool(
         "lifo_second_resolves_is_middle",
         second.card.name == "Giant Growth",
     );
 
-    let Some(third) = stack.resolve_top() else {
-        eprintln!("FATAL: stack has items to resolve (third)");
-        std::process::exit(1);
-    };
+    let third = stack
+        .resolve_top()
+        .or_exit("stack has items to resolve (third)");
     h.check_bool(
         "lifo_third_resolves_is_first_cast",
         third.card.name == "Lightning Bolt",

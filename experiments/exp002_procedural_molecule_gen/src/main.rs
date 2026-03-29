@@ -15,11 +15,11 @@
 use ludospring_barracuda::game::voxel::{BlockId, Chunk, chemistry_palette};
 use ludospring_barracuda::procedural::noise::fbm_3d;
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "baselines/python/perlin_noise.py",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-11",
     command: "python3 baselines/python/run_all_baselines.py",
 };
@@ -30,10 +30,7 @@ const PROVENANCE: BaselineProvenance = BaselineProvenance {
     reason = "palette/chunk counts ≤ 4096; fit in u32 and f64"
 )]
 fn validate_palette_and_generation(h: &mut ValidationHarness) {
-    let Ok(palette) = chemistry_palette() else {
-        eprintln!("FATAL: chemistry palette overflow");
-        std::process::exit(1);
-    };
+    let palette = chemistry_palette().or_exit("chemistry palette");
     h.check_abs(
         "chemistry palette has 11 entries",
         f64::from(palette.len() as u32),

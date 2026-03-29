@@ -15,6 +15,12 @@ pub const NICHE_NAME: &str = "ludospring";
 /// Capability domain — all capabilities are prefixed with this.
 pub const NICHE_DOMAIN: &str = "game";
 
+/// Conventional directory name for ecosystem IPC sockets.
+///
+/// Used under `$XDG_RUNTIME_DIR/` and `$TMPDIR/` to locate peer primals.
+/// Not a dependency on biomeOS — just the conventional socket namespace.
+pub const ECOSYSTEM_SOCKET_DIR: &str = "biomeos";
+
 /// All capabilities this primal exposes.
 ///
 /// Organized by domain:
@@ -204,11 +210,11 @@ pub fn socket_dirs() -> Vec<std::path::PathBuf> {
     }
 
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        dirs.push(PathBuf::from(xdg).join("biomeos"));
+        dirs.push(PathBuf::from(xdg).join(ECOSYSTEM_SOCKET_DIR));
     }
 
     let user = std::env::var("USER").unwrap_or_else(|_| "unknown".to_string());
-    dirs.push(std::env::temp_dir().join(format!("biomeos-{user}")));
+    dirs.push(std::env::temp_dir().join(format!("{ECOSYSTEM_SOCKET_DIR}-{user}")));
     dirs.push(std::env::temp_dir());
 
     dirs

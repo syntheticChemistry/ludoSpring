@@ -20,7 +20,7 @@ use ludospring_forge::{GameWorkload, Substrate, recommend_substrate};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — metalForge dispatch logic)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (wgpu adapter discovery)",
 };

@@ -33,12 +33,12 @@
 //! different environments (opponents/conditions) produces novel expression
 //! patterns every time. The provenance challenge is identical.
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — game tree combinatorics)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -321,10 +321,11 @@ fn validate_solo_branching(h: &mut ValidationHarness) {
         let turn = deck.typical_turn();
         let factor = turn.total_branch_factor();
 
-        let Some(first_word) = deck.name.split_whitespace().next() else {
-            eprintln!("FATAL: deck name has no first word");
-            std::process::exit(1);
-        };
+        let first_word = deck
+            .name
+            .split_whitespace()
+            .next()
+            .or_exit("deck name first word");
         h.check_bool(
             &format!("solo_{}_branches_per_turn_gt_1", first_word.to_lowercase()),
             factor > 1,
@@ -532,29 +533,26 @@ fn validate_scalability_comparison(h: &mut ValidationHarness) {
 
     let mut rankings: Vec<(&str, f64)> = known.clone();
     rankings.push(("MTG (computed)", mtg_log10));
-    rankings.sort_by(|a, b| match a.1.partial_cmp(&b.1) {
-        Some(ord) => ord,
-        None => {
-            eprintln!("FATAL: log10 value is NaN");
-            std::process::exit(1);
-        }
+    rankings.sort_by(|a, b| {
+        a.1.partial_cmp(&b.1)
+            .or_exit("log10 value is NaN during sort")
     });
 
-    let Some(mtg_rank) = rankings.iter().position(|r| r.0 == "MTG (computed)") else {
-        eprintln!("FATAL: MTG (computed) not found in rankings");
-        std::process::exit(1);
-    };
-    let Some(poker_rank) = rankings.iter().position(|r| r.0 == "Poker (heads-up NLH)") else {
-        eprintln!("FATAL: Poker (heads-up NLH) not found in rankings");
-        std::process::exit(1);
-    };
+    let mtg_rank = rankings
+        .iter()
+        .position(|r| r.0 == "MTG (computed)")
+        .or_exit("MTG (computed) in rankings");
+    let poker_rank = rankings
+        .iter()
+        .position(|r| r.0 == "Poker (heads-up NLH)")
+        .or_exit("Poker (heads-up NLH) in rankings");
 
     h.check_bool("mtg_ranks_above_poker", mtg_rank >= poker_rank);
 
-    let Some(chess_entry) = known.iter().find(|g| g.0 == "Chess") else {
-        eprintln!("FATAL: Chess not found in known game trees");
-        std::process::exit(1);
-    };
+    let chess_entry = known
+        .iter()
+        .find(|g| g.0 == "Chess")
+        .or_exit("Chess in known game trees");
     let chess_log = chess_entry.1;
     h.check_bool(
         "mtg_dwarfs_chess_by_orders_of_magnitude",

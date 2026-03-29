@@ -17,14 +17,14 @@
 
 mod world;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 use world::{ActionCategory, GameState};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — DAG text adventure)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -299,14 +299,11 @@ fn validate_isomorphism(h: &mut ValidationHarness) {
     game.execute_move("north");
     game.execute_take("crown");
 
-    let Some(crown_idx) = game
+    let crown_idx = game
         .vertices
         .iter()
         .position(|v| v.action == "take" && v.inventory.contains(&"crown"))
-    else {
-        eprintln!("FATAL: crown take vertex not found in vertices");
-        std::process::exit(1);
-    };
+        .or_exit("crown take vertex not found in vertices");
 
     let mut lineage = Vec::new();
     let mut current = Some(crown_idx);

@@ -66,3 +66,37 @@ pub const PERLIN_SAFE_BOUND: f64 = 1.5;
 /// leaves. For typical BSP trees (< 100 leaves, area ≤ 10 000), 1e-6
 /// is several orders of magnitude above the actual error.
 pub const BSP_AREA_CONSERVATION_TOL: f64 = 1e-6;
+
+/// Ultra-tight tolerance for bit-exact formula parity.
+///
+/// Justification: when Python and Rust evaluate the same closed-form
+/// expression (e.g. sigmoid, Perlin fade) with identical IEEE 754 f64
+/// operand order, the only difference is compiler reassociation of
+/// sub-expressions. Observed delta is < 1 ULP, bounded by 1e-15.
+/// Use this for same-formula cross-language checks where `ANALYTICAL_TOL`
+/// (1e-10) is unnecessarily loose.
+pub const STRICT_ANALYTICAL_TOL: f64 = 1e-15;
+
+/// Numerical floor to prevent division-by-zero in continuous scoring.
+///
+/// Justification: used as a lower bound for denominators (channel width,
+/// span normalization) where the domain value can legitimately approach
+/// zero. 1e-9 is well below any meaningful game parameter while keeping
+/// the quotient within f64 representable range.
+pub const NUMERICAL_FLOOR: f64 = 1e-9;
+
+/// Near-zero threshold for difficulty-adjustment decisions.
+///
+/// Justification: when a DDA adjustment is within ±1e-6 of zero, the
+/// system reports "hold difficulty" rather than a directional suggestion.
+/// This absorbs floating-point noise from success-rate estimation without
+/// masking genuine performance signals.
+pub const DDA_ADJUSTMENT_EPSILON: f64 = 1e-6;
+
+/// Minimum span denominator for linear interpolation falloff.
+///
+/// Justification: flow score falls off linearly as |challenge − skill|
+/// exceeds the channel width. The denominator (1.0 − width) can approach
+/// zero for extreme channel widths. 1e-6 prevents a divide-by-zero while
+/// remaining several orders of magnitude below meaningful flow parameters.
+pub const SPAN_FLOOR: f64 = 1e-6;

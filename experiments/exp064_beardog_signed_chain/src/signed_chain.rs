@@ -18,6 +18,7 @@ use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
+use ludospring_barracuda::validation::OrExit;
 
 /// Ed25519 key pair (simplified model for validation — real signing via `BearDog` IPC).
 #[derive(Debug, Clone)]
@@ -160,10 +161,7 @@ impl ProvDag {
         }
 
         let vertex = builder.build();
-        let Ok(vertex_id) = vertex.compute_id() else {
-            eprintln!("FATAL: vertex id computation failed");
-            std::process::exit(1);
-        };
+        let vertex_id = vertex.compute_id().or_exit("vertex id computation");
         self.session.update_frontier(vertex_id, &self.frontier);
 
         let content_hash = vertex_id.as_bytes().to_vec();
@@ -177,14 +175,12 @@ impl ProvDag {
 impl SignedProvenanceChain {
     /// Create a new signed provenance chain.
     pub fn new(owner: &Did, key_seed: &str) -> Self {
-        let Ok(spine) = Spine::new(
+        let spine = Spine::new(
             owner.clone(),
             Some("SignedChain".into()),
             SpineConfig::default(),
-        ) else {
-            eprintln!("FATAL: spine creation failed");
-            std::process::exit(1);
-        };
+        )
+        .or_exit("spine creation");
         let cert_manager = CertificateManager::new(spine);
         let key_pair = Ed25519KeyPair::from_seed(key_seed);
 
@@ -246,10 +242,10 @@ impl SignedProvenanceChain {
             attributes: HashMap::new(),
         };
 
-        let Ok((cert, _)) = self.cert_manager.mint(cert_type, owner, metadata) else {
-            eprintln!("FATAL: certificate minting failed");
-            std::process::exit(1);
-        };
+        let (cert, _) = self
+            .cert_manager
+            .mint(cert_type, owner, metadata)
+            .or_exit("certificate minting");
 
         let cert_id = cert.id;
         let content_hash = cert_id.to_string().into_bytes();

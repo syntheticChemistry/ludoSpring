@@ -13,9 +13,16 @@
 use ludospring_barracuda::game::rpgpt::knowledge::{KnowledgeBounds, LieTopic};
 use ludospring_barracuda::game::rpgpt::plane::PassiveCheckPriority;
 use ludospring_barracuda::game::rpgpt::voice::{VoiceCheckResult, VoiceId};
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 const EXP: &str = "exp068_lie_detection_passive_checks";
+
+const PROVENANCE: BaselineProvenance = BaselineProvenance {
+    script: "specs/RPGPT_INTERNAL_VOICES_SPEC.md",
+    commit: "4b683e3e",
+    date: "2026-03-29",
+    command: "cargo run -p exp068_lie_detection_passive_checks",
+};
 
 fn maren_knowledge() -> KnowledgeBounds {
     KnowledgeBounds {
@@ -107,10 +114,7 @@ fn validate_dc_affects_rate(h: &mut ValidationHarness) {
 fn validate_lie_tell_association(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
 
-    let Some(experiment_lie) = kb.get_lie("experiments") else {
-        eprintln!("FATAL: lie for 'experiments' not found");
-        std::process::exit(1);
-    };
+    let experiment_lie = kb.get_lie("experiments").or_exit("lie for 'experiments' not found");
     h.check_bool(
         "experiment_tell_mentions_scars",
         experiment_lie.tell.contains("burn scars"),
@@ -120,10 +124,7 @@ fn validate_lie_tell_association(h: &mut ValidationHarness) {
         !experiment_lie.tell.contains("workshop"),
     );
 
-    let Some(cellar_lie) = kb.get_lie("cellar") else {
-        eprintln!("FATAL: lie for 'cellar' not found");
-        std::process::exit(1);
-    };
+    let cellar_lie = kb.get_lie("cellar").or_exit("lie for 'cellar' not found");
     h.check_bool(
         "cellar_tell_mentions_glance",
         cellar_lie.tell.contains("Glances"),
@@ -136,10 +137,7 @@ fn validate_lie_tell_association(h: &mut ValidationHarness) {
 
 fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
-    let Some(experiment_lie) = kb.get_lie("experiments") else {
-        eprintln!("FATAL: lie for 'experiments' not found");
-        std::process::exit(1);
-    };
+    let experiment_lie = kb.get_lie("experiments").or_exit("lie for 'experiments' not found");
 
     h.check_bool(
         "perception_can_detect_experiments",
@@ -152,10 +150,7 @@ fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
         experiment_lie.detection_skills.contains(&"Empathy".into()),
     );
 
-    let Some(cellar_lie) = kb.get_lie("cellar") else {
-        eprintln!("FATAL: lie for 'cellar' not found");
-        std::process::exit(1);
-    };
+    let cellar_lie = kb.get_lie("cellar").or_exit("lie for 'cellar' not found");
     h.check_bool(
         "perception_can_detect_cellar",
         cellar_lie.detection_skills.contains(&"Perception".into()),
@@ -188,6 +183,7 @@ fn validate_voice_check_mechanics(h: &mut ValidationHarness) {
 
 fn main() {
     let mut h = ValidationHarness::new(EXP);
+    h.print_provenance(&[&PROVENANCE]);
 
     validate_detection_rates(&mut h);
     validate_dc_affects_rate(&mut h);

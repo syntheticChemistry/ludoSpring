@@ -10,7 +10,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — wetSpring Anderson QS model)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (cross-spring ludoSpring × wetSpring)",
 };

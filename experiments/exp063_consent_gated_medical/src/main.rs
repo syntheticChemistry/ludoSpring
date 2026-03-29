@@ -15,13 +15,13 @@
 mod medical;
 
 use loam_spine_core::Did;
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use medical::{AccessEvent, ConsentScope, MedicalAccessSystem, MedicalFraudType, RecordType};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — healthSpring zero-knowledge medical access)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -59,10 +59,7 @@ fn validate_consent_lifecycle(h: &mut ValidationHarness) {
     let access_result = system.access_record(&provider, record_id, "treatment", RecordType::Lab);
     h.check_bool("lifecycle_access_succeeds", access_result.is_ok());
 
-    let Ok(proof) = access_result else {
-        eprintln!("FATAL: access_result failed (validated above as Ok)");
-        std::process::exit(1);
-    };
+    let proof = access_result.or_exit("access_result failed (validated above as Ok)");
     h.check_bool("lifecycle_proof_returned", proof.record_id == record_id);
 
     h.check_bool("lifecycle_access_logged", system.access_log.len() == 1);
@@ -75,10 +72,9 @@ fn validate_consent_lifecycle(h: &mut ValidationHarness) {
         0.0,
     );
 
-    let Ok(()) = system.revoke_consent(&patient, consent_id) else {
-        eprintln!("FATAL: revoke_consent failed");
-        std::process::exit(1);
-    };
+    system
+        .revoke_consent(&patient, consent_id)
+        .or_exit("revoke_consent failed");
     h.check_bool(
         "lifecycle_consent_revoked",
         system.consents.get(&consent_id).is_some_and(|c| c.revoked),
@@ -145,10 +141,9 @@ fn validate_access_control(h: &mut ValidationHarness) {
     let b_access_lab = system.access_record(&provider_b, lab_id, "review", RecordType::Lab);
     h.check_bool("access_provider_b_cannot_access_lab", b_access_lab.is_err());
 
-    let Ok(()) = system.revoke_consent(&patient, consent_a) else {
-        eprintln!("FATAL: revoke_consent for consent_a failed");
-        std::process::exit(1);
-    };
+    system
+        .revoke_consent(&patient, consent_a)
+        .or_exit("revoke_consent for consent_a failed");
     let scope_short = ConsentScope {
         record_types: vec![RecordType::Lab],
         expiry_tick: 2,
@@ -160,10 +155,9 @@ fn validate_access_control(h: &mut ValidationHarness) {
     let expired_access = system.access_record(&provider_a, lab_id, "late", RecordType::Lab);
     h.check_bool("access_expired_consent_blocks", expired_access.is_err());
 
-    let Ok(()) = system.revoke_consent(&patient, consent_short) else {
-        eprintln!("FATAL: revoke_consent for consent_short failed");
-        std::process::exit(1);
-    };
+    system
+        .revoke_consent(&patient, consent_short)
+        .or_exit("revoke_consent for consent_short failed");
     let revoked_access = system.access_record(&provider_a, lab_id, "after_revoke", RecordType::Lab);
     h.check_bool("access_revoked_consent_blocks", revoked_access.is_err());
 
@@ -197,10 +191,9 @@ fn validate_fraud_detection(h: &mut ValidationHarness) {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    let Ok(_) = system.access_record(&provider, record_id, "legit", RecordType::Lab) else {
-        eprintln!("FATAL: access_record legit failed");
-        std::process::exit(1);
-    };
+    let _ = system
+        .access_record(&provider, record_id, "legit", RecordType::Lab)
+        .or_exit("access_record legit failed");
 
     let fraud_clean = system.detect_fraud();
     h.check_bool("fraud_clean_zero", fraud_clean.is_empty());
@@ -354,22 +347,17 @@ fn validate_audit_trail(h: &mut ValidationHarness) {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    let Ok(_) = system.access_record(&provider, record_id, "initial", RecordType::Encounter) else {
-        eprintln!("FATAL: access_record initial failed");
-        std::process::exit(1);
-    };
+    let _ = system
+        .access_record(&provider, record_id, "initial", RecordType::Encounter)
+        .or_exit("access_record initial failed");
     system.advance_tick();
-    let Ok(_) = system.access_record(&provider, record_id, "followup", RecordType::Encounter)
-    else {
-        eprintln!("FATAL: access_record followup failed");
-        std::process::exit(1);
-    };
+    let _ = system
+        .access_record(&provider, record_id, "followup", RecordType::Encounter)
+        .or_exit("access_record followup failed");
     system.advance_tick();
-    let Ok(_) = system.access_record(&provider, record_id, "discharge", RecordType::Encounter)
-    else {
-        eprintln!("FATAL: access_record discharge failed");
-        std::process::exit(1);
-    };
+    let _ = system
+        .access_record(&provider, record_id, "discharge", RecordType::Encounter)
+        .or_exit("access_record discharge failed");
 
     let audit = system.audit(record_id);
     h.check_abs("audit_full_reconstruction", audit.len() as f64, 3.0, 0.0);
@@ -416,11 +404,9 @@ fn validate_access_proof(h: &mut ValidationHarness) {
     system.grant_consent(&patient, &provider, scope);
 
     system.advance_tick();
-    let Ok(proof) = system.access_record(&provider, record_id, "verification", RecordType::Vitals)
-    else {
-        eprintln!("FATAL: access_record verification failed");
-        std::process::exit(1);
-    };
+    let proof = system
+        .access_record(&provider, record_id, "verification", RecordType::Vitals)
+        .or_exit("access_record verification failed");
 
     h.check_bool("proof_generation", !proof.proof_signature.is_empty());
 
@@ -438,11 +424,9 @@ fn validate_access_proof(h: &mut ValidationHarness) {
     h.check_bool("proof_tampered_rejected", !system.verify_proof(&bad_proof));
 
     system.advance_tick();
-    let Ok(proof2) = system.access_record(&provider, record_id, "second", RecordType::Vitals)
-    else {
-        eprintln!("FATAL: access_record second failed");
-        std::process::exit(1);
-    };
+    let proof2 = system
+        .access_record(&provider, record_id, "second", RecordType::Vitals)
+        .or_exit("access_record second failed");
     h.check_bool(
         "proof_different_per_access",
         proof.proof_signature != proof2.proof_signature,

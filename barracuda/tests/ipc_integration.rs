@@ -172,8 +172,11 @@ fn neural_bridge_rpc_round_trip_with_socket() {
     );
     assert!(bridge.is_available(), "health.check should succeed");
 
+    let reg_dir = ipc_test_util::ipc_test_socket_dir();
+    std::fs::create_dir_all(&reg_dir).expect("registration socket dir");
+    let reg_sock = reg_dir.join("register.sock");
     let reg = bridge
-        .register(std::path::Path::new("/tmp/ludospring-register.sock"))
+        .register(&reg_sock)
         .expect("lifecycle.register");
     assert_eq!(
         reg.get("status").and_then(|v| v.as_str()),

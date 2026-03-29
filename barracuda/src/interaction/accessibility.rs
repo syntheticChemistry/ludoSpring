@@ -150,6 +150,7 @@ impl AccessibilityReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn fully_accessible_scores_one() {
@@ -162,14 +163,14 @@ mod tests {
             scalable_text: true,
         };
         let score = score_visual_accessibility(&features);
-        assert!((score.score - 1.0).abs() < 1e-10);
+        assert!((score.score - 1.0).abs() < ANALYTICAL_TOL);
         assert!(score.issues.is_empty());
     }
 
     #[test]
     fn no_accessibility_scores_zero() {
         let score = score_visual_accessibility(&VisualAccessibilityFeatures::default());
-        assert!((score.score - 0.0).abs() < 1e-10);
+        assert!((score.score - 0.0).abs() < ANALYTICAL_TOL);
         assert_eq!(score.issues.len(), 6);
     }
 
@@ -188,6 +189,6 @@ mod tests {
             strengths: vec![],
         };
         let report = AccessibilityReport::from_dimensions(vec![d1, d2]);
-        assert!((report.overall - 0.6).abs() < 1e-10);
+        assert!((report.overall - 0.6).abs() < ANALYTICAL_TOL);
     }
 }

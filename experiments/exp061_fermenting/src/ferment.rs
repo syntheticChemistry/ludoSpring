@@ -19,6 +19,7 @@ use loam_spine_core::entry::SpineConfig;
 use loam_spine_core::manager::CertificateManager;
 use loam_spine_core::spine::Spine;
 use loam_spine_core::types::CertificateId;
+use ludospring_barracuda::validation::OrExit;
 
 // ============================================================================
 // Cosmetic Schema
@@ -218,10 +219,7 @@ impl FermentDag {
         }
 
         let vertex = builder.build();
-        let Ok(vertex_id) = vertex.compute_id() else {
-            eprintln!("FATAL: vertex id computation failed");
-            std::process::exit(1);
-        };
+        let vertex_id = vertex.compute_id().or_exit("vertex id computation");
         self.session.update_frontier(vertex_id, &self.frontier);
         self.frontier = vec![vertex_id];
         self.vertices.push(vertex);
@@ -232,14 +230,12 @@ impl FermentDag {
 impl FermentingSystem {
     /// Create a new fermenting system.
     pub fn new(owner: &Did) -> Self {
-        let Ok(spine) = Spine::new(
+        let spine = Spine::new(
             owner.clone(),
             Some("Fermenting".into()),
             SpineConfig::default(),
-        ) else {
-            eprintln!("FATAL: spine creation failed");
-            std::process::exit(1);
-        };
+        )
+        .or_exit("spine creation");
         let cert_manager = CertificateManager::new(spine);
 
         Self {
@@ -282,10 +278,10 @@ impl FermentingSystem {
             attributes: item_attrs,
         };
 
-        let Ok((cert, _entry_hash)) = self.cert_manager.mint(cert_type, owner, metadata) else {
-            eprintln!("FATAL: certificate minting failed");
-            std::process::exit(1);
-        };
+        let (cert, _entry_hash) = self
+            .cert_manager
+            .mint(cert_type, owner, metadata)
+            .or_exit("certificate minting");
 
         let cert_id = cert.id;
 

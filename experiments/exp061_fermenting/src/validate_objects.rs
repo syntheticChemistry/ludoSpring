@@ -3,7 +3,7 @@
 
 use loam_spine_core::certificate::LoanTerms;
 use loam_spine_core::{Certificate, Did};
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{OrExit, ValidationHarness};
 
 use crate::ferment::{CosmeticSchema, FermentEventType, FermentingSystem, Rarity};
 
@@ -45,10 +45,7 @@ pub fn validate_cosmetic_schema(h: &mut ValidationHarness) {
     let round_tripped = CosmeticSchema::from_attributes(&attrs);
     h.check_bool("cosmetic_roundtrip_succeeds", round_tripped.is_some());
 
-    let Some(rt) = round_tripped else {
-        eprintln!("FATAL: cosmetic roundtrip returned None despite prior check");
-        std::process::exit(1);
-    };
+    let rt = round_tripped.or_exit("cosmetic roundtrip");
     h.check_bool("cosmetic_roundtrip_rarity", rt.rarity == Rarity::Epic);
     h.check_bool("cosmetic_roundtrip_skin", rt.skin == "dragon_scale");
     h.check_bool(
@@ -313,10 +310,9 @@ pub fn validate_ownership_enforcement(h: &mut ValidationHarness) {
     let eve_loan = system.loan(amulet_id, &eve, &bob, LoanTerms::new());
     h.check_bool("ownership_non_owner_loan_fails", eve_loan.is_err());
 
-    let Ok(()) = system.loan(amulet_id, &alice, &bob, LoanTerms::new()) else {
-        eprintln!("FATAL: legitimate loan failed");
-        std::process::exit(1);
-    };
+    system
+        .loan(amulet_id, &alice, &bob, LoanTerms::new())
+        .or_exit("legitimate loan");
 
     let alice_return = system.return_loan(amulet_id, &alice);
     h.check_bool("ownership_non_borrower_return_fails", alice_return.is_err());

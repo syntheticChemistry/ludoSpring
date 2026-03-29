@@ -14,7 +14,7 @@ use std::time::Instant;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (runtime — crypto + discovery Tower Atomic)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (Unix socket RPC validation)",
 };

@@ -13,7 +13,7 @@ use crate::procedural::noise::perlin_perm_table_u32;
 
 use super::{HandlerResult, parse_params, to_json};
 
-const DEGRADE_REASON: &str = "toadStool unavailable — use CPU implementation";
+const DEGRADE_REASON: &str = "compute dispatch unavailable — CPU fallback active";
 
 fn degradation_value() -> serde_json::Value {
     json!({

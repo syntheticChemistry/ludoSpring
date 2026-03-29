@@ -23,7 +23,7 @@
 
 mod catalog;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 use catalog::{
     CardCategory, TreeEffect, commander_designed_cards, commander_format_rules, example_cards,
@@ -32,8 +32,8 @@ use catalog::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — game tree design metric)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -117,18 +117,14 @@ fn validate_mtg_infinite(h: &mut ValidationHarness) {
         has_finite && has_infinite,
     );
 
-    let Some(highest_finite) = finite_games.iter().max_by(|a, b| {
-        match a.game_tree_log10.partial_cmp(&b.game_tree_log10) {
-            Some(ord) => ord,
-            None => {
-                eprintln!("FATAL: game_tree_log10 is NaN");
-                std::process::exit(1);
-            }
-        }
-    }) else {
-        eprintln!("FATAL: no finite games in catalog");
-        std::process::exit(1);
-    };
+    let highest_finite = finite_games
+        .iter()
+        .max_by(|a, b| {
+            a.game_tree_log10
+                .partial_cmp(&b.game_tree_log10)
+                .or_exit("game_tree_log10 is NaN")
+        })
+        .or_exit("no finite games in catalog");
 
     h.check_bool(
         "highest_finite_is_stratego",
@@ -141,10 +137,10 @@ fn validate_mtg_infinite(h: &mut ValidationHarness) {
         0.0,
     );
 
-    let Some(mtg) = games.iter().find(|g| g.name == "Magic: The Gathering") else {
-        eprintln!("FATAL: Magic: The Gathering not found in game catalog");
-        std::process::exit(1);
-    };
+    let mtg = games
+        .iter()
+        .find(|g| g.name == "Magic: The Gathering")
+        .or_exit("Magic: The Gathering not found in game catalog");
     h.check_bool("mtg_tree_is_infinite", mtg.infinite_tree);
     h.check_bool("mtg_is_unsolved", !mtg.is_solved);
 
@@ -338,19 +334,19 @@ fn validate_longevity_correlation(h: &mut ValidationHarness) {
     let all_big_trees = actively_played.iter().all(|g| g.game_tree_log10 > 100.0);
     h.check_bool("active_games_have_tree_gt_100", all_big_trees);
 
-    let Some(ttt) = games.iter().find(|g| g.name == "Tic-Tac-Toe") else {
-        eprintln!("FATAL: Tic-Tac-Toe not found in longevity games");
-        std::process::exit(1);
-    };
+    let ttt = games
+        .iter()
+        .find(|g| g.name == "Tic-Tac-Toe")
+        .or_exit("Tic-Tac-Toe not found in longevity games");
     h.check_bool(
         "tictactoe_small_tree_not_played",
         !ttt.still_widely_played && ttt.game_tree_log10 < 10.0,
     );
 
-    let Some(mtg) = games.iter().find(|g| g.name == "Magic: The Gathering") else {
-        eprintln!("FATAL: Magic: The Gathering not found in longevity games");
-        std::process::exit(1);
-    };
+    let mtg = games
+        .iter()
+        .find(|g| g.name == "Magic: The Gathering")
+        .or_exit("Magic: The Gathering not found in longevity games");
     h.check_bool(
         "mtg_infinite_tree_still_growing",
         mtg.still_widely_played && mtg.game_tree_log10.is_infinite(),

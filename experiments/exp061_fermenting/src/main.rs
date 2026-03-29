@@ -28,7 +28,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/LYSOGENY_CATALOG.md",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "cargo run -p exp061_fermenting",
 };

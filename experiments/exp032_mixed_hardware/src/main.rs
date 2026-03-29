@@ -17,7 +17,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — PCIe transfer model, mixed pipeline)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (sysfs PCIe detection)",
 };

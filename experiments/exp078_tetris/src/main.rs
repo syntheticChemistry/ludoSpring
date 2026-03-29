@@ -31,7 +31,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — Tetris Guideline, Csikszentmihalyi 1990, Hick 1952)",
-    commit: "N/A",
+    commit: "4b683e3e",
     date: "2026-03-18",
     command: "N/A (analytical — Tetris first principles)",
 };

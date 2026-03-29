@@ -296,13 +296,13 @@ Core types: `barracuda/src/game/rpgpt/` (56 unit tests)
 
 metalForge forge library: 9 unit tests — `SubstrateKind` (Cpu/Gpu/Npu), `Capability` enum (F64/F32/Shader/SIMD/PCIe/QuantizedInference), `route()` with capability filtering, `fallback_chain()` (GPU>NPU>CPU).
 
-### petalTongue Dashboards
+### petalTongue Dashboards (UniBin subcommands)
 
-| Binary | Scenarios | What it visualizes |
-|--------|-----------|-------------------|
-| `ludospring_dashboard` | 8 | All 7 `GameChannelType` channels from validated math |
-| `ludospring_live_session` | 1 (streaming) | 120-tick game session with DDA, flow, engagement |
-| `ludospring_tufte_dashboard` | 3 | Genre comparison, minimap multiples, cognitive load sweep |
+| Subcommand | Scenarios | What it visualizes |
+|------------|-----------|-------------------|
+| `ludospring dashboard` | 8 | All 7 `GameChannelType` channels from validated math |
+| `ludospring live-session` | 1 (streaming) | 120-tick game session with DDA, flow, engagement |
+| `ludospring tufte-dashboard` | 3 | Genre comparison, minimap multiples, cognitive load sweep |
 
 ## Running
 
@@ -313,10 +313,10 @@ cargo run --bin exp017_bsp_level_generation
 # Run metalForge dispatch
 cargo run --bin validate_dispatch_routing
 
-# Run petalTongue dashboards
-cargo run --features ipc --bin ludospring_dashboard
-cargo run --features ipc --bin ludospring_live_session
-cargo run --features ipc --bin ludospring_tufte_dashboard
+# Run petalTongue dashboards (UniBin subcommands)
+cargo run --features ipc --bin ludospring -- dashboard
+cargo run --features ipc --bin ludospring -- live-session
+cargo run --features ipc --bin ludospring -- tufte-dashboard
 
 # Run baseCamp expeditions
 cargo run --bin exp023_open_systems_benchmark    # benchmark (16 checks)

@@ -29,6 +29,9 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
+      - name: Workspace check (all crates compile)
+        run: cargo check --workspace
+
       - name: Test (barracuda + forge)
         run: |
           cargo test -p ludospring-barracuda --features ipc --lib --tests
@@ -42,3 +45,17 @@ jobs:
 
       - name: cargo deny
         run: cargo deny check
+
+  baselines:
+    name: Python baseline drift check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Check baseline drift
+        run: python3 baselines/python/check_drift.py

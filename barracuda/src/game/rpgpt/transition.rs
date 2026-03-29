@@ -257,7 +257,10 @@ pub fn verify_transition(
     let dispositions_ok = pre.npc_dispositions.iter().all(|d| {
         post.npc_dispositions
             .iter()
-            .any(|p| p.npc_id == d.npc_id && (p.trust - d.trust).abs() < f64::EPSILON)
+            .any(|p| {
+                p.npc_id == d.npc_id
+                    && (p.trust - d.trust).abs() < crate::tolerances::TRUST_EQUALITY_TOL
+            })
     });
     if !dispositions_ok {
         issues.push(TransitionIssue::DispositionChanged);

@@ -15,8 +15,8 @@ use narrative::{Agent, AgentId, AgentState, EventType, NarrativeWorld, Schelling
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — emergent narrative from open math)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 

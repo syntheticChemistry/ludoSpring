@@ -202,6 +202,7 @@ pub fn turtle_interpret(lstring: &str, step_length: f64, angle_degrees: f64) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn algae_fibonacci_lengths() {
@@ -247,15 +248,15 @@ mod tests {
     fn turtle_forward_moves_right() {
         let points = turtle_interpret("F", 1.0, 90.0);
         assert_eq!(points.len(), 2);
-        assert!((points[1].0 - 1.0).abs() < 1e-10);
-        assert!(points[1].1.abs() < 1e-10);
+        assert!((points[1].0 - 1.0).abs() < ANALYTICAL_TOL);
+        assert!(points[1].1.abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn turtle_turn_changes_direction() {
         let points = turtle_interpret("F+F", 1.0, 90.0);
         assert_eq!(points.len(), 3);
-        assert!((points[2].1 - 1.0).abs() < 1e-10);
+        assert!((points[2].1 - 1.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
@@ -288,8 +289,8 @@ mod tests {
         assert_eq!(points.len(), 3);
         let (dx, dy) = (points[2].0 - points[1].0, points[2].1 - points[1].1);
         let heading_45 = 45.0_f64.to_radians();
-        assert!((dx - heading_45.cos()).abs() < 1e-10);
-        assert!((dy - heading_45.sin()).abs() < 1e-10);
+        assert!((dx - heading_45.cos()).abs() < ANALYTICAL_TOL);
+        assert!((dy - heading_45.sin()).abs() < ANALYTICAL_TOL);
     }
 
     #[test]

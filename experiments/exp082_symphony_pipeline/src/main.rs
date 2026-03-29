@@ -36,7 +36,7 @@ use ludospring_forge::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — frame pipeline model from AAA game architecture)",
-    commit: "N/A",
+    commit: "4b683e3e",
     date: "2026-03-18",
     command: "N/A (analytical — Carmack 1999 frame pipelining, CUDA async compute)",
 };

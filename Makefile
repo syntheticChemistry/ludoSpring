@@ -48,7 +48,7 @@ drift:
 COV_ARGS := $(BARRACUDA_FEATURES) $(BARRACUDA_PKG) --lib --tests --ignore-filename-regex 'bin/'
 
 coverage:
-	cargo llvm-cov $(COV_ARGS) --html --fail-under-lines 80
+	cargo llvm-cov $(COV_ARGS) --html --fail-under-lines 85
 	@echo "Coverage report: target/llvm-cov/html/index.html"
 	@echo "Target: 90%+ (raise --fail-under-lines as coverage improves)"
 

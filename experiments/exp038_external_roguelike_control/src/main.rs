@@ -27,7 +27,7 @@ use bracket_pathfinding::prelude::*;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — bracket-pathfinding, drunkard's walk)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (control group — external roguelike)",
 };

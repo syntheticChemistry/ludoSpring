@@ -18,6 +18,16 @@
 //! reachable over IPC (`compute.submit`), the engine can additionally
 //! offload work there.  The two paths are complementary, not exclusive.
 //! [`super::gpu::GpuAvailability`] captures the runtime probe result.
+//!
+//! # `TensorSession` Status
+//!
+//! `tensor_session()` exposes barraCuda's fused op-graph pipeline. This is
+//! the intended evolution target for Tier A shaders (sigmoid, relu, abs,
+//! scale, softmax) once the product GPU path migrates from toadStool
+//! dispatch to in-process compute. Currently no product code exercises
+//! `TensorSession` — game GPU ops route through custom WGSL via toadStool
+//! or exp030's direct wgpu. See `specs/BARRACUDA_REQUIREMENTS.md` for the
+//! shader promotion roadmap.
 
 use std::sync::Arc;
 

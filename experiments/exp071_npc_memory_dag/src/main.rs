@@ -19,7 +19,7 @@ const EXP: &str = "exp071_npc_memory_dag";
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/RPGPT_NPC_PERSONALITY_SPEC.md",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "cargo run -p exp071_npc_memory_dag",
 };

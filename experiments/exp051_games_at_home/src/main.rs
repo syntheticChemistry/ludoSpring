@@ -42,7 +42,7 @@
 
 mod models;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 use models::{
     HumanComputeUnit, cross_domain_transfers, example_players, isomorphism_table,
@@ -51,8 +51,8 @@ use models::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — Games@Home isomorphism)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -68,10 +68,10 @@ fn validate_isomorphism(h: &mut ValidationHarness) {
     h.check_bool("all_12_isomorphism_pairs_match", all_match);
     h.check_abs("isomorphism_has_12_concepts", table.len() as f64, 12.0, 0.0);
 
-    let Some(attribution) = table.iter().find(|r| r.concept == "Attribution") else {
-        eprintln!("FATAL: Attribution concept not found in isomorphism table");
-        std::process::exit(1);
-    };
+    let attribution = table
+        .iter()
+        .find(|r| r.concept == "Attribution")
+        .or_exit("Attribution concept not found in isomorphism table");
     h.check_bool(
         "games_attribution_exceeds_fah",
         attribution.games_at_home.contains("full creative lineage"),
@@ -84,13 +84,10 @@ fn validate_human_compute(h: &mut ValidationHarness) {
     let all_positive = players.iter().all(|p| p.novel_decisions_per_week() > 0.0);
     h.check_bool("all_players_produce_novel_data", all_positive);
 
-    let Some(rpgpt) = players
+    let rpgpt = players
         .iter()
         .find(|p| p.player_id == "rpgpt_campaign_player")
-    else {
-        eprintln!("FATAL: rpgpt_campaign_player not found in example players");
-        std::process::exit(1);
-    };
+        .or_exit("rpgpt_campaign_player not found in example players");
     let max_novelty = players
         .iter()
         .map(|p| p.novelty_rate)
@@ -111,17 +108,14 @@ fn validate_human_compute(h: &mut ValidationHarness) {
         rpgpt_val > others_max_val,
     );
 
-    let Some(commander) = players.iter().find(|p| p.player_id == "casual_commander") else {
-        eprintln!("FATAL: casual_commander not found in example players");
-        std::process::exit(1);
-    };
-    let Some(competitive) = players
+    let commander = players
+        .iter()
+        .find(|p| p.player_id == "casual_commander")
+        .or_exit("casual_commander not found in example players");
+    let competitive = players
         .iter()
         .find(|p| p.player_id == "competitive_standard")
-    else {
-        eprintln!("FATAL: competitive_standard not found in example players");
-        std::process::exit(1);
-    };
+        .or_exit("competitive_standard not found in example players");
     h.check_bool(
         "casual_commander_higher_novelty_than_competitive",
         commander.novelty_rate > competitive.novelty_rate,
@@ -201,21 +195,14 @@ fn validate_cross_domain(h: &mut ValidationHarness) {
         avg_similarity > 0.70,
     );
 
-    let Some(highest) = transfers.iter().max_by(|a, b| {
-        match a
-            .structural_similarity
-            .partial_cmp(&b.structural_similarity)
-        {
-            Some(ord) => ord,
-            None => {
-                eprintln!("FATAL: structural_similarity is NaN");
-                std::process::exit(1);
-            }
-        }
-    }) else {
-        eprintln!("FATAL: no transfers found for highest transfer domain");
-        std::process::exit(1);
-    };
+    let highest = transfers
+        .iter()
+        .max_by(|a, b| {
+            a.structural_similarity
+                .partial_cmp(&b.structural_similarity)
+                .or_exit("structural_similarity is NaN")
+        })
+        .or_exit("no transfers found for highest transfer domain");
     h.check_bool(
         "highest_transfer_is_tree_search_heuristics",
         highest.source_domain == "Game tree pruning (human intuition)",
@@ -240,56 +227,44 @@ fn validate_provenance(h: &mut ValidationHarness) {
 fn validate_scale(h: &mut ValidationHarness) {
     let scale = scale_comparison();
 
-    let Some(fah_units) = scale.iter().find(|s| s.metric == "Active compute units") else {
-        eprintln!("FATAL: Active compute units metric not found in scale comparison");
-        std::process::exit(1);
-    };
+    let fah_units = scale
+        .iter()
+        .find(|s| s.metric == "Active compute units")
+        .or_exit("Active compute units metric not found in scale comparison");
     let ratio = fah_units.games_at_home / fah_units.folding_at_home;
     h.check_bool("games_200x_more_compute_units", ratio >= 200.0);
 
-    let Some(cost) = scale
+    let cost = scale
         .iter()
         .find(|s| s.metric == "Compute cost per unit-hour (USD)")
-    else {
-        eprintln!("FATAL: Compute cost metric not found in scale comparison");
-        std::process::exit(1);
-    };
+        .or_exit("Compute cost metric not found in scale comparison");
     h.check_bool(
         "games_zero_compute_cost",
         cost.games_at_home < cost.folding_at_home,
     );
 
-    let Some(creativity) = scale
+    let creativity = scale
         .iter()
         .find(|s| s.metric == "Creativity per trajectory")
-    else {
-        eprintln!("FATAL: Creativity per trajectory metric not found in scale comparison");
-        std::process::exit(1);
-    };
+        .or_exit("Creativity per trajectory metric not found in scale comparison");
     h.check_bool(
         "games_higher_creativity",
         creativity.games_at_home > creativity.folding_at_home,
     );
 
-    let Some(transfer) = scale
+    let transfer = scale
         .iter()
         .find(|s| s.metric == "Cross-domain transfer potential")
-    else {
-        eprintln!("FATAL: Cross-domain transfer potential metric not found in scale comparison");
-        std::process::exit(1);
-    };
+        .or_exit("Cross-domain transfer potential metric not found in scale comparison");
     h.check_bool(
         "games_higher_transfer_potential",
         transfer.games_at_home > transfer.folding_at_home,
     );
 
-    let Some(space) = scale
+    let space = scale
         .iter()
         .find(|s| s.metric == "Search space size (log10)")
-    else {
-        eprintln!("FATAL: Search space size metric not found in scale comparison");
-        std::process::exit(1);
-    };
+        .or_exit("Search space size metric not found in scale comparison");
     h.check_bool(
         "games_search_space_infinite",
         space.games_at_home.is_infinite(),

@@ -15,12 +15,12 @@
 
 use std::collections::HashSet;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use serde::Deserialize;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (fixture — NCBI E-utilities gene/protein)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-10",
     command: "N/A (embedded fixture data)",
 };
@@ -66,11 +66,8 @@ struct GenusGeneHit {
     protein_count: u64,
 }
 
-fn parse_fixture() -> NcbiFixture {
-    serde_json::from_str(NCBI_FIXTURE).unwrap_or_else(|e| {
-        eprintln!("FATAL: fixture parse error: {e}");
-        std::process::exit(1);
-    })
+fn parse_fixture() -> Result<NcbiFixture, serde_json::Error> {
+    serde_json::from_str(NCBI_FIXTURE)
 }
 
 /// Run all validation checks (no I/O or exit).
@@ -143,7 +140,7 @@ fn run_validation<S: ludospring_barracuda::validation::ValidationSink>(
 }
 
 fn cmd_validate() {
-    let fixture = parse_fixture();
+    let fixture = parse_fixture().or_exit("parse NCBI fixture");
     let mut h = ValidationHarness::new("exp043_qs_gene_fetch");
     h.print_provenance(&[&PROVENANCE]);
     run_validation(&fixture, &mut h);
@@ -167,7 +164,7 @@ mod tests {
 
     #[test]
     fn fixture_parses() {
-        let fixture = parse_fixture();
+        let fixture = parse_fixture().expect("fixture must parse");
         assert!(!fixture.genus_gene_hits.is_empty());
     }
 
@@ -175,7 +172,7 @@ mod tests {
     fn all_validation_checks_pass() {
         use ludospring_barracuda::validation::BufferSink;
 
-        let fixture = parse_fixture();
+        let fixture = parse_fixture().expect("fixture must parse");
         let mut h = ValidationHarness::with_sink("exp043_test", BufferSink::default());
         run_validation(&fixture, &mut h);
         assert!(

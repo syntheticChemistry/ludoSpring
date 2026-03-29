@@ -24,7 +24,7 @@ use std::collections::HashMap;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — nucleus topology)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (toadStool JSON-RPC wire format)",
 };

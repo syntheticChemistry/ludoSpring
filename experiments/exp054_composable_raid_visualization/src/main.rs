@@ -44,12 +44,12 @@ mod protocol;
 mod simulation;
 mod visualization;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — composable raid visualization)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust — IPC protocol)",
 };
 
@@ -283,10 +283,8 @@ fn validate_cross_primal(h: &mut ValidationHarness) {
     let snapshot = raid.snapshot();
     let dashboard = visualization::build_raid_dashboard(&snapshot);
     let json = serde_json::to_string(&dashboard).unwrap_or_default();
-    let Ok(rt) = serde_json::from_str::<protocol::DashboardRenderRequest>(&json) else {
-        eprintln!("FATAL: round-trip deserialization failed");
-        std::process::exit(1);
-    };
+    let rt = serde_json::from_str::<protocol::DashboardRenderRequest>(&json)
+        .or_exit("round-trip DashboardRenderRequest deserialization");
 
     h.check_abs(
         "e2e_roundtrip_preserves_bindings",

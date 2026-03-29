@@ -32,7 +32,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — Newtonian mechanics, Fitts 1954, Csikszentmihalyi 1990)",
-    commit: "N/A",
+    commit: "4b683e3e",
     date: "2026-03-18",
     command: "N/A (analytical — Pong first principles)",
 };

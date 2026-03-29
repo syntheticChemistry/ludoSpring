@@ -24,7 +24,7 @@ use ludospring_benchmarks::noise as noise_bench;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — BM-002 spec, fastnoise-lite comparison)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (throughput benchmark)",
 };

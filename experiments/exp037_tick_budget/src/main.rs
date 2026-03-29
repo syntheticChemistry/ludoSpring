@@ -22,7 +22,7 @@ use ludospring_benchmarks::ecs::{spawn_entities, tick_game_logic, tick_metrics};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — GAME_ENGINE_NICHE_SPECIFICATION.md)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (tick budget benchmark)",
 };

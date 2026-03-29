@@ -11,15 +11,15 @@
 
 mod population;
 
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use population::{
     EncounterOutcome, Hierarchy, LotkaVolterraMemory, PromotionReason, Strategy, Usurper,
 };
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — population dynamics)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -130,14 +130,16 @@ fn validate_hierarchy_replicator(vh: &mut ValidationHarness) {
 
     h.replicator_step();
 
-    let Some(alpha) = h.usurpers.iter().find(|u| u.id == 0) else {
-        eprintln!("FATAL: usurper id 0 (alpha) not found");
-        std::process::exit(1);
-    };
-    let Some(delta) = h.usurpers.iter().find(|u| u.id == 3) else {
-        eprintln!("FATAL: usurper id 3 (delta) not found");
-        std::process::exit(1);
-    };
+    let alpha = h
+        .usurpers
+        .iter()
+        .find(|u| u.id == 0)
+        .or_exit("usurper id 0 (alpha) not found");
+    let delta = h
+        .usurpers
+        .iter()
+        .find(|u| u.id == 3)
+        .or_exit("usurper id 3 (delta) not found");
 
     vh.check_bool(
         "replicator_winner_above_mean",
@@ -163,10 +165,11 @@ fn validate_vacancy_filling(vh: &mut ValidationHarness) {
     h.player_encounter(0, EncounterOutcome::PlayerWins);
     h.player_encounter(0, EncounterOutcome::PlayerWins);
 
-    let Some(grunt) = h.usurpers.iter_mut().find(|u| u.id == grunt_id) else {
-        eprintln!("FATAL: usurper grunt_id not found");
-        std::process::exit(1);
-    };
+    let grunt = h
+        .usurpers
+        .iter_mut()
+        .find(|u| u.id == grunt_id)
+        .or_exit("usurper grunt_id not found");
     grunt.power = 3.0;
 
     h.fill_vacancies();
@@ -179,10 +182,11 @@ fn validate_vacancy_filling(vh: &mut ValidationHarness) {
         .any(|p| matches!(p.reason, PromotionReason::VacancyAbove));
     vh.check_bool("vacancy_reason_correct", promoted);
 
-    let Some(grunt) = h.usurpers.iter().find(|u| u.id == grunt_id) else {
-        eprintln!("FATAL: usurper grunt_id not found for vacancy check");
-        std::process::exit(1);
-    };
+    let grunt = h
+        .usurpers
+        .iter()
+        .find(|u| u.id == grunt_id)
+        .or_exit("usurper grunt_id not found for vacancy check");
     vh.check_bool("vacancy_strongest_promoted", grunt.rank < 3);
 }
 
@@ -193,10 +197,11 @@ fn validate_betrayal(vh: &mut ValidationHarness) {
     h.spawn("Overlord", 1, Strategy::Cautious);
     let amb_id = h.spawn("Ambitious", 2, Strategy::Deceptive);
 
-    let Some(amb) = h.usurpers.iter_mut().find(|u| u.id == amb_id) else {
-        eprintln!("FATAL: usurper amb_id not found");
-        std::process::exit(1);
-    };
+    let amb = h
+        .usurpers
+        .iter_mut()
+        .find(|u| u.id == amb_id)
+        .or_exit("usurper amb_id not found");
     amb.power = 5.0;
 
     h.check_betrayals(4.0);
@@ -206,20 +211,22 @@ fn validate_betrayal(vh: &mut ValidationHarness) {
     if let Some(b) = h.betrayals.first() {
         vh.check_bool("betrayal_correct_betrayer", b.betrayer_id == amb_id);
 
-        let Some(target) = h.usurpers.iter().find(|u| u.id == b.target_id) else {
-            eprintln!("FATAL: betrayal target not found");
-            std::process::exit(1);
-        };
+        let target = h
+            .usurpers
+            .iter()
+            .find(|u| u.id == b.target_id)
+            .or_exit("betrayal target not found");
         vh.check_bool("betrayal_target_eliminated", !target.alive);
     } else {
         vh.check_bool("betrayal_correct_betrayer", false);
         vh.check_bool("betrayal_target_eliminated", false);
     }
 
-    let Some(amb) = h.usurpers.iter().find(|u| u.id == amb_id) else {
-        eprintln!("FATAL: usurper amb_id not found for betrayal promotion check");
-        std::process::exit(1);
-    };
+    let amb = h
+        .usurpers
+        .iter()
+        .find(|u| u.id == amb_id)
+        .or_exit("usurper amb_id not found for betrayal promotion check");
     vh.check_bool("betrayal_promotes_betrayer", amb.rank == 1);
 
     let betrayal_promotion = h
@@ -312,10 +319,11 @@ fn validate_emergent_narrative(vh: &mut ValidationHarness) {
     h.fill_vacancies();
 
     h.advance_tick();
-    let Some(grunt2_u) = h.usurpers.iter_mut().find(|u| u.id == grunt2) else {
-        eprintln!("FATAL: usurper grunt2 not found");
-        std::process::exit(1);
-    };
+    let grunt2_u = h
+        .usurpers
+        .iter_mut()
+        .find(|u| u.id == grunt2)
+        .or_exit("usurper grunt2 not found");
     grunt2_u.power = 5.0;
     h.check_betrayals(4.0);
 

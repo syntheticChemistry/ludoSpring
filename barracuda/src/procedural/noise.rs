@@ -233,6 +233,7 @@ pub fn fbm_3d(x: f64, y: f64, z: f64, octaves: u32, lacunarity: f64, persistence
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn perlin_2d_in_range() {
@@ -267,7 +268,7 @@ mod tests {
     fn perlin_at_integer_coords_is_zero() {
         let v = perlin_2d(1.0, 1.0);
         assert!(
-            v.abs() < 1e-10,
+            v.abs() < ANALYTICAL_TOL,
             "perlin at integer coords should be ~0, got {v}"
         );
     }
@@ -275,7 +276,7 @@ mod tests {
     #[test]
     fn perlin_3d_at_integer_coords_is_zero() {
         let v = perlin_3d(1.0, 2.0, 3.0);
-        assert!(v.abs() < 1e-10, "3D perlin at integers should be ~0");
+        assert!(v.abs() < ANALYTICAL_TOL, "3D perlin at integers should be ~0");
     }
 
     #[test]
@@ -296,7 +297,7 @@ mod tests {
     fn fbm_2d_single_octave_equals_perlin() {
         let fbm_val = fbm_2d(0.5, 0.7, 1, 2.0, 0.5);
         let perlin_val = perlin_2d(0.5, 0.7);
-        assert!((fbm_val - perlin_val).abs() < 1e-10);
+        assert!((fbm_val - perlin_val).abs() < ANALYTICAL_TOL);
     }
 
     #[test]

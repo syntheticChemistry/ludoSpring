@@ -9,7 +9,7 @@
 mod sample;
 
 use loam_spine_core::Did;
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use sample::ProcessingStep;
 use sample::{
     SampleCondition, SampleEventType, SampleFraudType, SampleSystem, SampleType,
@@ -18,8 +18,8 @@ use sample::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — wetSpring sample chain-of-custody)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -272,13 +272,10 @@ fn validate_fraud_detection(h: &mut ValidationHarness) {
         type_uri: "ecoPrimals:sample".into(),
         schema_version: 1,
     };
-    let Ok(_) = phantom_sys
+    let _ = phantom_sys
         .cert_manager
         .mint(phantom_cert_type, &alice, phantom_meta)
-    else {
-        eprintln!("FATAL: phantom cert mint failed");
-        std::process::exit(1);
-    };
+        .or_exit("phantom cert mint failed");
     let phantom_fraud = detect_sample_fraud(&phantom_sys);
     h.check_bool(
         "fraud_phantom_detected",
@@ -331,17 +328,17 @@ fn validate_fraud_detection(h: &mut ValidationHarness) {
         .with_attribute("accession", "ACC-M")
         .with_attribute("location", "X")
         .with_attribute("condition", "fresh");
-    let Ok((mislabel_cert, _)) = mislabel_sys.cert_manager.mint(
-        loam_spine_core::certificate::CertificateType::Custom {
-            type_uri: "ecoPrimals:sample".into(),
-            schema_version: 1,
-        },
-        &alice,
-        mislabel_meta,
-    ) else {
-        eprintln!("FATAL: mislabel cert mint failed");
-        std::process::exit(1);
-    };
+    let (mislabel_cert, _) = mislabel_sys
+        .cert_manager
+        .mint(
+            loam_spine_core::certificate::CertificateType::Custom {
+                type_uri: "ecoPrimals:sample".into(),
+                schema_version: 1,
+            },
+            &alice,
+            mislabel_meta,
+        )
+        .or_exit("mislabel cert mint failed");
     mislabel_sys.inject_collect_event_for_test(
         mislabel_cert.id,
         alice.as_str(),
@@ -454,15 +451,13 @@ struct SampleDagAppendParams {
 }
 
 fn validate_ipc_wire_format(h: &mut ValidationHarness) {
-    let Ok(mint_params) = serde_json::to_value(SampleCertMintParams {
+    let mint_params = serde_json::to_value(SampleCertMintParams {
         cert_type: "custom".into(),
         owner_did: "did:key:alice".into(),
         sample_type: "soil".into(),
         accession: "ACC-001".into(),
-    }) else {
-        eprintln!("FATAL: failed to serialize mint params");
-        std::process::exit(1);
-    };
+    })
+    .or_exit("failed to serialize mint params");
     let mint_req = SampleJsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "certificate.mint".into(),
@@ -473,15 +468,13 @@ fn validate_ipc_wire_format(h: &mut ValidationHarness) {
     h.check_bool("ipc_mint_jsonrpc_2_0", mint_req.jsonrpc == "2.0");
     h.check_bool("ipc_mint_method", mint_req.method == "certificate.mint");
 
-    let Ok(dag_params) = serde_json::to_value(SampleDagAppendParams {
+    let dag_params = serde_json::to_value(SampleDagAppendParams {
         session_id: "field_sample".into(),
         event_type: "sample_collect".into(),
         agent_did: "did:key:collector".into(),
         metadata: std::collections::HashMap::new(),
-    }) else {
-        eprintln!("FATAL: failed to serialize dag append params");
-        std::process::exit(1);
-    };
+    })
+    .or_exit("failed to serialize dag append params");
     let dag_req = SampleJsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "dag.append_vertex".into(),
@@ -494,14 +487,9 @@ fn validate_ipc_wire_format(h: &mut ValidationHarness) {
         dag_req.method == "dag.append_vertex",
     );
 
-    let Ok(roundtrip) = serde_json::to_string(&mint_req) else {
-        eprintln!("FATAL: failed to serialize mint_req for roundtrip");
-        std::process::exit(1);
-    };
-    let Ok(parsed): Result<SampleJsonRpcRequest, _> = serde_json::from_str(&roundtrip) else {
-        eprintln!("FATAL: failed to deserialize mint_req roundtrip");
-        std::process::exit(1);
-    };
+    let roundtrip = serde_json::to_string(&mint_req).or_exit("failed to serialize mint_req for roundtrip");
+    let parsed: SampleJsonRpcRequest =
+        serde_json::from_str(&roundtrip).or_exit("failed to deserialize mint_req roundtrip");
     h.check_bool(
         "ipc_wire_roundtrip",
         parsed.method == "certificate.mint" && parsed.jsonrpc == "2.0",

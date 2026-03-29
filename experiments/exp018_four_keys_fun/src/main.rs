@@ -16,7 +16,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "baselines/python/fun_keys_model.py",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-11",
     command: "python3 baselines/python/run_all_baselines.py",
 };

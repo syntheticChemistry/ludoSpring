@@ -8,11 +8,11 @@
 //! # Provenance
 //!
 //! - **Baselines**: `baselines/python/` (stdlib only, no numpy/scipy)
-//! - **Generated**: 2026-03-15
+//! - **Generated**: 2026-03-23
 //! - **Python**: CPython 3.10.12 (math module only)
 //! - **Command**: `python3 baselines/python/run_all_baselines.py`
 //! - **Output**: `baselines/python/combined_baselines.json`
-//! - **Commit**: `74cf9488673e070bc5304e5bdf6d1bbee8466040`
+//! - **Commit**: `4b683e3e60c5fa7eaac55bbd073ab377568973f2`
 //! - **Note**: Baseline JSON was generated under Python 3.10.12.
 //!   `run_all_baselines.py` requires >= 3.10 (`REQUIRED_PYTHON_MIN`); outputs use
 //!   stdlib `math` only with no version-dependent behavior in the parity range.
@@ -683,5 +683,123 @@ fn parity_bsp_offset_area() {
     assert!(
         (leaf_area - python).abs() < tolerances::BSP_AREA_CONSERVATION_TOL,
         "BSP offset area: Rust={leaf_area}, Python={python}"
+    );
+}
+
+// ── Fun Keys: Edge Cases ─────────────────────────────────────────
+// JSON: fun_keys_model.py — zero_scores, max_scores
+
+#[test]
+fn parity_fun_keys_zero_scores() {
+    // fun_keys_model.py.zero_scores: all signals zero
+    // Expected: hard=0.0, easy=0.2, people=0, serious=0.3
+    let c = classify_fun(&FunSignals {
+        challenge: 0.0,
+        exploration: 0.0,
+        social: 0.0,
+        completion: 0.0,
+        retry_rate: 0.0,
+    });
+    assert!(
+        c.scores.hard.abs() < tolerances::ANALYTICAL_TOL,
+        "zero hard: Rust={}, Python=0.0",
+        c.scores.hard
+    );
+    assert!(
+        (c.scores.easy - 0.2).abs() < tolerances::ANALYTICAL_TOL,
+        "zero easy: Rust={}, Python=0.2",
+        c.scores.easy
+    );
+    assert!(
+        c.scores.people.abs() < tolerances::ANALYTICAL_TOL,
+        "zero people: Rust={}, Python=0.0",
+        c.scores.people
+    );
+    assert!(
+        (c.scores.serious - 0.3).abs() < tolerances::ANALYTICAL_TOL,
+        "zero serious: Rust={}, Python=0.3",
+        c.scores.serious
+    );
+}
+
+#[test]
+fn parity_fun_keys_max_scores() {
+    // fun_keys_model.py.max_scores: all signals at 1.0
+    // Expected: hard=1.0, easy=0.8, people=1, serious=0.7
+    let c = classify_fun(&FunSignals {
+        challenge: 1.0,
+        exploration: 1.0,
+        social: 1.0,
+        completion: 1.0,
+        retry_rate: 1.0,
+    });
+    assert!(
+        (c.scores.hard - 1.0).abs() < tolerances::ANALYTICAL_TOL,
+        "max hard: Rust={}, Python=1.0",
+        c.scores.hard
+    );
+    assert!(
+        (c.scores.easy - 0.8).abs() < tolerances::ANALYTICAL_TOL,
+        "max easy: Rust={}, Python=0.8",
+        c.scores.easy
+    );
+    assert!(
+        (c.scores.people - 1.0).abs() < tolerances::ANALYTICAL_TOL,
+        "max people: Rust={}, Python=1.0",
+        c.scores.people
+    );
+    assert!(
+        (c.scores.serious - 0.7).abs() < tolerances::ANALYTICAL_TOL,
+        "max serious: Rust={}, Python=0.7",
+        c.scores.serious
+    );
+}
+
+// ── Perlin fBm 3D Lattice Check ──────────────────────────────────
+// JSON: perlin_noise.py — fbm_3d_sample
+
+#[test]
+fn parity_fbm_3d_lattice_zero() {
+    // perlin_noise.py.fbm_3d_sample = 0.0 (integer lattice point)
+    use ludospring_barracuda::procedural::noise::fbm_3d;
+    let rust = fbm_3d(0.0, 0.0, 0.0, 4, 2.0, 0.5);
+    let python = 0.0;
+    assert!(
+        (rust - python).abs() < tolerances::ANALYTICAL_TOL,
+        "fBm 3D lattice origin: Rust={rust}, Python={python}"
+    );
+}
+
+// ── L-System Turtle Geometry ─────────────────────────────────────
+// JSON: lsystem_growth.py — turtle endpoints and distances
+
+#[test]
+fn parity_lsystem_turtle_ff_end() {
+    // lsystem_growth.py.turtle_FF_end = [2.0, 0.0]
+    use ludospring_barracuda::procedural::lsystem::turtle_interpret;
+    let points = turtle_interpret("FF", 1.0, 90.0);
+    let end = points.last().expect("at least one point");
+    assert!(
+        (end.0 - 2.0).abs() < tolerances::ANALYTICAL_TOL,
+        "turtle FF x: Rust={}, Python=2.0",
+        end.0
+    );
+    assert!(
+        end.1.abs() < tolerances::ANALYTICAL_TOL,
+        "turtle FF y: Rust={}, Python=0.0",
+        end.1
+    );
+}
+
+#[test]
+fn parity_lsystem_turtle_square_dist() {
+    // lsystem_growth.py.turtle_square_dist = 2.8818119592750155e-16
+    use ludospring_barracuda::procedural::lsystem::turtle_interpret;
+    let points = turtle_interpret("F+F+F+F", 1.0, 90.0);
+    let end = points.last().expect("at least one point");
+    let dist = (end.0 * end.0 + end.1 * end.1).sqrt();
+    assert!(
+        dist < tolerances::STRICT_ANALYTICAL_TOL,
+        "turtle square distance: Rust={dist:.2e}, should be near-zero"
     );
 }

@@ -43,7 +43,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — Perlin 1985, WFC Gumin 2016, BSP Fuchs 1980, Lindenmayer 1968)",
-    commit: "N/A",
+    commit: "4b683e3e",
     date: "2026-03-18",
     command: "N/A (analytical — procedural generation first principles)",
 };

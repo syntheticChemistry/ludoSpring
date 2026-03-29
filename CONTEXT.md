@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** March 28, 2026 (V31)
+**Last updated:** March 29, 2026 (V32)
 
 ## What is this?
 
@@ -53,8 +53,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 675 barracuda + 19 forge + 42 Python parity + 3 doctests
-- **Coverage**: 91.27% line coverage (85% floor enforced via `cargo-llvm-cov`)
+- **Tests**: 674 barracuda + 19 forge + 47 Python parity + 3 doctests
+- **Coverage**: 91.27% line coverage (85% floor enforced via `cargo-llvm-cov`; target 90%+)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural}.rs`
 - **CI**: `.github/workflows/ci.yml` — fmt, clippy, test, doc, cargo deny

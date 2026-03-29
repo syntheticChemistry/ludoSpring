@@ -18,13 +18,13 @@ use ludospring_barracuda::game::rpgpt::knowledge::{
     KnowledgeBounds, KnowledgeQueryResult, LieTopic, Suspicion,
 };
 use ludospring_barracuda::tolerances;
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 const EXP: &str = "exp067_npc_knowledge_bounds";
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/RPGPT_NPC_PERSONALITY_SPEC.md",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "cargo run -p exp067_npc_knowledge_bounds",
 };
@@ -167,10 +167,9 @@ fn validate_maren(h: &mut ValidationHarness) {
         kb.query("old master") == KnowledgeQueryResult::Suspected,
     );
 
-    let Some(ore_suspicion) = kb.get_suspicion("strange ore") else {
-        eprintln!("FATAL: suspicion for 'strange ore' not found");
-        std::process::exit(1);
-    };
+    let ore_suspicion = kb
+        .get_suspicion("strange ore")
+        .or_exit("suspicion for 'strange ore' not found");
     h.check_abs(
         "maren_ore_confidence",
         ore_suspicion.confidence,
@@ -178,10 +177,9 @@ fn validate_maren(h: &mut ValidationHarness) {
         tolerances::GAME_STATE_TOL,
     );
 
-    let Some(master_suspicion) = kb.get_suspicion("old master") else {
-        eprintln!("FATAL: suspicion for 'old master' not found");
-        std::process::exit(1);
-    };
+    let master_suspicion = kb
+        .get_suspicion("old master")
+        .or_exit("suspicion for 'old master' not found");
     h.check_abs(
         "maren_master_confidence",
         master_suspicion.confidence,
@@ -198,10 +196,7 @@ fn validate_maren(h: &mut ValidationHarness) {
         kb.query("cellar door") == KnowledgeQueryResult::LiedAbout,
     );
 
-    let Some(exp_lie) = kb.get_lie("experiments") else {
-        eprintln!("FATAL: lie for 'experiments' not found");
-        std::process::exit(1);
-    };
+    let exp_lie = kb.get_lie("experiments").or_exit("lie for 'experiments' not found");
     h.check_abs(
         "maren_experiment_dc",
         f64::from(exp_lie.detection_dc),
@@ -219,10 +214,7 @@ fn validate_maren(h: &mut ValidationHarness) {
         0.0,
     );
 
-    let Some(cellar_lie) = kb.get_lie("cellar") else {
-        eprintln!("FATAL: lie for 'cellar' not found");
-        std::process::exit(1);
-    };
+    let cellar_lie = kb.get_lie("cellar").or_exit("lie for 'cellar' not found");
     h.check_abs(
         "maren_cellar_dc",
         f64::from(cellar_lie.detection_dc),
@@ -316,20 +308,16 @@ fn validate_multi_npc(h: &mut ValidationHarness) {
         professor.query("disappearances") == KnowledgeQueryResult::Unknown,
     );
 
-    let Some(prof_lie) = professor.get_lie("research") else {
-        eprintln!("FATAL: professor lie for 'research' not found");
-        std::process::exit(1);
-    };
+    let prof_lie = professor
+        .get_lie("research")
+        .or_exit("professor lie for 'research' not found");
     h.check_abs(
         "professor_research_dc",
         f64::from(prof_lie.detection_dc),
         10.0,
         0.0,
     );
-    let Some(sheriff_family_lie) = sheriff.get_lie("family") else {
-        eprintln!("FATAL: sheriff lie for 'family' not found");
-        std::process::exit(1);
-    };
+    let sheriff_family_lie = sheriff.get_lie("family").or_exit("sheriff lie for 'family' not found");
     h.check_bool(
         "professor_research_dc_lower_than_sheriff",
         prof_lie.detection_dc < sheriff_family_lie.detection_dc,

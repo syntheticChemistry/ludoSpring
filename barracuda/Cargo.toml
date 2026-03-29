@@ -45,21 +45,6 @@ tokio = { version = "1", features = ["rt", "net", "io-util", "sync"], optional =
 tarpc = { version = "0.37", features = ["full"], optional = true }
 
 [[bin]]
-name = "ludospring_dashboard"
-path = "src/bin/ludospring_dashboard.rs"
-required-features = ["ipc"]
-
-[[bin]]
-name = "ludospring_live_session"
-path = "src/bin/ludospring_live_session.rs"
-required-features = ["ipc"]
-
-[[bin]]
-name = "ludospring_tufte_dashboard"
-path = "src/bin/ludospring_tufte_dashboard.rs"
-required-features = ["ipc"]
-
-[[bin]]
 name = "ludospring"
 path = "src/bin/ludospring.rs"
 required-features = ["ipc"]

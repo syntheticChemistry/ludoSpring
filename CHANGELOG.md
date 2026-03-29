@@ -3,7 +3,46 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V30).
+This project does not use SemVer — versions are session-sequential (V1–V32).
+
+## [V32] — 2026-03-29
+
+### Added
+
+- `specs/BARRACUDA_REQUIREMENTS.md` — consumed/unused modules, shader promotion tiers, upstream evolution requests
+- 5 new Python parity tests: `fun_keys_zero_scores`, `fun_keys_max_scores`, `fbm_3d_lattice_zero`, `lsystem_turtle_ff_end`, `lsystem_turtle_square_dist`
+- CI baseline drift check job in `.github/workflows/ci.yml` (`baselines` job with `check_drift.py`)
+- CI workspace-wide `cargo check` and full workspace `cargo clippy`
+- `STRICT_ANALYTICAL_TOL`, `NUMERICAL_FLOOR`, `DDA_ADJUSTMENT_EPSILON`, `SPAN_FLOOR` to `tolerances::validation`
+- `TRUST_EQUALITY_TOL` to `tolerances::game`
+- `niche::ECOSYSTEM_SOCKET_DIR` constant replacing hardcoded `"biomeos"` socket path
+
+### Changed
+
+- All 77 experiment provenance blocks aligned to current baselines commit (`4b683e3e`)
+- 34 analytical experiments populated with commit hashes and dates (was `"N/A"`)
+- exp030 rewritten from legacy `ValidationResult` to `ValidationHarness` with GPU-skip via `EXIT_SKIPPED` (525-line rewrite)
+- 27 experiment files migrated from manual `eprintln!("FATAL:..."); exit(1)` to `.or_exit("context")` — zero manual FATAL patterns remain
+- All test `1e-10` literals replaced with `ANALYTICAL_TOL` across 6 library modules (23 instances)
+- `1e-6` in `flow.rs` and `science.rs` handlers replaced with named constants (`SPAN_FLOOR`, `DDA_ADJUSTMENT_EPSILON`)
+- `f64::EPSILON` in `transition.rs` replaced with `TRUST_EQUALITY_TOL`
+- GPU degradation messages made primal-agnostic (no primal name in `DEGRADE_REASON`)
+- MCP tool descriptions reference capabilities not primal names
+- `deny.toml`: `unmaintained = "warn"` (invalid for cargo-deny 0.19) → `"workspace"`
+- `deploy/ludospring.toml`: added `game.gpu.batch_raycast`, capability count 26→27
+- Makefile coverage floor: 80%→85% (aligns with CONTEXT.md)
+- IPC integration test: hardcoded `/tmp/ludospring-register.sock` → dynamic tempdir
+- `push_client.rs`: hardcoded `"biomeos"` → `niche::ECOSYSTEM_SOCKET_DIR`
+- `TensorSession` documented as future-only with shader promotion roadmap reference
+- Deprecated binaries removed: `ludospring_dashboard`, `ludospring_live_session`, `ludospring_tufte_dashboard` (consolidated in UniBin V30)
+
+### Removed
+
+- 3 deprecated binary stubs (`ludospring_dashboard.rs`, `ludospring_live_session.rs`, `ludospring_tufte_dashboard.rs`) and their `Cargo.toml` entries — superseded by `ludospring dashboard|live-session|tufte-dashboard` since V30
+
+## [V31] — 2026-03-28
+
+V31 changelog is in the README.md (inlined for historical reasons). See git log for details.
 
 ## [V30] — 2026-03-23
 

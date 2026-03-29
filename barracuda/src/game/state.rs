@@ -77,6 +77,7 @@ impl ReplayBuffer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn replay_buffer_records_and_plays_back() {
@@ -94,6 +95,6 @@ mod tests {
     #[test]
     fn default_tick_budget_is_60hz() {
         let budget = TickBudget::default();
-        assert!((budget.dt - 1.0 / 60.0).abs() < 1e-10);
+        assert!((budget.dt - 1.0 / 60.0).abs() < ANALYTICAL_TOL);
     }
 }

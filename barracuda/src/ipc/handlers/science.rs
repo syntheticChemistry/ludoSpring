@@ -205,7 +205,9 @@ fn difficulty_adjustment_reason(
     trend: f64,
     target_success_rate: f64,
 ) -> String {
-    if adjustment.abs() < 1e-6 {
+    use crate::tolerances::DDA_ADJUSTMENT_EPSILON;
+
+    if adjustment.abs() < DDA_ADJUSTMENT_EPSILON {
         format!(
             "Estimated success rate {:.0}% matches target {:.0}% (trend {:.2}); hold difficulty.",
             estimated_skill * 100.0,

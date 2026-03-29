@@ -98,6 +98,7 @@ pub fn interaction_cost(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tolerances::ANALYTICAL_TOL;
 
     #[test]
     fn fitts_larger_target_is_faster() {
@@ -131,35 +132,35 @@ mod tests {
     fn index_of_difficulty_matches_expected() {
         let id = fitts_index_of_difficulty(100.0, 10.0);
         let expected = (2.0 * 100.0 / 10.0 + 1.0_f64).log2();
-        assert!((id - expected).abs() < 1e-10);
+        assert!((id - expected).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn fitts_zero_distance_returns_intercept() {
         let mt = fitts_movement_time(0.0, 10.0, 50.0, 150.0);
-        assert!((mt - 50.0).abs() < 1e-10);
+        assert!((mt - 50.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn fitts_zero_width_returns_intercept() {
         let mt = fitts_movement_time(100.0, 0.0, 50.0, 150.0);
-        assert!((mt - 50.0).abs() < 1e-10);
+        assert!((mt - 50.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn fitts_id_zero_distance_returns_zero() {
-        assert!(fitts_index_of_difficulty(0.0, 10.0).abs() < 1e-10);
+        assert!(fitts_index_of_difficulty(0.0, 10.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn fitts_id_zero_width_returns_zero() {
-        assert!(fitts_index_of_difficulty(100.0, 0.0).abs() < 1e-10);
+        assert!(fitts_index_of_difficulty(100.0, 0.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
     fn hick_zero_choices_returns_base() {
         let rt = hick_reaction_time(0, 200.0, 150.0);
-        assert!((rt - 200.0).abs() < 1e-10);
+        assert!((rt - 200.0).abs() < ANALYTICAL_TOL);
     }
 
     #[test]
@@ -177,6 +178,6 @@ mod tests {
         let cost = interaction_cost(100.0, 20.0, 4, fitts_a, fitts_b, hick_a, hick_b);
         let expected_fitts = fitts_movement_time(100.0, 20.0, fitts_a, fitts_b);
         let expected_hick = hick_reaction_time(4, hick_a, hick_b);
-        assert!((cost - (expected_fitts + expected_hick)).abs() < 1e-10);
+        assert!((cost - (expected_fitts + expected_hick)).abs() < ANALYTICAL_TOL);
     }
 }

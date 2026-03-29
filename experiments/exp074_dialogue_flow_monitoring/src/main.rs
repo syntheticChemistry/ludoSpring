@@ -21,7 +21,7 @@ const EXP: &str = "exp074_dialogue_flow_monitoring";
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/RPGPT_DIALOGUE_PLANE_EXPERIMENTS.md",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "cargo run -p exp074_dialogue_flow_monitoring",
 };

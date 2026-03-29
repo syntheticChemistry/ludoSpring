@@ -12,15 +12,15 @@
 mod signed_chain;
 
 use loam_spine_core::Did;
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 use signed_chain::{
     Ed25519KeyPair, SignedProvenanceChain, hash_content_ipc, sign_vertex_ipc, verify_signature_ipc,
 };
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — BearDog Ed25519 + provenance trio)",
-    commit: "N/A",
-    date: "N/A",
+    commit: "4b683e3e",
+    date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };
 
@@ -112,10 +112,9 @@ fn validate_signed_lifecycle(h: &mut ValidationHarness) {
     chain.sign_and_append_vertex("achieve_dragon_slayer", alice.as_str());
     chain.sign_and_create_braid("Dragon Slayer achievement", alice.as_str());
 
-    let Ok(()) = chain.sign_and_transfer(cert_id, &alice, &bob) else {
-        eprintln!("FATAL: sign_and_transfer alice->bob failed");
-        std::process::exit(1);
-    };
+    chain
+        .sign_and_transfer(cert_id, &alice, &bob)
+        .or_exit("sign_and_transfer alice->bob failed");
     chain.sign_and_append_vertex("trade_to_bob", alice.as_str());
     chain.sign_and_create_braid("Traded sword to Bob", alice.as_str());
 
@@ -228,17 +227,15 @@ fn validate_multi_actor(h: &mut ValidationHarness) {
     chain.sign_and_append_vertex("alice_equips", alice.as_str());
     chain.sign_and_create_braid("Alice equips shield", alice.as_str());
 
-    let Ok(()) = chain.sign_and_transfer(cert_id, &alice, &bob) else {
-        eprintln!("FATAL: sign_and_transfer A->B failed");
-        std::process::exit(1);
-    };
+    chain
+        .sign_and_transfer(cert_id, &alice, &bob)
+        .or_exit("sign_and_transfer A->B failed");
     chain.sign_and_append_vertex("bob_uses_shield", bob.as_str());
     chain.sign_and_create_braid("Bob blocks attack", bob.as_str());
 
-    let Ok(()) = chain.sign_and_transfer(cert_id, &bob, &carol) else {
-        eprintln!("FATAL: sign_and_transfer B->C failed");
-        std::process::exit(1);
-    };
+    chain
+        .sign_and_transfer(cert_id, &bob, &carol)
+        .or_exit("sign_and_transfer B->C failed");
     chain.sign_and_append_vertex("carol_enchants", carol.as_str());
     chain.sign_and_create_braid("Carol enchants shield", carol.as_str());
 
@@ -307,15 +304,10 @@ fn validate_beardog_ipc(h: &mut ValidationHarness) {
         hash_req["params"]["data"] == "data_to_hash",
     );
 
-    let Ok(roundtrip_str) = serde_json::to_string(&sign_req) else {
-        eprintln!("FATAL: failed to serialize sign_req for roundtrip");
-        std::process::exit(1);
-    };
-    let Ok(sign_roundtrip): Result<serde_json::Value, _> = serde_json::from_str(&roundtrip_str)
-    else {
-        eprintln!("FATAL: failed to deserialize sign_req roundtrip");
-        std::process::exit(1);
-    };
+    let roundtrip_str =
+        serde_json::to_string(&sign_req).or_exit("failed to serialize sign_req for roundtrip");
+    let sign_roundtrip: serde_json::Value =
+        serde_json::from_str(&roundtrip_str).or_exit("failed to deserialize sign_req roundtrip");
     h.check_bool(
         "ipc_json_roundtrip",
         sign_roundtrip["method"] == "crypto.sign_ed25519",
@@ -331,14 +323,8 @@ fn validate_serialization(h: &mut ValidationHarness) {
     let message = b"provenance data";
     let sig = kp.sign(message);
 
-    let Ok(sig_json) = serde_json::to_string(&sig.to_vec()) else {
-        eprintln!("FATAL: failed to serialize signature");
-        std::process::exit(1);
-    };
-    let Ok(sig_back): Result<Vec<u8>, _> = serde_json::from_str(&sig_json) else {
-        eprintln!("FATAL: failed to deserialize signature");
-        std::process::exit(1);
-    };
+    let sig_json = serde_json::to_string(&sig.to_vec()).or_exit("failed to serialize signature");
+    let sig_back: Vec<u8> = serde_json::from_str(&sig_json).or_exit("failed to deserialize signature");
     let mut sig_arr = [0u8; 64];
     sig_arr.copy_from_slice(&sig_back);
 
@@ -347,14 +333,9 @@ fn validate_serialization(h: &mut ValidationHarness) {
         Ed25519KeyPair::verify(&kp.public_key, message, &sig_arr),
     );
 
-    let Ok(pk_json) = serde_json::to_string(&kp.public_key.to_vec()) else {
-        eprintln!("FATAL: failed to serialize public key");
-        std::process::exit(1);
-    };
-    let Ok(pk_back): Result<Vec<u8>, _> = serde_json::from_str(&pk_json) else {
-        eprintln!("FATAL: failed to deserialize public key");
-        std::process::exit(1);
-    };
+    let pk_json =
+        serde_json::to_string(&kp.public_key.to_vec()).or_exit("failed to serialize public key");
+    let pk_back: Vec<u8> = serde_json::from_str(&pk_json).or_exit("failed to deserialize public key");
     let mut pk_arr = [0u8; 32];
     pk_arr.copy_from_slice(&pk_back);
     h.check_bool("serial_pubkey_roundtrip", pk_arr == kp.public_key);

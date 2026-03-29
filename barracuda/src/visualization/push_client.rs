@@ -61,7 +61,7 @@ impl VisualizationPushClient {
         }
 
         if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-            let biomeos_dir = PathBuf::from(&xdg).join("biomeos");
+            let biomeos_dir = PathBuf::from(&xdg).join(crate::niche::ECOSYSTEM_SOCKET_DIR);
             if let Some(sock) = Self::find_viz_sock_in(&biomeos_dir) {
                 return Ok(Self { socket: sock });
             }

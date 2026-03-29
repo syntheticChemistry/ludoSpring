@@ -2,7 +2,7 @@
 //! System-level validation: trading protocol, trio integration, full scenario, IPC wire format.
 
 use loam_spine_core::Did;
-use ludospring_barracuda::validation::ValidationHarness;
+use ludospring_barracuda::validation::{OrExit, ValidationHarness};
 
 use crate::ferment::{
     CosmeticSchema, FermentEventType, FermentingSystem, Rarity, TradeState, TradingProtocol,
@@ -42,10 +42,9 @@ pub fn validate_trading_protocol(h: &mut ValidationHarness) {
     let shield_id = system.mint(&alice, "Oak Shield", "armor", shield_cosmetics);
     let helm_id = system.mint(&alice, "Iron Helm", "armor", helm_cosmetics);
 
-    let Ok(()) = system.trade(helm_id, &alice, &bob) else {
-        eprintln!("FATAL: initial helm transfer to bob failed");
-        std::process::exit(1);
-    };
+    system
+        .trade(helm_id, &alice, &bob)
+        .or_exit("initial helm transfer to bob");
 
     let offer_id = protocol.offer("did:key:alice_trader", "did:key:bob_trader", shield_id);
     h.check_abs(
@@ -152,10 +151,9 @@ pub fn validate_trio_integration(h: &mut ValidationHarness) {
     system.advance_tick();
     system.inspect(gem_id, &alice);
     system.advance_tick();
-    let Ok(()) = system.trade(gem_id, &alice, &bob) else {
-        eprintln!("FATAL: gem trade to bob failed");
-        std::process::exit(1);
-    };
+    system
+        .trade(gem_id, &alice, &bob)
+        .or_exit("gem trade to bob");
     system.advance_tick();
     system.record_achievement(gem_id, &bob, "first_trade_received");
 
@@ -302,10 +300,9 @@ pub fn validate_full_scenario(h: &mut ValidationHarness) {
         bob_ring_id,
     );
     protocol.accept(swap_id);
-    let Ok(()) = protocol.execute(swap_id, &mut system) else {
-        eprintln!("FATAL: swap execution failed");
-        std::process::exit(1);
-    };
+    protocol
+        .execute(swap_id, &mut system)
+        .or_exit("swap execution");
 
     system.advance_tick();
     system.record_achievement(sword_id, &bob, "inherited_a_legend");
@@ -380,12 +377,13 @@ pub fn validate_full_scenario(h: &mut ValidationHarness) {
     reason = "validation counts fit in f64 mantissa"
 )]
 pub fn validate_composable_deployment(h: &mut ValidationHarness) {
-    let Ok(mint_calls) =
-        protocol::mint_ipc_sequence("did:key:alice_ferment", "Flame Sword", "weapon", "rare")
-    else {
-        eprintln!("FATAL: mint IPC sequence serialization failed");
-        std::process::exit(1);
-    };
+    let mint_calls = protocol::mint_ipc_sequence(
+        "did:key:alice_ferment",
+        "Flame Sword",
+        "weapon",
+        "rare",
+    )
+    .or_exit("mint IPC sequence serialization");
     h.check_abs(
         "ipc_mint_requires_three_calls",
         mint_calls.len() as f64,
@@ -408,12 +406,10 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
     let all_jsonrpc_2_0 = mint_calls.iter().all(|c| c.jsonrpc == "2.0");
     h.check_bool("ipc_all_calls_jsonrpc_2_0", all_jsonrpc_2_0);
 
-    let Ok(cert_params) =
-        serde_json::from_value::<protocol::CertMintRequest>(mint_calls[0].params.clone())
-    else {
-        eprintln!("FATAL: CertMintRequest deserialization failed");
-        std::process::exit(1);
-    };
+    let cert_params = serde_json::from_value::<protocol::CertMintRequest>(
+        mint_calls[0].params.clone(),
+    )
+    .or_exit("CertMintRequest deserialization");
     h.check_bool(
         "ipc_cert_mint_has_owner",
         cert_params.owner_did == "did:key:alice_ferment",
@@ -423,11 +419,9 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
         cert_params.item_attributes.get("rarity") == Some(&"rare".to_string()),
     );
 
-    let Ok(trade_calls) = protocol::trade_ipc_sequence("cert-001", "did:key:alice", "did:key:bob")
-    else {
-        eprintln!("FATAL: trade IPC sequence serialization failed");
-        std::process::exit(1);
-    };
+    let trade_calls =
+        protocol::trade_ipc_sequence("cert-001", "did:key:alice", "did:key:bob")
+            .or_exit("trade IPC sequence serialization");
     h.check_abs(
         "ipc_trade_requires_three_calls",
         trade_calls.len() as f64,
@@ -439,12 +433,10 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
         trade_calls[0].method == "certificate.transfer",
     );
 
-    let Ok(transfer_params) =
-        serde_json::from_value::<protocol::CertTransferRequest>(trade_calls[0].params.clone())
-    else {
-        eprintln!("FATAL: CertTransferRequest deserialization failed");
-        std::process::exit(1);
-    };
+    let transfer_params = serde_json::from_value::<protocol::CertTransferRequest>(
+        trade_calls[0].params.clone(),
+    )
+    .or_exit("CertTransferRequest deserialization");
     h.check_bool(
         "ipc_trade_transfer_from_alice",
         transfer_params.from_did == "did:key:alice",
@@ -462,14 +454,10 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
         0.0,
     );
 
-    let Ok(mint_json) = serde_json::to_string(&mint_calls[0]) else {
-        eprintln!("FATAL: mint call serialization failed");
-        std::process::exit(1);
-    };
-    let Ok(roundtrip) = serde_json::from_str::<protocol::JsonRpcRequest>(&mint_json) else {
-        eprintln!("FATAL: mint call roundtrip deserialization failed");
-        std::process::exit(1);
-    };
+    let mint_json =
+        serde_json::to_string(&mint_calls[0]).or_exit("mint call serialization");
+    let roundtrip = serde_json::from_str::<protocol::JsonRpcRequest>(&mint_json)
+        .or_exit("mint call roundtrip deserialization");
     h.check_bool(
         "ipc_wire_format_roundtrip",
         roundtrip.method == "certificate.mint" && roundtrip.jsonrpc == "2.0",

@@ -19,14 +19,14 @@ mod rulesets;
 use ludospring_barracuda::game::ruleset::{
     Character, Condition, DegreeOfSuccess, DiceResult, DiceSystem, Ruleset,
 };
-use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
+use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHarness};
 
 use rulesets::{Cairn, FateCore, Pathfinder2e};
 use rulesets::{cairn_ability_target, fate_skill_modifier, pf2e_skill_modifier};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — Pathfinder 2e ORC, FATE Core, Cairn)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (ruleset control systems)",
 };
@@ -83,10 +83,11 @@ fn validate_pf2e(h: &mut ValidationHarness) {
         6.0,
         0.0,
     );
-    let Some(str_ability) = character.abilities.iter().find(|a| a.name == "Strength") else {
-        eprintln!("FATAL: Strength ability not found");
-        std::process::exit(1);
-    };
+    let str_ability = character
+        .abilities
+        .iter()
+        .find(|a| a.name == "Strength")
+        .or_exit("Strength ability");
     let str_mod = str_ability.modifier;
     h.check_abs("pf2e_str_14_gives_mod_2", f64::from(str_mod), 2.0, 0.0);
 
@@ -211,10 +212,10 @@ fn validate_fate(h: &mut ValidationHarness) {
     );
     let fight_rating = fate_skill_modifier(&character, "Fight");
     h.check_abs("fate_fight_rating_3", f64::from(fight_rating), 3.0, 0.0);
-    let Some(fate_points) = character.resource_tracks.get("Fate Points") else {
-        eprintln!("FATAL: Fate Points track not found");
-        std::process::exit(1);
-    };
+    let fate_points = character
+        .resource_tracks
+        .get("Fate Points")
+        .or_exit("Fate Points track");
     h.check_abs(
         "fate_starts_with_3_fate_points",
         f64::from(fate_points.current),
@@ -274,21 +275,19 @@ fn cairn_damage_overflow_str_value(character: &mut Character, damage: i32) -> i3
     let overflow = damage - character.hp_current;
     character.hp_current = 0;
     if overflow > 0 {
-        let Some(str_ability) = character
+        let str_ability = character
             .abilities
             .iter_mut()
             .find(|a| a.name == "Strength")
-        else {
-            eprintln!("FATAL: Strength ability not found");
-            std::process::exit(1);
-        };
+            .or_exit("Strength ability");
         str_ability.value -= overflow;
         str_ability.modifier = str_ability.value;
     }
-    let Some(str_ability) = character.abilities.iter().find(|a| a.name == "Strength") else {
-        eprintln!("FATAL: Strength ability not found");
-        std::process::exit(1);
-    };
+    let str_ability = character
+        .abilities
+        .iter()
+        .find(|a| a.name == "Strength")
+        .or_exit("Strength ability");
     str_ability.value
 }
 

@@ -19,12 +19,13 @@ use std::time::Instant;
 use ludospring_barracuda::barcuda_math;
 use ludospring_barracuda::interaction::input_laws;
 use ludospring_barracuda::procedural::noise;
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "baselines/python/interaction_laws.py",
-    commit: "74cf9488",
-    date: "2026-03-15",
+    script: "baselines/python/run_all_baselines.py",
+    commit: "4b683e3e",
+    date: "2026-03-23",
     command: "python3 baselines/python/run_all_baselines.py",
 };
 
@@ -119,7 +120,12 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         .iter()
         .map(|&x| (python_sigmoid(x) - barcuda_math::sigmoid(x)).abs())
         .fold(0.0_f64, f64::max);
-    h.check_abs("sigmoid_parity_python_vs_rust", sig_max_err, 0.0, 1e-15);
+    h.check_abs(
+        "sigmoid_parity_python_vs_rust",
+        sig_max_err,
+        0.0,
+        tolerances::STRICT_ANALYTICAL_TOL,
+    );
 
     // 2. Fitts's law parity (MacKenzie 1992 Shannon formulation)
     let fitts_py = python_fitts_mt(300.0, 20.0, 50.0, 150.0);
@@ -128,7 +134,7 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         "fitts_parity_python_vs_rust",
         (fitts_py - fitts_rs).abs(),
         0.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     );
 
     // 3. Hick's law parity (Hyman 1953)
@@ -138,7 +144,7 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         "hick_parity_python_vs_rust",
         (hick_py - hick_rs).abs(),
         0.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     );
 
     // 4. LCG parity
@@ -155,7 +161,7 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         "dot_parity_python_vs_rust",
         (dot_py - dot_rs).abs(),
         0.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     );
 
     // 6. Mean parity
@@ -166,7 +172,7 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         "mean_parity_python_vs_rust",
         (mean_py - mean_rs).abs(),
         0.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     );
 
     // 7. L2 norm parity
@@ -176,7 +182,7 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         "l2_norm_parity_python_vs_rust",
         (norm_py - norm_rs).abs(),
         0.0,
-        1e-10,
+        tolerances::ANALYTICAL_TOL,
     );
 
     // 8. Perlin noise parity (known test point)
@@ -190,7 +196,7 @@ fn run_validation_checks<S: ludospring_barracuda::validation::ValidationSink>(
         "perlin_fade_analytical",
         (fade_py - fade_expected).abs(),
         0.0,
-        1e-15,
+        tolerances::STRICT_ANALYTICAL_TOL,
     );
 
     // --- Performance checks: Rust faster than Python-equivalent ---

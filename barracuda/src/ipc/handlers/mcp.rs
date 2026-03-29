@@ -232,7 +232,7 @@ pub(super) fn mcp_tools_descriptors() -> serde_json::Value {
         },
         {
             "name": METHOD_NPC_DIALOGUE,
-            "description": "NPC dialogue via Squirrel AI delegation.",
+            "description": "NPC dialogue via AI capability delegation.",
             "input_schema": {
                 "type": "object",
                 "properties": {
@@ -250,7 +250,7 @@ pub(super) fn mcp_tools_descriptors() -> serde_json::Value {
         },
         {
             "name": METHOD_NARRATE_ACTION,
-            "description": "Narrate a game action via Squirrel AI.",
+            "description": "Narrate a game action via AI capability delegation.",
             "input_schema": {
                 "type": "object",
                 "properties": {
@@ -262,11 +262,11 @@ pub(super) fn mcp_tools_descriptors() -> serde_json::Value {
         },
         {
             "name": METHOD_PUSH_SCENE,
-            "description": "Push a scene to petalTongue visualization.",
+            "description": "Push a scene to the visualization capability.",
             "input_schema": {
                 "type": "object",
                 "properties": {
-                    "session_id": { "type": "string", "description": "Session ID for petalTongue routing." },
+                    "session_id": { "type": "string", "description": "Session ID for visualization routing." },
                     "channel": { "type": "string", "description": "Channel name (e.g. DialogueTree, CombatGrid)." },
                     "scene": { "description": "Scene payload (any JSON value)." }
                 },

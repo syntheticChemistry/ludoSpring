@@ -18,7 +18,7 @@ use ludospring_benchmarks::raycaster::{arena_map, cast_full_screen, maze_map};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — BM-003 spec, Lodev DDA raycaster)",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "N/A (throughput benchmark)",
 };

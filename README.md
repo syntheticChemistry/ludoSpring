@@ -2,14 +2,14 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 28, 2026
-**Version:** V31 (82 experiments, 675 barracuda tests + 19 forge + 42 Python parity + 3 doctests, 19 proptest + 11 IPC integration)
+**Date:** March 29, 2026
+**Version:** V32 (82 experiments, 674 barracuda tests + 19 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration)
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.7 (standalone, default-features = false — CPU-only default, GPU opt-in)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance)
 **Niche Status:** Deployable — UniBin (7 subcommands), deploy graph, niche YAML, Neural API domain registration, 27 capabilities (25 game + 2 health probes), MCP `tools.list`/`tools.call` (13 tool descriptors: 8 science + 5 delegation), optional `tarpc-ipc` feature, structured `capability_domains` registry
-**Audit Status:** Complete — zero hardcoded primal names (capability-based discovery only), zero hardcoded paths (`LUDOSPRING_OUTPUT_DIR` + XDG socket chain), zero `#[allow()]` in application code (3 `#[expect(reason)]` with curated reasons), zero `unsafe`, zero clippy warnings, zero TODO/FIXME, all validation experiments use `ValidationHarness` + `BaselineProvenance` (including forge dispatch-routing binary), `GpuContext` + `TensorSession` wired behind `gpu` feature, `metalForge/forge` refactored into 4 domain modules (19 tests), `cargo-llvm-cov` gated at 85% floor (91.27% library coverage — figure pre-V31; may shift after recent changes), baselines regenerated with `content_sha256` provenance, `thiserror` for all error types, handlers split into 6 domain submodules (lifecycle, science, delegation, mcp, neural, gpu), CI pipeline (`.github/workflows/ci.yml` — fmt, clippy, tests including forge, workspace doc, cargo deny)
+**Audit Status:** Complete — zero hardcoded primal names (capability-based discovery via `niche::ECOSYSTEM_SOCKET_DIR`), zero hardcoded paths (`LUDOSPRING_OUTPUT_DIR` + XDG socket chain), zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, zero manual `eprintln!("FATAL:...")` patterns (all migrated to `OrExit`), all validation experiments use `ValidationHarness` + `BaselineProvenance`, all provenance hashes aligned to current baselines (`4b683e3e`), all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check, `cargo-llvm-cov` gated at 85% floor, `deny.toml` fixed for cargo-deny 0.19
 
 ---
 
@@ -460,7 +460,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (675+ barracuda + 19 forge + 42 Python parity + 3 doctests)
+# All tests (674 barracuda + 19 forge + 47 Python parity + 3 doctests)
 cargo test --features ipc -p ludospring-barracuda --lib --tests
 
 # Run a specific experiment
@@ -487,15 +487,15 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test` (barracuda + forge) | 675 barracuda + 19 forge tests, 0 failures |
+| `cargo test` (barracuda + forge) | 674 barracuda + 19 forge + 47 parity tests, 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 82 validation binaries | All checks pass, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 19 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick, JSON-RPC, capability parsing, DispatchOutcome) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
-| `#[allow()]` in application code | 0 — remaining lint suppressions use `#[expect(reason)]` with curated reasons (3 sites, V31) |
-| `llvm-cov` (library) | 91.27% line coverage (85% floor enforced, binaries excluded; measured pre-V31 — may shift) |
+| `#[allow()]` in application code | 0 — remaining lint suppressions use `#[expect(reason)]` with curated reasons (3 sites) |
+| `llvm-cov` (library) | 91.27% line coverage (85% floor enforced, binaries excluded; measured pre-V32 — may shift) |
 | CI pipeline | `.github/workflows/ci.yml` — fmt, clippy, test (barracuda + forge), doc (workspace), cargo deny |
 | SPDX headers | All `.rs` + all `Cargo.toml` |
 | Error handling | `thiserror` — all error types derive `thiserror::Error` |
@@ -509,6 +509,23 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 | tarpc option | `tarpc-ipc` feature with `LudoSpringService` trait mirroring JSON-RPC surface |
 | GPU tolerances | Named constants in `tolerances::gpu` + `tolerances::validation` (single source of truth; raycaster tolerances re-exported from validation where shared) |
 | Validation infrastructure | `check_abs_or_rel`, `exit_skipped` (exit 2), `load_baseline_f64`, `OrExit<T>` |
+
+## V32 Comprehensive Audit + Deep Debt Evolution (March 29, 2026)
+
+Full codebase audit + systematic remediation across 110 files:
+
+- **Provenance integrity** — all 77 experiment provenance blocks aligned to current baselines commit (`4b683e3e`); 34 analytical experiments populated with commit hashes and dates
+- **Tolerance centralization** — 6 new named constants (`STRICT_ANALYTICAL_TOL`, `NUMERICAL_FLOOR`, `DDA_ADJUSTMENT_EPSILON`, `SPAN_FLOOR`, `TRUST_EQUALITY_TOL`); all test `1e-10` literals replaced with `ANALYTICAL_TOL` across 6 library modules
+- **exp030 harness migration** — 525-line rewrite from legacy `ValidationResult` to `ValidationHarness<S>` with GPU-skip via `EXIT_SKIPPED`
+- **OrExit adoption** — 27 experiment files migrated from manual `eprintln!("FATAL:..."); exit(1)` to `.or_exit("context")`; zero manual FATAL patterns remain
+- **Capability-based evolution** — GPU degradation messages made primal-agnostic; MCP tool descriptions reference capabilities not names; `"biomeos"` socket dir extracted to `niche::ECOSYSTEM_SOCKET_DIR`
+- **Deploy manifest fix** — added missing `game.gpu.batch_raycast`, corrected 26→27 capability count
+- **deny.toml fix** — `unmaintained = "warn"` (invalid for cargo-deny 0.19) → `"workspace"`
+- **CI hardening** — added baseline drift check job, workspace-wide `cargo check`, full workspace clippy
+- **Coverage floor aligned** — Makefile 80%→85% matching CONTEXT.md
+- **Python parity expansion** — 5 new tests: fun_keys zero/max, fBm 3D lattice, L-system turtle geometry
+- **TensorSession documented** — future-only status with shader promotion roadmap in `specs/BARRACUDA_REQUIREMENTS.md`
+- **`specs/BARRACUDA_REQUIREMENTS.md`** — new: consumed/unused modules, shader tiers, upstream evolution requests
 
 ## V31 Deep Debt + esotericWebb Alignment (March 28, 2026)
 

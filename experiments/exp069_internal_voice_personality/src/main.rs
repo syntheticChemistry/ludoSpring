@@ -17,7 +17,7 @@ const EXP: &str = "exp069_internal_voice_personality";
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/RPGPT_INTERNAL_VOICES_SPEC.md",
-    commit: "74cf9488",
+    commit: "4b683e3e",
     date: "2026-03-15",
     command: "cargo run -p exp069_internal_voice_personality",
 };

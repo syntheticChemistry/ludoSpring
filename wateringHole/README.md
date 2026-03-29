@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 28, 2026 (V31)
+**Last Updated:** March 29, 2026 (V32)
 
 ---
 
@@ -24,12 +24,12 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V31** | [LUDOSPRING_V31_DEEP_DEBT_ESOTERICWEBB_ALIGNMENT_HANDOFF_MAR28_2026.md](handoffs/LUDOSPRING_V31_DEEP_DEBT_ESOTERICWEBB_ALIGNMENT_HANDOFF_MAR28_2026.md) | Mar 28 | esotericWebb / gen4 client alignment, 13 MCP tools (8 science + 5 delegation), `game.gpu.*` delegation to toadStool, fog-of-war Bresenham LOS + wall occlusion, workspace lint inheritance, neural → petalTongue delegation |
+| **V32** | [LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md](handoffs/LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md) | Mar 29 | Full codebase audit + deep debt: provenance alignment, tolerance centralization, OrExit adoption (27 files), exp030 harness rewrite, CI baseline drift, deny.toml fix, deprecated binary cleanup, `specs/BARRACUDA_REQUIREMENTS.md` |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 82 experiments, all checks pass, 675+ barracuda + 19 forge + 42 Python parity + 3 doctests, 19 proptest + 11 IPC integration, capability-based discovery V31, esotericWebb alignment)
+ludoSpring (game science, 82 experiments, all checks pass, 674 barracuda + 19 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration, V32 full audit + deep debt)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -86,6 +86,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V31 | `handoffs/archive/LUDOSPRING_V31_DEEP_DEBT_ESOTERICWEBB_ALIGNMENT_HANDOFF_MAR28_2026.md` | V32 Comprehensive Audit + Deep Debt |
 | V30 | `handoffs/archive/LUDOSPRING_V30_DEEP_EVOLUTION_MODERN_RUST_HANDOFF_MAR23_2026.md` | V31 Deep Debt + esotericWebb |
 | V26 | `handoffs/archive/LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md` | V28 Deep Evolution |
 | V26 | `handoffs/archive/LUDOSPRING_V26_TOADSTOOL_BARRACUDA_ABSORPTION_HANDOFF_MAR18_2026.md` | V28 Deep Evolution |
