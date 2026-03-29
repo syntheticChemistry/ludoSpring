@@ -684,7 +684,7 @@ mod tests {
         assert_eq!(result["fallback"], "cpu");
         assert_eq!(
             result["reason"],
-            "toadStool unavailable — use CPU implementation"
+            "compute dispatch unavailable — CPU fallback active"
         );
     }
 }

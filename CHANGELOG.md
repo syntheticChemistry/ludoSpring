@@ -5,6 +5,43 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V32.2).
 
+## [V34] — 2026-03-29
+
+### Added — Full NUCLEUS Nest Atomic Composition
+
+- **exp083_neural_api_e2e v2**: Evolved from 10 to **13 checks** — full Nest Atomic validation:
+  - BearDog: Blake3, SHA3-256, ChaCha20-Poly1305 roundtrip, Ed25519 sign
+  - Songbird: `discovery.peers` via Neural API
+  - ToadStool: `compute.dispatch.capabilities` via Neural API (RTX 4060)
+  - NestGate: `storage.store`/`storage.retrieve` roundtrip via Neural API
+  - Squirrel: `ai.list_providers` + `tool.list` (25 tools) via Neural API
+  - **Cross-domain provenance chain**: hash(BearDog) → sign(BearDog) → store(NestGate) → verify
+  - Capability registry completeness (5 domains verified)
+- **barracuda discovery refactor**: Split `discovery.rs` (652 lines) into module:
+  - `discovery/mod.rs`: registry, probing, scanning (~280 lines)
+  - `discovery/capabilities.rs`: 6-format parser, semantic aliases, base injection (~230 lines)
+- **IPC timeouts now env-configurable**: `LUDOSPRING_RPC_TIMEOUT_SECS`,
+  `LUDOSPRING_PROBE_TIMEOUT_MS`, `LUDOSPRING_CONNECT_PROBE_TIMEOUT_MS`
+- **Stale test fix**: `gpu_fog_of_war_degrades_without_toadstool` assertion aligned to evolved message
+
+### Validated — Full NUCLEUS (5 Primals)
+
+- BearDog v0.9.0 (crypto): Blake3, SHA3-256, ChaCha20-Poly1305, Ed25519
+- Songbird v0.2.1 (discovery): peer listing via Neural API
+- ToadStool (compute): GPU dispatch capabilities (Vulkan/CUDA on RTX 4060)
+- NestGate v2.1.0 (storage): store/retrieve/list via Unix socket JSON-RPC
+- Squirrel v0.1.0 (AI/MCP): 25 tools, AI provider routing (abstract socket bridged)
+- biomeOS neural-api: Coordinated Mode, 60+ capabilities across 5 primals
+- Cross-domain provenance: hash → sign → store → retrieve verified end-to-end
+
+### Test counts
+
+- barracuda lib: 424 (discovery 24 incl. capabilities submodule)
+- metalForge/forge: 26
+- esotericWebb: 341
+- Experiments: 83 (82 structural + exp083 live 13/13)
+- Total workspace (excl exp032 pre-existing): **734**
+
 ## [V33] — 2026-03-29
 
 ### Added — Neural API E2E Pipeline

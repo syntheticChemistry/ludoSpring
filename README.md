@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 29, 2026
-**Version:** V33 (83 experiments, 343 barracuda lib + 26 forge + 322 esotericWebb, Neural API e2e validated with live primals)
+**Version:** V34 (83 experiments, 424 barracuda lib + 26 forge + 341 esotericWebb = 734 total, full NUCLEUS Nest Atomic validated: 5 primals × Neural API × cross-domain provenance)
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.7 (standalone, default-features = false — CPU-only default, GPU opt-in)

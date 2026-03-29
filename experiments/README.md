@@ -288,15 +288,17 @@ Core types: `barracuda/src/game/rpgpt/` (56 unit tests)
 - Plane transitions preserve complete world state with verified condition mapping
 - Round-trip (Dialogue->Tactical->Dialogue) demonstrates ruleset-agnostic state preservation
 
-### Track 25: Neural API End-to-End Pipeline (V33)
+### Track 25: Neural API End-to-End Pipeline (V33→V34)
 
-First live e2e validation against real primal processes through biomeOS Neural API routing.
+Full NUCLEUS Nest Atomic validation against 5 live primal processes through biomeOS Neural API routing.
 
 | # | Package | Checks | Status | Reference | What it proves |
 |---|---------|--------|--------|-----------|----------------|
-| 083 | `ludospring-exp083` | 10 | PASS (live) | biomeOS capability_registry.toml | Neural API socket discovery, Blake3/SHA3-256 hash through `capability.call`, ChaCha20-Poly1305 encrypt/decrypt roundtrip, Songbird reachability, capability listing verification, sub-200ms routed latency |
+| 083 | `ludospring-exp083` | 13 | PASS (live) | biomeOS capability_registry.toml | Full Nest Atomic: Blake3/SHA3-256 hash, ChaCha20-Poly1305 roundtrip, Ed25519 sign, Songbird discovery, ToadStool compute caps, NestGate store/retrieve, Squirrel AI/tool list, cross-domain provenance chain (hash→sign→store→verify), capability registry 5-domain completeness |
 
-**Requires live primals**: BearDog server, Songbird server, biomeOS neural-api. Not structural — talks to real processes.
+**Requires live primals**: BearDog, Songbird, ToadStool, NestGate, Squirrel + biomeOS neural-api. Not structural — talks to real processes.
+
+**V34 evolution**: Expanded from Tower-only (10 checks) to full Nest Atomic (13 checks) with NestGate storage, Squirrel AI/MCP, and cross-domain provenance chain.
 
 ### metalForge Dispatch (Capability-Based Routing)
 
