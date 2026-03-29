@@ -3,7 +3,7 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V32.2).
+This project does not use SemVer — versions are session-sequential (V1–V34).
 
 ## [V34] — 2026-03-29
 

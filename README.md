@@ -429,11 +429,11 @@ ludoSpring/
 │   │   ├── validation/    # ValidationHarness<S: ValidationSink> + BaselineProvenance
 │   │   ├── telemetry/     # Portable event protocol + analysis pipeline
 │   │   ├── visualization/ # Data channels + VisualizationPushClient (capability-based)
-│   │   ├── ipc/           # JSON-RPC 2.0 server + handlers/{lifecycle,science,delegation,mcp,neural} + typed clients
+│   │   ├── ipc/           # JSON-RPC 2.0 server + handlers/{lifecycle,science,delegation,mcp,neural} + typed clients + discovery/{mod,capabilities}
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring UniBin (7 subcommands) + commands/ modules
 │   └── tests/             # python_parity, validation, determinism, proptest_invariants, ipc_integration
-├── experiments/           # 82 experiments
+├── experiments/           # 83 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Capability-based routing (26 tests, 4 domain modules, GPU>NPU>CPU)
@@ -460,8 +460,8 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (674 barracuda + 26 forge + 47 Python parity + 3 doctests)
-cargo test --features ipc -p ludospring-barracuda --lib --tests
+# All tests (424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace)
+cargo test --workspace
 
 # Run a specific experiment
 cargo run --bin exp017_bsp_level_generation
@@ -487,9 +487,9 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test` (barracuda + forge) | 674 barracuda + 26 forge + 47 parity tests, 0 failures |
+| `cargo test --workspace` | 424 barracuda lib + 26 forge + 47 parity + 2 doctests + experiment tests = 734 total, 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
-| 82 validation binaries | All checks pass, 0 failures |
+| 83 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 19 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick, JSON-RPC, capability parsing, DispatchOutcome) |

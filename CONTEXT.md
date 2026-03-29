@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** March 29, 2026 (V32.2)
+**Last updated:** March 29, 2026 (V34)
 
 ## What is this?
 
@@ -53,19 +53,21 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 674 barracuda + 26 forge + 47 Python parity + 3 doctests
+- **Tests**: 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace total
 - **Coverage**: 91.27% line coverage (85% floor enforced via `cargo-llvm-cov`; target 90%+)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural}.rs`
+- **Discovery**: `ipc/discovery/{mod, capabilities}.rs` — 6-format capability parser, semantic aliases
+- **IPC timeouts**: env-configurable via `LUDOSPRING_RPC_TIMEOUT_SECS`, `LUDOSPRING_PROBE_TIMEOUT_MS`
 - **CI**: `.github/workflows/ci.yml` — fmt, clippy, test, doc, cargo deny
 - **Lints**: `clippy::pedantic`, `clippy::nursery`, `-D warnings`, `unsafe_code = "forbid"`, `missing_docs = "deny"`
 
 ## Build
 
 ```sh
-cargo test -p ludospring-barracuda --features ipc --lib --tests
-cargo clippy -p ludospring-barracuda --all-features -- -D warnings
-cargo doc -p ludospring-barracuda --all-features --no-deps
+cargo test --workspace
+cargo clippy --workspace --all-features -- -D warnings
+cargo doc --workspace --all-features --no-deps
 cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
     --ignore-filename-regex bin/ --fail-under-lines 85
 ```

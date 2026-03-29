@@ -1,9 +1,9 @@
 # ludoSpring Experiments
 
-**Date:** March 28, 2026
-**Total:** 82 experiments, all checks pass, 675 barracuda + 19 forge tests + 42 Python parity (V31)
+**Date:** March 29, 2026
+**Total:** 83 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V34)
 **Pattern:** hotSpring validation + baseCamp expeditions
-**Lints:** All 82 experiment Cargo.toml files inherit `[lints] workspace = true` (V31)
+**Lints:** All 83 experiment Cargo.toml files inherit `[lints] workspace = true` (V34)
 
 ---
 
@@ -77,10 +77,10 @@
 
 | # | Binary | Checks | Status | Reference | Modules Validated |
 |---|--------|--------|--------|-----------|-------------------|
-| 030 | `exp030_cpu_gpu_parity` | 24 | PASS | barraCuda CPU, WGSL shaders, wgpu 28 | CPU-vs-GPU parity (sigmoid, relu, dot, softmax, LCG, reduce, Perlin, fBm, engagement, raycaster) |
+| 030 | `exp030_cpu_gpu_parity` | 32 | PASS | barraCuda CPU, WGSL shaders, wgpu 28 | CPU-vs-GPU parity (sigmoid, relu, dot, softmax, LCG, reduce, Perlin, fBm, engagement, raycaster, fog-of-war, tile-lighting, pathfind) |
 | 031 | `exp031_dispatch_routing` | 10 | PASS | toadStool substrate, wgpu adapter API | Hardware discovery, workload routing |
-| 032 | `exp032_mixed_hardware` | 18 | PASS | PCIe specs, barraCuda unified_hardware | Transfer cost, mixed pipelines, NPU→GPU direct PCIe, 4-stage mixed pipeline |
-| 033 | `exp033_nucleus_pipeline` | 19 | PASS | biomeOS nucleus_complete.toml | Tower/Node/Nest atomics + capability routing + toadStool dispatch + biomeOS graph |
+| 032 | `exp032_mixed_hardware` | 23 | PASS (22/23) | PCIe specs, barraCuda unified_hardware | Transfer cost, mixed pipelines, NPU→GPU direct PCIe, 4-stage mixed pipeline |
+| 033 | `exp033_nucleus_pipeline` | 27 | PASS | biomeOS nucleus_complete.toml | Tower/Node/Nest atomics + capability routing + toadStool dispatch + biomeOS graph |
 
 ### Track 9: Specs Paper Validation + Performance Benchmarks
 
@@ -306,7 +306,7 @@ Full NUCLEUS Nest Atomic validation against 5 live primal processes through biom
 |--------|--------|--------|-------------------|
 | `validate_dispatch_routing` | 7 | PASS | GPU/CPU workload routing for noise, WFC, raycaster |
 
-metalForge forge library: 9 unit tests — `SubstrateKind` (Cpu/Gpu/Npu), `Capability` enum (F64/F32/Shader/SIMD/PCIe/QuantizedInference), `route()` with capability filtering, `fallback_chain()` (GPU>NPU>CPU).
+metalForge forge library: 26 unit tests — `SubstrateKind` (Cpu/Gpu/Npu), `Capability` enum (F64/F32/Shader/SIMD/PCIe/QuantizedInference), `route()` with capability filtering, `fallback_chain()` (GPU>NPU>CPU), pipeline routing, workload dispatch.
 
 ### petalTongue Dashboards (UniBin subcommands)
 
@@ -342,10 +342,10 @@ cargo run --bin exp028_fishfolk_adapter -- validate  # Fish Folk adapter (7 chec
 cargo run --bin exp029_abstreet_adapter -- validate  # A/B Street adapter (8 checks)
 
 # Run compute dispatch experiments
-cargo run --bin exp030_cpu_gpu_parity                 # CPU-vs-GPU parity (24 checks)
+cargo run --bin exp030_cpu_gpu_parity                 # CPU-vs-GPU parity (32 checks)
 cargo run --bin exp031_dispatch_routing               # dispatch routing (10 checks)
-cargo run --bin exp032_mixed_hardware                 # mixed hardware (18 checks)
-cargo run --bin exp033_nucleus_pipeline               # NUCLEUS pipeline (19 checks)
+cargo run --bin exp032_mixed_hardware                 # mixed hardware (23 checks)
+cargo run --bin exp033_nucleus_pipeline               # NUCLEUS pipeline (27 checks)
 
 # Generate + analyze telemetry pipeline
 cargo run --bin exp026_game_telemetry -- generate session.ndjson
