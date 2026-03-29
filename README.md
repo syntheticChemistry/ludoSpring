@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** March 29, 2026
-**Version:** V32 (82 experiments, 674 barracuda tests + 19 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration)
+**Version:** V32.2 (82 experiments, 674 barracuda tests + 26 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration)
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.7 (standalone, default-features = false — CPU-only default, GPU opt-in)
@@ -100,10 +100,10 @@ cargo run --bin exp023_open_systems_benchmark
 Validates the CPU → GPU evolution pipeline and NUCLEUS atomic coordination:
 
 ```bash
-cargo run --bin exp030_cpu_gpu_parity               # 24/24 CPU-vs-GPU parity (Tier A WGSL shaders)
+cargo run --bin exp030_cpu_gpu_parity               # 32/32 CPU-vs-GPU parity (Tier A WGSL shaders; fog-of-war, tile lighting, pathfind wavefront)
 cargo run --bin exp031_dispatch_routing              # 10/10 real hardware discovery
-cargo run --bin exp032_mixed_hardware                # 18/18 PCIe + mixed pipelines + NPU→GPU direct
-cargo run --bin exp033_nucleus_pipeline              # 19/19 NUCLEUS atomics + toadStool dispatch + biomeOS graph
+cargo run --bin exp032_mixed_hardware                # 23/23 PCIe + mixed pipelines + NPU→GPU direct + Forge integration
+cargo run --bin exp033_nucleus_pipeline              # 27/27 NUCLEUS atomics + toadStool dispatch + biomeOS graph + mixed pipeline / NPU
 ```
 
 ## External Control Groups
@@ -436,7 +436,7 @@ ludoSpring/
 ├── experiments/           # 82 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
-├── metalForge/forge/      # Capability-based routing (19 tests, 4 domain modules, GPU>NPU>CPU)
+├── metalForge/forge/      # Capability-based routing (26 tests, 4 domain modules, GPU>NPU>CPU)
 ├── graphs/                # Deploy graphs (ludospring_deploy.toml, gaming_niche.toml)
 ├── niches/                # Niche YAML (ludospring-game.yaml)
 ├── deploy/                # primalSpring deploy graph fragment
@@ -460,7 +460,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (674 barracuda + 19 forge + 47 Python parity + 3 doctests)
+# All tests (674 barracuda + 26 forge + 47 Python parity + 3 doctests)
 cargo test --features ipc -p ludospring-barracuda --lib --tests
 
 # Run a specific experiment
@@ -487,7 +487,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test` (barracuda + forge) | 674 barracuda + 19 forge + 47 parity tests, 0 failures |
+| `cargo test` (barracuda + forge) | 674 barracuda + 26 forge + 47 parity tests, 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 82 validation binaries | All checks pass, 0 failures |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
@@ -526,6 +526,16 @@ Full codebase audit + systematic remediation across 110 files:
 - **Python parity expansion** — 5 new tests: fun_keys zero/max, fBm 3D lattice, L-system turtle geometry
 - **TensorSession documented** — future-only status with shader promotion roadmap in `specs/BARRACUDA_REQUIREMENTS.md`
 - **`specs/BARRACUDA_REQUIREMENTS.md`** — new: consumed/unused modules, shader tiers, upstream evolution requests
+
+## V32.2 Compute Evolution — GPU Parity + NPU Dispatch + NUCLEUS (March 29, 2026)
+
+Builds on the V32 audit with active compute-path evolution and broader validation:
+
+- **exp030 game shader parity** — CPU↔GPU checks expanded **24→32**: fog-of-war, tile lighting, and pathfind wavefront parity alongside existing Tier A WGSL coverage
+- **metalForge NPU evolution** — forge tests **19→26**: `Substrate::Npu`, `recommend_substrate_full`, NPU pipeline bands (`BandTarget::NpuCompute`, `BandTarget::NpuToGpuTransfer`), direct NPU→GPU PCIe transfer paths, mixed hardware profiles, and budget fields
+- **exp032 Forge integration** — mixed-hardware validation **20→23** checks (Forge routing + pipeline integration)
+- **exp033 NUCLEUS deepening** — atomic coordination checks **19→27** (mixed pipeline + biomeOS NPU graph)
+- **Experiment matrix** — all **82 experiments validated** (**81 green + 1 live-IPC**)
 
 ## V31 Deep Debt + esotericWebb Alignment (March 28, 2026)
 

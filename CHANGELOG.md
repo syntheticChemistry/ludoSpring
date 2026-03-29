@@ -3,7 +3,34 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V32).
+This project does not use SemVer — versions are session-sequential (V1–V32.2).
+
+## [V32.2] — 2026-03-29
+
+### Added
+
+- Game shader CPU–GPU parity in exp030 — fog-of-war, tile lighting, pathfind wavefront (checks 24→32)
+- `GPU_LIGHTING_ABS_TOL` tolerance constant
+- `Substrate::Npu`, `recommend_substrate_full()`, `GameWorkload::QuantizedInference`
+- `BandTarget::NpuCompute`, `BandTarget::NpuToGpuTransfer` pipeline bands
+- `HardwareProfile::mixed_gpu_npu()`, `npu_to_gpu_transfer_ms()`
+- NPU/GPU budget fields on `BudgetEstimate`
+- Seven new metalForge tests — NPU routing, mixed pipeline, PCIe bypass, budget (forge 19→26)
+- Three new Forge integration checks in exp032 (20→23)
+- Eight new checks in exp033 — NUCLEUS mixed pipeline + biomeOS NPU graph (19→27)
+- V32.2 handoff: `wateringHole/handoffs/LUDOSPRING_V32_2_COMPUTE_EVOLUTION_HANDOFF_MAR29_2026.md`
+
+### Changed
+
+- Validation matrix: all 82 experiments validated (81 green + 1 live-IPC)
+
+### Fixed
+
+- exp003 — RTS HUD bounds + Tufte assertion direction
+- exp004 — engagement session params for composite threshold
+- exp052 — `Arc<str>` API drift in sweetGrass braid metadata
+- exp062 — mislabel fraud detection (`inject_collect_event_for_test` now records `sample_type`)
+- Seven trio experiments — `#![allow(missing_docs)]` for workspace lint inheritance
 
 ## [V32] — 2026-03-29
 
