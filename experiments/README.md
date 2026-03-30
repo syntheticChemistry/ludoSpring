@@ -317,13 +317,13 @@ ludoSpring process. primalSpring validates the composition patterns work.
   Python baseline → Rust validation → barraCuda CPU → barraCuda GPU
   → **primal composition (THIS TRACK)** → esotericWebb absorbs patterns
 
-| # | Package | Checks | Live Result | Composition Target | Gaps Surfaced |
-|---|---------|--------|-------------|--------------------|---------------|
-| 084 | `ludospring-exp084` | 14 | 0/12 (dry) | barraCuda math IPC (Fitts, Hick, sigmoid, Perlin, flow, engagement) + Neural API routing | barraCuda not in plasmidBin release — no binary to probe |
-| 085 | `ludospring-exp085` | 8 | **2/8** (live) | Sovereign shader dispatch: coralReef compile → toadStool dispatch | Sockets discovered; compile fails (HTTP vs raw JSON-RPC framing) |
-| 086 | `ludospring-exp086` | 9 | 0/10 (dry) | Tensor API stress: engagement composite via tensor.create + matmul | barraCuda not in plasmidBin — tensor API unreachable |
-| 087 | `ludospring-exp087` | 7 | **1/7** (live) | Neural API graph orchestration: graph.execute, pipeline, continuous | Neural API discovered; primals not registered; graphs not deployed |
-| 088 | `ludospring-exp088` | 10 | **2/10** (live) | 60Hz continuous game loop: flow → DDA → narrate → render → provenance | Neural API discovered; capability.call <16ms; 5 domains unregistered |
+| # | Package | Checks | V35 Result | V35.1 Result | Composition Target | Gaps Surfaced |
+|---|---------|--------|------------|--------------|--------------------|--------------| 
+| 084 | `ludospring-exp084` | 15 | 0/12 | **4/15** | barraCuda math IPC (sigmoid, log2, mean, std_dev, Perlin, flow, engagement) + Neural API routing | barraCuda alive + 4 math methods pass; domain-level methods (fitts, hick, flow, engagement) not yet on IPC |
+| 085 | `ludospring-exp085` | 8 | 2/8 | **7/8** | Sovereign shader dispatch: coralReef compile → toadStool dispatch | Raw JSON-RPC fixed! Compile + dispatch work. Only readback fails (no sovereign GPU driver in test env) |
+| 086 | `ludospring-exp086` | 10 | 0/10 | **5/10** | Tensor API stress: engagement composite via tensor.create + matmul | tensor.create + matmul + read PASS; element-wise ops (add/scale/clamp/reduce/sigmoid) still method_not_found |
+| 087 | `ludospring-exp087` | 7 | 1/7 | **3/7** | Neural API graph orchestration: graph.execute, pipeline, continuous | health.liveness PASS, graph.list returns 40 graphs; composition graphs not in runtime dir |
+| 088 | `ludospring-exp088` | 10 | 2/10 | **2/10** | 60Hz continuous game loop: flow → DDA → narrate → render → provenance | Socket naming mismatch (beardog.sock vs beardog-ludotest.sock); sub-ms latency confirmed |
 
 **Key insight**: These experiments are designed to FAIL. Each failure is a
 documented gap with a specific primal owner and evolution target. When the

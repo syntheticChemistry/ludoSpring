@@ -5,6 +5,37 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V35).
 
+## [V35.1] — 2026-03-30
+
+### Revalidated — Primal Evolution Confirmed
+
+Pulled and rebuilt evolved primals (barraCuda v0.3.11 local, biomeOS v2.79 local,
+coralReef Iter70 plasmidBin, toadStool S168 plasmidBin). Reran all 5 composition
+experiments. Total: **5/47 → 21/50 (42%)**.
+
+| Experiment | Before | After | Key change |
+|-----------|--------|-------|------------|
+| exp084 | 0/12 | 4/15 | barraCuda binary alive, 4 math methods pass |
+| exp085 | 2/8 | 7/8 | coralReef raw JSON-RPC fixed, compile+dispatch work |
+| exp086 | 0/10 | 5/10 | tensor.create + matmul + read pass |
+| exp087 | 1/7 | 3/7 | health.liveness pass, 40 graphs listed |
+| exp088 | 2/10 | 2/10 | Socket naming mismatch blocks forwarding |
+
+### Resolved (by primal teams)
+
+- P0: barraCuda binary exists with 30 JSON-RPC methods
+- P1: coralReef speaks raw newline-delimited JSON-RPC on UDS
+- P2: biomeOS continuous executor wired with capability routing
+- P2: biomeOS graph.save + nucleus/runtime tier separation
+- P3: biomeOS health.liveness implemented
+
+### Remaining gaps
+
+- barraCuda tensor element-wise ops: registered but handler not dispatching
+- Socket naming: biomeOS expects `{primal}-{family}.sock` vs actual `{primal}.sock`
+- Composition graphs need `graph.save` API deployment
+- Domain-level methods (fitts, hick, flow) not on barraCuda IPC
+
 ## [V35] — 2026-03-30
 
 ### Added — Primal Composition Gap Discovery (Track 26)

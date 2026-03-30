@@ -88,21 +88,29 @@ ludoSpring's next evolution tier: replicate validated game science using ONLY
 primal composition — no ludoSpring binary in the loop. Experiments probe live
 primals and document gaps.
 
-**Live results (Mar 30, 2026 — beardog + songbird + biomeOS + toadStool + coralReef running):**
+**V35.1 revalidation (Mar 30, 2026 — barraCuda local build + biomeOS v2.79 + coralReef Iter70 + toadStool S168 + beardog):**
 
-| Exp | Target | Passed | Key finding |
-|-----|--------|--------|-------------|
-| 084 | barraCuda math IPC | 0/12 | barraCuda not in plasmidBin release — no binary to probe |
-| 085 | Shader dispatch chain | 2/8 | coralReef + toadStool discovered; compile fails (HTTP vs raw JSON-RPC framing) |
-| 086 | Tensor composition | 0/10 | barraCuda not in plasmidBin — tensor API unreachable |
-| 087 | Neural API pipeline | 1/7 | Neural API discovered; primals not registered (`compute` capability absent) |
-| 088 | Continuous game loop | 2/10 | Neural API discovered; `capability.call` latency <16ms; 5 domains unregistered |
+| Exp | Target | V35 | V35.1 | Key finding |
+|-----|--------|-----|-------|-------------|
+| 084 | barraCuda math IPC | 0/12 | **4/15** | barraCuda alive! sigmoid, log2, mean, std_dev PASS. Domain methods (fitts, hick, flow) still -32601 |
+| 085 | Shader dispatch chain | 2/8 | **7/8** | coralReef raw JSON-RPC fixed! compile + dispatch work. Only readback fails (no sovereign driver) |
+| 086 | Tensor composition | 0/10 | **5/10** | tensor.create + matmul + read PASS. Element-wise ops (add/scale/clamp/reduce) still method_not_found |
+| 087 | Neural API pipeline | 1/7 | **3/7** | health.liveness PASS, graph.list returns 40 graphs. Composition graphs need graph.save deployment |
+| 088 | Continuous game loop | 2/10 | **2/10** | Socket naming mismatch blocks forwarding. Sub-ms latency still confirmed |
+
+**Total: 5/47 → 21/50 (42%) — evolution is real and substantial.**
 
 **Composition graphs**: `graphs/composition/*.toml` — `[graph]` header (biomeOS-compatible), `[[nodes]]` with `by_capability`.
 
-**Critical gaps for primal evolution:**
-1. barraCuda missing from plasmidBin (blocks all math composition)
-2. Running primals not auto-registered with Neural API capability registry
-3. coralReef uses HTTP JSON-RPC; consumers expect raw newline-delimited
-4. biomeOS continuous executor stub (session lifecycle works, node routing is placeholder)
-5. biomeOS needs nucleus bootstrap graphs bundled internally, not as runtime files
+**V35 gaps RESOLVED by primal evolution:**
+1. ~~barraCuda missing from plasmidBin~~ — binary built, IPC server responds (30 methods)
+2. ~~coralReef HTTP JSON-RPC~~ — raw newline-delimited on UDS (Iter 70)
+3. ~~biomeOS continuous executor stub~~ — node dispatch wired with capability routing (v2.79)
+4. ~~biomeOS nucleus vs runtime graphs~~ — `graph.save` implemented, tier separation (v2.79)
+5. ~~health.liveness missing~~ — implemented on Neural API (v2.79)
+
+**Remaining gaps (V35.1):**
+1. barraCuda tensor element-wise ops (add/scale/clamp/reduce/sigmoid) registered but not dispatched
+2. Socket naming convention mismatch: biomeOS expects `{primal}-{family}.sock`, primals bind as `{primal}.sock`
+3. Composition graphs need deployment via `graph.save` API (not filesystem)
+4. barraCuda domain-level methods (fitts, hick, flow, engagement) not on IPC — these are ludoSpring science, need either upstream absorption or experiment refactoring to use barraCuda primitives
