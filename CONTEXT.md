@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** March 30, 2026 (V35)
+**Last updated:** March 30, 2026 (V35.3 — ecosystem evolution review)
 
 ## What is this?
 
@@ -127,9 +127,35 @@ primals and document gaps.
 - ALL tensor element-wise ops (add/scale/clamp/reduce/sigmoid) WORK
 
 **Remaining GENUINE gaps (V35.2):**
-1. biomeOS: no barraCuda/math domain in capability registry (only 5 bootstrap capabilities)
-2. biomeOS: auto-discovery finds 0 primals despite live sockets
-3. biomeOS: `graph.save` returns parse error for composition TOMLs
-4. biomeOS: needs `tower_atomic_bootstrap.toml` in CWD or internal bundling
+1. ~~biomeOS: no barraCuda/math domain in capability registry~~ — **RESOLVED** in v2.80: bootstrap graph now has `register_barracuda` node with all 30+ method translations (math/tensor/stats/noise/activation/rng)
+2. biomeOS: auto-discovery finds 0 primals despite live sockets — v2.80 improved `discover_and_register_primals()` with `is_known_primal()` filter and `capabilities.list` probing. **NEEDS REVALIDATION**.
+3. ~~biomeOS: `graph.save` returns parse error for composition TOMLs~~ — **RESOLVED** in v2.80: accepts `{"toml": "..."}` format. Our experiments updated to match.
+4. ~~biomeOS: needs `tower_atomic_bootstrap.toml` in CWD or internal bundling~~ — **RESOLVED** in v2.80: `include_str!()` bundles the bootstrap graph into the binary.
 5. toadStool: sovereign dispatch readback needs coralReef driver (hardware gap)
 6. barraCuda: `math.flow.evaluate` and `math.engagement.composite` don't exist (ludoSpring domain compositions — composable from primitives)
+
+## V35.3: Ecosystem Evolution Review (March 30, 2026)
+
+Full pull and review of all primals, springs, and infra. Key evolution since V35.2:
+
+**biomeOS v2.80** (critical for our composition validation):
+- Graph handler refactored: 922-line `graph.rs` → 4 clean modules (CRUD, execute, pipeline, continuous)
+- **Bootstrap graph now includes `register_barracuda` node** with full capability translations for all 30 barraCuda methods
+- **Bootstrap graph includes `register_coralreef` node** with shader/wgsl/spirv capabilities
+- **`graph.save` accepts `{"toml": "..."}` format** — our `graph_toml` key updated to `toml`
+- **Bundled bootstrap graph** via `include_str!()` — no filesystem dependency
+- Auto-discovery improved with `capabilities.list` probing and `is_known_primal()` filter
+- Three-layer translation loading: hardcoded defaults → config TOML → graph translations
+- Capability domain registry now has explicit barraCuda, coralReef, and all spring domains
+
+**barraCuda Sprint 24**: 15-tier precision continuum, docs alignment. Sprint 23 gap resolution (30 IPC methods) confirmed stable. Minor regression: `for_precision_tier` function in `tolerances.rs` missing `#[cfg(feature = "gpu")]` gate (breaks non-GPU consumers).
+
+**primalSpring Phase 23d**: Absorbed toadStool S168, esotericWebb V6. `ludospring_validate.toml` still V32-era — not updated for V35 composition experiments. `gen4_storytelling_minimal.toml` has ludoSpring as optional with game science capabilities.
+
+**Other primals**: bearDog Wave 25 (schema refactor), songBird Wave 89 (pure Rust QUIC — quinn elimination), nestGate Session 10 (2.3k lines debt removed), hotSpring (sovereign validation matrix, reagent capture scripts).
+
+**New wateringHole handoffs**: hotSpring compute trio, nestGate trait excision, songBird QUIC elimination.
+
+**Local fixes for V35.3**: Updated `graph.save` key (`graph_toml` → `toml`), capability domain routing (`compute` → `tensor`/`math`), added `capability_call_math` check to exp087. Applied `#[cfg(feature = "gpu")]` to barraCuda `for_precision_tier`. All 5 experiments compile and dry-run.
+
+**Expected revalidation improvement**: biomeOS v2.80 should resolve 3 of 4 remaining biomeOS gaps (capability registry, graph.save parse, bundled bootstrap). The 4th (auto-discovery) needs live testing. Potential to reach 40+/50 with fresh primal startup.

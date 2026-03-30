@@ -3,7 +3,42 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V35).
+This project does not use SemVer — versions are session-sequential (V1–V35.3).
+
+## [V35.3] — 2026-03-30
+
+### Changed — Ecosystem Evolution Review + Experiment Alignment
+
+Pulled and reviewed ALL primals, springs, and infra. Key findings:
+
+**biomeOS v2.80 resolves 3 of our 4 V35.2 genuine gaps:**
+- Bootstrap graph now has `register_barracuda` node with all 30 method translations
+- Bootstrap graph bundled via `include_str!()` — no filesystem dependency
+- `graph.save` accepts `{"toml": "..."}` format (was returning parse errors)
+- Auto-discovery improved but needs live revalidation
+
+**barraCuda Sprint 24:**
+- 15-tier precision continuum, docs alignment
+- Regression: `for_precision_tier` missing `#[cfg(feature = "gpu")]` (fixed locally)
+
+**primalSpring Phase 23d:**
+- `gen4_storytelling_minimal.toml` has ludoSpring as optional
+- `ludospring_validate.toml` still V32-era — needs V35 update
+
+### Fixed — Experiment alignment with biomeOS v2.80
+
+- **exp087 + exp088**: `graph.save` key `"graph_toml"` → `"toml"` (biomeOS v2.80 schema)
+- **exp087**: Added `capability_call_math` check (math → barraCuda routing via new domain)
+- **exp087 + exp088**: Capability domain routing `"compute"` → `"tensor"`/`"math"` (biomeOS now has explicit barraCuda domain instead of routing all through toadStool)
+- **barraCuda**: `#[cfg(feature = "gpu")]` on `for_precision_tier` (Sprint 24 regression)
+
+| Experiment | V35.2 | Expected V35.3 | Change |
+|-----------|-------|-----------------|--------|
+| exp084 | 12/15 | 12-15/15 | No code change — barraCuda already passes |
+| exp085 | 7/8 | 7-8/8 | No code change — readback is hardware gap |
+| exp086 | 10/10 | 10/10 | Already perfect — barraCuda tensor API confirmed |
+| exp087 | 3/7 | **5-8/8** | graph.save + capability routing fixes + new math check |
+| exp088 | 2/10 | **4-8/10** | graph.save + tensor/math domain routing fixes |
 
 ## [V35.2] — 2026-03-30
 

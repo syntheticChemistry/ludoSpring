@@ -218,24 +218,44 @@ fn cmd_validate() {
         }
     }
 
-    // ── Phase 6: Capability routing ───────────────────────────
+    // ── Phase 6: Capability routing (tensor → barraCuda) ──────
     let cap_call = rpc_call(
         &na,
         "capability.call",
         &serde_json::json!({
-            "capability": "compute",
+            "capability": "tensor",
             "operation": "tensor.create",
             "params": {"shape": [2], "data": [1.0, 2.0]}
         }),
     );
     let cap_ok = cap_call.as_ref().is_ok_and(has_result);
-    h.check_bool("capability_call_compute", cap_ok);
+    h.check_bool("capability_call_tensor", cap_ok);
     if cap_ok {
-        eprintln!("  capability.call → compute routes successfully");
-        eprintln!("  This means Neural API CAN route to barraCuda");
+        eprintln!("  capability.call → tensor routes to barraCuda");
     } else {
-        eprintln!("  GAP: capability.call → compute failed or not routed");
+        eprintln!("  GAP: capability.call → tensor not routed to barraCuda");
         if let Ok(ref resp) = cap_call {
+            eprintln!("    Response: {resp}");
+        }
+    }
+
+    // ── Phase 6b: Math domain routing ───────────────────────
+    let math_call = rpc_call(
+        &na,
+        "capability.call",
+        &serde_json::json!({
+            "capability": "math",
+            "operation": "math.sigmoid",
+            "params": {"data": [0.5]}
+        }),
+    );
+    let math_ok = math_call.as_ref().is_ok_and(has_result);
+    h.check_bool("capability_call_math", math_ok);
+    if math_ok {
+        eprintln!("  capability.call → math routes to barraCuda");
+    } else {
+        eprintln!("  GAP: capability.call → math not routed to barraCuda");
+        if let Ok(ref resp) = math_call {
             eprintln!("    Response: {resp}");
         }
     }
@@ -271,7 +291,7 @@ fn deploy_composition_graphs(na: &Path) {
         let resp = rpc_call(
             na,
             "graph.save",
-            &serde_json::json!({"graph_toml": content}),
+            &serde_json::json!({"toml": content}),
         );
         match resp {
             Ok(ref r) if has_result(r) => {
@@ -297,7 +317,8 @@ fn dry_mode_gaps(h: &mut ValidationHarness) {
         "graph_execute_sequential",
         "graph_execute_pipeline",
         "graph_start_continuous",
-        "capability_call_compute",
+        "capability_call_tensor",
+        "capability_call_math",
     ] {
         eprintln!("  DRY_GAP: {name} — Neural API not running");
         h.check_bool(name, false);

@@ -1,9 +1,9 @@
 # ludoSpring Experiments
 
-**Date:** March 29, 2026
-**Total:** 88 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V35)
+**Date:** March 30, 2026
+**Total:** 88 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V35.3)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery
-**Lints:** All 88 experiment Cargo.toml files inherit `[lints] workspace = true` (V35)
+**Lints:** All 88 experiment Cargo.toml files inherit `[lints] workspace = true` (V35.3)
 
 ---
 
@@ -317,28 +317,41 @@ ludoSpring process. primalSpring validates the composition patterns work.
   Python baseline → Rust validation → barraCuda CPU → barraCuda GPU
   → **primal composition (THIS TRACK)** → esotericWebb absorbs patterns
 
-| # | Package | Checks | V35 Result | V35.1 Result | Composition Target | Gaps Surfaced |
-|---|---------|--------|------------|--------------|--------------------|--------------| 
-| 084 | `ludospring-exp084` | 15 | 0/12 | **4/15** | barraCuda math IPC (sigmoid, log2, mean, std_dev, Perlin, flow, engagement) + Neural API routing | barraCuda alive + 4 math methods pass; domain-level methods (fitts, hick, flow, engagement) not yet on IPC |
-| 085 | `ludospring-exp085` | 8 | 2/8 | **7/8** | Sovereign shader dispatch: coralReef compile → toadStool dispatch | Raw JSON-RPC fixed! Compile + dispatch work. Only readback fails (no sovereign GPU driver in test env) |
-| 086 | `ludospring-exp086` | 10 | 0/10 | **5/10** | Tensor API stress: engagement composite via tensor.create + matmul | tensor.create + matmul + read PASS; element-wise ops (add/scale/clamp/reduce/sigmoid) still method_not_found |
-| 087 | `ludospring-exp087` | 7 | 1/7 | **3/7** | Neural API graph orchestration: graph.execute, pipeline, continuous | health.liveness PASS, graph.list returns 40 graphs; composition graphs not in runtime dir |
-| 088 | `ludospring-exp088` | 10 | 2/10 | **2/10** | 60Hz continuous game loop: flow → DDA → narrate → render → provenance | Socket naming mismatch (beardog.sock vs beardog-ludotest.sock); sub-ms latency confirmed |
+| # | Package | Checks | V35 | V35.1 | V35.2 | V35.3 (expected) | Composition Target |
+|---|---------|--------|-----|-------|-------|-------------------|--------------------|
+| 084 | `ludospring-exp084` | 15 | 0/12 | 4/15 | **12/15** | 12-15/15 | barraCuda math IPC + Neural API routing |
+| 085 | `ludospring-exp085` | 8 | 2/8 | 7/8 | **7/8** | 7-8/8 | Sovereign shader dispatch: coralReef compile → toadStool dispatch |
+| 086 | `ludospring-exp086` | 10 | 0/10 | 5/10 | **10/10** | 10/10 | Tensor API: all element-wise ops confirmed |
+| 087 | `ludospring-exp087` | 8 | 1/7 | 3/7 | 3/7 | **5-8/8** | Neural API graph orchestration (graph.save fixed, barraCuda domain added) |
+| 088 | `ludospring-exp088` | 10 | 2/10 | 2/10 | 2/10 | **4-8/10** | 60Hz game loop (graph.save + domain routing fixed) |
+
+**Total trajectory**: 5/47 → 21/50 → **34/50 (68%)** → expected **38-46/51 (75-90%)** with biomeOS v2.80
 
 **Key insight**: These experiments are designed to FAIL. Each failure is a
 documented gap with a specific primal owner and evolution target. When the
 primals evolve to fill the gaps, these experiments will start passing —
 proving that ludoSpring's science is replicable through composition alone.
 
-**Gap summary**:
+**V35.3 ecosystem evolution — gaps resolved since V35.2**:
+
+| Former Gap | Resolution | Version |
+|-----------|------------|---------|
+| biomeOS: no barraCuda domain in registry | Bootstrap graph has `register_barracuda` with 30+ method translations | v2.80 |
+| biomeOS: `graph.save` parse error | Now accepts `{"toml": "..."}` format; experiments updated | v2.80 |
+| biomeOS: bootstrap graph not bundled | `include_str!()` compiles graph into binary | v2.80 |
+| barraCuda math not on IPC | 30 methods registered since Sprint 23 (confirmed V35.2) | Sprint 23+ |
+| barraCuda tensor element-wise ops | All ops work: add, scale, clamp, reduce, sigmoid (confirmed V35.2) | Sprint 23+ |
+| coralReef HTTP JSON-RPC | Raw newline-delimited on UDS (confirmed V35.1) | Iter 70 |
+
+**Remaining gaps (V35.3)**:
 
 | Gap | Owner | What's Needed | Experiment |
 |-----|-------|--------------|------------|
-| barraCuda math not on IPC | barraCuda | Expose stats, activations, noise, RNG as JSON-RPC | exp084 |
-| Compile→dispatch chain | coralReef + toadStool | WGSL compile → binary dispatch → result readback | exp085 |
-| Tensor element-wise ops | barraCuda | tensor.add, tensor.scale, tensor.clamp, tensor.reduce | exp086 |
-| Neural API executors (GAP-018) | biomeOS | Wire Pipeline, ConditionalDag, Continuous as JSON-RPC | exp087, exp088 |
-| 60Hz composition throughput | biomeOS | <16ms round-trip for capability.call routing | exp088 |
+| Auto-discovery effectiveness | biomeOS | `is_known_primal()` may not match all socket names; needs live test | exp087, exp088 |
+| Sovereign dispatch readback | toadStool + coralReef | coralReef driver for GPU readback (hardware) | exp085 |
+| Domain-level math methods | barraCuda (low-priority) | `math.flow.evaluate`, `math.engagement.composite` (composable from primitives) | exp084 |
+| Graph execution routing | biomeOS | `graph.execute` → capability.call per node (end-to-end) | exp087, exp088 |
+| 60Hz composition throughput | biomeOS | <16ms per capability.call hop | exp088 |
 
 ### metalForge Dispatch (Capability-Based Routing)
 

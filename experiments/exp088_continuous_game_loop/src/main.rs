@@ -180,10 +180,10 @@ fn cmd_validate() {
     probe_primal_via_capability(
         &mut h,
         &na,
-        "compute",
+        "tensor",
         "tensor.create",
         serde_json::json!({"shape": [2], "data": [0.5, 0.5]}),
-        "route_compute_tensor",
+        "route_tensor_create",
     );
 
     probe_primal_via_capability(
@@ -288,9 +288,9 @@ fn cmd_validate() {
         &na,
         "capability.call",
         &serde_json::json!({
-            "capability": "compute",
-            "operation": "health.liveness",
-            "params": {}
+            "capability": "math",
+            "operation": "math.sigmoid",
+            "params": {"data": [0.5]}
         }),
     );
     let latency = start.elapsed();
@@ -334,7 +334,7 @@ fn deploy_composition_graph(na: &Path) {
     let resp = rpc_call(
         na,
         "graph.save",
-        &serde_json::json!({"graph_toml": content}),
+        &serde_json::json!({"toml": content}),
     );
     match resp {
         Ok(ref r) if has_result(r) => {
@@ -354,7 +354,7 @@ fn deploy_composition_graph(na: &Path) {
 
 fn dry_mode(h: &mut ValidationHarness) {
     for name in [
-        "route_compute_tensor",
+        "route_tensor_create",
         "route_ai_narration",
         "route_visualization_render",
         "route_dag_provenance",
