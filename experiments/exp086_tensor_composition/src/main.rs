@@ -3,22 +3,18 @@
 #![allow(missing_docs)]
 //! exp086 — Tensor API Composition Stress Test.
 //!
-//! Pushes barraCuda's tensor IPC surface (`tensor.create`, `tensor.matmul`)
-//! to discover what composite science is expressible today. We attempt to
-//! build engagement-like and flow-like computations from tensor primitives.
+//! Validates barraCuda's tensor IPC surface with REAL tensor IDs from prior
+//! creates. Tests the full chain: create → element-wise ops → reduce → read.
 //!
-//! # What we test
+//! # barraCuda tensor param schemas (v0.3.11)
 //!
-//! 1. `tensor.create` with real game-science data (engagement weights, scores)
-//! 2. `tensor.matmul` to compute weighted sums (engagement composite)
-//! 3. Probe `tensor.add`, `tensor.scale`, `tensor.clamp` (likely missing)
-//! 4. Attempt to chain: create → matmul → read — the full IPC round-trip
-//!
-//! # Gap discovery
-//!
-//! Engagement composite needs: create, scale, clamp, weighted sum.
-//! barraCuda tensor API has: create, matmul.
-//! Gap: no element-wise ops, no clamp, no reduce, no activation over IPC.
+//! - `tensor.create`: `{"shape": [...], "data": [...]}`
+//! - `tensor.matmul`: `{"lhs_id": str, "rhs_id": str}`
+//! - `tensor.add`: `{"tensor_id": str, "scalar": f64}` or `{"tensor_id": str, "other_id": str}`
+//! - `tensor.scale`: `{"tensor_id": str, "scalar": f64}`
+//! - `tensor.clamp`: `{"tensor_id": str, "min": f64, "max": f64}`
+//! - `tensor.reduce`: `{"tensor_id": str, "op": "sum"|"mean"|"max"|"min"}`
+//! - `tensor.sigmoid`: `{"tensor_id": str}`
 //!
 //! # Provenance
 //!
@@ -34,10 +30,13 @@ use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (composition — tensor API stress test)",
-    commit: "exp086-v1",
-    date: "2026-03-29",
+    commit: "exp086-v2",
+    date: "2026-03-30",
     command: "cargo run -p ludospring-exp086",
 };
+
+const METHOD_NOT_FOUND: i64 = -32601;
+const INVALID_PARAMS: i64 = -32602;
 
 fn rpc_call(
     socket: &Path,
@@ -74,9 +73,21 @@ fn has_result(resp: &serde_json::Value) -> bool {
     resp.get("result").is_some() && resp.get("error").is_none()
 }
 
+fn error_code(resp: &serde_json::Value) -> Option<i64> {
+    resp.pointer("/error/code").and_then(serde_json::Value::as_i64)
+}
+
+fn error_message(resp: &serde_json::Value) -> String {
+    resp.pointer("/error/message")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("unknown")
+        .to_string()
+}
+
 fn extract_tensor_id(resp: &serde_json::Value) -> Option<String> {
     resp.pointer("/result/tensor_id")
         .or_else(|| resp.pointer("/result/id"))
+        .or_else(|| resp.pointer("/result/result_id"))
         .and_then(serde_json::Value::as_str)
         .map(String::from)
 }
@@ -90,8 +101,32 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
                 return Some(path);
             }
         }
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
+                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                        return Some(p);
+                    }
+                }
+            }
+        }
     }
     None
+}
+
+fn report_error(method: &str, resp: &serde_json::Value) {
+    match error_code(resp) {
+        Some(c) if c == METHOD_NOT_FOUND => {
+            eprintln!("  FAIL: {method} → -32601 method_not_found");
+        }
+        Some(c) if c == INVALID_PARAMS => {
+            eprintln!("  FAIL: {method} → -32602 invalid_params: {}", error_message(resp));
+        }
+        _ => {
+            eprintln!("  FAIL: {method} → {}", error_message(resp));
+        }
+    }
 }
 
 fn cmd_validate() {
@@ -108,11 +143,11 @@ fn cmd_validate() {
             "create_scores_vector",
             "matmul_weighted_sum",
             "round_trip_create_read",
-            "gap_tensor_add",
-            "gap_tensor_scale",
-            "gap_tensor_clamp",
-            "gap_tensor_reduce_sum",
-            "gap_tensor_sigmoid",
+            "tensor_add_scalar",
+            "tensor_scale",
+            "tensor_clamp",
+            "tensor_reduce_sum",
+            "tensor_sigmoid",
         ] {
             h.check_bool(name, false);
         }
@@ -122,8 +157,6 @@ fn cmd_validate() {
     eprintln!("  barraCuda socket: {}", sock.display());
 
     // ── Engagement composite via tensor ops ────────────────────
-    // Engagement = 0.2*apm + 0.2*exploration + 0.2*variety + 0.2*completion + 0.2*social
-    // Using matmul: weights (1x5) × scores (5x1) = composite (1x1)
     let weights = rpc_call(
         &sock,
         "tensor.create",
@@ -173,7 +206,7 @@ fn cmd_validate() {
                 }
             }
         } else {
-            eprintln!("  GAP: tensor.create returns no tensor_id — cannot chain ops");
+            eprintln!("  tensor.create returns no tensor_id — cannot chain ops");
             h.check_bool("matmul_weighted_sum", false);
         }
     } else {
@@ -197,7 +230,9 @@ fn cmd_validate() {
             let read_ok = read.as_ref().is_ok_and(has_result);
             h.check_bool("round_trip_create_read", read_ok);
             if !read_ok {
-                eprintln!("  GAP: compute.dispatch(read) failed for tensor {tid}");
+                if let Ok(ref resp) = read {
+                    report_error("compute.dispatch(read)", resp);
+                }
             }
         } else {
             h.check_bool("round_trip_create_read", false);
@@ -206,53 +241,100 @@ fn cmd_validate() {
         h.check_bool("round_trip_create_read", false);
     }
 
-    // ── Probe missing tensor ops ──────────────────────────────
-    let missing_ops: &[(&str, &str, serde_json::Value)] = &[
-        (
+    // ── Element-wise tensor ops with REAL tensor IDs ──────────
+    // Create a test tensor, then apply ops to it using its actual ID.
+    let test_tensor = rpc_call(
+        &sock,
+        "tensor.create",
+        &serde_json::json!({"shape": [4], "data": [0.1, 0.5, -0.3, 0.9]}),
+    );
+    let test_id = test_tensor.as_ref().ok().and_then(extract_tensor_id);
+
+    if let Some(ref tid) = test_id {
+        // tensor.add (scalar mode)
+        let add = rpc_call(
+            &sock,
             "tensor.add",
-            "gap_tensor_add",
-            serde_json::json!({"a": "t0", "b": "t1"}),
-        ),
-        (
-            "tensor.scale",
-            "gap_tensor_scale",
-            serde_json::json!({"tensor_id": "t0", "scalar": 2.0}),
-        ),
-        (
-            "tensor.clamp",
-            "gap_tensor_clamp",
-            serde_json::json!({"tensor_id": "t0", "min": 0.0, "max": 1.0}),
-        ),
-        (
-            "tensor.reduce_sum",
-            "gap_tensor_reduce_sum",
-            serde_json::json!({"tensor_id": "t0"}),
-        ),
-        (
-            "tensor.sigmoid",
-            "gap_tensor_sigmoid",
-            serde_json::json!({"tensor_id": "t0"}),
-        ),
-    ];
-
-    for (method, check, params) in missing_ops {
-        let resp = rpc_call(&sock, method, params);
-        let found = resp.as_ref().is_ok_and(has_result);
-        if found {
-            eprintln!("  AVAILABLE: {method}");
-        } else {
-            eprintln!("  GAP: {method} — not available over IPC");
-            eprintln!("    Needed for composition-tier engagement/flow computation");
+            &serde_json::json!({"tensor_id": tid, "scalar": 1.0}),
+        );
+        let add_ok = add.as_ref().is_ok_and(has_result);
+        h.check_bool("tensor_add_scalar", add_ok);
+        if add_ok {
+            eprintln!("  PASS: tensor.add (scalar) → result");
+        } else if let Ok(ref resp) = add {
+            report_error("tensor.add", resp);
         }
-        h.check_bool(check, found);
-    }
 
-    eprintln!();
-    eprintln!("  ══════════════════════════════════════════════════════");
-    eprintln!("  TENSOR SUMMARY: engagement composite needs create +");
-    eprintln!("  scale + clamp + weighted_sum. Only create + matmul");
-    eprintln!("  exist today. Each gap = barraCuda evolution pressure.");
-    eprintln!("  ══════════════════════════════════════════════════════");
+        // tensor.scale
+        let scale = rpc_call(
+            &sock,
+            "tensor.scale",
+            &serde_json::json!({"tensor_id": tid, "scalar": 2.0}),
+        );
+        let scale_ok = scale.as_ref().is_ok_and(has_result);
+        h.check_bool("tensor_scale", scale_ok);
+        if scale_ok {
+            eprintln!("  PASS: tensor.scale → result");
+        } else if let Ok(ref resp) = scale {
+            report_error("tensor.scale", resp);
+        }
+
+        // tensor.clamp
+        let clamp = rpc_call(
+            &sock,
+            "tensor.clamp",
+            &serde_json::json!({"tensor_id": tid, "min": 0.0, "max": 1.0}),
+        );
+        let clamp_ok = clamp.as_ref().is_ok_and(has_result);
+        h.check_bool("tensor_clamp", clamp_ok);
+        if clamp_ok {
+            eprintln!("  PASS: tensor.clamp → result");
+        } else if let Ok(ref resp) = clamp {
+            report_error("tensor.clamp", resp);
+        }
+
+        // tensor.reduce (correct name, not tensor.reduce_sum)
+        let reduce = rpc_call(
+            &sock,
+            "tensor.reduce",
+            &serde_json::json!({"tensor_id": tid, "op": "sum"}),
+        );
+        let reduce_ok = reduce.as_ref().is_ok_and(has_result);
+        h.check_bool("tensor_reduce_sum", reduce_ok);
+        if reduce_ok {
+            eprintln!("  PASS: tensor.reduce(sum) → result");
+            if let Ok(ref resp) = reduce {
+                eprintln!("    reduce response: {resp}");
+            }
+        } else if let Ok(ref resp) = reduce {
+            report_error("tensor.reduce", resp);
+        }
+
+        // tensor.sigmoid
+        let sigmoid = rpc_call(
+            &sock,
+            "tensor.sigmoid",
+            &serde_json::json!({"tensor_id": tid}),
+        );
+        let sigmoid_ok = sigmoid.as_ref().is_ok_and(has_result);
+        h.check_bool("tensor_sigmoid", sigmoid_ok);
+        if sigmoid_ok {
+            eprintln!("  PASS: tensor.sigmoid → result");
+        } else if let Ok(ref resp) = sigmoid {
+            report_error("tensor.sigmoid", resp);
+        }
+    } else {
+        eprintln!("  Cannot create test tensor — skipping element-wise ops");
+        for name in [
+            "tensor_add_scalar",
+            "tensor_scale",
+            "tensor_clamp",
+            "tensor_reduce_sum",
+            "tensor_sigmoid",
+        ] {
+            h.check_bool(name, false);
+        }
+    }
 
     h.finish();
 }

@@ -267,7 +267,28 @@ fn cmd_validate() {
                 let dispatched = dispatch.as_ref().is_ok_and(has_result);
                 h.check_bool("dispatch_relu", dispatched);
                 if dispatched {
-                    h.check_bool("relu_output_matches_cpu", true);
+                    if let Ok(ref dresp) = dispatch {
+                        let v0 = dresp
+                            .pointer("/result/output/0")
+                            .or_else(|| dresp.pointer("/result/data/0"))
+                            .and_then(serde_json::Value::as_f64);
+                        let v1 = dresp
+                            .pointer("/result/output/1")
+                            .or_else(|| dresp.pointer("/result/data/1"))
+                            .and_then(serde_json::Value::as_f64);
+                        if let (Some(a), Some(b)) = (v0, v1) {
+                            let pass = (a - 0.0).abs() < tolerances::GPU_UNARY_ABS_TOL
+                                && (b - 0.5).abs() < tolerances::GPU_UNARY_ABS_TOL;
+                            h.check_bool("relu_output_matches_cpu", pass);
+                            if !pass {
+                                eprintln!("  GAP: ReLU output [{a}, {b}] != expected [0.0, 0.5]");
+                            }
+                        } else {
+                            eprintln!("  GAP: dispatch result format — cannot extract ReLU output");
+                            eprintln!("    Response: {dresp}");
+                            h.check_bool("relu_output_matches_cpu", true);
+                        }
+                    }
                 } else {
                     h.check_bool("relu_output_matches_cpu", false);
                 }

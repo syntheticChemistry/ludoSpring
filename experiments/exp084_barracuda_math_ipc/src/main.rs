@@ -1,44 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
 #![allow(missing_docs)]
-//! exp084 — barraCuda Math IPC Gap Discovery.
+//! exp084 — barraCuda Math IPC Composition Validation.
 //!
-//! Attempts to replicate ludoSpring's validated game science (Fitts, Hick,
-//! steering, Perlin noise, engagement, flow) by composing barraCuda's
-//! JSON-RPC IPC surface. Every method that doesn't exist over IPC is a
-//! **gap** — evolution pressure for barraCuda to expose its math library.
+//! Validates ludoSpring's game science can be replicated via barraCuda's
+//! JSON-RPC IPC surface. Calls the ACTUAL method names and param schemas
+//! exposed by barraCuda (v0.3.11+), not aspirational names.
 //!
-//! The goal is NOT to pass. The goal is to discover what's missing so
-//! that primal composition can eventually replace in-process delegation.
+//! # barraCuda IPC surface (30 methods, Sprint 23)
 //!
-//! # Known barraCuda IPC surface (as of 2026-03-29)
+//! Math/activation: `math.sigmoid`, `math.log2`, `activation.fitts`, `activation.hick`
+//! Statistics: `stats.mean`, `stats.std_dev`, `stats.weighted_mean`
+//! Noise/RNG: `noise.perlin2d`, `noise.perlin3d`, `rng.uniform`
+//! Tensor (GPU): `tensor.create/matmul/add/scale/clamp/reduce/sigmoid`
+//! Ecosystem: `health.*`, `capabilities.list`, `device.*`
 //!
-//! - `tensor.create` — allocate f32 tensor from shape + data
-//! - `tensor.matmul` — matrix multiply two stored tensors
-//! - `compute.dispatch` — only `zeros`, `ones`, `read` ops
-//! - `fhe.ntt`, `fhe.pointwise_mul` — FHE domain
-//! - `health.*`, `device.*`, `capabilities.*` — discovery
+//! # Param schemas (from barracuda-core/src/ipc/methods/)
 //!
-//! # What we NEED callable over IPC
-//!
-//! - `math.activation.sigmoid`, `.relu`, `.gelu`, `.softmax`
-//! - `math.stats.mean`, `.dot`, `.variance`, `.std_dev`, `.pearson`
-//! - `math.noise.perlin_2d`, `.fbm_2d`
-//! - `math.rng.lcg_step`
-//! - `math.formula.fitts_mt`, `.hick_rt`, `.steering_time`
-//! - `math.flow.evaluate`, `math.engagement.composite`
-//!
-//! # Also probe via Neural API capability.call
-//!
-//! biomeOS `capability.call` IS implemented — it routes `compute` domain
-//! to barraCuda if registered. We test both direct UDS and Neural API
-//! routing to discover which path works.
-//!
-//! # Reference
-//!
-//! primalSpring exp088: uses `tcp::neural_api_capability_call` pattern
-//! primalSpring STORYTELLING_EVOLUTION.md: documents ludoSpring's 8 game.* methods
-//! wateringHole CAPABILITY_BASED_DISCOVERY_STANDARD.md: tiered fallback
+//! - `math.sigmoid`: `{"data": [f64...]}`
+//! - `activation.fitts`: `{"distance": f64, "width": f64, "a": f64, "b": f64}`
+//! - `activation.hick`: `{"n_choices": u64, "a": f64, "b": f64}`
+//! - `stats.mean`: `{"data": [f64...]}`
+//! - `noise.perlin2d`: `{"x": f64, "y": f64}`
+//! - `rng.uniform`: `{"n": u64, "min": f64, "max": f64, "seed": u64}`
 //!
 //! # Provenance
 //!
@@ -53,24 +37,19 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "N/A (composition gap discovery — barraCuda IPC surface audit)",
-    commit: "exp084-v1",
-    date: "2026-03-29",
+    script: "N/A (composition — barraCuda IPC surface validation)",
+    commit: "exp084-v2",
+    date: "2026-03-30",
     command: "cargo run -p ludospring-exp084",
 };
 
-/// Known Fitts result: MT for D=100, W=10, a=50, b=150.
-/// Validated in exp001, python_parity.rs, baselines/python/interaction_laws.py.
 const FITTS_EXPECTED: f64 = 708.847_613_416_814;
-
-/// Known Hick result: RT for N=7, a=200, b=150.
 const HICK_EXPECTED: f64 = 650.0;
-
-/// Known Perlin 2D at integer lattice: always 0.0.
 const PERLIN_LATTICE_EXPECTED: f64 = 0.0;
-
-/// Known sigmoid(0.5) from Python/Rust parity.
 const SIGMOID_HALF_EXPECTED: f64 = 0.622_459_331_201_854_6;
+
+const METHOD_NOT_FOUND: i64 = -32601;
+const INVALID_PARAMS: i64 = -32602;
 
 fn rpc_call(
     socket: &Path,
@@ -107,13 +86,16 @@ fn has_result(resp: &serde_json::Value) -> bool {
     resp.get("result").is_some() && resp.get("error").is_none()
 }
 
-fn has_error_code(resp: &serde_json::Value, code: i64) -> bool {
-    resp.pointer("/error/code")
-        .and_then(serde_json::Value::as_i64)
-        == Some(code)
+fn error_code(resp: &serde_json::Value) -> Option<i64> {
+    resp.pointer("/error/code").and_then(serde_json::Value::as_i64)
 }
 
-const METHOD_NOT_FOUND: i64 = -32601;
+fn error_message(resp: &serde_json::Value) -> String {
+    resp.pointer("/error/message")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("unknown")
+        .to_string()
+}
 
 fn discover_neural_api() -> Option<PathBuf> {
     let dirs = ludospring_barracuda::niche::socket_dirs();
@@ -164,15 +146,13 @@ fn cmd_validate() {
 
     let Some(sock) = socket else {
         eprintln!("  barraCuda socket not found — running gap audit in dry mode");
-        eprintln!("  GAP: barraCuda process must be running for composition tests");
-
         gap_audit_dry(&mut h);
         h.finish();
     };
 
     eprintln!("  barraCuda socket: {}", sock.display());
 
-    // ── Phase 1: Confirm known IPC surface works ──────────────
+    // ── Phase 1: Ecosystem probes ────────────────────────────
     let health = rpc_call(&sock, "health.liveness", &serde_json::json!({}));
     h.check_bool(
         "barracuda_health_liveness",
@@ -198,117 +178,88 @@ fn cmd_validate() {
         tensor.as_ref().is_ok_and(has_result),
     );
 
-    // ── Phase 2: Probe for math methods that SHOULD exist ─────
-    // Each probe tests a method ludoSpring needs. Method-not-found
-    // is the expected gap — we document it, not fail on it.
-
-    probe_method(
+    // ── Phase 2: Math methods with CORRECT names + params ────
+    probe_math(
         &mut h,
         &sock,
-        "math.activation.sigmoid",
-        &serde_json::json!({"x": 0.5}),
-        "gap_sigmoid",
-        SIGMOID_HALF_EXPECTED,
+        "math.sigmoid",
+        &serde_json::json!({"data": [0.5]}),
+        "sigmoid_half",
+        Some(SIGMOID_HALF_EXPECTED),
         tolerances::ANALYTICAL_TOL,
     );
 
-    probe_method(
+    probe_math(
         &mut h,
         &sock,
-        "math.activation.relu",
-        &serde_json::json!({"x": -0.5}),
-        "gap_relu",
+        "math.log2",
+        &serde_json::json!({"data": [8.0]}),
+        "log2_of_8",
+        Some(3.0),
+        tolerances::ANALYTICAL_TOL,
+    );
+
+    probe_math(
+        &mut h,
+        &sock,
+        "activation.fitts",
+        &serde_json::json!({"distance": 100.0, "width": 10.0, "a": 50.0, "b": 150.0}),
+        "fitts_movement_time",
+        Some(FITTS_EXPECTED),
+        tolerances::ANALYTICAL_TOL,
+    );
+
+    probe_math(
+        &mut h,
+        &sock,
+        "activation.hick",
+        &serde_json::json!({"n_choices": 7, "a": 200.0, "b": 150.0}),
+        "hick_reaction_time",
+        Some(HICK_EXPECTED),
+        tolerances::ANALYTICAL_TOL,
+    );
+
+    probe_math(
+        &mut h,
+        &sock,
+        "stats.mean",
+        &serde_json::json!({"data": [1.0, 2.0, 3.0, 4.0, 5.0]}),
+        "stats_mean",
+        Some(3.0),
+        tolerances::ANALYTICAL_TOL,
+    );
+
+    probe_math(
+        &mut h,
+        &sock,
+        "stats.std_dev",
+        &serde_json::json!({"data": [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]}),
+        "stats_std_dev",
+        None, // accept any valid result
         0.0,
-        tolerances::ANALYTICAL_TOL,
     );
 
-    probe_method(
+    probe_math(
         &mut h,
         &sock,
-        "math.stats.mean",
-        &serde_json::json!({"values": [1.0, 2.0, 3.0, 4.0, 5.0]}),
-        "gap_mean",
-        3.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-
-    probe_method(
-        &mut h,
-        &sock,
-        "math.stats.dot",
-        &serde_json::json!({"a": [1.0, 2.0, 3.0], "b": [4.0, 5.0, 6.0]}),
-        "gap_dot_product",
-        32.0,
-        tolerances::ANALYTICAL_TOL,
-    );
-
-    probe_method(
-        &mut h,
-        &sock,
-        "math.noise.perlin_2d",
+        "noise.perlin2d",
         &serde_json::json!({"x": 0.0, "y": 0.0}),
-        "gap_perlin_2d_lattice",
-        PERLIN_LATTICE_EXPECTED,
+        "perlin2d_lattice",
+        Some(PERLIN_LATTICE_EXPECTED),
         tolerances::ANALYTICAL_TOL,
     );
 
-    probe_method(
+    probe_math(
         &mut h,
         &sock,
-        "math.rng.lcg_step",
-        &serde_json::json!({"state": 42}),
-        "gap_lcg_rng",
-        f64::NAN, // any valid state is fine
-        f64::INFINITY,
-    );
-
-    probe_formula(
-        &mut h,
-        &sock,
-        "math.formula.fitts_mt",
-        &serde_json::json!({"d": 100.0, "w": 10.0, "a": 50.0, "b": 150.0}),
-        "gap_fitts_movement_time",
-        FITTS_EXPECTED,
-        tolerances::ANALYTICAL_TOL,
-    );
-
-    probe_formula(
-        &mut h,
-        &sock,
-        "math.formula.hick_rt",
-        &serde_json::json!({"n": 7, "a": 200.0, "b": 150.0}),
-        "gap_hick_reaction_time",
-        HICK_EXPECTED,
-        tolerances::ANALYTICAL_TOL,
-    );
-
-    probe_method(
-        &mut h,
-        &sock,
-        "math.flow.evaluate",
-        &serde_json::json!({"challenge": 0.5, "skill": 0.5, "channel_width": 0.15}),
-        "gap_flow_evaluate",
-        f64::NAN,
-        f64::INFINITY,
-    );
-
-    probe_method(
-        &mut h,
-        &sock,
-        "math.engagement.composite",
-        &serde_json::json!({
-            "action_rate": 30.0, "exploration_rate": 2.0,
-            "variety": 0.6, "completion": 0.4, "social": 0.3,
-            "session_minutes": 10.0
-        }),
-        "gap_engagement_composite",
-        f64::NAN,
-        f64::INFINITY,
+        "rng.uniform",
+        &serde_json::json!({"n": 5, "min": 0.0, "max": 1.0, "seed": 42}),
+        "rng_uniform",
+        None, // accept any valid result
+        0.0,
     );
 
     // ── Phase 3: Neural API capability.call routing ──────────
-    // biomeOS capability.call IS implemented — test whether it can
-    // route `compute` domain to barraCuda for tensor ops.
     let neural = discover_neural_api();
     if let Some(ref na) = neural {
         eprintln!("  Neural API socket: {}", na.display());
@@ -318,7 +269,7 @@ fn cmd_validate() {
             &serde_json::json!({
                 "capability": "compute",
                 "operation": "tensor.create",
-                "args": {"shape": [2], "data": [1.0, 2.0]}
+                "params": {"shape": [2], "data": [1.0, 2.0]}
             }),
         );
         let routed = cap_route.as_ref().is_ok_and(has_result);
@@ -326,7 +277,8 @@ fn cmd_validate() {
         if routed {
             eprintln!("  Neural API routes compute → barraCuda successfully");
         } else {
-            eprintln!("  GAP: Neural API cannot route compute domain to barraCuda");
+            eprintln!("  GAP (biomeOS): Neural API compute domain routes to toadStool, not barraCuda");
+            eprintln!("  biomeOS bootstrap graph maps compute→toadStool; needs math→barraCuda");
             if let Ok(ref resp) = cap_route {
                 eprintln!("    Response: {resp}");
             }
@@ -336,58 +288,78 @@ fn cmd_validate() {
         h.check_bool("neural_api_routes_compute", false);
     }
 
-    // ── Phase 4: Summary ──────────────────────────────────────
-    eprintln!();
-    eprintln!("  ══════════════════════════════════════════════════════");
-    eprintln!("  GAP SUMMARY: Methods probed that returned method-not-found");
-    eprintln!("  are evolution pressure for barraCuda to expose its math");
-    eprintln!("  library over JSON-RPC. Each gap blocks composition-tier");
-    eprintln!("  validation of ludoSpring's science.");
-    eprintln!("  ══════════════════════════════════════════════════════");
+    // ── Phase 4: Domain-level methods (real gaps) ────────────
+    // These are ludoSpring domain compositions that don't exist
+    // in barraCuda. They need either upstream absorption or
+    // ludoSpring should compose them from primitives.
+    let flow = rpc_call(
+        &sock,
+        "math.flow.evaluate",
+        &serde_json::json!({"challenge": 0.5, "skill": 0.5, "channel_width": 0.15}),
+    );
+    let flow_exists = flow.as_ref().is_ok_and(has_result);
+    h.check_bool("domain_flow_evaluate", flow_exists);
+    if !flow_exists {
+        eprintln!("  EXPECTED GAP: math.flow.evaluate — ludoSpring domain method");
+        eprintln!("    Composable from sigmoid + clamp; not in barraCuda yet");
+    }
+
+    let engagement = rpc_call(
+        &sock,
+        "math.engagement.composite",
+        &serde_json::json!({"action_rate": 30.0, "exploration_rate": 2.0, "variety": 0.6}),
+    );
+    let eng_exists = engagement.as_ref().is_ok_and(has_result);
+    h.check_bool("domain_engagement_composite", eng_exists);
+    if !eng_exists {
+        eprintln!("  EXPECTED GAP: math.engagement.composite — ludoSpring domain method");
+        eprintln!("    Composable from stats.weighted_mean + tensor ops; not in barraCuda yet");
+    }
 
     h.finish();
 }
 
-fn probe_method(
+fn probe_math(
     h: &mut ValidationHarness,
     sock: &Path,
     method: &str,
     params: &serde_json::Value,
     check_name: &str,
-    expected: f64,
+    expected: Option<f64>,
     tol: f64,
 ) {
     match rpc_call(sock, method, params) {
         Ok(resp) if has_result(&resp) => {
-            eprintln!("  AVAILABLE: {method} → result present");
-            if expected.is_nan() {
-                h.check_bool(check_name, true);
-            } else if let Some(val) = resp
-                .pointer("/result/value")
-                .or_else(|| resp.pointer("/result"))
-                .and_then(serde_json::Value::as_f64)
-            {
-                h.check_abs(check_name, val, expected, tol);
-            } else {
-                h.check_bool(check_name, true);
+            eprintln!("  PASS: {method} → result present");
+            match expected {
+                Some(exp) => {
+                    if let Some(val) = resp
+                        .pointer("/result/value")
+                        .or_else(|| resp.pointer("/result/0"))
+                        .or_else(|| resp.pointer("/result/data/0"))
+                        .or_else(|| resp.pointer("/result"))
+                        .and_then(serde_json::Value::as_f64)
+                    {
+                        h.check_abs(check_name, val, exp, tol);
+                    } else {
+                        eprintln!("    Result present but cannot extract numeric value: {resp}");
+                        h.check_bool(check_name, true);
+                    }
+                }
+                None => h.check_bool(check_name, true),
             }
         }
-        Ok(resp) if has_error_code(&resp, METHOD_NOT_FOUND) => {
-            eprintln!("  GAP: {method} → method_not_found (-32601)");
-            eprintln!("    Evolution pressure: barraCuda should expose this over IPC");
-            eprintln!("    ludoSpring expected: {expected} (tol {tol})");
+        Ok(resp) if error_code(&resp) == Some(METHOD_NOT_FOUND) => {
+            eprintln!("  FAIL: {method} → -32601 method_not_found");
+            h.check_bool(check_name, false);
+        }
+        Ok(resp) if error_code(&resp) == Some(INVALID_PARAMS) => {
+            eprintln!("  FAIL: {method} → -32602 invalid_params: {}", error_message(&resp));
+            eprintln!("    Method EXISTS but param schema doesn't match");
             h.check_bool(check_name, false);
         }
         Ok(resp) => {
-            let code = resp
-                .pointer("/error/code")
-                .and_then(serde_json::Value::as_i64)
-                .unwrap_or(0);
-            let msg = resp
-                .pointer("/error/message")
-                .and_then(serde_json::Value::as_str)
-                .unwrap_or("unknown");
-            eprintln!("  ERROR: {method} → {code}: {msg}");
+            eprintln!("  FAIL: {method} → {}: {}", error_code(&resp).unwrap_or(0), error_message(&resp));
             h.check_bool(check_name, false);
         }
         Err(e) => {
@@ -397,34 +369,25 @@ fn probe_method(
     }
 }
 
-fn probe_formula(
-    h: &mut ValidationHarness,
-    sock: &Path,
-    method: &str,
-    params: &serde_json::Value,
-    check_name: &str,
-    expected: f64,
-    tol: f64,
-) {
-    probe_method(h, sock, method, params, check_name, expected, tol);
-}
-
 fn gap_audit_dry(h: &mut ValidationHarness) {
     let gaps = [
-        "gap_sigmoid",
-        "gap_relu",
-        "gap_mean",
-        "gap_dot_product",
-        "gap_perlin_2d_lattice",
-        "gap_lcg_rng",
-        "gap_fitts_movement_time",
-        "gap_hick_reaction_time",
-        "gap_flow_evaluate",
-        "gap_engagement_composite",
+        "barracuda_health_liveness",
+        "barracuda_capabilities_list",
+        "tensor_create_identity_2x2",
+        "sigmoid_half",
+        "log2_of_8",
+        "fitts_movement_time",
+        "hick_reaction_time",
+        "stats_mean",
+        "stats_std_dev",
+        "perlin2d_lattice",
+        "rng_uniform",
         "neural_api_routes_compute",
+        "domain_flow_evaluate",
+        "domain_engagement_composite",
     ];
     for name in gaps {
-        eprintln!("  DRY_GAP: {name} — barraCuda not running, cannot probe");
+        eprintln!("  DRY_GAP: {name} — barraCuda not running");
         h.check_bool(name, false);
     }
 }

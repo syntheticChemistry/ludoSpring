@@ -98,7 +98,17 @@ primals and document gaps.
 | 087 | Neural API pipeline | 1/7 | **3/7** | health.liveness PASS, graph.list returns 40 graphs. Composition graphs need graph.save deployment |
 | 088 | Continuous game loop | 2/10 | **2/10** | Socket naming mismatch blocks forwarding. Sub-ms latency still confirmed |
 
-**Total: 5/47 → 21/50 (42%) — evolution is real and substantial.**
+**V35.2 local debt fix (Mar 30, 2026 — fixed method names, param schemas, tensor IDs):**
+
+| Exp | Target | V35.1 | V35.2 | Key finding |
+|-----|--------|-------|-------|-------------|
+| 084 | barraCuda math IPC | 4/15 | **12/15** | All 8 math methods PASS with correct names/params. Only Neural API routing + 2 domain methods remain |
+| 085 | Shader dispatch chain | 7/8 | **7/8** | Unchanged — readback needs sovereign GPU driver (expected) |
+| 086 | Tensor composition | 5/10 | **10/10** | ALL tensor ops PASS — add, scale, clamp, reduce, sigmoid ALL exist and work |
+| 087 | Neural API pipeline | 3/7 | **3/7** | graph.save parse error; biomeOS has no barraCuda capability domain |
+| 088 | Continuous game loop | 2/10 | **2/10** | Same — biomeOS capability registry empty in bootstrap mode |
+
+**Total: 5/47 → 21/50 (42%) → 34/50 (68%)**
 
 **Composition graphs**: `graphs/composition/*.toml` — `[graph]` header (biomeOS-compatible), `[[nodes]]` with `by_capability`.
 
@@ -109,8 +119,17 @@ primals and document gaps.
 4. ~~biomeOS nucleus vs runtime graphs~~ — `graph.save` implemented, tier separation (v2.79)
 5. ~~health.liveness missing~~ — implemented on Neural API (v2.79)
 
-**Remaining gaps (V35.1):**
-1. barraCuda tensor element-wise ops (add/scale/clamp/reduce/sigmoid) registered but not dispatched
-2. Socket naming convention mismatch: biomeOS expects `{primal}-{family}.sock`, primals bind as `{primal}.sock`
-3. Composition graphs need deployment via `graph.save` API (not filesystem)
-4. barraCuda domain-level methods (fitts, hick, flow, engagement) not on IPC — these are ludoSpring science, need either upstream absorption or experiment refactoring to use barraCuda primitives
+**V35.1 "gaps" that were actually LOCAL debt (FIXED in V35.2):**
+- Wrong method names: `math.activation.sigmoid` → `math.sigmoid`, etc.
+- Wrong param keys: `values` → `data`, `d` → `distance`, `n` → `n_choices`
+- Placeholder tensor IDs `"t0"` → real IDs from `tensor.create`
+- `tensor.reduce_sum` → `tensor.reduce` (correct name)
+- ALL tensor element-wise ops (add/scale/clamp/reduce/sigmoid) WORK
+
+**Remaining GENUINE gaps (V35.2):**
+1. biomeOS: no barraCuda/math domain in capability registry (only 5 bootstrap capabilities)
+2. biomeOS: auto-discovery finds 0 primals despite live sockets
+3. biomeOS: `graph.save` returns parse error for composition TOMLs
+4. biomeOS: needs `tower_atomic_bootstrap.toml` in CWD or internal bundling
+5. toadStool: sovereign dispatch readback needs coralReef driver (hardware gap)
+6. barraCuda: `math.flow.evaluate` and `math.engagement.composite` don't exist (ludoSpring domain compositions — composable from primitives)

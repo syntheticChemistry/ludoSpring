@@ -121,6 +121,9 @@ fn cmd_validate() {
 
     eprintln!("  Neural API socket: {}", na.display());
 
+    // ── Phase 0: Deploy our composition graphs via graph.save ─
+    deploy_composition_graphs(&na);
+
     // ── Phase 1: Health + capability discovery ────────────────
     let health = rpc_call(&na, "health.liveness", &serde_json::json!({}));
     h.check_bool(
@@ -200,7 +203,7 @@ fn cmd_validate() {
         &na,
         "graph.start_continuous",
         &serde_json::json!({
-            "graph_id": "ludospring_game_loop"
+            "graph_id": "ludospring_game_loop_continuous"
         }),
     );
     let cont_ok = cont_exec.as_ref().is_ok_and(has_result);
@@ -248,6 +251,43 @@ fn cmd_validate() {
     eprintln!("  ══════════════════════════════════════════════════════");
 
     h.finish();
+}
+
+fn deploy_composition_graphs(na: &Path) {
+    let graph_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|root| root.join("graphs/composition"));
+
+    let graph_files = ["math_pipeline.toml", "engagement_pipeline.toml", "game_loop_continuous.toml"];
+
+    for filename in &graph_files {
+        let Some(ref dir) = graph_dir else { continue };
+        let path = dir.join(filename);
+        let Ok(content) = std::fs::read_to_string(&path) else {
+            eprintln!("  WARN: cannot read {filename} — graph not deployed");
+            continue;
+        };
+        let resp = rpc_call(
+            na,
+            "graph.save",
+            &serde_json::json!({"graph_toml": content}),
+        );
+        match resp {
+            Ok(ref r) if has_result(r) => {
+                eprintln!("  Deployed graph: {filename}");
+            }
+            Ok(ref r) => {
+                let msg = r.pointer("/error/message")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("unknown");
+                eprintln!("  WARN: graph.save({filename}) → {msg}");
+            }
+            Err(e) => {
+                eprintln!("  WARN: graph.save({filename}) → {e}");
+            }
+        }
+    }
 }
 
 fn dry_mode_gaps(h: &mut ValidationHarness) {

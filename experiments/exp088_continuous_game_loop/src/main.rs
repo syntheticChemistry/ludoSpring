@@ -170,6 +170,9 @@ fn cmd_validate() {
 
     eprintln!("  Neural API socket: {}", na.display());
 
+    // ── Phase 0: Deploy our continuous graph ──────────────────
+    deploy_composition_graph(&na);
+
     // ── Phase 1: Probe each primal needed in the game loop ────
     // Each check validates that the Neural API can route to the
     // primal domain needed for one stage of the 60Hz loop.
@@ -314,6 +317,39 @@ fn cmd_validate() {
     eprintln!("  ══════════════════════════════════════════════════════");
 
     h.finish();
+}
+
+fn deploy_composition_graph(na: &Path) {
+    let graph_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|root| root.join("graphs/composition"));
+
+    let Some(ref dir) = graph_dir else { return };
+    let path = dir.join("game_loop_continuous.toml");
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        eprintln!("  WARN: cannot read game_loop_continuous.toml — graph not deployed");
+        return;
+    };
+    let resp = rpc_call(
+        na,
+        "graph.save",
+        &serde_json::json!({"graph_toml": content}),
+    );
+    match resp {
+        Ok(ref r) if has_result(r) => {
+            eprintln!("  Deployed graph: game_loop_continuous.toml");
+        }
+        Ok(ref r) => {
+            let msg = r.pointer("/error/message")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("unknown");
+            eprintln!("  WARN: graph.save → {msg}");
+        }
+        Err(e) => {
+            eprintln!("  WARN: graph.save → {e}");
+        }
+    }
 }
 
 fn dry_mode(h: &mut ValidationHarness) {
