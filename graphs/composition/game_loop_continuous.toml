@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Game Loop Continuous — 60Hz storytelling via primal composition.
+#
+# The full RPGPT storytelling loop expressed as a biomeOS Continuous graph.
+# Each tick: evaluate flow → DDA recommend → AI narrate → render → provenance.
+#
+# No ludoSpring process. Just primals composed at 60Hz.
+#
+# biomeOS `graph.start_continuous` IS implemented — session lifecycle
+# (start/pause/resume/stop) works. However, node execution is currently
+# a stub: the callback returns fixed JSON per node rather than routing
+# each tick to real primal capabilities. This graph documents the target
+# architecture; when biomeOS wires the continuous executor to NeuralRouter,
+# it starts working.
+#
+# Modeled after primalSpring gen4_storytelling_full.toml but decomposed
+# to ONLY the science pipeline (no esotericWebb process, no ludoSpring
+# process — pure capability routing through barraCuda, Squirrel, etc.)
+#
+# Related: exp088 (continuous game loop), exp074 (dialogue flow monitoring)
+# Reference: primalSpring graphs/gen4/gen4_storytelling_full.toml
+#
+# STATUS: Active (Mar 29, 2026) — session lifecycle works,
+#         node routing stubbed in biomeOS, barraCuda math gaps
+
+[graph]
+name = "ludospring_game_loop_continuous"
+version = "0.1.0"
+description = "60Hz storytelling loop — pure primal composition"
+coordination = "Continuous"
+tick_hz = 60
+
+[[nodes]]
+name = "evaluate_flow"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "dda_recommend"
+by_capability = "compute"
+depends_on = ["evaluate_flow"]
+
+[[nodes]]
+name = "ai_narrate"
+by_capability = "ai"
+depends_on = ["dda_recommend"]
+required = false
+
+[[nodes]]
+name = "render_scene"
+by_capability = "visualization"
+depends_on = ["ai_narrate"]
+required = false
+
+[[nodes]]
+name = "provenance_stamp"
+by_capability = "dag"
+depends_on = ["render_scene"]
+required = false
+
+[[nodes]]
+name = "crypto_sign"
+by_capability = "security"
+depends_on = ["provenance_stamp"]
+required = false

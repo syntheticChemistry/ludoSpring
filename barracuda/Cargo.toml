@@ -29,7 +29,7 @@ tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
 signal-hook = { version = "0.3", optional = true }
 
-barracuda = { path = "../../barraCuda/crates/barracuda", default-features = false }
+barracuda = { path = "../../../primals/barraCuda/crates/barracuda", default-features = false }
 
 # wgpu is the only non-pure-Rust dependency (ash → Vulkan loader → system libvulkan).
 # It is optional, gated behind the `gpu` feature, and never active in default builds.

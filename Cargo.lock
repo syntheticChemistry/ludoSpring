@@ -140,7 +140,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "barracuda"
-version = "0.3.10"
+version = "0.3.11"
 dependencies = [
  "blake3",
  "bytemuck",
@@ -2167,6 +2167,51 @@ name = "ludospring-exp083"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp084"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp085"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp086"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp087"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp088"
+version = "0.1.0"
+dependencies = [
  "ludospring-barracuda",
  "serde",
  "serde_json",

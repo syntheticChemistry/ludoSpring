@@ -3,7 +3,57 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V34).
+This project does not use SemVer — versions are session-sequential (V1–V35).
+
+## [V35] — 2026-03-30
+
+### Added — Primal Composition Gap Discovery (Track 26)
+
+- **5 new composition experiments** (exp084–exp088): probe whether ludoSpring's
+  validated game science can be replicated using ONLY primal composition
+  (no ludoSpring binary in the loop)
+- **4 deploy graphs** (`graphs/composition/*.toml`): math pipeline, shader
+  dispatch chain, engagement pipeline, 60Hz continuous game loop — biomeOS-
+  compatible `[graph]` header with `[[nodes]]` and `by_capability` routing
+- **exp084 (barraCuda math IPC)**: 12 math methods probed over JSON-RPC
+- **exp085 (shader dispatch chain)**: coralReef compile → toadStool dispatch E2E
+- **exp086 (tensor composition)**: engagement scoring via tensor element-wise ops
+- **exp087 (Neural API pipeline)**: graph.execute, pipeline, continuous orchestration
+- **exp088 (60Hz game loop)**: full storytelling loop at continuous tick rate
+
+### Fixed — Build Infrastructure
+
+- Fixed barraCuda path dependency in `barracuda/Cargo.toml`, `metalForge/forge/Cargo.toml`,
+  `exp030_cpu_gpu_parity/Cargo.toml` (incorrect relative paths)
+- Fixed provenance trio path dependencies in 7 experiments (exp052–054, exp061–064):
+  `phase2/` → `primals/` for rhizoCrypt, loamSpine, sweetGrass
+- Graph TOMLs use `[graph]` header (not `[metadata]`) for biomeOS compatibility
+- `#![expect(missing_docs)]` → `#![allow(missing_docs)]` in binary crates
+
+### Validated — Live Primal Composition (Mar 30, 2026)
+
+Ran all 5 experiments against live primals from plasmidBin (v2026.03.25):
+
+| Experiment | Result | Key finding |
+|-----------|--------|-------------|
+| exp084 | 0/12 | barraCuda not in plasmidBin release |
+| exp085 | 2/8 | coralReef HTTP-wrapped JSON-RPC vs raw UDS |
+| exp086 | 0/10 | barraCuda missing — tensor API unreachable |
+| exp087 | 1/7 | Neural API discovered; primals not registered |
+| exp088 | 2/10 | Sub-ms capability.call latency confirmed |
+
+### Documented — 5 Critical Gaps for Primal Evolution
+
+- P0: barraCuda not in plasmidBin (blocks all math composition)
+- P0: Running primals not auto-registered with Neural API
+- P1: coralReef HTTP vs raw JSON-RPC on UDS
+- P1: barraCuda math/stats/noise methods not on JSON-RPC
+- P2: biomeOS continuous executor stub + nucleus graph bundling
+
+### Handoff
+
+- Central: `LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md`
+  (wateringHole) — full gap analysis with per-team actions
 
 ## [V34] — 2026-03-29
 

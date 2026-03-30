@@ -96,6 +96,11 @@ members = [
     "experiments/exp081_procedural_generation",
     "experiments/exp082_symphony_pipeline",
     "experiments/exp083_neural_api_e2e",
+    "experiments/exp084_barracuda_math_ipc",
+    "experiments/exp085_shader_dispatch_chain",
+    "experiments/exp086_tensor_composition",
+    "experiments/exp087_neural_api_pipeline",
+    "experiments/exp088_continuous_game_loop",
 ]
 
 [workspace.package]

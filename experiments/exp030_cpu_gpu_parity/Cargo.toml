@@ -14,7 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 ludospring-barracuda = { path = "../../barracuda" }
-barracuda = { path = "../../../barraCuda/crates/barracuda" }
+barracuda = { path = "../../../../primals/barraCuda/crates/barracuda" }
 wgpu = { version = "28", default-features = false, features = [
     "wgsl",
     "vulkan-portability",

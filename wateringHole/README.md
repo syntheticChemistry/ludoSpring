@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 29, 2026 (V32)
+**Last Updated:** March 30, 2026 (V35)
 
 ---
 
@@ -10,7 +10,8 @@
 Unidirectional handoff documents from ludoSpring to consuming teams. No reverse
 dependencies. Receiving teams: barraCuda (math primitives), toadStool (GPU dispatch),
 coralReef (shader compilation), biomeOS (orchestration), petalTongue (visualization),
-wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptographic signing).
+wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptographic signing),
+primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 ## Conventions
 
@@ -24,12 +25,13 @@ wetSpring (sample provenance), healthSpring (medical access), BearDog (cryptogra
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V32** | [LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md](handoffs/LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md) | Mar 29 | Full codebase audit + deep debt: provenance alignment, tolerance centralization, OrExit adoption (27 files), exp030 harness rewrite, CI baseline drift, deny.toml fix, deprecated binary cleanup, `specs/BARRACUDA_REQUIREMENTS.md` |
+| **V35** | [Central: LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md) | Mar 30 | Primal composition gap discovery: 5 experiments against live primals, 5 critical gaps documented (barraCuda missing, Neural API registration, coralReef transport, continuous executor, nucleus graphs) |
+| **V34** | [LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md](handoffs/LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md) | Mar 29 | Dependency path fixes, workspace alignment |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 82 experiments, all checks pass, 674 barracuda + 19 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration, V32 full audit + deep debt)
+ludoSpring (game science, 88 experiments, 734 workspace tests, V35 primal composition gap discovery)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -82,10 +84,25 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
+## V35 Composition Gap Summary
+
+| Gap | Owner | Priority |
+|-----|-------|----------|
+| barraCuda not in plasmidBin | barraCuda | P0 |
+| Primals not registered with Neural API | biomeOS | P0 |
+| coralReef HTTP vs raw JSON-RPC on UDS | coralReef | P1 |
+| barraCuda math not on JSON-RPC | barraCuda | P1 |
+| Tensor element-wise ops not on IPC | barraCuda | P1 |
+| Continuous executor stub | biomeOS | P2 |
+| Nucleus vs runtime graph separation | biomeOS | P2 |
+
+See central handoff for full details per team.
+
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V32 | `handoffs/archive/LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md` | V34 Nucleus Nest |
 | V31 | `handoffs/archive/LUDOSPRING_V31_DEEP_DEBT_ESOTERICWEBB_ALIGNMENT_HANDOFF_MAR28_2026.md` | V32 Comprehensive Audit + Deep Debt |
 | V30 | `handoffs/archive/LUDOSPRING_V30_DEEP_EVOLUTION_MODERN_RUST_HANDOFF_MAR23_2026.md` | V31 Deep Debt + esotericWebb |
 | V26 | `handoffs/archive/LUDOSPRING_V26_FULL_HARNESS_MIGRATION_HANDOFF_MAR18_2026.md` | V28 Deep Evolution |

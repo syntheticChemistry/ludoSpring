@@ -9,7 +9,7 @@ description = "Hardware discovery and cross-substrate dispatch for ludoSpring"
 license.workspace = true
 
 [dependencies]
-barracuda = { path = "../../../barraCuda/crates/barracuda" }
+barracuda = { path = "../../../../primals/barraCuda/crates/barracuda" }
 ludospring-barracuda = { path = "../../barracuda", default-features = false }
 
 [[bin]]

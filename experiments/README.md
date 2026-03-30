@@ -1,9 +1,9 @@
 # ludoSpring Experiments
 
 **Date:** March 29, 2026
-**Total:** 83 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V34)
-**Pattern:** hotSpring validation + baseCamp expeditions
-**Lints:** All 83 experiment Cargo.toml files inherit `[lints] workspace = true` (V34)
+**Total:** 88 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V35)
+**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery
+**Lints:** All 88 experiment Cargo.toml files inherit `[lints] workspace = true` (V35)
 
 ---
 
@@ -300,6 +300,46 @@ Full NUCLEUS Nest Atomic validation against 5 live primal processes through biom
 
 **V34 evolution**: Expanded from Tower-only (10 checks) to full Nest Atomic (13 checks) with NestGate storage, Squirrel AI/MCP, and cross-domain provenance chain.
 
+### Track 26: Primal Composition Validation — Gap Discovery (V35)
+
+The next evolution tier: replicate ludoSpring's validated science using ONLY
+primal composition (existing deployed primals composed via biomeOS graphs).
+No ludoSpring binary participates — just barraCuda, toadStool, coralReef,
+Squirrel, petalTongue, rhizoCrypt, and biomeOS Neural API.
+
+Gaps discovered here become evolution pressure on primals and the Neural API.
+esotericWebb learns from these composition graphs instead of depending on a
+ludoSpring process. primalSpring validates the composition patterns work.
+
+**Deploy graphs**: `graphs/composition/*.toml` — focused DAGs for each experiment.
+
+**Evolution path**:
+  Python baseline → Rust validation → barraCuda CPU → barraCuda GPU
+  → **primal composition (THIS TRACK)** → esotericWebb absorbs patterns
+
+| # | Package | Checks | Live Result | Composition Target | Gaps Surfaced |
+|---|---------|--------|-------------|--------------------|---------------|
+| 084 | `ludospring-exp084` | 14 | 0/12 (dry) | barraCuda math IPC (Fitts, Hick, sigmoid, Perlin, flow, engagement) + Neural API routing | barraCuda not in plasmidBin release — no binary to probe |
+| 085 | `ludospring-exp085` | 8 | **2/8** (live) | Sovereign shader dispatch: coralReef compile → toadStool dispatch | Sockets discovered; compile fails (HTTP vs raw JSON-RPC framing) |
+| 086 | `ludospring-exp086` | 9 | 0/10 (dry) | Tensor API stress: engagement composite via tensor.create + matmul | barraCuda not in plasmidBin — tensor API unreachable |
+| 087 | `ludospring-exp087` | 7 | **1/7** (live) | Neural API graph orchestration: graph.execute, pipeline, continuous | Neural API discovered; primals not registered; graphs not deployed |
+| 088 | `ludospring-exp088` | 10 | **2/10** (live) | 60Hz continuous game loop: flow → DDA → narrate → render → provenance | Neural API discovered; capability.call <16ms; 5 domains unregistered |
+
+**Key insight**: These experiments are designed to FAIL. Each failure is a
+documented gap with a specific primal owner and evolution target. When the
+primals evolve to fill the gaps, these experiments will start passing —
+proving that ludoSpring's science is replicable through composition alone.
+
+**Gap summary**:
+
+| Gap | Owner | What's Needed | Experiment |
+|-----|-------|--------------|------------|
+| barraCuda math not on IPC | barraCuda | Expose stats, activations, noise, RNG as JSON-RPC | exp084 |
+| Compile→dispatch chain | coralReef + toadStool | WGSL compile → binary dispatch → result readback | exp085 |
+| Tensor element-wise ops | barraCuda | tensor.add, tensor.scale, tensor.clamp, tensor.reduce | exp086 |
+| Neural API executors (GAP-018) | biomeOS | Wire Pipeline, ConditionalDag, Continuous as JSON-RPC | exp087, exp088 |
+| 60Hz composition throughput | biomeOS | <16ms round-trip for capability.call routing | exp088 |
+
 ### metalForge Dispatch (Capability-Based Routing)
 
 | Binary | Checks | Status | Modules Validated |
@@ -420,6 +460,14 @@ cargo run -p ludospring-exp072                             # Trust dynamics/arc 
 cargo run -p ludospring-exp073                             # Dialogue skill checks D6 pool (34 checks)
 cargo run -p ludospring-exp074                             # Dialogue flow monitoring (26 checks)
 cargo run -p ludospring-exp075                             # Plane transition continuity (31 checks)
+
+# Run Primal Composition Validation — Gap Discovery (Track 26)
+# Requires live primals: barraCuda, coralReef, toadStool, biomeOS neural-api
+cargo run -p ludospring-exp084                             # barraCuda math IPC gaps (13 checks)
+cargo run -p ludospring-exp085                             # Shader dispatch chain (8 checks)
+cargo run -p ludospring-exp086                             # Tensor composition (9 checks)
+cargo run -p ludospring-exp087                             # Neural API pipeline (7 checks)
+cargo run -p ludospring-exp088                             # Continuous game loop (10 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

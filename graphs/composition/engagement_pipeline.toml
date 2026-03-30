@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Engagement Pipeline — streaming science via Neural API.
+#
+# A Pipeline-coordination graph that computes engagement metrics by
+# streaming data through multiple compute stages. Each stage is a
+# primal capability call — no ludoSpring process in the loop.
+#
+# biomeOS `graph.execute_pipeline` IS implemented with PipelineExecutor
+# + NeuralRouter per-stream-item. This graph should actually execute
+# if the compute capability is registered.
+#
+# Today the nodes CANNOT do real engagement math because barraCuda lacks
+# element-wise ops over IPC. But the pipeline orchestration itself works.
+#
+# Related: exp087 (Neural API pipeline), exp010 (engagement curves)
+#
+# STATUS: Active (Mar 29, 2026) — pipeline orchestration works,
+#         node math blocked on barraCuda IPC gaps
+
+[graph]
+name = "ludospring_engagement_pipeline"
+version = "0.1.0"
+description = "Engagement composite as streaming Pipeline composition"
+coordination = "Pipeline"
+
+[[nodes]]
+name = "normalize_apm"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "normalize_exploration"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "normalize_variety"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "normalize_completion"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "normalize_social"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "composite"
+by_capability = "compute"
+depends_on = ["normalize_apm", "normalize_exploration", "normalize_variety", "normalize_completion", "normalize_social"]
+
+[[nodes]]
+name = "persist"
+by_capability = "storage"
+depends_on = ["composite"]
+required = false

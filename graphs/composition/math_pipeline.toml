@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Math Pipeline — barraCuda science via composition.
+#
+# Smallest possible composition graph: a single compute primal performs
+# tensor operations that replicate ludoSpring's engagement composite.
+#
+# biomeOS `Graph::from_toml_str` requires `[graph]` header and accepts
+# `[[nodes]]` or `[[graph.node]]` — we use `[[nodes]]` (flat form) per
+# the NEURAL_API_GRAPH_DEPLOYMENT_STANDARD.md preference, with `[graph]`
+# per biomeOS implementation reality.
+#
+# Related: exp084 (math IPC gaps), exp086 (tensor stress test)
+#
+# STATUS: Active (Mar 29, 2026) — composition gap discovery V35
+
+[graph]
+name = "ludospring_math_pipeline"
+version = "0.1.0"
+description = "Engagement composite via barraCuda tensor composition"
+coordination = "Sequential"
+
+[[nodes]]
+name = "create_weights"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "create_scores"
+by_capability = "compute"
+depends_on = []
+
+[[nodes]]
+name = "weighted_sum"
+by_capability = "compute"
+depends_on = ["create_weights", "create_scores"]
+
+[[nodes]]
+name = "persist_result"
+by_capability = "storage"
+depends_on = ["weighted_sum"]
+required = false

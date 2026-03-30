@@ -17,9 +17,9 @@ serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 uuid = { version = "1", features = ["v7"] }
 
-rhizo-crypt-core = { path = "../../../../phase2/rhizoCrypt/crates/rhizo-crypt-core", default-features = false, features = [] }
-loam-spine-core = { path = "../../../../phase2/loamSpine/crates/loam-spine-core" }
-sweet-grass-core = { path = "../../../../phase2/sweetGrass/crates/sweet-grass-core" }
+rhizo-crypt-core = { path = "../../../../primals/rhizoCrypt/crates/rhizo-crypt-core", default-features = false, features = [] }
+loam-spine-core = { path = "../../../../primals/loamSpine/crates/loam-spine-core" }
+sweet-grass-core = { path = "../../../../primals/sweetGrass/crates/sweet-grass-core" }
 blake3 = "1.5"
 
 [lints]

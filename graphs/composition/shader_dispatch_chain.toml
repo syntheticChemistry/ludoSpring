@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Shader Dispatch Chain — sovereign GPU path via composition.
+#
+# The full WGSL → compile → dispatch → readback pipeline using two primals:
+#   coralReef (sovereign compiler) → toadStool (hardware dispatch)
+#
+# This validates the sovereign GPU compute path without wgpu: ludoSpring's
+# validated WGSL shaders compiled by coralReef and dispatched by toadStool.
+#
+# Related: exp085 (shader dispatch chain), exp030 (CPU-GPU parity)
+#
+# STATUS: Active (Mar 29, 2026) — composition gap discovery V35
+
+[graph]
+name = "ludospring_shader_dispatch"
+version = "0.1.0"
+description = "Sovereign GPU: compile(coralReef) → dispatch(toadStool)"
+coordination = "Sequential"
+
+[[nodes]]
+name = "compile_shader"
+by_capability = "shader"
+depends_on = []
+
+[[nodes]]
+name = "dispatch_binary"
+by_capability = "compute"
+depends_on = ["compile_shader"]
+
+[[nodes]]
+name = "validate_output"
+by_capability = "compute"
+depends_on = ["dispatch_binary"]
