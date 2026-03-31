@@ -2,41 +2,56 @@
 #
 # Math Pipeline — barraCuda science via composition.
 #
-# Smallest possible composition graph: a single compute primal performs
-# tensor operations that replicate ludoSpring's engagement composite.
+# Engagement composite replicated purely through barraCuda IPC:
+# tensor.create (weights + scores) → tensor.scale → tensor.reduce("sum")
 #
-# biomeOS `Graph::from_toml_str` requires `[graph]` header and accepts
-# `[[nodes]]` or `[[graph.node]]` — we use `[[nodes]]` (flat form) per
-# the NEURAL_API_GRAPH_DEPLOYMENT_STANDARD.md preference, with `[graph]`
-# per biomeOS implementation reality.
+# barraCuda Sprint 23+ exposes 30 methods: math.*, activation.*, stats.*,
+# noise.*, tensor.*, rng.*. All element-wise ops confirmed working (V35.2).
 #
-# Related: exp084 (math IPC gaps), exp086 (tensor stress test)
+# Related: exp084 (math IPC), exp086 (tensor), exp090 (engagement composition)
+# Reference: primalSpring graphs/compositions/game_science_standalone.toml
 #
-# STATUS: Active (Mar 29, 2026) — composition gap discovery V35
+# STATUS: Active (Mar 30, 2026) — V36 aligned with biomeOS v2.80 domains
 
 [graph]
 name = "ludospring_math_pipeline"
-version = "0.1.0"
+version = "0.2.0"
 description = "Engagement composite via barraCuda tensor composition"
 coordination = "Sequential"
 
-[[nodes]]
+[[graph.node]]
 name = "create_weights"
-by_capability = "compute"
+order = 0
+by_capability = "tensor"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["tensor.create", "tensor.scale"]
 
-[[nodes]]
+[[graph.node]]
 name = "create_scores"
-by_capability = "compute"
+order = 1
+by_capability = "tensor"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["tensor.create"]
 
-[[nodes]]
+[[graph.node]]
 name = "weighted_sum"
-by_capability = "compute"
+order = 2
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = ["create_weights", "create_scores"]
+capabilities = ["stats.weighted_mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "persist_result"
+order = 3
 by_capability = "storage"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["weighted_sum"]
 required = false
+capabilities = ["storage.store"]

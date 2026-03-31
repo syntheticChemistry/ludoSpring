@@ -5,30 +5,45 @@
 # The full WGSL → compile → dispatch → readback pipeline using two primals:
 #   coralReef (sovereign compiler) → toadStool (hardware dispatch)
 #
-# This validates the sovereign GPU compute path without wgpu: ludoSpring's
-# validated WGSL shaders compiled by coralReef and dispatched by toadStool.
+# barraCuda Sprint 24 adds barracuda-naga-exec for CPU shader interpretation
+# as an alternative validation backend (no GPU required). coralReef IPC
+# contract now includes shader.compile.cpu and shader.validate.
 #
 # Related: exp085 (shader dispatch chain), exp030 (CPU-GPU parity)
+# Reference: primalSpring graphs/science/gaming_mesh_chimera.toml
 #
-# STATUS: Active (Mar 29, 2026) — composition gap discovery V35
+# STATUS: Active (Mar 30, 2026) — V36 sovereign dispatch readback
+#         still needs coralReef driver (hardware gap)
 
 [graph]
 name = "ludospring_shader_dispatch"
-version = "0.1.0"
-description = "Sovereign GPU: compile(coralReef) → dispatch(toadStool)"
+version = "0.2.0"
+description = "Sovereign GPU: compile(coralReef) → dispatch(toadStool) → validate"
 coordination = "Sequential"
 
-[[nodes]]
+[[graph.node]]
 name = "compile_shader"
+order = 0
 by_capability = "shader"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["shader.compile", "shader.compile.cpu", "shader.validate"]
 
-[[nodes]]
+[[graph.node]]
 name = "dispatch_binary"
+order = 1
 by_capability = "compute"
+health_method = "compute.health"
+spawn = false
 depends_on = ["compile_shader"]
+capabilities = ["compute.dispatch.submit", "compute.execute"]
 
-[[nodes]]
+[[graph.node]]
 name = "validate_output"
-by_capability = "compute"
+order = 2
+by_capability = "math"
+health_method = "health.check"
+spawn = false
 depends_on = ["dispatch_binary"]
+capabilities = ["math.sigmoid"]

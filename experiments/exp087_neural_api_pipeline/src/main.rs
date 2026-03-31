@@ -3,14 +3,19 @@
 #![allow(missing_docs)]
 //! exp087 — Neural API Pipeline Executor.
 //!
-//! Tests biomeOS graph orchestration for science pipelines. Key finding
-//! from biomeOS audit: `graph.execute`, `graph.execute_pipeline`, and
-//! `capability.call` are ALL IMPLEMENTED in the Neural API server
-//! (`biomeos-atomic-deploy` routing.rs). `graph.start_continuous` has
-//! session lifecycle implemented but node execution is a stub.
+//! Tests biomeOS graph orchestration for science pipelines. V35.3 aligned
+//! with biomeOS v2.80: `graph.save` uses `{"toml": "..."}` format,
+//! capability routing uses `"tensor"`/`"math"` domains (not generic `"compute"`).
 //!
-//! This means our Sequential and Pipeline graphs SHOULD execute if
-//! the primals are registered and the graph TOML is in `graphs_dir`.
+//! biomeOS v2.80 resolves 3/4 remaining gaps: bundled bootstrap graph,
+//! barraCuda domain registration (30 method translations), graph.save schema.
+//! Auto-discovery still needs live revalidation.
+//!
+//! V36: Infrastructure validation for Pipeline coordination pattern.
+//! Science experiments exp092 (GOMS + Four Keys) use this pattern.
+//!
+//! Reference: primalSpring `graphs/spring_validation/composition_game_science_validate.toml`,
+//!            ludoSpring `graphs/composition/engagement_pipeline.toml`
 //!
 //! # Composition graphs (use `[graph]` header, not `[metadata]`)
 //!

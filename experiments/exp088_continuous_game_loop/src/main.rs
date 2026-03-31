@@ -6,13 +6,19 @@
 //! The storytelling loop at 60Hz: evaluate flow → DDA recommend →
 //! AI narrate → render scene → provenance stamp.
 //!
-//! # biomeOS audit findings (critical for this experiment)
+//! V36: Infrastructure validation for Continuous coordination pattern.
+//! Science experiment exp093 (full game session) builds on this.
+//!
+//! Reference: primalSpring `graphs/science/gaming_mesh_chimera.toml`,
+//!            ludoSpring `graphs/composition/game_loop_continuous.toml`
+//!
+//! # biomeOS v2.80 status
 //!
 //! `graph.start_continuous` IS implemented in biomeOS:
 //!   - Session lifecycle works: start/pause/resume/stop are wired
 //!   - Sessions are tracked with IDs and can be queried via graph.status
-//!   - BUT: node execution callback is a STUB — returns fixed JSON
-//!     per node instead of routing through NeuralRouter/capability.call
+//!   - Node execution callback routes through NeuralRouter in v2.80
+//!   - Needs <16ms per capability.call hop for 60Hz budget
 //!
 //! This means: session management SHOULD pass, but actual per-tick
 //! primal routing will not produce real science results until biomeOS

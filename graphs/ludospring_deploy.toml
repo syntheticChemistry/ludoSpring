@@ -1,261 +1,152 @@
-# =============================================================================
-# ludoSpring Deploy Graph
-# =============================================================================
+# SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# Deploys ludoSpring as a NUCLEUS science primal atop Node Atomic:
+# ludoSpring Deploy Graph — game-science primal atop Node Atomic.
+#
+# Deploys ludoSpring as a NUCLEUS science primal:
 #   Tower (BearDog + Songbird) → ToadStool (GPU) → ludoSpring (game science)
 #   → Validation → Provenance Trio (optional)
 #
-# ludoSpring registers 12 game science capabilities covering:
-#   - UI analysis (Tufte constraints on game/application interfaces)
-#   - Flow evaluation (Csikszentmihalyi flow state model)
-#   - Input cost modeling (Fitts's law, Hick's law)
-#   - Engagement metrics (action density, exploration, persistence)
-#   - Procedural generation (noise fields, wave function collapse)
-#   - Accessibility scoring (visual, auditory, motor, cognitive)
-#   - Dynamic difficulty adjustment
-#   - Session lifecycle (provenance trio integration)
-#   - Telemetry (continuous coordination ready)
-#
-# Cross-spring shader evolution:
-#   - barraCuda noise primitives → GPU Perlin/simplex generation
-#   - hotSpring physics → collision broadphase validation
-#   - wetSpring Gillespie → procedural chemistry generation
-#   - petalTongue Tufte → game UI constraint evaluation
+# ludoSpring registers 27 capabilities covering game science, provenance,
+# AI narration, visualization, storage, certificates, DAG queries, GPU compute.
+# V37: every game.* capability now has a demonstrated primal composition
+# equivalent (exp089-098). The capability mapping in niche.rs decomposes
+# each game.* to the underlying primal's native method.
 #
 # Continuous coordination readiness (game engine niche):
-#   [graph.tick]
-#   target_hz = 60
-#   max_accumulator_ms = 250
-#   budget_warning_ms = 14
+#   target_hz = 60, max_accumulator_ms = 250, budget_warning_ms = 14
 #
-# STATUS: Active (Mar 16, 2026) — cross-ecosystem deep debt V23
-# Requires: Tower Atomic (BearDog + Songbird)
-# Optional: ToadStool (GPU), Provenance Trio (rhizoCrypt, LoamSpine, sweetGrass)
+# Reference: primalSpring graphs/ludospring_game_deploy.toml
 #
-# Usage:
-#   biomeos deploy graphs/ludospring_deploy.toml
-#
-# =============================================================================
+# STATUS: Active (Mar 30, 2026) — V37 NUCLEUS composition
 
 [graph]
-id = "ludospring_deploy"
+name = "ludospring_deploy"
+version = "37.0"
 description = "ludoSpring game-science primal atop Node Atomic"
 coordination = "Sequential"
 
-# =============================================================================
-# Phase 1: Tower Atomic (security + network foundation)
-# =============================================================================
+# ── Phase 1: Tower Atomic (security + network foundation) ────
 
-[[nodes]]
-id = "germinate_beardog"
-output = "beardog_genesis"
-capabilities = ["crypto", "tls_crypto", "genetic", "security"]
-
-[nodes.primal]
+[[graph.node]]
+name = "beardog"
+order = 0
 by_capability = "security"
+health_method = "health.check"
+spawn = true
+depends_on = []
+capabilities = [
+    "crypto.generate_keypair",
+    "crypto.encrypt",
+    "crypto.hash",
+    "crypto.sign",
+]
 
-[nodes.operation]
-name = "start"
-
-[nodes.operation.params]
-mode = "server"
-family_id = "${FAMILY_ID}"
-
-[nodes.constraints]
-timeout_ms = 30000
-
-[nodes.capabilities_provided]
-"crypto.generate_keypair" = "crypto.x25519_generate_ephemeral"
-"crypto.encrypt" = "crypto.chacha20_poly1305_encrypt"
-"crypto.hash" = "crypto.blake3_hash"
-"crypto.sign" = "crypto.sign_ed25519"
-
-[[nodes]]
-id = "germinate_songbird"
-depends_on = ["germinate_beardog"]
-output = "songbird_genesis"
-capabilities = ["http", "discovery", "secure_http", "tls"]
-
-[nodes.primal]
+[[graph.node]]
+name = "songbird"
+order = 1
 by_capability = "discovery"
+health_method = "health.check"
+spawn = true
+depends_on = ["beardog"]
+capabilities = [
+    "network.http_request",
+    "network.tls_connect",
+    "discovery.announce",
+    "discovery.query",
+]
 
-[nodes.operation]
-name = "start"
+# ── Phase 2: ToadStool (GPU/CPU compute — optional) ─────────
 
-[nodes.operation.params]
-mode = "server"
-family_id = "${FAMILY_ID}"
-
-[nodes.operation.environment]
-BEARDOG_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/beardog-${FAMILY_ID}.sock"
-SONGBIRD_SECURITY_PROVIDER = "beardog"
-
-[nodes.constraints]
-timeout_ms = 30000
-
-[nodes.capabilities_provided]
-"network.http_request" = "http.request"
-"network.tls_connect" = "tls.connect"
-"discovery.announce" = "announce_capabilities"
-"discovery.query" = "discover_by_capability"
-
-# =============================================================================
-# Phase 2: ToadStool (GPU/CPU compute — optional for noise generation)
-# =============================================================================
-
-[[nodes]]
-id = "germinate_toadstool"
-depends_on = ["germinate_beardog", "germinate_songbird"]
-output = "toadstool_genesis"
-capabilities = ["compute", "workload"]
-fallback = "skip"
-
-[nodes.primal]
+[[graph.node]]
+name = "toadstool"
+order = 2
 by_capability = "compute"
+health_method = "compute.health"
+spawn = true
+depends_on = ["beardog", "songbird"]
+required = false
+capabilities = [
+    "compute.health",
+    "compute.execute",
+    "compute.capabilities",
+    "compute.dispatch.submit",
+    "compute.dispatch.result",
+    "compute.dispatch.capabilities",
+]
 
-[nodes.operation]
-name = "start"
+# ── Phase 3: ludoSpring (game science primal) ────────────────
 
-[nodes.operation.params]
-mode = "server"
-family_id = "${FAMILY_ID}"
-
-[nodes.operation.environment]
-BEARDOG_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/beardog-${FAMILY_ID}.sock"
-SONGBIRD_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/songbird-${FAMILY_ID}.sock"
-
-[nodes.constraints]
-timeout_ms = 45000
-
-[nodes.capabilities_provided]
-"compute.health" = "toadstool.health"
-"compute.execute" = "toadstool.execute"
-"compute.capabilities" = "toadstool.query_capabilities"
-"compute.dispatch.submit" = "toadstool.dispatch_submit"
-"compute.dispatch.result" = "toadstool.dispatch_result"
-"compute.dispatch.capabilities" = "toadstool.dispatch_capabilities"
-
-# =============================================================================
-# Phase 3: ludoSpring (game science primal)
-# =============================================================================
-
-[[nodes]]
-id = "germinate_ludospring"
-depends_on = ["germinate_beardog", "germinate_songbird"]
-output = "ludospring_genesis"
-capabilities = ["game", "ludology", "interaction_design", "procedural_generation", "accessibility_scoring", "engagement_metrics"]
-
-[nodes.primal]
+[[graph.node]]
+name = "ludospring"
+order = 3
 by_capability = "game"
+health_method = "health.liveness"
+spawn = true
+depends_on = ["beardog", "songbird"]
+capabilities = [
+    "game.analyze_ui",
+    "game.evaluate_flow",
+    "game.fitts_cost",
+    "game.engagement",
+    "game.generate_noise",
+    "game.wfc_step",
+    "game.accessibility",
+    "game.difficulty_adjustment",
+    "game.begin_session",
+    "game.record_action",
+    "game.complete_session",
+    "game.poll_telemetry",
+]
 
-[nodes.operation]
-name = "start"
+# ── Phase 4: Validate ludoSpring Atomic ──────────────────────
 
-[nodes.operation.params]
-mode = "server"
-family_id = "${FAMILY_ID}"
+[[graph.node]]
+name = "validate_ludospring_atomic"
+order = 4
+by_capability = "health"
+health_method = "health.check"
+spawn = false
+depends_on = ["beardog", "songbird", "ludospring"]
+capabilities = []
 
-[nodes.operation.environment]
-BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
-FAMILY_ID = "${FAMILY_ID}"
-SONGBIRD_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/songbird-${FAMILY_ID}.sock"
+# ── Phase 5: Provenance Trio (optional — enhances, never blocks) ──
 
-[nodes.constraints]
-timeout_ms = 15000
-
-[nodes.capabilities_provided]
-"game.analyze_ui" = "game.analyze_ui"
-"game.evaluate_flow" = "game.evaluate_flow"
-"game.fitts_cost" = "game.fitts_cost"
-"game.engagement" = "game.engagement"
-"game.generate_noise" = "game.generate_noise"
-"game.wfc_step" = "game.wfc_step"
-"game.accessibility" = "game.accessibility"
-"game.difficulty_adjustment" = "game.difficulty_adjustment"
-"game.begin_session" = "game.begin_session"
-"game.record_action" = "game.record_action"
-"game.complete_session" = "game.complete_session"
-"game.poll_telemetry" = "game.poll_telemetry"
-
-# =============================================================================
-# Phase 4: Validate ludoSpring Atomic
-# =============================================================================
-
-[[nodes]]
-id = "validate_ludospring_atomic"
-depends_on = ["germinate_beardog", "germinate_songbird", "germinate_ludospring"]
-output = "ludospring_validated"
-
-[nodes.operation]
-name = "health_check"
-
-[nodes.operation.params]
-check_beardog = true
-check_songbird = true
-check_ludospring = true
-timeout_seconds = 15
-
-[nodes.constraints]
-timeout_ms = 20000
-
-# =============================================================================
-# Phase 5: Provenance Trio (optional — enhances, never blocks)
-# =============================================================================
-
-[[nodes]]
-id = "provenance_session_start"
+[[graph.node]]
+name = "provenance_session_start"
+order = 5
+by_capability = "provenance"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["validate_ludospring_atomic"]
-fallback = "skip"
+required = false
+capabilities = ["provenance.session_create"]
 
-[nodes.operation]
-name = "capability_call"
-
-[nodes.operation.params]
-capability = "provenance.session_create"
-params = { agent = "ludospring", experiment_id = "deploy", version = "V23" }
-
-[nodes.constraints]
-timeout_ms = 10000
-
-[[nodes]]
-id = "store_results"
+[[graph.node]]
+name = "store_results"
+order = 6
+by_capability = "storage"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["provenance_session_start"]
-fallback = "skip"
+required = false
+capabilities = ["storage.store"]
 
-[nodes.operation]
-name = "capability_call"
-
-[nodes.operation.params]
-capability = "storage.store"
-
-[nodes.constraints]
-timeout_ms = 10000
-
-[[nodes]]
-id = "provenance_commit"
+[[graph.node]]
+name = "provenance_commit"
+order = 7
+by_capability = "provenance"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["store_results"]
-fallback = "skip"
+required = false
+capabilities = ["provenance.session_dehydrate"]
 
-[nodes.operation]
-name = "capability_call"
-
-[nodes.operation.params]
-capability = "provenance.session_dehydrate"
-
-[nodes.constraints]
-timeout_ms = 10000
-
-[[nodes]]
-id = "provenance_attribute"
+[[graph.node]]
+name = "provenance_attribute"
+order = 8
+by_capability = "attribution"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["provenance_commit"]
-fallback = "skip"
-
-[nodes.operation]
-name = "capability_call"
-
-[nodes.operation.params]
-capability = "contribution.recordDehydration"
-
-[nodes.constraints]
-timeout_ms = 10000
+required = false
+capabilities = ["contribution.recordDehydration"]

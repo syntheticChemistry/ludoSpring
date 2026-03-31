@@ -101,6 +101,16 @@ members = [
     "experiments/exp086_tensor_composition",
     "experiments/exp087_neural_api_pipeline",
     "experiments/exp088_continuous_game_loop",
+    "experiments/exp089_psychomotor_composition",
+    "experiments/exp090_gameflow_tensor_composition",
+    "experiments/exp091_pcg_noise_composition",
+    "experiments/exp092_composite_pipeline",
+    "experiments/exp093_continuous_session",
+    "experiments/exp094_session_lifecycle",
+    "experiments/exp095_content_ownership",
+    "experiments/exp096_npc_dialogue_composition",
+    "experiments/exp097_population_dynamics",
+    "experiments/exp098_nucleus_game_session",
 ]
 
 [workspace.package]

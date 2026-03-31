@@ -2217,6 +2217,99 @@ dependencies = [
 ]
 
 [[package]]
+name = "ludospring-exp089"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp090"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp091"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp092"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp093"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp094"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp095"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp096"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp097"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ludospring-exp098"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ludospring-forge"
 version = "0.1.0"
 dependencies = [

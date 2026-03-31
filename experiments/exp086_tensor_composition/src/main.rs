@@ -6,6 +6,10 @@
 //! Validates barraCuda's tensor IPC surface with REAL tensor IDs from prior
 //! creates. Tests the full chain: create → element-wise ops → reduce → read.
 //!
+//! V36: All 10/10 checks pass (confirmed V35.2). This experiment validates
+//! the tensor infrastructure that exp090 (Flow + Engagement + DDA) and
+//! exp092 (GOMS + Four Keys) build on for science composition.
+//!
 //! # barraCuda tensor param schemas (v0.3.11)
 //!
 //! - `tensor.create`: `{"shape": [...], "data": [...]}`

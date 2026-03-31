@@ -8,8 +8,16 @@
 //! the compiled binary, and we compare the result to ludoSpring's known
 //! CPU reference values.
 //!
+//! V36: barraCuda Sprint 24 adds `barracuda-naga-exec` — pure Rust CPU
+//! interpreter for naga IR. This provides an alternative validation backend
+//! (no GPU required). coralReef IPC contract now includes `shader.compile.cpu`
+//! and `shader.validate`. Sovereign dispatch readback still needs coralReef
+//! driver (hardware gap).
+//!
 //! This is the sovereign GPU path: no wgpu, no vendor SDK. WGSL source →
 //! coralReef (sovereign compiler) → toadStool (hardware dispatch) → result.
+//!
+//! Reference: primalSpring `graphs/science/gaming_mesh_chimera.toml`
 //!
 //! # Composition chain
 //!

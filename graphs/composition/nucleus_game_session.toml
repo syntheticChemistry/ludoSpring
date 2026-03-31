@@ -1,0 +1,147 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# NUCLEUS Game Session — full game engine as primal composition.
+#
+# The "esotericWebb reference graph": every layer of NUCLEUS composed into
+# a 60Hz game session. No ludoSpring binary — just primals.
+#
+# Node Atomic: barraCuda (math + activation + tensor + stats + noise)
+# Nest Atomic: NestGate (storage)
+# Trio: rhizoCrypt (DAG) + loamSpine (certs) + sweetGrass (attribution)
+# Meta-tier: Squirrel (AI) + petalTongue (viz)
+# Tower: BearDog (crypto) + Songbird (discovery) — implicit substrate
+#
+# When this graph executes end-to-end, ALL game.* capabilities from
+# ludoSpring's niche.rs have primal composition equivalents. esotericWebb
+# can wire its bridge to these exact capability.call chains.
+#
+# Related: exp098 (NUCLEUS Complete game session)
+# Reference: primalSpring graphs/esotericwebb_composed_deploy.toml
+#
+# STATUS: Active (Mar 30, 2026) — V37 NUCLEUS composition
+
+[graph]
+name = "nucleus_game_session"
+version = "0.1.0"
+description = "Full game engine: 60Hz NUCLEUS composition — esotericWebb reference"
+coordination = "Continuous"
+tick_hz = 60
+
+# ── Node Atomic: Science (required) ──────────────────────────
+
+[[graph.node]]
+name = "barracuda_science"
+order = 0
+by_capability = "math"
+health_method = "health.check"
+spawn = false
+depends_on = []
+capabilities = ["math.sigmoid", "math.log2", "activation.fitts", "activation.hick"]
+
+[[graph.node]]
+name = "barracuda_tensor"
+order = 1
+by_capability = "tensor"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_science"]
+capabilities = ["tensor.create", "tensor.matmul", "tensor.add", "tensor.scale", "tensor.reduce", "tensor.sigmoid"]
+
+[[graph.node]]
+name = "barracuda_stats"
+order = 2
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_science"]
+capabilities = ["stats.mean", "stats.std_dev", "stats.weighted_mean"]
+
+[[graph.node]]
+name = "barracuda_noise"
+order = 3
+by_capability = "noise"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_science"]
+required = false
+capabilities = ["noise.perlin2d", "noise.perlin3d"]
+
+# ── Meta-tier: AI (optional) ─────────────────────────────────
+
+[[graph.node]]
+name = "squirrel_ai"
+order = 4
+by_capability = "ai"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["barracuda_science"]
+required = false
+capabilities = ["ai.query", "ai.suggest", "ai.analyze"]
+
+# ── Meta-tier: Visualization (optional) ──────────────────────
+
+[[graph.node]]
+name = "petaltongue_viz"
+order = 5
+by_capability = "visualization"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["squirrel_ai"]
+required = false
+capabilities = ["visualization.render.scene", "visualization.render.dashboard"]
+
+# ── Trio: Provenance (optional) ──────────────────────────────
+
+[[graph.node]]
+name = "rhizocrypt_dag"
+order = 6
+by_capability = "provenance"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["barracuda_science"]
+required = false
+capabilities = ["provenance.session_create", "provenance.vertex_append", "provenance.vertex_query"]
+
+[[graph.node]]
+name = "loamspine_certs"
+order = 7
+by_capability = "certificate"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["rhizocrypt_dag"]
+required = false
+capabilities = ["certificate.mint", "certificate.query"]
+
+[[graph.node]]
+name = "sweetgrass_attribution"
+order = 8
+by_capability = "attribution"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["rhizocrypt_dag"]
+required = false
+capabilities = ["attribution.record", "attribution.query"]
+
+# ── Tower: Crypto (optional for signing) ─────────────────────
+
+[[graph.node]]
+name = "beardog_crypto"
+order = 9
+by_capability = "security"
+health_method = "health.check"
+spawn = false
+depends_on = ["rhizocrypt_dag"]
+required = false
+capabilities = ["crypto.blake3_hash", "crypto.sign_ed25519"]
+
+# ── Nest Atomic: Storage (optional) ──────────────────────────
+
+[[graph.node]]
+name = "nestgate_storage"
+order = 10
+by_capability = "storage"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["beardog_crypto"]
+required = false
+capabilities = ["storage.store", "storage.retrieve"]

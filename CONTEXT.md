@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** March 30, 2026 (V35.3 — ecosystem evolution review)
+**Last updated:** March 31, 2026 (V37.1 — plasmidBin live validation)
 
 ## What is this?
 
@@ -54,7 +54,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 ## Code quality
 
 - **Tests**: 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace total
-- **Experiments**: 88 total (83 science + 5 primal composition gap discovery)
+- **Experiments**: 98 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition)
 - **Coverage**: 91.27% line coverage (85% floor enforced via `cargo-llvm-cov`; target 90%+)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural}.rs`
@@ -82,80 +82,65 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
 - **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)
 
-## V35: Primal Composition Validation (Track 26)
+## V37.1: Live plasmidBin Validation (March 31, 2026)
 
-ludoSpring's next evolution tier: replicate validated game science using ONLY
-primal composition — no ludoSpring binary in the loop. Experiments probe live
-primals and document gaps.
+ludoSpring does not ship a binary. It proves that its validated science can be
+replicated through primal composition alone. 15 experiments (exp084-098) probe
+live primals deployed from `infra/plasmidBin/` and document gaps.
 
-**V35.1 revalidation (Mar 30, 2026 — barraCuda local build + biomeOS v2.79 + coralReef Iter70 + toadStool S168 + beardog):**
+**Score: 95/141 (67.4%)** — 5 experiments fully PASS.
 
-| Exp | Target | V35 | V35.1 | Key finding |
-|-----|--------|-----|-------|-------------|
-| 084 | barraCuda math IPC | 0/12 | **4/15** | barraCuda alive! sigmoid, log2, mean, std_dev PASS. Domain methods (fitts, hick, flow) still -32601 |
-| 085 | Shader dispatch chain | 2/8 | **7/8** | coralReef raw JSON-RPC fixed! compile + dispatch work. Only readback fails (no sovereign driver) |
-| 086 | Tensor composition | 0/10 | **5/10** | tensor.create + matmul + read PASS. Element-wise ops (add/scale/clamp/reduce) still method_not_found |
-| 087 | Neural API pipeline | 1/7 | **3/7** | health.liveness PASS, graph.list returns 40 graphs. Composition graphs need graph.save deployment |
-| 088 | Continuous game loop | 2/10 | **2/10** | Socket naming mismatch blocks forwarding. Sub-ms latency still confirmed |
+### Live results
 
-**V35.2 local debt fix (Mar 30, 2026 — fixed method names, param schemas, tensor IDs):**
+| Exp | Target | Pass/Total | Key finding |
+|-----|--------|------------|-------------|
+| 084 | barraCuda math IPC | 12/15 | All math methods work. Neural API routing gap |
+| 085 | Shader dispatch chain | 7/8 | coralReef compile works. toadStool↔coralReef discovery gap |
+| 086 | Tensor composition | **10/10** | ALL tensor ops confirmed |
+| 087 | Neural API pipeline | 3/8 | capability.call not routing to primals |
+| 088 | Continuous game loop | 2/10 | Neural API capability registration gap |
+| 089 | Psychomotor (Fitts/Hick/Steering) | 4/8 | barraCuda Fitts/Hick formula mismatch |
+| 090 | GameFlow tensor | **13/13** | Flow, engagement, DDA all correct |
+| 091 | PCG/Noise | 7/8 | perlin3d lattice invariant broken |
+| 092 | Composite pipeline | **8/8** | GOMS, Four Keys, stats all correct |
+| 093 | Continuous session | **6/6** | 60Hz loop, 0.18ms max tick, deterministic |
+| 094 | Session lifecycle | 3/8 | BearDog+NestGate work. rhizoCrypt: no UDS |
+| 095 | Content ownership | 0/8 | rhizoCrypt no UDS + loamSpine startup panic |
+| 096 | NPC dialogue | 5/10 | barraCuda math works. rhizoCrypt/Squirrel/petalTongue missing |
+| 097 | Population dynamics | **10/10** | Replicator, Markov, Wright-Fisher all correct |
+| 098 | NUCLEUS game session | 5/6 | Full 10-tick loop. Only rhizoCrypt provenance missing |
 
-| Exp | Target | V35.1 | V35.2 | Key finding |
-|-----|--------|-------|-------|-------------|
-| 084 | barraCuda math IPC | 4/15 | **12/15** | All 8 math methods PASS with correct names/params. Only Neural API routing + 2 domain methods remain |
-| 085 | Shader dispatch chain | 7/8 | **7/8** | Unchanged — readback needs sovereign GPU driver (expected) |
-| 086 | Tensor composition | 5/10 | **10/10** | ALL tensor ops PASS — add, scale, clamp, reduce, sigmoid ALL exist and work |
-| 087 | Neural API pipeline | 3/7 | **3/7** | graph.save parse error; biomeOS has no barraCuda capability domain |
-| 088 | Continuous game loop | 2/10 | **2/10** | Same — biomeOS capability registry empty in bootstrap mode |
+### Primal gap matrix
 
-**Total: 5/47 → 21/50 (42%) → 34/50 (68%)**
+| Gap | Owner | Severity | Checks gained when fixed |
+|-----|-------|----------|--------------------------|
+| TCP-only transport (no UDS) | rhizoCrypt | CRITICAL | +9 |
+| Startup panic (runtime nesting) | loamSpine | CRITICAL | +6 |
+| Fitts/Hick formula mismatch | barraCuda | HIGH | +4 |
+| No capability registration | biomeOS Neural API | HIGH | +14 |
+| No binary in plasmidBin | barraCuda | HIGH | deployment |
+| Perlin3D lattice invariant | barraCuda | MEDIUM | +1 |
+| Inter-primal discovery | toadStool↔coralReef | MEDIUM | +1 |
 
-**Composition graphs**: `graphs/composition/*.toml` — `[graph]` header (biomeOS-compatible), `[[nodes]]` with `by_capability`.
+**Projected with all fixes: 130/141 (92.2%)**
 
-**V35 gaps RESOLVED by primal evolution:**
-1. ~~barraCuda missing from plasmidBin~~ — binary built, IPC server responds (30 methods)
-2. ~~coralReef HTTP JSON-RPC~~ — raw newline-delimited on UDS (Iter 70)
-3. ~~biomeOS continuous executor stub~~ — node dispatch wired with capability routing (v2.79)
-4. ~~biomeOS nucleus vs runtime graphs~~ — `graph.save` implemented, tier separation (v2.79)
-5. ~~health.liveness missing~~ — implemented on Neural API (v2.79)
+### What works today
 
-**V35.1 "gaps" that were actually LOCAL debt (FIXED in V35.2):**
-- Wrong method names: `math.activation.sigmoid` → `math.sigmoid`, etc.
-- Wrong param keys: `values` → `data`, `d` → `distance`, `n` → `n_choices`
-- Placeholder tensor IDs `"t0"` → real IDs from `tensor.create`
-- `tensor.reduce_sum` → `tensor.reduce` (correct name)
-- ALL tensor element-wise ops (add/scale/clamp/reduce/sigmoid) WORK
+- barraCuda tensor/stats/noise/activation math via UDS IPC
+- BearDog crypto (blake3_hash, sign_ed25519) via base64 params
+- NestGate storage (store/retrieve with family_id) via UDS
+- sweetGrass attribution via UDS (available, not fully tested — blocked by rhizoCrypt/loamSpine)
+- Songbird discovery via UDS
+- 60Hz composition loops under 0.54ms per tick
+- biomeOS graph deployment and health probing
 
-**Remaining GENUINE gaps (V35.2):**
-1. ~~biomeOS: no barraCuda/math domain in capability registry~~ — **RESOLVED** in v2.80: bootstrap graph now has `register_barracuda` node with all 30+ method translations (math/tensor/stats/noise/activation/rng)
-2. biomeOS: auto-discovery finds 0 primals despite live sockets — v2.80 improved `discover_and_register_primals()` with `is_known_primal()` filter and `capabilities.list` probing. **NEEDS REVALIDATION**.
-3. ~~biomeOS: `graph.save` returns parse error for composition TOMLs~~ — **RESOLVED** in v2.80: accepts `{"toml": "..."}` format. Our experiments updated to match.
-4. ~~biomeOS: needs `tower_atomic_bootstrap.toml` in CWD or internal bundling~~ — **RESOLVED** in v2.80: `include_str!()` bundles the bootstrap graph into the binary.
-5. toadStool: sovereign dispatch readback needs coralReef driver (hardware gap)
-6. barraCuda: `math.flow.evaluate` and `math.engagement.composite` don't exist (ludoSpring domain compositions — composable from primitives)
+### Composition graphs
 
-## V35.3: Ecosystem Evolution Review (March 30, 2026)
+- `graphs/composition/science_validation.toml` — sequential barraCuda math pipeline
+- `graphs/composition/nucleus_game_session.toml` — continuous 60Hz NUCLEUS game tick
+- `graphs/composition/session_provenance.toml` — session lifecycle via Nest Atomic + Trio
+- `graphs/composition/math_pipeline.toml`, `engagement_pipeline.toml`, `shader_dispatch_chain.toml`, `game_loop_continuous.toml`
 
-Full pull and review of all primals, springs, and infra. Key evolution since V35.2:
+### Handoff
 
-**biomeOS v2.80** (critical for our composition validation):
-- Graph handler refactored: 922-line `graph.rs` → 4 clean modules (CRUD, execute, pipeline, continuous)
-- **Bootstrap graph now includes `register_barracuda` node** with full capability translations for all 30 barraCuda methods
-- **Bootstrap graph includes `register_coralreef` node** with shader/wgsl/spirv capabilities
-- **`graph.save` accepts `{"toml": "..."}` format** — our `graph_toml` key updated to `toml`
-- **Bundled bootstrap graph** via `include_str!()` — no filesystem dependency
-- Auto-discovery improved with `capabilities.list` probing and `is_known_primal()` filter
-- Three-layer translation loading: hardcoded defaults → config TOML → graph translations
-- Capability domain registry now has explicit barraCuda, coralReef, and all spring domains
-
-**barraCuda Sprint 24**: 15-tier precision continuum, docs alignment. Sprint 23 gap resolution (30 IPC methods) confirmed stable. Minor regression: `for_precision_tier` function in `tolerances.rs` missing `#[cfg(feature = "gpu")]` gate (breaks non-GPU consumers).
-
-**primalSpring Phase 23d**: Absorbed toadStool S168, esotericWebb V6. `ludospring_validate.toml` still V32-era — not updated for V35 composition experiments. `gen4_storytelling_minimal.toml` has ludoSpring as optional with game science capabilities.
-
-**Other primals**: bearDog Wave 25 (schema refactor), songBird Wave 89 (pure Rust QUIC — quinn elimination), nestGate Session 10 (2.3k lines debt removed), hotSpring (sovereign validation matrix, reagent capture scripts).
-
-**New wateringHole handoffs**: hotSpring compute trio, nestGate trait excision, songBird QUIC elimination.
-
-**Local fixes for V35.3**: Updated `graph.save` key (`graph_toml` → `toml`), capability domain routing (`compute` → `tensor`/`math`), added `capability_call_math` check to exp087. Applied `#[cfg(feature = "gpu")]` to barraCuda `for_precision_tier`. All 5 experiments compile and dry-run.
-
-**Expected revalidation improvement**: biomeOS v2.80 should resolve 3 of 4 remaining biomeOS gaps (capability registry, graph.save parse, bundled bootstrap). The 4th (auto-discovery) needs live testing. Potential to reach 40+/50 with fresh primal startup.
+`wateringHole/handoffs/LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md`

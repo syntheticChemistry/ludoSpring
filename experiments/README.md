@@ -1,9 +1,10 @@
 # ludoSpring Experiments
 
-**Date:** March 30, 2026
-**Total:** 88 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V35.3)
-**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery
-**Lints:** All 88 experiment Cargo.toml files inherit `[lints] workspace = true` (V35.3)
+**Date:** March 31, 2026
+**Total:** 98 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V37.1)
+**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition
+**Lints:** All 98 experiment Cargo.toml files inherit `[lints] workspace = true` (V37.1)
+**Live V37.1 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals
 
 ---
 
@@ -317,15 +318,15 @@ ludoSpring process. primalSpring validates the composition patterns work.
   Python baseline → Rust validation → barraCuda CPU → barraCuda GPU
   → **primal composition (THIS TRACK)** → esotericWebb absorbs patterns
 
-| # | Package | Checks | V35 | V35.1 | V35.2 | V35.3 (expected) | Composition Target |
-|---|---------|--------|-----|-------|-------|-------------------|--------------------|
-| 084 | `ludospring-exp084` | 15 | 0/12 | 4/15 | **12/15** | 12-15/15 | barraCuda math IPC + Neural API routing |
-| 085 | `ludospring-exp085` | 8 | 2/8 | 7/8 | **7/8** | 7-8/8 | Sovereign shader dispatch: coralReef compile → toadStool dispatch |
-| 086 | `ludospring-exp086` | 10 | 0/10 | 5/10 | **10/10** | 10/10 | Tensor API: all element-wise ops confirmed |
-| 087 | `ludospring-exp087` | 8 | 1/7 | 3/7 | 3/7 | **5-8/8** | Neural API graph orchestration (graph.save fixed, barraCuda domain added) |
-| 088 | `ludospring-exp088` | 10 | 2/10 | 2/10 | 2/10 | **4-8/10** | 60Hz game loop (graph.save + domain routing fixed) |
+| # | Package | Checks | V35 | V35.2 | **V37.1 live** | Composition Target |
+|---|---------|--------|-----|-------|----------------|--------------------|
+| 084 | `ludospring-exp084` | 15 | 0/12 | **12/15** | **12/15** | barraCuda math IPC + Neural API routing |
+| 085 | `ludospring-exp085` | 8 | 2/8 | **7/8** | **7/8** | Sovereign shader dispatch: coralReef compile → toadStool dispatch |
+| 086 | `ludospring-exp086` | 10 | 0/10 | **10/10** | **10/10** | Tensor API: all element-wise ops confirmed |
+| 087 | `ludospring-exp087` | 8 | 1/7 | 3/7 | **3/8** | Neural API graph orchestration — capability routing gap |
+| 088 | `ludospring-exp088` | 10 | 2/10 | 2/10 | **2/10** | 60Hz game loop — Neural API capability registration gap |
 
-**Total trajectory**: 5/47 → 21/50 → **34/50 (68%)** → expected **38-46/51 (75-90%)** with biomeOS v2.80
+**Total trajectory**: 5/47 → 34/50 (68%) → **34/51 V37.1 live (67%)**
 
 **Key insight**: These experiments are designed to FAIL. Each failure is a
 documented gap with a specific primal owner and evolution target. When the
@@ -343,15 +344,84 @@ proving that ludoSpring's science is replicable through composition alone.
 | barraCuda tensor element-wise ops | All ops work: add, scale, clamp, reduce, sigmoid (confirmed V35.2) | Sprint 23+ |
 | coralReef HTTP JSON-RPC | Raw newline-delimited on UDS (confirmed V35.1) | Iter 70 |
 
-**Remaining gaps (V35.3)**:
+**V37.1 live gap matrix** (all failures below are primal evolution gaps, not local experiment debt):
 
-| Gap | Owner | What's Needed | Experiment |
-|-----|-------|--------------|------------|
-| Auto-discovery effectiveness | biomeOS | `is_known_primal()` may not match all socket names; needs live test | exp087, exp088 |
-| Sovereign dispatch readback | toadStool + coralReef | coralReef driver for GPU readback (hardware) | exp085 |
-| Domain-level math methods | barraCuda (low-priority) | `math.flow.evaluate`, `math.engagement.composite` (composable from primitives) | exp084 |
-| Graph execution routing | biomeOS | `graph.execute` → capability.call per node (end-to-end) | exp087, exp088 |
-| 60Hz composition throughput | biomeOS | <16ms per capability.call hop | exp088 |
+| Gap | Owner | Severity | What's Needed | Experiments Blocked |
+|-----|-------|----------|---------------|---------------------|
+| No UDS transport | **rhizoCrypt** | **CRITICAL** | Add `--unix` / `XDG_RUNTIME_DIR` socket support (only binds TCP:9401) | exp094, exp095, exp096, exp098 |
+| Startup panic (runtime nesting) | **loamSpine** | **CRITICAL** | Fix `block_on` inside async runtime in `infant_discovery.rs:233` | exp095 |
+| Fitts formula mismatch | **barraCuda** | HIGH | `activation.fitts` returns 800 for (d=256,w=32,a=200,b=150); Python expects 708.85. Likely using `log2(D/W)` instead of Shannon `log2(2D/W+1)` | exp089 |
+| Hick formula variant | **barraCuda** | HIGH | `activation.hick` returns 675.49 for (n=8,a=200,b=150); Python expects 650. Using `log2(n+1)` instead of `log2(n)` | exp089 |
+| Perlin3D lattice invariant | **barraCuda** | MEDIUM | `noise.perlin3d(0,0,0)` returns -0.11 instead of 0 (lattice points must be zero by gradient noise definition) | exp091 |
+| Neural API capability registration | **biomeOS** | HIGH | Running primals not auto-registering `math`, `tensor`, `compute`, `dag`, `visualization`, `crypto` capabilities with Neural API | exp087, exp088 |
+| Sovereign GPU dispatch readback | **toadStool + coralReef** | MEDIUM | toadStool reports "coralReef not available" even though coralReef socket exists (inter-primal discovery gap) | exp085 |
+| Domain-level math methods | **barraCuda** | LOW | `math.flow.evaluate`, `math.engagement.composite` (composable from existing primitives) | exp084 |
+| No binary in plasmidBin | **barraCuda** | HIGH | Need published ecoBin for plasmidBin deployment | all science exps |
+| JWT secret generation in start_primal.sh | **plasmidBin** | LOW | Script generates 25-byte secret, NestGate requires 32+ | NestGate startup |
+
+**Score**: 95/141 checks passing (67.4%). With rhizoCrypt UDS + loamSpine fix alone → estimated 115/141 (81.5%). With barraCuda formula fixes → estimated 125/141 (88.7%).
+
+### Track 27: Science via Primal Composition — HCI Model Validation (V36)
+
+The next evolution step: validate each HCI model's math purely through primal
+IPC composition. Each experiment calls barraCuda IPC methods (activation.*,
+math.*, tensor.*, noise.*, stats.*) and compares results to the same Python
+baselines used in exp001-034. No ludoSpring binary participates in the science.
+
+**Deploy graph**: `graphs/composition/science_validation.toml`
+
+**HCI Model → barraCuda IPC Mapping**:
+- Fitts/Hick/Steering → `activation.fitts`, `activation.hick`, `math.log2`
+- Flow/DDA → `math.sigmoid` (flow curve, performance-to-difficulty)
+- Engagement → `stats.weighted_mean` (composite), `tensor.create` + `tensor.scale` + `tensor.reduce`
+- Four Keys → `tensor.create` + `tensor.scale` + `tensor.reduce` (composite score)
+- GOMS KLM → `stats.mean`, `stats.weighted_mean`
+- Perlin → `noise.perlin2d`, `noise.perlin3d` (direct IPC)
+- WFC → `tensor.create` + `tensor.reduce` (constraint propagation)
+
+| # | Package | Checks | **V37.1 live** | Composition Target | Blocking Gaps |
+|---|---------|--------|----------------|--------------------|---------------|
+| 089 | `ludospring-exp089` | 8 | **4/8** | Fitts + Hick + Steering via barraCuda IPC | barraCuda: Fitts/Hick formula mismatch |
+| 090 | `ludospring-exp090` | 13 | **13/13 PASS** | Flow + Engagement + DDA via tensor composition | — |
+| 091 | `ludospring-exp091` | 8 | **7/8** | Perlin + WFC via noise/tensor composition | barraCuda: perlin3d lattice invariant |
+| 092 | `ludospring-exp092` | 8 | **8/8 PASS** | GOMS + Four Keys via Pipeline composition | — |
+| 093 | `ludospring-exp093` | 6 | **6/6 PASS** | Full game session via Continuous composition | — |
+
+### Track 28: NUCLEUS Game Engine Composition (V37)
+
+Full game engine patterns validated via NUCLEUS composition. V36 proved barraCuda
+can compute the math. V37 proves the entire engine stack can be composed from
+NUCLEUS primals — session lifecycle, content ownership, RPGPT dialogue, Lysogeny
+game mechanics, and a full NUCLEUS game tick. Every `game.*` capability in
+`niche.rs` gets a demonstrated primal composition equivalent.
+
+**Deploy graphs**: `graphs/composition/nucleus_game_session.toml` (full stack),
+`graphs/composition/session_provenance.toml` (session lifecycle)
+
+**NUCLEUS layers exercised**:
+- Tower: BearDog (crypto.blake3_hash, crypto.sign_ed25519)
+- Node: barraCuda (math.sigmoid, stats.weighted_mean, tensor.*, activation.*)
+- Nest: NestGate (storage.store, storage.retrieve)
+- Trio: rhizoCrypt (provenance.*), loamSpine (certificate.*), sweetGrass (attribution.*)
+- Meta-tier: Squirrel (ai.query), petalTongue (visualization.render.scene)
+
+**Capability mapping** (game.* → primal decomposition):
+- `game.begin_session` → rhizoCrypt `provenance.session_create` (exp094)
+- `game.record_action` → rhizoCrypt `provenance.vertex_append` (exp094)
+- `game.complete_session` → rhizoCrypt + BearDog + NestGate (exp094)
+- `game.mint_certificate` → loamSpine `certificate.mint` (exp095)
+- `game.npc_dialogue` → Squirrel `ai.query` (exp096)
+- `game.voice_check` → Squirrel `ai.query` with temperature (exp096)
+- `game.evaluate_flow` → barraCuda `math.sigmoid` (exp096, exp098)
+- Population dynamics → barraCuda `tensor.*` + `stats.*` (exp097)
+
+| # | Package | Checks | **V37.1 live** | Composition Target | Blocking Gaps |
+|---|---------|--------|----------------|--------------------|---------------|
+| 094 | `ludospring-exp094` | 8 | **3/8** | Session lifecycle via Nest Atomic (BearDog + rhizoCrypt + NestGate) | rhizoCrypt: no UDS (TCP-only) |
+| 095 | `ludospring-exp095` | 8 | **0/8** | Content ownership via Provenance Trio (loamSpine + sweetGrass + BearDog) | rhizoCrypt: no UDS, loamSpine: startup panic |
+| 096 | `ludospring-exp096` | 10 | **5/10** | NPC dialogue via NUCLEUS (Squirrel + barraCuda + rhizoCrypt + petalTongue) | rhizoCrypt: no UDS, Squirrel/petalTongue: not started |
+| 097 | `ludospring-exp097` | 10 | **10/10 PASS** | Population dynamics as tensor composition (replicator, LV, WF, Markov) | — |
+| 098 | `ludospring-exp098` | 6 | **5/6** | NUCLEUS Complete game session (full stack, 10-tick continuous) | rhizoCrypt: no UDS |
 
 ### metalForge Dispatch (Capability-Based Routing)
 
@@ -481,6 +551,22 @@ cargo run -p ludospring-exp085                             # Shader dispatch cha
 cargo run -p ludospring-exp086                             # Tensor composition (9 checks)
 cargo run -p ludospring-exp087                             # Neural API pipeline (7 checks)
 cargo run -p ludospring-exp088                             # Continuous game loop (10 checks)
+
+# Run Science via Primal Composition — HCI Model Validation (Track 27, V36)
+# Requires live primals: barraCuda (+ biomeOS neural-api for exp093)
+cargo run -p ludospring-exp089                             # Fitts + Hick + Steering (8 checks)
+cargo run -p ludospring-exp090                             # Flow + Engagement + DDA (10 checks)
+cargo run -p ludospring-exp091                             # Perlin + WFC noise/tensor (8 checks)
+cargo run -p ludospring-exp092                             # GOMS + Four Keys pipeline (8 checks)
+cargo run -p ludospring-exp093                             # Full game session continuous (6 checks)
+
+# Run NUCLEUS Game Engine Composition (Track 28, V37)
+# Requires live primals: varies per experiment (see check list)
+cargo run -p ludospring-exp094                             # Session lifecycle (8 checks)
+cargo run -p ludospring-exp095                             # Content ownership (8 checks)
+cargo run -p ludospring-exp096                             # NPC dialogue composition (10 checks)
+cargo run -p ludospring-exp097                             # Population dynamics (10 checks)
+cargo run -p ludospring-exp098                             # NUCLEUS Complete session (6 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

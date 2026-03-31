@@ -3,7 +3,124 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V35.3).
+This project does not use SemVer — versions are session-sequential (V1–V37).
+
+## [V37.1] — 2026-03-31
+
+### Added — plasmidBin Live Validation Run
+
+First full run of all 15 composition experiments (exp084-098) against live
+primals started from `infra/plasmidBin/`. Score: **95/141 (67.4%)**.
+
+5 experiments fully PASS: exp086 (tensor), exp090 (gameflow), exp092 (pipeline),
+exp093 (continuous session), exp097 (population dynamics).
+
+### Fixed — Local Experiment Debt (V37.1)
+
+- exp094/095/098: BearDog `crypto.blake3_hash` now sends base64 data (not raw strings)
+- exp094/095: BearDog `crypto.sign_ed25519` now uses `{"message": ...}` (not `{"data": ...}`)
+- exp094/098: NestGate `storage.store/retrieve` now includes required `family_id` parameter
+- exp093: Removed unused `has_result` function (dead code warning)
+
+### Documented — Primal Evolution Gap Matrix
+
+10 primal gaps documented and handed off via
+`wateringHole/handoffs/LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md`:
+
+| Gap | Owner | Severity | Impact |
+|-----|-------|----------|--------|
+| TCP-only transport (no UDS) | rhizoCrypt | CRITICAL | blocks 4 experiments |
+| Startup panic (runtime nesting) | loamSpine | CRITICAL | blocks 1 experiment |
+| Fitts/Hick formula mismatch | barraCuda | HIGH | -4 checks |
+| Perlin3D lattice invariant | barraCuda | MEDIUM | -1 check |
+| No capability registration | biomeOS Neural API | HIGH | -14 checks |
+| No binary in plasmidBin | barraCuda | HIGH | deployment gap |
+| Inter-primal discovery | toadStool↔coralReef | MEDIUM | -1 check |
+
+Projected: all fixes → 130/141 (92.2%).
+
+## [V37] — 2026-03-30
+
+### Added — NUCLEUS Game Engine Composition (Track 28)
+
+Five new experiments that validate ALL game engine patterns via full NUCLEUS
+composition — session/provenance, RPGPT dialogue, Lysogeny mechanics, content
+ownership — and structure everything as abstractable patterns for esotericWebb:
+
+- **exp094** — Session lifecycle via Nest Atomic: BearDog hash/sign + rhizoCrypt DAG + NestGate store/retrieve (8 checks)
+- **exp095** — Content ownership via Provenance Trio: loamSpine mint + rhizoCrypt trade + sweetGrass attribution + BearDog sign (8 checks)
+- **exp096** — NPC dialogue via NUCLEUS: Squirrel ai.query + barraCuda math.sigmoid/stats.weighted_mean + rhizoCrypt DAG + petalTongue scene (10 checks)
+- **exp097** — Population dynamics (Lysogeny) via tensor: replicator dynamics, Markov transitions, Wright-Fisher fixation, all via tensor.create/scale/reduce/matmul (10 checks)
+- **exp098** — NUCLEUS Complete game session: 10-tick loop composing barraCuda science + Squirrel AI + petalTongue viz + trio provenance + BearDog crypto + NestGate storage (6 checks)
+
+Two new deploy graphs:
+- `graphs/composition/nucleus_game_session.toml` — full 60Hz NUCLEUS game session (esotericWebb reference)
+- `graphs/composition/session_provenance.toml` — session lifecycle: hash → DAG → cert → attribution → storage
+
+### Changed — Deploy Graph Migration (V37)
+
+Migrated 2 existing deploy graphs from `[[nodes]]`+`[nodes.primal]`+`[nodes.operation]` to
+`[[graph.node]]` format with v2.80 conventions:
+
+- `rpgpt_dialogue_engine.toml` — 7 phases (Tower → ludoSpring → petalTongue → Squirrel → toadStool → Trio → Validation)
+- `ludospring_deploy.toml` — 5 phases (Tower → toadStool → ludoSpring → Validation → Provenance)
+
+Both now use `by_capability`, `health_method`, `spawn`, `order`, `capabilities` list, `required` per primalSpring convention.
+
+### Summary — V36 + V37 Capability Coverage
+
+After V37, every `game.*` capability in `niche.rs` (27 total) has a demonstrated
+primal composition equivalent:
+
+| Capability domain | Primal | Experiments |
+|-------------------|--------|-------------|
+| Science (flow, DDA, Fitts, engagement, noise, WFC) | barraCuda | exp089-093 |
+| Session lifecycle | rhizoCrypt + BearDog + NestGate | exp094 |
+| Content ownership | loamSpine + sweetGrass + BearDog | exp095 |
+| NPC dialogue + voices | Squirrel + barraCuda | exp096 |
+| Game mechanics (population dynamics) | barraCuda tensor/stats | exp097 |
+| Full NUCLEUS game tick | All primals | exp098 |
+
+esotericWebb can replace its local `science/` module with these exact
+`capability.call` chains.
+
+## [V36] — 2026-03-30
+
+### Added — Science via Primal Composition (Track 27)
+
+Five new experiments that validate each HCI model's math purely through
+barraCuda IPC composition, comparing results to the same Python baselines:
+
+- **exp089** — Fitts + Hick + Steering via `activation.fitts`/`activation.hick`/`math.log2` (8 checks)
+- **exp090** — Flow + Engagement + DDA via `math.sigmoid`/`stats.weighted_mean`/`tensor.*` (10 checks)
+- **exp091** — Perlin + WFC via `noise.perlin2d`/`noise.perlin3d`/`tensor.*` (8 checks)
+- **exp092** — GOMS KLM + Four Keys via `stats.mean`/`stats.weighted_mean`/`tensor.*` (8 checks)
+- **exp093** — Full game session (10 tick simulation) via Continuous composition (6 checks)
+
+New deploy graph: `graphs/composition/science_validation.toml` composes all
+barraCuda capability domains (math, activation, tensor, noise, stats, rng)
+needed to validate all 13 HCI models without any ludoSpring binary.
+
+### Changed — Composition Graph Migration (V36)
+
+Migrated all 4 existing `graphs/composition/*.toml` from `[[nodes]]` to
+`[[graph.node]]` format with biomeOS v2.80 specific capability domains:
+
+- `math_pipeline.toml` — `"compute"` → `"tensor"`/`"stats"`, removed stale gap comments
+- `engagement_pipeline.toml` — `"compute"` → `"stats"`, documented resolved IPC gaps
+- `shader_dispatch_chain.toml` — added `"shader"`/`"compute"`/`"math"` domains + health_method
+- `game_loop_continuous.toml` — capability per node (`"math"`/`"activation"`/`"ai"`/`"visualization"`/`"dag"`/`"security"`)
+
+All graphs now include: `health_method`, `order`, `spawn = false`, `capabilities` list,
+`depends_on` per primalSpring convention.
+
+### Changed — Experiment Alignment (V36)
+
+- **exp084-088**: Updated doc headers to reference primalSpring graphs and V36 science experiments
+- **exp085**: Documented barraCuda Sprint 24 `barracuda-naga-exec` CPU shader backend
+- **exp086**: Noted as infrastructure foundation for exp090/exp092
+- **exp087**: Updated to reference Pipeline coordination pattern and primalSpring validation graphs
+- **exp088**: Added primalSpring `gaming_mesh_chimera.toml` reference
 
 ## [V35.3] — 2026-03-30
 

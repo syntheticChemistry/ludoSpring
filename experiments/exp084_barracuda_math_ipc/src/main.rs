@@ -5,9 +5,12 @@
 //!
 //! Validates ludoSpring's game science can be replicated via barraCuda's
 //! JSON-RPC IPC surface. Calls the ACTUAL method names and param schemas
-//! exposed by barraCuda (v0.3.11+), not aspirational names.
+//! exposed by barraCuda (v0.3.11+, Sprint 23+).
 //!
-//! # barraCuda IPC surface (30 methods, Sprint 23)
+//! V36: Infrastructure validation for science-via-composition. The science
+//! experiments (exp089-093) build on the IPC surface proven here.
+//!
+//! # barraCuda IPC surface (30 methods, Sprint 23+)
 //!
 //! Math/activation: `math.sigmoid`, `math.log2`, `activation.fitts`, `activation.hick`
 //! Statistics: `stats.mean`, `stats.std_dev`, `stats.weighted_mean`
@@ -23,6 +26,12 @@
 //! - `stats.mean`: `{"data": [f64...]}`
 //! - `noise.perlin2d`: `{"x": f64, "y": f64}`
 //! - `rng.uniform`: `{"n": u64, "min": f64, "max": f64, "seed": u64}`
+//!
+//! # References
+//!
+//! - primalSpring: `graphs/compositions/game_science_standalone.toml`
+//! - primalSpring: `graphs/spring_validation/composition_game_science_validate.toml`
+//! - ludoSpring graph: `graphs/composition/math_pipeline.toml`
 //!
 //! # Provenance
 //!

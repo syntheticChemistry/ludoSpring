@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Session Provenance — session lifecycle via Nest Atomic + Trio.
+#
+# Focused graph for the session lifecycle pattern:
+#   BearDog (hash session) → rhizoCrypt (create + append DAG)
+#   → loamSpine (mint session cert) → sweetGrass (record attribution)
+#   → NestGate (persist session)
+#
+# This is the "bounded game" foundation: every session has a provenance
+# chain, every creative contribution is attributed, every artifact is
+# signed and stored.
+#
+# Related: exp094 (session lifecycle), exp095 (content ownership)
+# Reference: ludoSpring graph `graphs/ludospring_deploy.toml` Phase 5
+#
+# STATUS: Active (Mar 30, 2026) — V37 session provenance composition
+
+[graph]
+name = "session_provenance"
+version = "0.1.0"
+description = "Session lifecycle: hash → DAG → cert → attribution → storage"
+coordination = "Sequential"
+
+[[graph.node]]
+name = "beardog_hash"
+order = 0
+by_capability = "security"
+health_method = "health.check"
+spawn = false
+depends_on = []
+capabilities = ["crypto.blake3_hash", "crypto.sign_ed25519", "crypto.verify_ed25519"]
+
+[[graph.node]]
+name = "rhizocrypt_session"
+order = 1
+by_capability = "provenance"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["beardog_hash"]
+capabilities = ["provenance.session_create", "provenance.vertex_append", "provenance.vertex_query"]
+
+[[graph.node]]
+name = "loamspine_certs"
+order = 2
+by_capability = "certificate"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["beardog_hash"]
+required = false
+capabilities = ["certificate.mint", "certificate.query", "certificate.evolve"]
+
+[[graph.node]]
+name = "sweetgrass_attribution"
+order = 3
+by_capability = "attribution"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["rhizocrypt_session"]
+required = false
+capabilities = ["attribution.record", "attribution.query"]
+
+[[graph.node]]
+name = "nestgate_persist"
+order = 4
+by_capability = "storage"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["rhizocrypt_session", "beardog_hash"]
+required = false
+capabilities = ["storage.store", "storage.retrieve"]

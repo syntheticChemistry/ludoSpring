@@ -7,60 +7,80 @@
 #
 # No ludoSpring process. Just primals composed at 60Hz.
 #
-# biomeOS `graph.start_continuous` IS implemented — session lifecycle
-# (start/pause/resume/stop) works. However, node execution is currently
-# a stub: the callback returns fixed JSON per node rather than routing
-# each tick to real primal capabilities. This graph documents the target
-# architecture; when biomeOS wires the continuous executor to NeuralRouter,
-# it starts working.
+# biomeOS v2.80: session lifecycle (start/pause/resume/stop) works.
+# Node execution routes through NeuralRouter to capability domains.
+# barraCuda math.sigmoid for flow, activation.* for psychomotor models.
+# Continuous executor needs <16ms per capability.call hop for 60Hz budget.
 #
-# Modeled after primalSpring gen4_storytelling_full.toml but decomposed
-# to ONLY the science pipeline (no esotericWebb process, no ludoSpring
-# process — pure capability routing through barraCuda, Squirrel, etc.)
+# Related: exp088 (continuous game loop), exp074 (dialogue flow monitoring),
+#          exp093 (full game session via Continuous composition)
+# Reference: primalSpring graphs/science/gaming_mesh_chimera.toml,
+#            primalSpring graphs/gen4/gen4_storytelling_full.toml
 #
-# Related: exp088 (continuous game loop), exp074 (dialogue flow monitoring)
-# Reference: primalSpring graphs/gen4/gen4_storytelling_full.toml
-#
-# STATUS: Active (Mar 29, 2026) — session lifecycle works,
-#         node routing stubbed in biomeOS, barraCuda math gaps
+# STATUS: Active (Mar 30, 2026) — V36 biomeOS v2.80 capability routing,
+#         barraCuda 30 methods on IPC, graph.execute E2E still evolving
 
 [graph]
 name = "ludospring_game_loop_continuous"
-version = "0.1.0"
+version = "0.2.0"
 description = "60Hz storytelling loop — pure primal composition"
 coordination = "Continuous"
 tick_hz = 60
 
-[[nodes]]
+[[graph.node]]
 name = "evaluate_flow"
-by_capability = "compute"
+order = 0
+by_capability = "math"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["math.sigmoid"]
 
-[[nodes]]
+[[graph.node]]
 name = "dda_recommend"
-by_capability = "compute"
+order = 1
+by_capability = "activation"
+health_method = "health.check"
+spawn = false
 depends_on = ["evaluate_flow"]
+capabilities = ["activation.fitts", "activation.hick"]
 
-[[nodes]]
+[[graph.node]]
 name = "ai_narrate"
+order = 2
 by_capability = "ai"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["dda_recommend"]
 required = false
+capabilities = ["ai.query"]
 
-[[nodes]]
+[[graph.node]]
 name = "render_scene"
+order = 3
 by_capability = "visualization"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["ai_narrate"]
 required = false
+capabilities = ["visualization.render.scene"]
 
-[[nodes]]
+[[graph.node]]
 name = "provenance_stamp"
+order = 4
 by_capability = "dag"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["render_scene"]
 required = false
+capabilities = ["dag.event.append"]
 
-[[nodes]]
+[[graph.node]]
 name = "crypto_sign"
+order = 5
 by_capability = "security"
+health_method = "health.check"
+spawn = false
 depends_on = ["provenance_stamp"]
 required = false
+capabilities = ["crypto.sign"]

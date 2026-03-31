@@ -3,59 +3,87 @@
 # Engagement Pipeline — streaming science via Neural API.
 #
 # A Pipeline-coordination graph that computes engagement metrics by
-# streaming data through multiple compute stages. Each stage is a
-# primal capability call — no ludoSpring process in the loop.
+# streaming data through multiple normalize stages. Each stage calls
+# stats.mean via barraCuda IPC, then the composite node calls
+# stats.weighted_mean to produce the final engagement score.
 #
-# biomeOS `graph.execute_pipeline` IS implemented with PipelineExecutor
-# + NeuralRouter per-stream-item. This graph should actually execute
-# if the compute capability is registered.
+# biomeOS `graph.execute_pipeline` routes per-stream-item through
+# NeuralRouter. barraCuda Sprint 23+ exposes stats.mean, stats.std_dev,
+# stats.weighted_mean — all normalize + composite ops are now available.
 #
-# Today the nodes CANNOT do real engagement math because barraCuda lacks
-# element-wise ops over IPC. But the pipeline orchestration itself works.
+# Related: exp087 (Neural API pipeline), exp010 (engagement curves),
+#          exp092 (GOMS + Four Keys via Pipeline)
+# Reference: primalSpring graphs/spring_validation/composition_game_science_validate.toml
 #
-# Related: exp087 (Neural API pipeline), exp010 (engagement curves)
-#
-# STATUS: Active (Mar 29, 2026) — pipeline orchestration works,
-#         node math blocked on barraCuda IPC gaps
+# STATUS: Active (Mar 30, 2026) — V36 barraCuda IPC gaps resolved,
+#         Pipeline orchestration + node math both available
 
 [graph]
 name = "ludospring_engagement_pipeline"
-version = "0.1.0"
+version = "0.2.0"
 description = "Engagement composite as streaming Pipeline composition"
 coordination = "Pipeline"
 
-[[nodes]]
+[[graph.node]]
 name = "normalize_apm"
-by_capability = "compute"
+order = 0
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["stats.mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "normalize_exploration"
-by_capability = "compute"
+order = 1
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["stats.mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "normalize_variety"
-by_capability = "compute"
+order = 2
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["stats.mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "normalize_completion"
-by_capability = "compute"
+order = 3
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["stats.mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "normalize_social"
-by_capability = "compute"
+order = 4
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = []
+capabilities = ["stats.mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "composite"
-by_capability = "compute"
+order = 5
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
 depends_on = ["normalize_apm", "normalize_exploration", "normalize_variety", "normalize_completion", "normalize_social"]
+capabilities = ["stats.weighted_mean"]
 
-[[nodes]]
+[[graph.node]]
 name = "persist"
+order = 6
 by_capability = "storage"
+health_method = "health.liveness"
+spawn = false
 depends_on = ["composite"]
 required = false
+capabilities = ["storage.store"]

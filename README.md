@@ -2,8 +2,8 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 30, 2026
-**Version:** V35.3 (88 experiments — 83 science + 5 primal composition gap discovery, 734 workspace tests. Track 26: live primal composition validation 34/50 (68%). V35.3: ecosystem evolution review — biomeOS v2.80 resolves 3/4 remaining gaps, cross-primal overstep audit completed, barraCuda Sprint 24 + songBird Wave 89 + nestGate Session 10 absorbed.)
+**Date:** March 31, 2026
+**Version:** V37.1 (98 experiments — 83 science + 15 composition, 734 workspace tests. Live plasmidBin validation: 95/141 composition checks passing (67.4%). 5 experiments fully PASS against live primals. 10 primal evolution gaps documented and handed off. BearDog+NestGate IPC contracts validated. barraCuda tensor/stats/noise/activation all working via UDS. Projected 92.2% with rhizoCrypt UDS + loamSpine fix + barraCuda formula alignment.)
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.7 (standalone, default-features = false — CPU-only default, GPU opt-in)

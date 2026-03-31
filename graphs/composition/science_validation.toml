@@ -1,0 +1,90 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Science Validation — full HCI model validation via primal composition.
+#
+# A Sequential graph that composes all the barraCuda capability domains
+# needed to validate ludoSpring's 13 HCI models purely via IPC:
+#
+#   math → activation (Fitts, Hick)
+#   tensor → element-wise ops, reductions (Flow, Engagement, DDA, Four Keys)
+#   noise → Perlin2D/3D (PCG)
+#   stats → mean, weighted_mean, std_dev (GOMS, composites)
+#
+# This graph is the deploy-time equivalent of exp089-093: if a biomeOS
+# instance can execute this graph, all science models can be validated
+# via composition without any ludoSpring binary.
+#
+# Related: exp089 (psychomotor), exp090 (flow/engagement/DDA),
+#          exp091 (PCG noise), exp092 (GOMS/Four Keys), exp093 (session)
+# Reference: primalSpring graphs/spring_validation/composition_game_science_validate.toml
+#
+# STATUS: Active (Mar 30, 2026) — V36 science validation composition
+
+[graph]
+name = "ludospring_science_composition"
+version = "0.1.0"
+description = "All HCI models validated via barraCuda composition"
+coordination = "Sequential"
+
+[[graph.node]]
+name = "barracuda_math"
+order = 0
+by_capability = "math"
+health_method = "health.check"
+spawn = false
+depends_on = []
+capabilities = ["math.sigmoid", "math.log2"]
+
+[[graph.node]]
+name = "barracuda_activation"
+order = 1
+by_capability = "activation"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_math"]
+capabilities = ["activation.fitts", "activation.hick"]
+
+[[graph.node]]
+name = "barracuda_tensor"
+order = 2
+by_capability = "tensor"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_math"]
+capabilities = [
+    "tensor.create",
+    "tensor.matmul",
+    "tensor.add",
+    "tensor.scale",
+    "tensor.clamp",
+    "tensor.reduce",
+    "tensor.sigmoid",
+]
+
+[[graph.node]]
+name = "barracuda_noise"
+order = 3
+by_capability = "noise"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_math"]
+capabilities = ["noise.perlin2d", "noise.perlin3d"]
+
+[[graph.node]]
+name = "barracuda_stats"
+order = 4
+by_capability = "stats"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_math"]
+capabilities = ["stats.mean", "stats.std_dev", "stats.weighted_mean"]
+
+[[graph.node]]
+name = "barracuda_rng"
+order = 5
+by_capability = "rng"
+health_method = "health.check"
+spawn = false
+depends_on = ["barracuda_math"]
+required = false
+capabilities = ["rng.uniform"]
