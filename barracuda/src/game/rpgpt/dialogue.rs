@@ -126,7 +126,7 @@ impl DialogueCheck {
         } else {
             die_values
         };
-        let result = D6PoolResult::from_dice(effective_dice, 4);
+        let result = D6PoolResult::from_dice(effective_dice, crate::tolerances::D6_SUCCESS_THRESHOLD);
         let degree = resolve_d6_pool(result.successes, result.pool_size);
         Self {
             skill: skill.into(),
@@ -184,7 +184,7 @@ impl DialogueFlowTracker {
                 DegreeOfSuccess::Success => 0.75,
                 DegreeOfSuccess::CriticalSuccess => 1.0,
             };
-            let alpha = 0.3;
+            let alpha = crate::tolerances::DIALOGUE_EMA_ALPHA;
             self.skill = self.skill.mul_add(1.0 - alpha, outcome * alpha);
         }
         self.exchanges.push(exchange);

@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 10, 2026
-**Total:** 99 experiments, 696 barracuda lib + 23 ipc integration + 26 forge = 745 workspace tests (V38)
-**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation
-**Lints:** All 99 experiment Cargo.toml files inherit `[lints] workspace = true` (V38)
-**Live V38 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099 composition validation: 13/13 (Rust == IPC parity).
+**Total:** 100 experiments, 745+ workspace tests (V39)
+**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
+**Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true` (V39)
+**Live V39 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity (niche integrity, health probes, capability discovery, science parity, golden chain).
 
 ---
 
@@ -444,6 +444,20 @@ composition that Python baselines serve for Rust code.
 
 *Requires live ludoSpring server on UDS. Graceful dry-mode when no server running.
 
+### Track 30: NUCLEUS Composition Parity — Python → Rust → IPC → Primal (V39)
+
+Three-layer chain complete. Python validated Rust; now both Python and Rust
+validate primal composition patterns through the full NUCLEUS graph.
+
+**Evolution path**:
+  Python baseline → Rust library → IPC composition → **NUCLEUS primal graph (THIS TRACK)**
+
+| # | Package | Checks | Status | What it validates |
+|---|---------|--------|--------|-------------------|
+| 100 | `ludospring-exp100` | 27 | PASS* | Niche integrity (7), health probes (2), capability discovery (4), science parity via IPC (8), golden chain Python→Rust→IPC (6) |
+
+*Requires live ludoSpring server on UDS. Exit code 2 = skip (primals not running).
+
 ### metalForge Dispatch (Capability-Based Routing)
 
 | Binary | Checks | Status | Modules Validated |
@@ -592,6 +606,10 @@ cargo run -p ludospring-exp098                             # NUCLEUS Complete se
 # Run Composition Validation (Track 29, V38)
 # Requires live ludoSpring server
 cargo run -p ludospring-exp099                             # Composition validation (13 checks)
+
+# Run NUCLEUS Composition Parity (Track 30, V39)
+# Requires live ludoSpring server (exit 2 = skip)
+cargo run -p ludospring-exp100                             # NUCLEUS parity (27 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

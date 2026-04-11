@@ -2,7 +2,7 @@
 
 **Date:** April 10, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V38 — 99 experiments, 30 IPC capabilities, 696 barracuda lib + 23 ipc integration + 26 forge = 745 workspace tests. Three-layer validation chain: Python → Rust → IPC composition → NUCLEUS deployment. ecoBin harvested to plasmidBin (v0.8.0, 3.1M PIE, sha256-verified). 7 composition parity tests prove Rust == IPC within 1e-10. exp099 composition validation (13/13). 8 primal gaps documented (GAP-01 to GAP-08).
+**Status:** V39 — 100 experiments, 30 IPC capabilities, 745+ workspace tests. Three-layer validation chain complete: Python → Rust → IPC composition → NUCLEUS deployment. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). exp100 NUCLEUS composition parity (27 checks). exp099 IPC parity (13/13). 8 primal gaps documented (GAP-01 to GAP-08). `config/capability_registry.toml` machine-readable SSOT.
 
 ---
 
@@ -51,6 +51,31 @@ validated HCI models benefit every primal in the ecosystem.
 | Cross-Domain Fraud | Same GenericFraudDetector across gaming/science/medical (>80% similarity) | 065 | 74 |
 | Radiating Attribution | sunCloud value distribution — decay, role weighting, conservation of attribution | 066 | 41 |
 | RPGPT Dialogue Plane | NPC knowledge bounds, lie detection, memory DAG, ruleset hot-swap, multi-voice, trust, factions, plane transitions | 067–075 | 321 |
+| IPC Composition Parity | Rust library == IPC within analytical tolerance (1e-10) | 099 | 13 |
+| NUCLEUS Composition Parity | Python → Rust → IPC → Primal golden chain, niche integrity, capability discovery | 100 | 27 |
+
+### NUCLEUS Composition Parity V39
+
+The validation chain is now complete. Each layer validates the next:
+
+```
+Layer 1: Python → Rust    (47 parity tests, 7 baseline scripts)
+Layer 2: Rust → IPC       (exp099: 13/13, analytical tolerance 1e-10)
+Layer 3: IPC → NUCLEUS    (exp100: 27 checks — niche integrity, health, capability, science, golden chain)
+```
+
+Python was the validation target for Rust. Now both Python and Rust are validation
+targets for the ecoPrimal NUCLEUS composition patterns. The golden chain in exp100
+traces a single computation (e.g. Fitts cost) through all three layers, proving
+equivalence from the published paper's formula to the deployed primal graph.
+
+Key artifacts:
+- **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
+- **exp100** (`ludospring-exp100`) — 27-check NUCLEUS composition parity validator: niche integrity (7), health probes (2), capability discovery (4), science parity (8), golden chain (6)
+- **ecoBin v0.9.0** — Harvested to `infra/plasmidBin/ludospring/` (sha256-verified)
+- **Shared HUD fixtures** — `hud_fixtures.rs` extracted from dashboard binaries, eliminating duplication
+- **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
+- **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
 
 ### RPGPT Dialogue Plane (V18–V19)
 

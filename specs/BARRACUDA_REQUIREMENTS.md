@@ -9,7 +9,7 @@ adopt, and what upstream evolution is needed.
 ## Current dependency
 
 ```toml
-barracuda = { path = "../../barraCuda/crates/barracuda", default-features = false }
+barracuda = { path = "../../../primals/barraCuda/crates/barracuda", default-features = false }
 ```
 
 - **Path dependency** with `default-features = false` (lean CPU build).

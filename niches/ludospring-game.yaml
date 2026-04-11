@@ -9,7 +9,7 @@
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
 # Date: April 10, 2026
-# Version: V38 (99 experiments, 745 #[test] functions, 97 validation binaries)
+# Version: V39 (100 experiments, 745+ #[test] functions, 100 validation binaries)
 
 niche:
   id: "ludospring-game"

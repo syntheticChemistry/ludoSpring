@@ -3,7 +3,49 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V38).
+This project does not use SemVer — versions are session-sequential (V1–V39).
+
+## [V39] — 2026-04-10
+
+### Added — NUCLEUS Composition Parity (Layer 3 Validation)
+
+Python validated Rust (Layer 1). Rust validated IPC (Layer 2, V38). Now both
+Python and Rust validate primal composition patterns (Layer 3):
+
+- **exp100 — NUCLEUS Composition Parity** — 27-check three-layer validator:
+  niche self-knowledge integrity (7 checks), health probes (2), capability
+  discovery (4), science parity through IPC (8), and golden chain
+  Python→Rust→IPC round-trip (6). Exit code 2 for skip when primals not
+  running. Uses `tolerances::RPC_TIMEOUT_SECS` for IPC calls.
+- **`config/capability_registry.toml`** — machine-readable capability SSOT
+  matching `niche.rs`, following the neuralSpring registry pattern. Includes
+  identity, fragments, capabilities by category, semantic mappings, external
+  dependencies, and proto-nucleate references.
+- **`barracuda/src/bin/commands/hud_fixtures.rs`** — shared HUD element
+  fixtures for FPS, RTS, sandbox, RPG, puzzle genres. Eliminates duplication
+  between `dashboard.rs` and `tufte_dashboard.rs`.
+- **`tolerances::game::D6_SUCCESS_THRESHOLD`** (4) and
+  **`tolerances::game::DIALOGUE_EMA_ALPHA`** (0.3) — centralized from
+  inline literals in `dialogue.rs` with calibration citations.
+
+### Changed — CI and Quality Gates
+
+- **Coverage in CI**: Added `cargo-llvm-cov --fail-under-lines 90` step to
+  `.github/workflows/ci.yml` — coverage floor now enforced in CI, not just
+  locally via `make coverage`.
+- **Makefile test parity**: `make test` now includes `ludospring-forge` tests,
+  matching CI's test scope.
+- **Forge workload naming**: `fraud_batch()` → `anti_cheat_batch()` — correct
+  game-science domain vocabulary.
+- **Dashboard deduplication**: `dashboard.rs` and `tufte_dashboard.rs` now
+  share `hud_fixtures.rs` instead of maintaining identical element builders.
+
+### Fixed
+
+- `python_parity.rs` provenance commit updated from `4b683e3e` to `19e402c0`
+  to match current `combined_baselines.json` artifact.
+- `specs/BARRACUDA_REQUIREMENTS.md` path corrected from `../../barraCuda/` to
+  `../../../primals/barraCuda/` matching actual `Cargo.toml`.
 
 ## [V38] — 2026-04-10
 

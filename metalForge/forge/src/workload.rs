@@ -95,11 +95,11 @@ impl GameWorkloadProfile {
         }
     }
 
-    /// Fraud batch: F32, no preference.
+    /// Anti-cheat detection batch: F32, no substrate preference.
     #[must_use]
-    pub fn fraud_batch() -> Self {
+    pub fn anti_cheat_batch() -> Self {
         Self {
-            name: "fraud_batch".to_string(),
+            name: "anti_cheat_batch".to_string(),
             required: vec![Capability::F32Compute],
             preferred_substrate: None,
         }

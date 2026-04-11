@@ -1,0 +1,132 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# ludoSpring — Machine-readable capability registry.
+#
+# Single source of truth for primal identity, capabilities, semantic
+# mappings, cost estimates, and dependency hints.  Kept in sync with
+# barracuda/src/niche.rs (code SSOT) by CI assertion.
+#
+# Follows the neuralSpring config/capability_registry.toml pattern.
+
+[identity]
+niche_name    = "ludospring"
+niche_domain  = "game"
+socket_dir    = "biomeos"
+bonding_type  = "Metallic"
+trust_model   = "InternalNucleus"
+encryption_tiers = ["TLS-internal", "mTLS-external"]
+
+[fragments]
+declared = ["tower_atomic", "node_atomic", "meta_tier"]
+
+[capabilities]
+# Game science
+game_science = [
+    "game.evaluate_flow",
+    "game.fitts_cost",
+    "game.engagement",
+    "game.analyze_ui",
+    "game.accessibility",
+    "game.wfc_step",
+    "game.difficulty_adjustment",
+    "game.generate_noise",
+]
+
+# Provenance lifecycle
+provenance = [
+    "game.begin_session",
+    "game.record_action",
+    "game.complete_session",
+    "game.poll_telemetry",
+]
+
+# AI narration (Squirrel-backed)
+ai_narration = [
+    "game.npc_dialogue",
+    "game.narrate_action",
+    "game.voice_check",
+]
+
+# Visualization (petalTongue-backed)
+visualization = [
+    "game.push_scene",
+]
+
+# DAG queries (rhizoCrypt-backed)
+dag = [
+    "game.query_vertices",
+]
+
+# Certificates (loamSpine-backed)
+certificates = [
+    "game.mint_certificate",
+]
+
+# Storage (NestGate-backed)
+storage = [
+    "game.storage_put",
+    "game.storage_get",
+]
+
+# GPU compute (toadStool + barraCuda-backed)
+gpu_compute = [
+    "game.gpu.fog_of_war",
+    "game.gpu.tile_lighting",
+    "game.gpu.pathfind",
+    "game.gpu.perlin_terrain",
+    "game.gpu.batch_raycast",
+]
+
+# Health probes
+health = [
+    "health.liveness",
+    "health.readiness",
+]
+
+[semantic_mappings]
+evaluate_flow       = "game.evaluate_flow"
+fitts_cost          = "game.fitts_cost"
+engagement          = "game.engagement"
+analyze_ui          = "game.analyze_ui"
+accessibility       = "game.accessibility"
+wfc_step            = "game.wfc_step"
+difficulty_adjustment = "game.difficulty_adjustment"
+generate_noise      = "game.generate_noise"
+begin_session       = "game.begin_session"
+record_action       = "game.record_action"
+complete_session    = "game.complete_session"
+poll_telemetry      = "game.poll_telemetry"
+npc_dialogue        = "game.npc_dialogue"
+narrate_action      = "game.narrate_action"
+voice_check         = "game.voice_check"
+push_scene          = "game.push_scene"
+query_vertices      = "game.query_vertices"
+mint_certificate    = "game.mint_certificate"
+storage_put         = "game.storage_put"
+storage_get         = "game.storage_get"
+gpu_fog_of_war      = "game.gpu.fog_of_war"
+gpu_tile_lighting   = "game.gpu.tile_lighting"
+gpu_pathfind        = "game.gpu.pathfind"
+gpu_perlin_terrain  = "game.gpu.perlin_terrain"
+gpu_batch_raycast   = "game.gpu.batch_raycast"
+liveness            = "health.liveness"
+readiness           = "health.readiness"
+
+[external_dependencies]
+"game.npc_dialogue"     = ["ai.query"]
+"game.narrate_action"   = ["ai.suggest"]
+"game.voice_check"      = ["ai.analyze"]
+"game.push_scene"       = ["visualization.render.scene"]
+"game.query_vertices"   = ["dag.vertex.query"]
+"game.mint_certificate" = ["certificate.mint"]
+"game.storage_put"      = ["storage.store"]
+"game.storage_get"      = ["storage.retrieve"]
+"game.gpu.fog_of_war"   = ["compute.submit"]
+"game.gpu.tile_lighting" = ["compute.submit"]
+"game.gpu.pathfind"     = ["compute.submit"]
+"game.gpu.perlin_terrain" = ["compute.submit"]
+"game.gpu.batch_raycast" = ["compute.dispatch"]
+
+[proto_nucleate]
+graph = "primalSpring/graphs/downstream/ludospring_proto_nucleate.toml"
+composition_model = "pure"

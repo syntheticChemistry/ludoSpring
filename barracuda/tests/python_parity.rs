@@ -8,11 +8,11 @@
 //! # Provenance
 //!
 //! - **Baselines**: `baselines/python/` (stdlib only, no numpy/scipy)
-//! - **Generated**: 2026-03-23
+//! - **Generated**: 2026-04-10
 //! - **Python**: CPython 3.10.12 (math module only)
 //! - **Command**: `python3 baselines/python/run_all_baselines.py`
 //! - **Output**: `baselines/python/combined_baselines.json`
-//! - **Commit**: `4b683e3e60c5fa7eaac55bbd073ab377568973f2`
+//! - **Commit**: `19e402c0b5b023db6e8df53dc4494b572a3ecd4b`
 //! - **Note**: Baseline JSON was generated under Python 3.10.12.
 //!   `run_all_baselines.py` requires >= 3.10 (`REQUIRED_PYTHON_MIN`); outputs use
 //!   stdlib `math` only with no version-dependent behavior in the parity range.

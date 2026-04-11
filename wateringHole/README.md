@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 10, 2026 (V38)
+**Last Updated:** April 10, 2026 (V39)
 
 ---
 
@@ -25,12 +25,12 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V38** | [Central: LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md) | Apr 10 | Three-layer validation chain (Python → Rust → IPC), ecoBin harvest to plasmidBin v0.8.0, 30 capabilities, 8 primal gaps, composition patterns for NUCLEUS, actions for all primal + spring teams |
+| **V39** | [Central: LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md) | Apr 10 | NUCLEUS composition parity (Python → Rust → IPC → Primal), ecoBin harvest to plasmidBin v0.9.0, exp100 (27 checks), capability_registry.toml, 8 primal gaps, actions for all primal + spring teams |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 99 experiments, 745 workspace tests, V38 composition validation chain)
+ludoSpring (game science, 100 experiments, 745+ workspace tests, V39 NUCLEUS composition parity)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -66,7 +66,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `stats::dot` | `metrics::engagement` | Weighted engagement composite |
 | `rng::lcg_step` | `procedural::bsp` | Deterministic BSP generation |
 | `rng::state_to_f64` | `procedural::bsp` | Split ratio from LCG state |
-| `validation::ValidationHarness` | All 99 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
+| `validation::ValidationHarness` | All 100 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
 
 ### Absorption Opportunities
 
@@ -83,7 +83,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## V38 Composition Gap Matrix
+## V39 Composition Gap Matrix
 
 | GAP | Owner | Severity | Impact |
 |-----|-------|----------|--------|
@@ -96,17 +96,18 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | Inter-primal discovery gap | **toadStool** | MEDIUM | -1 check |
 | Perlin3D lattice invariant | **barraCuda** | MEDIUM | -1 check |
 
-**Score**: 95/141 (67.4%) + exp099 13/13. Projected with all fixes: ~143/154 (92.9%).
+**Score**: 95/141 (67.4%) + exp099 13/13 + exp100 27 checks (NUCLEUS parity). Projected with all fixes: ~143/154 (92.9%).
 
-See [V38 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md) for full details per team.
+See [V39 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md) for full details per team.
 
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
-| V37.1 | Central: `LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md` | V38 Composition Validation Chain |
-| V35 | Central: `LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md` | V38 Composition Validation Chain |
-| V34 | `handoffs/LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md` | V38 Composition Validation Chain |
+| V38 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md` | V39 NUCLEUS Composition Parity |
+| V37.1 | Central: `infra/wateringHole/handoffs/archive/` | V38 Composition Validation Chain |
+| V35 | Central: `infra/wateringHole/handoffs/archive/` | V38 Composition Validation Chain |
+| V34 | `handoffs/archive/LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md` | V38 Composition Validation Chain |
 | V32 | `handoffs/archive/LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md` | V34 Nucleus Nest |
 | V31 | `handoffs/archive/LUDOSPRING_V31_DEEP_DEBT_ESOTERICWEBB_ALIGNMENT_HANDOFF_MAR28_2026.md` | V32 Comprehensive Audit + Deep Debt |
 | V30 | `handoffs/archive/LUDOSPRING_V30_DEEP_EVOLUTION_MODERN_RUST_HANDOFF_MAR23_2026.md` | V31 Deep Debt + esotericWebb |

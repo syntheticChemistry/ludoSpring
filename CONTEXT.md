@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 10, 2026 (V38 — composition validation chain)
+**Last updated:** April 10, 2026 (V39 — NUCLEUS composition parity)
 
 ## What is this?
 
@@ -54,13 +54,13 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 ## Code quality
 
 - **Tests**: 696 barracuda lib + 23 barracuda integration + 26 forge = 745 `#[test]` functions
-- **Experiments**: 99 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 1 composition validation)
-- **Coverage**: 91.27% line coverage (85% floor enforced via `cargo-llvm-cov`; target 90%+)
+- **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
+- **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural}.rs`
 - **Discovery**: `ipc/discovery/{mod, capabilities}.rs` — 6-format capability parser, semantic aliases
 - **IPC timeouts**: env-configurable via `LUDOSPRING_RPC_TIMEOUT_SECS`, `LUDOSPRING_PROBE_TIMEOUT_MS`
-- **CI**: `.github/workflows/ci.yml` — fmt, clippy, test, doc, cargo deny
+- **CI**: `.github/workflows/ci.yml` — fmt, clippy, test, doc, cargo deny, llvm-cov 90% floor
 - **Lints**: `clippy::pedantic`, `clippy::nursery`, `-D warnings`, `unsafe_code = "forbid"`, `missing_docs = "deny"`
 
 ## Build
@@ -70,7 +70,7 @@ cargo test --workspace
 cargo clippy --workspace --all-features -- -D warnings
 cargo doc --workspace --all-features --no-deps
 cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
-    --ignore-filename-regex bin/ --fail-under-lines 85
+    --ignore-filename-regex bin/ --fail-under-lines 90
 ```
 
 ## Key standards followed
@@ -81,6 +81,28 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `SPRING_AS_NICHE_DEPLOYMENT_STANDARD.md`
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
 - **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)
+
+## V39: NUCLEUS Composition Parity (April 10, 2026)
+
+V39 evolves ludoSpring from Layer 2 (Rust→IPC) into full Layer 3 (IPC→NUCLEUS)
+validation. Python validated Rust; now both Python and Rust validate the primal
+composition patterns.
+
+### Key changes
+
+- **exp100 — NUCLEUS Composition Parity**: Three-layer validator (niche integrity,
+  health probes, capability discovery, science parity, golden chain Python→Rust→IPC)
+- **Coverage enforced in CI**: `cargo-llvm-cov --fail-under-lines 90` added to
+  `.github/workflows/ci.yml`
+- **`config/capability_registry.toml`**: Machine-readable SSOT for capabilities,
+  semantic mappings, external dependencies, and proto-nucleate references
+- **Shared HUD fixtures**: Extracted `hud_fixtures.rs` from duplicated dashboard code
+- **Dialogue constants centralized**: `D6_SUCCESS_THRESHOLD` and `DIALOGUE_EMA_ALPHA`
+  moved to `tolerances::game`
+- **Stale provenance fixed**: `python_parity.rs` commit hash and
+  `specs/BARRACUDA_REQUIREMENTS.md` barraCuda path updated
+- **Forge naming**: `fraud_batch` → `anti_cheat_batch`
+- **Makefile parity**: `make test` now includes forge (matches CI)
 
 ## V38: Composition Validation Chain (April 10, 2026)
 

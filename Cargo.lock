@@ -2264,6 +2264,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ludospring-exp100"
+version = "0.1.0"
+dependencies = [
+ "ludospring-barracuda",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ludospring-forge"
 version = "0.1.0"
 dependencies = [

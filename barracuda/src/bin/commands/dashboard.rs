@@ -10,6 +10,8 @@ use ludospring_barracuda::interaction::input_laws;
 use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_engagement};
 use ludospring_barracuda::metrics::fun_keys::{FunSignals, classify_fun};
 use ludospring_barracuda::metrics::tufte_gaming::{UiElement, analyze_game_ui};
+
+use super::hud_fixtures::{fps_hud_elements, rts_hud_elements, sandbox_hud_elements};
 use ludospring_barracuda::procedural::bsp::{Rect, generate_bsp};
 use ludospring_barracuda::procedural::noise::fbm_2d;
 use ludospring_barracuda::tolerances;
@@ -419,109 +421,6 @@ fn build_ui_analysis() -> Value {
         "values": values,
         "metadata": { "x_labels": genres, "y_labels": metrics }
     })
-}
-
-fn fps_hud_elements() -> Vec<UiElement> {
-    vec![
-        UiElement {
-            name: "health".into(),
-            bounds: [0.05, 0.9, 0.15, 0.05],
-            data_values: 1,
-            pixel_area: 200.0,
-            data_ink_area: 150.0,
-            critical: true,
-        },
-        UiElement {
-            name: "ammo".into(),
-            bounds: [0.85, 0.9, 0.1, 0.05],
-            data_values: 1,
-            pixel_area: 150.0,
-            data_ink_area: 100.0,
-            critical: true,
-        },
-        UiElement {
-            name: "crosshair".into(),
-            bounds: [0.48, 0.48, 0.04, 0.04],
-            data_values: 1,
-            pixel_area: 20.0,
-            data_ink_area: 18.0,
-            critical: true,
-        },
-        UiElement {
-            name: "minimap".into(),
-            bounds: [0.8, 0.0, 0.2, 0.2],
-            data_values: 50,
-            pixel_area: 1000.0,
-            data_ink_area: 600.0,
-            critical: false,
-        },
-    ]
-}
-
-fn rts_hud_elements() -> Vec<UiElement> {
-    vec![
-        UiElement {
-            name: "minimap".into(),
-            bounds: [0.75, 0.0, 0.25, 0.25],
-            data_values: 200,
-            pixel_area: 2500.0,
-            data_ink_area: 1800.0,
-            critical: true,
-        },
-        UiElement {
-            name: "unit_list".into(),
-            bounds: [0.0, 0.0, 0.15, 0.5],
-            data_values: 30,
-            pixel_area: 1500.0,
-            data_ink_area: 800.0,
-            critical: true,
-        },
-        UiElement {
-            name: "resources".into(),
-            bounds: [0.3, 0.0, 0.3, 0.03],
-            data_values: 4,
-            pixel_area: 300.0,
-            data_ink_area: 250.0,
-            critical: true,
-        },
-        UiElement {
-            name: "command_card".into(),
-            bounds: [0.0, 0.7, 0.2, 0.3],
-            data_values: 12,
-            pixel_area: 2000.0,
-            data_ink_area: 600.0,
-            critical: true,
-        },
-    ]
-}
-
-fn sandbox_hud_elements() -> Vec<UiElement> {
-    vec![
-        UiElement {
-            name: "hotbar".into(),
-            bounds: [0.3, 0.95, 0.4, 0.05],
-            data_values: 9,
-            pixel_area: 500.0,
-            data_ink_area: 400.0,
-            critical: true,
-        },
-        UiElement {
-            name: "health".into(),
-            bounds: [0.3, 0.9, 0.1, 0.03],
-            data_values: 2,
-            pixel_area: 80.0,
-            data_ink_area: 70.0,
-            critical: true,
-        },
-        UiElement {
-            name: "crosshair".into(),
-            bounds: [0.49, 0.49, 0.02, 0.02],
-            data_values: 1,
-            pixel_area: 10.0,
-            data_ink_area: 9.0,
-            critical: false,
-        },
-    ]
 }
 
 /// Four Keys to Fun profiles for 4 game archetypes (Lazzaro 2004).

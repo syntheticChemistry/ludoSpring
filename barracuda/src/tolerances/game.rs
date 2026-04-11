@@ -65,6 +65,22 @@ pub const GAME_STATE_TOL: f64 = 0.01;
 /// noise while remaining tight enough to catch real trust drift.
 pub const TRUST_EQUALITY_TOL: f64 = 1e-12;
 
+/// D6 dice pool success threshold.
+///
+/// Justification: In the Dialogue plane's D6 pool system, each die
+/// showing >= this value counts as a success. The 4+ convention is
+/// standard across Shadowrun-lineage dice pools and RPGPT's internal
+/// design docs.
+pub const D6_SUCCESS_THRESHOLD: u8 = 4;
+
+/// Exponential moving average smoothing factor for dialogue skill tracking.
+///
+/// Justification: Alpha = 0.3 gives a half-life of ~1.9 exchanges,
+/// meaning recent outcomes dominate the skill estimate while retaining
+/// enough history to smooth single outliers. Calibrated against RPGPT
+/// playtest sessions (V36).
+pub const DIALOGUE_EMA_ALPHA: f64 = 0.3;
+
 /// Milliseconds per second — unit conversion constant.
 ///
 /// Used in telemetry timestamp-to-duration calculations.

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod dashboard;
+mod hud_fixtures;
 mod live_session;
 mod tufte_dashboard;
 

@@ -32,6 +32,7 @@ clippy:
 
 test:
 	cargo test $(BARRACUDA_FEATURES) $(BARRACUDA_PKG) --lib --tests
+	cargo test -p ludospring-forge --lib --tests
 
 doc:
 	cargo doc $(BARRACUDA_FEATURES) $(BARRACUDA_PKG) --no-deps

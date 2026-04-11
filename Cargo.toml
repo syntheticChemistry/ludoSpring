@@ -112,6 +112,7 @@ members = [
     "experiments/exp097_population_dynamics",
     "experiments/exp098_nucleus_game_session",
     "experiments/exp099_composition_validation",
+    "experiments/exp100_nucleus_composition_parity",
 ]
 
 [workspace.package]

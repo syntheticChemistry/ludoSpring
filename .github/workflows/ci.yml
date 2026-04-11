@@ -46,6 +46,17 @@ jobs:
       - name: cargo deny
         run: cargo deny check
 
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Coverage (90% floor)
+        run: >
+          cargo llvm-cov
+          --features ipc -p ludospring-barracuda
+          --lib --tests
+          --ignore-filename-regex 'bin/'
+          --fail-under-lines 90
+
   baselines:
     name: Python baseline drift check
     runs-on: ubuntu-latest
