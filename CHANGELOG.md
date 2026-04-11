@@ -3,7 +3,24 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V41).
+This project does not use SemVer — versions are session-sequential (V1–V42).
+
+## [V42] — 2026-04-11
+
+### Composition Evolution — Rust+Python validate NUCLEUS patterns
+
+Python validated Rust. Now Rust and Python are validation targets for
+ecoPrimal NUCLEUS composition patterns. This release completes the
+evolution from validation spring to composition spring.
+
+- **`lifecycle.composition` handler:** Wired as a dispatched JSON-RPC method in `handlers/lifecycle.rs`. `CompositionReport` is now externally callable — biomeOS and peers can probe ludoSpring's proto-nucleate composition at runtime.
+- **Capability-first discovery:** `probe_dependency()` in `ipc/composition.rs` now resolves via `discover_by_capability(dep.capability)` first, falling back to name-based `discover_primal_tiered()`. Aligns with `SPRING_COMPOSITION_PATTERNS` §3.
+- **`nest_atomic` in fragments:** Declared in `FRAGMENTS`, `capability_registry.toml`, and `PRIMAL_GAPS.md`. Trio primals remain `required: false` (aspirational until GAP-06/GAP-07 resolve). GAP-09 updated to RESOLVED.
+- **Provenance unified:** All `BaselineProvenance` commits, test headers, and doc comments aligned to `19e402c0` (matches `combined_baselines.json`). Eliminated three conflicting commit references (`4b683e3e`, `74cf9488`). Dates aligned to `2026-04-10`.
+- **ecoBin banned-crate enforcement:** `deny.toml` `[bans].deny` list added for 8 C dependencies per ecoBin v3.0 (openssl-sys, ring, aws-lc-sys, native-tls, zstd-sys, lz4-sys, libsqlite3-sys, cryptoki-sys). `cargo deny check` passes.
+- **fog_of_war.wgsl README:** Reconciled with shader body — documents distance-based radial mask (not Bresenham occlusion, which is a planned Tier C promotion).
+- **exp045 doc link:** Fixed broken `OrExit` intra-doc link (rustdoc warning eliminated).
+- **Tests:** 780 → **781** (+1 `lifecycle_composition_returns_report`). Zero clippy warnings. Zero fmt diffs. Zero regressions.
 
 ## [V41] — 2026-04-11
 

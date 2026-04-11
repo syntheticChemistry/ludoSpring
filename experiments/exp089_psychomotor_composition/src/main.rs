@@ -33,7 +33,7 @@ use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "baselines/python/exp001_fitts.py + exp002_hick.py + exp003_steering.py",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-30",
     command: "cargo run -p ludospring-exp089",
 };

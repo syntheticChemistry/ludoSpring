@@ -28,6 +28,20 @@ multiple-versions = "warn"
 wildcards = "warn"
 highlight = "all"
 
+# ecoBin v3.0 banned C dependencies — application code MUST NOT pull these.
+# renderdoc-sys (transitive via wgpu-hal, gpu feature) and linux-raw-sys
+# (via rustix) are infrastructure-C exceptions documented in the README.
+deny = [
+    { crate = "openssl-sys", wrappers = [] },
+    { crate = "ring", wrappers = [] },
+    { crate = "aws-lc-sys", wrappers = [] },
+    { crate = "native-tls", wrappers = [] },
+    { crate = "zstd-sys", wrappers = [] },
+    { crate = "lz4-sys", wrappers = [] },
+    { crate = "libsqlite3-sys", wrappers = [] },
+    { crate = "cryptoki-sys", wrappers = [] },
+]
+
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"

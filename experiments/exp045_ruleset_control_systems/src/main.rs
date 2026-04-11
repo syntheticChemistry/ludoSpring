@@ -26,8 +26,8 @@ use rulesets::{cairn_ability_target, fate_skill_modifier, pf2e_skill_modifier};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — Pathfinder 2e ORC, FATE Core, Cairn)",
-    commit: "4b683e3e",
-    date: "2026-03-15",
+    commit: "19e402c0",
+    date: "2026-04-10",
     command: "N/A (ruleset control systems)",
 };
 

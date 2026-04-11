@@ -36,7 +36,7 @@ use model::{
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — MTG stack folding)",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };

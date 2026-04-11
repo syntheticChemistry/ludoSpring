@@ -49,7 +49,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, OrExit, ValidationHar
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — composable raid visualization)",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-29",
     command: "N/A (pure Rust — IPC protocol)",
 };

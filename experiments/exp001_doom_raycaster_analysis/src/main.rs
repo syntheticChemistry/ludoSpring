@@ -12,7 +12,7 @@
 //! Raycaster geometry: analytical (enclosed arena, known wall distances).
 //! Fitts: MacKenzie (1992) — `a=50, b=150` mouse parameters.
 //! Tufte thresholds: Tufte (1983), Fagerholt & Lorentzon (2009).
-//! Python baseline: `baselines/python/interaction_laws.py` commit 74cf9488, 2026-03-15.
+//! Python baseline: `baselines/python/interaction_laws.py` commit 19e402c0, 2026-04-10.
 
 use ludospring_barracuda::game::raycaster::{GridMap, RayPlayer, cast_screen};
 use ludospring_barracuda::interaction::input_laws::fitts_movement_time;
@@ -22,8 +22,8 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "baselines/python/interaction_laws.py",
-    commit: "4b683e3e",
-    date: "2026-03-15",
+    commit: "19e402c0",
+    date: "2026-04-10",
     command: "python3 baselines/python/run_all_baselines.py",
 };
 

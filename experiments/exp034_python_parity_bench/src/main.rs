@@ -24,8 +24,8 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "baselines/python/run_all_baselines.py",
-    commit: "4b683e3e",
-    date: "2026-03-23",
+    commit: "19e402c0",
+    date: "2026-04-10",
     command: "python3 baselines/python/run_all_baselines.py",
 };
 

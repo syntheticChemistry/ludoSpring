@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 11, 2026 (V41 — composition evolution, absorbed primalSpring patterns)
+**Last updated:** April 11, 2026 (V42 — composition evolution: `lifecycle.composition` wired, capability-first discovery, `nest_atomic` declared, provenance unified)
 
 ## What is this?
 
@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 779 workspace `#[test]` functions (V41 — up from 733 in V40)
+- **Tests**: 781 workspace `#[test]` functions (V42 — up from 779 in V41)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
@@ -86,32 +86,42 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
 - **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)
 
+## V42: Composition Evolution — Rust+Python validate NUCLEUS patterns (April 11, 2026)
+
+Python validated Rust. Now Rust and Python are validation targets for ecoPrimal
+NUCLEUS composition patterns. V42 completes the evolution from validation spring
+to composition spring — `lifecycle.composition` is externally callable, discovery
+is capability-first, and fragments declare the full atomic surface.
+
+### V42 changes
+
+| Change | Module |
+|--------|--------|
+| `lifecycle.composition` handler — runtime composition probe via JSON-RPC | `ipc/handlers/lifecycle.rs` |
+| Capability-first discovery (`by_capability` → name fallback) | `ipc/composition.rs` |
+| `nest_atomic` in declared fragments (aspirational until GAP-06/07 resolve) | `ipc/composition.rs`, `config/capability_registry.toml` |
+| Provenance unified to single commit `19e402c0` (88 files) | all experiments, `validation.rs` |
+| ecoBin banned-crate enforcement (8 C deps) | `deny.toml` |
+| fog_of_war.wgsl README reconciled with shader body | `barracuda/shaders/game/README.md` |
+| exp045 doc link fixed (rustdoc warning eliminated) | `experiments/exp045` |
+
+### Metrics
+
+- **Tests**: 779 → **781** (+1 `lifecycle_composition_returns_report`)
+- **Clippy**: zero warnings (workspace-wide)
+- **Fragments**: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
+- **GAP-09**: updated to RESOLVED (nest_atomic declared, trio `required: false`)
+
 ## V41: Composition Evolution — Absorbed primalSpring patterns (April 11, 2026)
 
 V41 absorbs 9 hardened composition patterns from primalSpring, plasmidBin, and
-wateringHole `SPRING_COMPOSITION_PATTERNS.md`. ludoSpring now validates its
-primal composition at runtime the same way Python validates Rust and Rust
-validates IPC: **Python → Rust → IPC → NUCLEUS composition → deployment**.
-
-### Absorbed patterns
-
-| Pattern | Source | Module |
-|---------|--------|--------|
-| `IpcErrorPhase` + `PhasedIpcError` | primalSpring `ecoPrimal/src/ipc/error.rs` | `ipc/envelope.rs` |
-| Method normalization (`normalize_method`) | `SPRING_COMPOSITION_PATTERNS` §1 | `ipc/envelope.rs` + `ipc/handlers/mod.rs` |
-| Three-tier dispatch (lifecycle / infra / science) | `SPRING_COMPOSITION_PATTERNS` §4 | `ipc/handlers/mod.rs` |
-| Tiered discovery (`DiscoveryTier`, `DiscoveryResult`) | `SPRING_COMPOSITION_PATTERNS` §3 | `ipc/discovery/mod.rs` |
-| `NicheDependency` table (11 primals) | `SPRING_COMPOSITION_PATTERNS` §11 | `niche.rs` |
-| Typed inference wire types (`inference.*`) | neuralSpring | `ipc/squirrel.rs` |
-| `CompositionReport` + live validation | `SPRING_COMPOSITION_PATTERNS` §5 | `ipc/composition.rs` |
-| `--port` CLI flag (plasmidBin startup) | plasmidBin contract | `bin/ludospring.rs` |
-| `is_retriable` / `is_recoverable` / `is_method_not_found` | primalSpring `PhasedIpcError` | `ipc/envelope.rs` |
+wateringHole `SPRING_COMPOSITION_PATTERNS.md`.
 
 ### Metrics
 
 - **Tests**: 733 → **779** (+46 new composition pattern tests)
 - **Clippy**: zero warnings (ludoSpring workspace)
-- **Gaps**: 10 tracked (unchanged), nest_atomic documented as aspirational
+- **Gaps**: 10 tracked, nest_atomic documented as aspirational
 - **plasmidBin**: metadata bumped to V41, `--port` flag aligned
 
 ## V40: Audit & documentation cleanup (April 11, 2026)
@@ -225,4 +235,4 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 
 ### Handoff
 
-`wateringHole/handoffs/archive/LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md` (archived)
+[V42 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md)

@@ -16,7 +16,7 @@ use serde::Deserialize;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (fixture — NCBI E-utilities offline validation)",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-10",
     command: "N/A (embedded fixture data)",
 };

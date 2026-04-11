@@ -70,3 +70,15 @@ pub(super) fn handle_capability_list(req: &JsonRpcRequest) -> HandlerResult {
     response["cost_estimates"] = crate::niche::cost_estimates();
     to_json(&req.id, response)
 }
+
+/// `lifecycle.composition` — runtime composition report.
+///
+/// Probes all proto-nucleate dependencies and returns a structured
+/// report of live/absent status per primal. This is the composition
+/// validation step: Python validated Rust, now Rust validates primal
+/// composition patterns via IPC liveness.
+pub(super) fn handle_composition(req: &JsonRpcRequest) -> HandlerResult {
+    let report = crate::ipc::composition::composition_json()
+        .map_err(|e| crate::ipc::envelope::JsonRpcError::internal(&req.id, &e))?;
+    to_json(&req.id, report)
+}

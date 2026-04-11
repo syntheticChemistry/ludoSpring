@@ -4,9 +4,9 @@
 //! Per `SPRING_COMPOSITION_PATTERNS` §5, a spring MUST be able to probe
 //! its proto-nucleate at runtime and report which dependencies are live,
 //! degraded, or absent. This module implements the `CompositionReport`
-//! returned by `lifecycle.composition` (proposed IPC method).
+//! returned by `lifecycle.composition` (dispatched in `handlers/lifecycle.rs`).
 
-use super::discovery::{DiscoveryResult, discover_primal_tiered};
+use super::discovery::{DiscoveryResult, discover_by_capability, discover_primal_tiered};
 use crate::niche::{DEPENDENCIES, NicheDependency};
 
 /// Per-dependency liveness status.
@@ -44,7 +44,13 @@ pub struct CompositionReport {
 }
 
 /// Declared fragment set for ludoSpring's proto-nucleate.
-pub const FRAGMENTS: &[&str] = &["tower_atomic", "node_atomic", "meta_tier"];
+///
+/// `nest_atomic` included because ludoSpring wires NestGate + provenance
+/// trio (rhizoCrypt, loamSpine, sweetGrass) as niche dependencies. Trio
+/// primals are `required: false` — the Nest fragment is aspirational
+/// until upstream blockers (GAP-06 rhizoCrypt UDS, GAP-07 loamSpine
+/// startup) are resolved.
+pub const FRAGMENTS: &[&str] = &["tower_atomic", "node_atomic", "nest_atomic", "meta_tier"];
 
 /// Probe all niche dependencies and build a composition report.
 #[must_use]
@@ -74,7 +80,22 @@ pub fn validate_composition() -> CompositionReport {
     }
 }
 
+/// Probe a dependency by capability first (by_capability), then fall
+/// back to name-based tiered discovery. Per `SPRING_COMPOSITION_PATTERNS`
+/// §3, capability-based is the canonical resolution path; name-based is
+/// the operational fallback for primals that may not yet advertise
+/// capabilities in their `lifecycle.status` response.
 fn probe_dependency(dep: &NicheDependency) -> DependencyStatus {
+    if let Some(ep) = discover_by_capability(dep.capability) {
+        return DependencyStatus {
+            name: dep.name,
+            role: dep.role,
+            required: dep.required,
+            status: "live",
+            detail: format!("by_capability({}) → {}", dep.capability, ep.name),
+        };
+    }
+
     let result = discover_primal_tiered(dep.name);
     match result {
         DiscoveryResult::Found { tier, .. } => DependencyStatus {
@@ -82,7 +103,7 @@ fn probe_dependency(dep: &NicheDependency) -> DependencyStatus {
             role: dep.role,
             required: dep.required,
             status: "live",
-            detail: format!("discovered via {tier}"),
+            detail: format!("by_name via {tier}"),
         },
         DiscoveryResult::NotFound { searched, .. } => DependencyStatus {
             name: dep.name,
@@ -129,6 +150,7 @@ mod tests {
     fn fragments_match_proto_nucleate() {
         assert!(FRAGMENTS.contains(&"tower_atomic"));
         assert!(FRAGMENTS.contains(&"node_atomic"));
+        assert!(FRAGMENTS.contains(&"nest_atomic"));
         assert!(FRAGMENTS.contains(&"meta_tier"));
     }
 }

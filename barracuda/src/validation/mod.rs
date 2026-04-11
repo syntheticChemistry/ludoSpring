@@ -20,8 +20,8 @@
 //!
 //! let provenance = BaselineProvenance {
 //!     script: "baselines/python/run_all_baselines.py",
-//!     commit: "74cf9488",
-//!     date: "2026-03-15",
+//!     commit: "19e402c0",
+//!     date: "2026-04-10",
 //!     command: "python3 baselines/python/run_all_baselines.py",
 //! };
 //!
@@ -545,7 +545,7 @@ mod tests {
         let p = BaselineProvenance {
             script: "run.py",
             commit: "abc123",
-            date: "2026-03-15",
+            date: "2026-04-10",
             command: "python3 run.py",
         };
         let s = format!("{p}");
@@ -559,7 +559,7 @@ mod tests {
         let p = BaselineProvenance {
             script: "run.py",
             commit: "abc123",
-            date: "2026-03-15",
+            date: "2026-04-10",
             command: "python3 run.py",
         };
         h.print_provenance(&[&p]);

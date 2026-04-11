@@ -29,7 +29,7 @@ use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (composition — population dynamics via tensor IPC)",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-30",
     command: "cargo run -p ludospring-exp097",
 };

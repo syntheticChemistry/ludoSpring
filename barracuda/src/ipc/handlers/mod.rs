@@ -73,6 +73,7 @@ fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResul
         "health.liveness" => lifecycle::handle_liveness(req),
         "health.readiness" => lifecycle::handle_readiness(req),
         "lifecycle.status" => lifecycle::handle_lifecycle_status(req),
+        "lifecycle.composition" => lifecycle::handle_composition(req),
         "lifecycle.register" => neural::handle_lifecycle_register(req),
         "capability.list" => lifecycle::handle_capability_list(req),
         "capability.deregister" => neural::handle_capability_deregister(req),
@@ -713,6 +714,23 @@ mod tests {
         let req = make_request(METHOD_STORAGE_GET, serde_json::json!({ "key": "k1" }));
         let result = result_json(&dispatch(&req));
         assert_eq!(result["available"], false);
+    }
+
+    #[test]
+    fn lifecycle_composition_returns_report() {
+        let req = JsonRpcRequest {
+            jsonrpc: "2.0".into(),
+            method: "lifecycle.composition".into(),
+            params: None,
+            id: serde_json::json!(1),
+        };
+        let resp = dispatch(&req);
+        let result = result_json(&resp);
+        assert_eq!(result["spring"], "ludospring");
+        assert_eq!(result["composition_model"], "pure");
+        assert!(result["dependencies"].is_array());
+        assert!(result["live_count"].is_number());
+        assert!(result["complete"].is_boolean());
     }
 
     #[test]

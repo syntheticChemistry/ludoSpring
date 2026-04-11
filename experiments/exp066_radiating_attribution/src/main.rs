@@ -18,7 +18,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "N/A (analytical — sunCloud radiating attribution)",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-29",
     command: "N/A (pure Rust implementation)",
 };

@@ -7,7 +7,7 @@ barraCuda `ComputeDispatch` or toadStool `compute.submit`.
 
 | Shader | Purpose | Dispatch Pattern |
 |--------|---------|-----------------|
-| `fog_of_war.wgsl` | Per-tile visibility from viewer position — **Bresenham line-of-sight** with terrain wall occlusion (not distance-only radial masks) | 1 thread/tile, single dispatch |
+| `fog_of_war.wgsl` | Per-tile visibility from viewer position — distance-based radial mask with explored-state tracking. Terrain buffer bound but occlusion not yet wired (Bresenham line-of-sight is a planned Tier C promotion) | 1 thread/tile, single dispatch |
 | `tile_lighting.wgsl` | Point light propagation with 1/d² falloff | 1 thread/tile, single dispatch |
 | `pathfind_wavefront.wgsl` | BFS wavefront expansion (one ring/dispatch) | 1 thread/tile, loop until frontier=0 |
 

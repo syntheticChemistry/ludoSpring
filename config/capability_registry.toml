@@ -17,7 +17,7 @@ trust_model   = "InternalNucleus"
 encryption_tiers = ["TLS-internal", "mTLS-external"]
 
 [fragments]
-declared = ["tower_atomic", "node_atomic", "meta_tier"]
+declared = ["tower_atomic", "node_atomic", "nest_atomic", "meta_tier"]
 
 [capabilities]
 # Game science

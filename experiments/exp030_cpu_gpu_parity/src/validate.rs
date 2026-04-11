@@ -29,7 +29,7 @@ use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness, Va
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "experiments/exp030_cpu_gpu_parity/shaders/",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-29",
     command: "cargo run -p exp030_cpu_gpu_parity -- validate",
 };

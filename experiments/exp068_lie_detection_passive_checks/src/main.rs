@@ -19,7 +19,7 @@ const EXP: &str = "exp068_lie_detection_passive_checks";
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/RPGPT_INTERNAL_VOICES_SPEC.md",
-    commit: "4b683e3e",
+    commit: "19e402c0",
     date: "2026-03-29",
     command: "cargo run -p exp068_lie_detection_passive_checks",
 };

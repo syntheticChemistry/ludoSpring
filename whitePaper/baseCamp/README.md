@@ -2,7 +2,7 @@
 
 **Date:** April 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V41 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 779 workspace tests. Composition evolution: 9 primalSpring patterns absorbed. Three-layer validation chain complete: Python validates Rust, Rust validates IPC, IPC validates NUCLEUS composition. Runtime `CompositionReport` probes all 11 niche dependencies. `IpcErrorPhase` + method normalization + tiered discovery + three-tier dispatch hardened for biomeOS routing. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10).
+**Status:** V42 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 781 workspace tests. Composition evolution complete: Python validated Rust; now Rust+Python validate NUCLEUS composition patterns. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable via JSON-RPC. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin banned-crate enforcement in `deny.toml`. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-09 RESOLVED).
 
 ---
 
@@ -54,9 +54,9 @@ validated HCI models benefit every primal in the ecosystem.
 | IPC Composition Parity | Rust library == IPC within analytical tolerance (1e-10) | 099 | 13 |
 | NUCLEUS Composition Parity | Python → Rust → IPC → Primal golden chain, niche integrity, capability discovery | 100 | 27 |
 
-### Composition Evolution V41
+### Composition Evolution V42
 
-V41 completes the evolution from **validation spring** to **composition spring**:
+V42 completes the evolution from **validation spring** to **composition spring**:
 Python was the validation target for Rust. Now both Python and Rust are validation
 targets for the ecoPrimal NUCLEUS composition patterns. The golden chain traces a
 single computation (e.g. Fitts cost) from the published paper's formula through
@@ -66,8 +66,15 @@ Python baseline → Rust library → IPC serialization → NUCLEUS primal graph.
 Layer 1: Python ↔ Rust    (python_parity.rs — parity vs Python baselines)
 Layer 2: Rust ↔ IPC       (exp099: 13/13, analytical tolerance 1e-10)
 Layer 3: NUCLEUS          (exp100: 27 checks — niche integrity, health, capability, science, golden chain)
-Layer 4: Composition      (CompositionReport — runtime probe of all 11 niche dependencies)
+Layer 4: Composition      (lifecycle.composition — runtime probe of all 11 niche dependencies via JSON-RPC)
 ```
+
+**V42 composition evolution:**
+- `lifecycle.composition` handler — `CompositionReport` externally callable via JSON-RPC
+- Capability-first discovery — `by_capability` → name fallback in composition probing
+- `nest_atomic` in declared fragments — aspirational until GAP-06/07 resolve (trio `required: false`)
+- Provenance unified to single commit `19e402c0` across 88 files
+- ecoBin banned-crate enforcement — `deny.toml` denies 8 C deps per ecoBin v3.0
 
 **V41 patterns absorbed from primalSpring ecosystem:**
 - `IpcErrorPhase` + `PhasedIpcError` — retry/recovery classification for IPC failures
@@ -254,7 +261,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 733 workspace tests (707 barracuda + 26 forge)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 781 workspace tests (V42)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

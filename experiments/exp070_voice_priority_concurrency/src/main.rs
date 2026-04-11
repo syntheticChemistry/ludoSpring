@@ -18,8 +18,8 @@ const EXP: &str = "exp070_voice_priority_concurrency";
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "specs/RPGPT_INTERNAL_VOICES_SPEC.md",
-    commit: "4b683e3e",
-    date: "2026-03-15",
+    commit: "19e402c0",
+    date: "2026-04-10",
     command: "cargo run -p exp070_voice_priority_concurrency",
 };
 

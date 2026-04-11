@@ -17,8 +17,8 @@
 //!   - `interaction_laws.py` — Fitts, Hick, steering (stdlib only)
 //!   - `flow_engagement.py` — flow state, engagement composite (stdlib only)
 //!   - Run: `python3 baselines/python/run_all_baselines.py`
-//!   - Generated: 2026-03-23, Python 3.10.12, no external dependencies
-//!   - Commit: `4b683e3e60c5fa7eaac55bbd073ab377568973f2`
+//!   - Generated: 2026-04-10, Python 3.10.12, no external dependencies
+//!   - Commit: `19e402c0b5b023db6e8df53dc4494b572a3ecd4b`
 //!   - Output: `baselines/python/combined_baselines.json`
 
 use ludospring_barracuda::interaction::flow::{FlowState, evaluate_flow};

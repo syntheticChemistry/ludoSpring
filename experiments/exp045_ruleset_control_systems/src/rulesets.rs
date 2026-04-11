@@ -115,7 +115,7 @@ impl Ruleset for Pathfinder2e {
 ///
 /// # Panics
 ///
-/// Exits the process via [`OrExit`] if `skill_name` is not in the character's skill list.
+/// Exits the process via `OrExit` if `skill_name` is not in the character's skill list.
 pub fn pf2e_skill_modifier(character: &Character, skill_name: &str) -> i32 {
     use ludospring_barracuda::validation::OrExit;
     let skill = character

@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 11, 2026
-**Total:** 100 experiments, 779 workspace tests (V41)
+**Total:** 100 experiments, 781 workspace tests (V42)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
 **Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
-**Live V41 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. 9 composition patterns absorbed from primalSpring. Runtime `CompositionReport` probes all 11 niche dependencies.
+**Live V42 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable. Capability-first discovery. `nest_atomic` in fragments. Provenance unified to `19e402c0`.
 
 ---
 
@@ -622,8 +622,8 @@ Every experiment follows the hotSpring validation pattern using `ValidationHarne
 ```rust
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
     script: "baselines/python/interaction_laws.py",
-    commit: "abc1234",
-    date: "2026-03-10",
+    commit: "19e402c0",
+    date: "2026-04-10",
     python: "3.12.1",
     command: "python3 baselines/python/interaction_laws.py",
 };

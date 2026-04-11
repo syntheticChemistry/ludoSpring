@@ -8,8 +8,8 @@
 # Deploy graph: graphs/ludospring_deploy.toml
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
-# Date: April 10, 2026
-# Version: V39 (100 experiments, 733+ #[test] functions, 100 validation binaries)
+# Date: April 11, 2026
+# Version: V42 (100 experiments, 781 #[test] functions, 100 validation binaries)
 
 niche:
   id: "ludospring-game"
