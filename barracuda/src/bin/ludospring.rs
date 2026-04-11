@@ -19,7 +19,7 @@ use ludospring_barracuda::ipc::IpcServer;
 use ludospring_barracuda::niche;
 use tracing::info;
 
-fn cmd_server() -> Result<(), String> {
+fn cmd_server(port: Option<u16>) -> Result<(), String> {
     let family_id = niche::family_id();
     let socket_path = niche::resolve_server_socket();
 
@@ -31,6 +31,9 @@ fn cmd_server() -> Result<(), String> {
     let server = IpcServer::with_path(&socket_path);
 
     info!("ludospring IPC listening on {}", socket_path.display());
+    if let Some(p) = port {
+        info!("  Port (plasmidBin): {p}");
+    }
     info!("  Family ID: {family_id}");
     info!("  Domain: {GAME_DOMAIN}");
     info!("  Version: {}", env!("CARGO_PKG_VERSION"));
@@ -115,7 +118,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Start the IPC server (germination mode).
-    Server,
+    Server {
+        /// TCP port for plasmidBin/orchestrator binding (sets LUDOSPRING_PORT).
+        #[arg(long)]
+        port: Option<u16>,
+    },
     /// Print health and capability info.
     Status,
     /// Print version info.
@@ -139,7 +146,7 @@ fn main() {
 
     let cli = Cli::parse();
     let result = match cli.command {
-        Command::Server => cmd_server(),
+        Command::Server { port } => cmd_server(port),
         Command::Status => {
             cmd_status();
             Ok(())

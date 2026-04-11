@@ -23,6 +23,80 @@ use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+/// Discovery tier that resolved a primal socket.
+///
+/// Per `SPRING_COMPOSITION_PATTERNS` §3, socket discovery follows a
+/// six-tier priority chain. Tracking which tier succeeded enables
+/// diagnostics and fallback analysis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiscoveryTier {
+    /// Tier 1: explicit `${PRIMAL}_SOCKET` env var.
+    ExplicitEnv = 1,
+    /// Tier 2: `$XDG_RUNTIME_DIR/biomeos/{primal}-{family}.sock`.
+    XdgFamily = 2,
+    /// Tier 3: `$XDG_RUNTIME_DIR/biomeos/{primal}.sock`.
+    XdgPlain = 3,
+    /// Tier 4: `/tmp/biomeos/{primal}.sock`.
+    TempFallback = 4,
+    /// Tier 5: directory scan with `*.sock` pattern.
+    DirectoryScan = 5,
+    /// Tier 6: Neural API `capability.discover` sweep.
+    NeuralApiSweep = 6,
+}
+
+impl core::fmt::Display for DiscoveryTier {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::ExplicitEnv => write!(f, "explicit env"),
+            Self::XdgFamily => write!(f, "XDG family socket"),
+            Self::XdgPlain => write!(f, "XDG plain socket"),
+            Self::TempFallback => write!(f, "temp fallback"),
+            Self::DirectoryScan => write!(f, "directory scan"),
+            Self::NeuralApiSweep => write!(f, "Neural API sweep"),
+        }
+    }
+}
+
+/// Structured result from primal discovery.
+///
+/// Per `SPRING_COMPOSITION_PATTERNS` §3, discovery returns either a found
+/// endpoint with its resolution tier, or a `NotFound` with the list of
+/// paths that were searched.
+#[derive(Debug, Clone)]
+pub enum DiscoveryResult {
+    /// Primal found at a socket with a known resolution tier.
+    Found {
+        /// The discovered endpoint.
+        endpoint: PrimalEndpoint,
+        /// Which tier resolved the socket.
+        tier: DiscoveryTier,
+    },
+    /// No primal found after searching all tiers.
+    NotFound {
+        /// The primal or capability that was sought.
+        target: String,
+        /// All paths that were probed without success.
+        searched: Vec<PathBuf>,
+    },
+}
+
+impl DiscoveryResult {
+    /// Extract the endpoint if discovery succeeded.
+    #[must_use]
+    pub const fn endpoint(&self) -> Option<&PrimalEndpoint> {
+        match self {
+            Self::Found { endpoint, .. } => Some(endpoint),
+            Self::NotFound { .. } => None,
+        }
+    }
+
+    /// Whether the discovery succeeded.
+    #[must_use]
+    pub const fn is_found(&self) -> bool {
+        matches!(self, Self::Found { .. })
+    }
+}
+
 /// A discovered primal endpoint.
 #[derive(Debug, Clone)]
 pub struct PrimalEndpoint {
@@ -217,6 +291,84 @@ pub fn discover_by_capability(capability: &str) -> Option<PrimalEndpoint> {
     registry.find(capability).cloned()
 }
 
+/// Tiered discovery for a specific primal by name.
+///
+/// Follows the six-tier priority chain from `SPRING_COMPOSITION_PATTERNS`
+/// §3. Returns a structured [`DiscoveryResult`] with the resolution tier
+/// on success or the full list of searched paths on failure.
+///
+/// Tiers 1–4 probe well-known socket paths; Tier 5 falls back to the
+/// existing directory scan; Tier 6 is reserved for Neural API sweep.
+#[must_use]
+pub fn discover_primal_tiered(primal_name: &str) -> DiscoveryResult {
+    let mut searched = Vec::new();
+    let family = crate::niche::family_id();
+
+    let env_key = format!("{}_SOCKET", primal_name.to_uppercase().replace('-', "_"));
+    if let Ok(explicit) = std::env::var(&env_key) {
+        let path = PathBuf::from(&explicit);
+        if let Some(ep) = probe_socket(&path) {
+            return DiscoveryResult::Found {
+                endpoint: ep,
+                tier: DiscoveryTier::ExplicitEnv,
+            };
+        }
+        searched.push(path);
+    }
+
+    for dir in crate::niche::socket_dirs() {
+        if !dir.is_dir() {
+            continue;
+        }
+
+        let family_sock = dir.join(format!("{primal_name}-{family}.sock"));
+        if let Some(ep) = probe_socket(&family_sock) {
+            return DiscoveryResult::Found {
+                endpoint: ep,
+                tier: DiscoveryTier::XdgFamily,
+            };
+        }
+        searched.push(family_sock);
+
+        let plain_sock = dir.join(format!("{primal_name}.sock"));
+        if let Some(ep) = probe_socket(&plain_sock) {
+            return DiscoveryResult::Found {
+                endpoint: ep,
+                tier: DiscoveryTier::XdgPlain,
+            };
+        }
+        searched.push(plain_sock);
+    }
+
+    let temp_sock = std::env::temp_dir()
+        .join(crate::niche::ECOSYSTEM_SOCKET_DIR)
+        .join(format!("{primal_name}.sock"));
+    if let Some(ep) = probe_socket(&temp_sock) {
+        return DiscoveryResult::Found {
+            endpoint: ep,
+            tier: DiscoveryTier::TempFallback,
+        };
+    }
+    searched.push(temp_sock);
+
+    let registry = discover_primals();
+    if let Some(ep) = registry
+        .endpoints
+        .values()
+        .find(|ep| ep.name == primal_name)
+    {
+        return DiscoveryResult::Found {
+            endpoint: ep.clone(),
+            tier: DiscoveryTier::DirectoryScan,
+        };
+    }
+
+    DiscoveryResult::NotFound {
+        target: primal_name.to_owned(),
+        searched,
+    }
+}
+
 /// Send a JSON-RPC request to a primal and return the result.
 ///
 /// # Errors
@@ -328,5 +480,56 @@ mod tests {
         let reg = discover_primals_in_directories(std::slice::from_ref(&dir));
         assert_eq!(reg.endpoint_count(), 0);
         std::fs::remove_dir(&dir).ok();
+    }
+
+    #[test]
+    fn discovery_tier_display() {
+        assert_eq!(DiscoveryTier::ExplicitEnv.to_string(), "explicit env");
+        assert_eq!(DiscoveryTier::XdgFamily.to_string(), "XDG family socket");
+        assert_eq!(DiscoveryTier::XdgPlain.to_string(), "XDG plain socket");
+        assert_eq!(DiscoveryTier::TempFallback.to_string(), "temp fallback");
+        assert_eq!(DiscoveryTier::DirectoryScan.to_string(), "directory scan");
+        assert_eq!(
+            DiscoveryTier::NeuralApiSweep.to_string(),
+            "Neural API sweep"
+        );
+    }
+
+    #[test]
+    fn discover_primal_tiered_returns_not_found_for_absent() {
+        let result = discover_primal_tiered("nonexistent-test-primal");
+        assert!(!result.is_found());
+        assert!(result.endpoint().is_none());
+        match result {
+            DiscoveryResult::NotFound { target, searched } => {
+                assert_eq!(target, "nonexistent-test-primal");
+                assert!(
+                    !searched.is_empty(),
+                    "should have searched at least one path"
+                );
+            }
+            DiscoveryResult::Found { .. } => panic!("should not find nonexistent primal"),
+        }
+    }
+
+    #[test]
+    fn discovery_result_is_found_accessors() {
+        let found = DiscoveryResult::Found {
+            endpoint: PrimalEndpoint {
+                socket: PathBuf::from("/tmp/test.sock"),
+                name: "test".into(),
+                capabilities: vec![],
+            },
+            tier: DiscoveryTier::ExplicitEnv,
+        };
+        assert!(found.is_found());
+        assert!(found.endpoint().is_some());
+
+        let not_found = DiscoveryResult::NotFound {
+            target: "x".into(),
+            searched: vec![],
+        };
+        assert!(!not_found.is_found());
+        assert!(not_found.endpoint().is_none());
     }
 }

@@ -7,7 +7,35 @@
 //! [`IpcError`] replaces bare `String` errors across the IPC layer,
 //! following the coralReef Iter 52 typed error pattern.
 
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
+
+// ── IPC Error Phase (primalSpring V094 pattern) ─────────────────────
+
+/// Phase in which an IPC operation failed.
+///
+/// Absorbed from primalSpring `ecoPrimal/src/ipc/error.rs`. Annotating
+/// errors with their phase enables smart retry logic: connect failures
+/// are retriable, parse failures are not.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum IpcErrorPhase {
+    /// Socket connection attempt.
+    #[error("connect")]
+    Connect,
+    /// Sending the request payload.
+    #[error("send")]
+    Send,
+    /// Waiting for / reading the response.
+    #[error("receive")]
+    Receive,
+    /// Deserializing the response JSON.
+    #[error("parse")]
+    Parse,
+    /// Timeout on any phase.
+    #[error("timeout")]
+    Timeout,
+}
 
 // ── Typed IPC Error ──────────────────────────────────────────────────
 
@@ -47,9 +75,83 @@ pub enum IpcError {
     NotFound(String),
 }
 
+impl IpcError {
+    /// Whether this error is retriable (transient transport failure).
+    #[must_use]
+    pub const fn is_retriable(&self) -> bool {
+        matches!(self, Self::Connect(_) | Self::Timeout(_))
+    }
+
+    /// Whether this error is recoverable (could succeed on a different endpoint).
+    #[must_use]
+    pub const fn is_recoverable(&self) -> bool {
+        matches!(
+            self,
+            Self::Connect(_) | Self::Timeout(_) | Self::Io(_) | Self::NotFound(_)
+        )
+    }
+
+    /// Whether the remote explicitly reported "method not found".
+    #[must_use]
+    pub const fn is_method_not_found(&self) -> bool {
+        matches!(self, Self::RpcError { code: -32601, .. })
+    }
+
+    /// Wrap this error with a phase annotation.
+    #[must_use]
+    pub const fn in_phase(self, phase: IpcErrorPhase) -> PhasedIpcError {
+        PhasedIpcError { phase, inner: self }
+    }
+}
+
+/// An [`IpcError`] annotated with the [`IpcErrorPhase`] where it occurred.
+///
+/// Absorbed from primalSpring `ecoPrimal/src/ipc/error.rs`. Enables
+/// downstream code to make retry/fallback decisions based on both the
+/// error kind and the communication phase.
+#[derive(Debug, thiserror::Error)]
+#[error("{phase}: {inner}")]
+pub struct PhasedIpcError {
+    /// Which phase of the IPC exchange failed.
+    pub phase: IpcErrorPhase,
+    /// The underlying error.
+    pub inner: IpcError,
+}
+
 impl From<IpcError> for String {
     fn from(e: IpcError) -> Self {
         e.to_string()
+    }
+}
+
+// ── Method Normalization (SPRING_COMPOSITION_PATTERNS §1 — MUST) ────
+
+/// Known method-name prefixes that biomeOS or peer springs may prepend.
+const METHOD_PREFIXES: &[&str] = &["ludospring.", "barracuda.", "biomeos.", "game.ludospring."];
+
+/// Strip known spring/primal prefixes from a method name.
+///
+/// Iterates until stable — handles double-prefixed names like
+/// `biomeos.ludospring.game.evaluate_flow`. Per `SPRING_COMPOSITION_PATTERNS`
+/// §1, every spring's RPC dispatch MUST normalize before matching.
+#[must_use]
+pub fn normalize_method(method: &str) -> Cow<'_, str> {
+    let mut m = method;
+    loop {
+        let before = m;
+        for p in METHOD_PREFIXES {
+            if let Some(stripped) = m.strip_prefix(p) {
+                m = stripped;
+            }
+        }
+        if m == before {
+            break;
+        }
+    }
+    if m == method {
+        Cow::Borrowed(method)
+    } else {
+        Cow::Owned(m.to_owned())
     }
 }
 
@@ -350,6 +452,95 @@ mod tests {
         let e = IpcError::Io(inner);
         let src = e.source().expect("Io should chain to io::Error source");
         assert_eq!(src.to_string(), "bp");
+    }
+
+    // ── IpcErrorPhase + classification tests ────────────────────────
+
+    #[test]
+    fn ipc_error_is_retriable() {
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        assert!(IpcError::Connect(io).is_retriable());
+        let io = std::io::Error::new(std::io::ErrorKind::TimedOut, "timeout");
+        assert!(IpcError::Timeout(io).is_retriable());
+        assert!(!IpcError::NoResult.is_retriable());
+        assert!(!IpcError::Serialization("bad".into()).is_retriable());
+    }
+
+    #[test]
+    fn ipc_error_is_recoverable() {
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        assert!(IpcError::Connect(io).is_recoverable());
+        assert!(IpcError::NotFound("x".into()).is_recoverable());
+        assert!(!IpcError::NoResult.is_recoverable());
+    }
+
+    #[test]
+    fn ipc_error_is_method_not_found() {
+        assert!(
+            IpcError::RpcError {
+                code: -32601,
+                message: "method not found".into()
+            }
+            .is_method_not_found()
+        );
+        assert!(
+            !IpcError::RpcError {
+                code: -32000,
+                message: "app error".into()
+            }
+            .is_method_not_found()
+        );
+        assert!(!IpcError::NoResult.is_method_not_found());
+    }
+
+    #[test]
+    fn phased_ipc_error_display() {
+        let err = IpcError::NoResult.in_phase(IpcErrorPhase::Receive);
+        assert_eq!(err.to_string(), "receive: no result in response");
+        assert_eq!(err.phase, IpcErrorPhase::Receive);
+    }
+
+    #[test]
+    fn ipc_error_phase_display() {
+        assert_eq!(IpcErrorPhase::Connect.to_string(), "connect");
+        assert_eq!(IpcErrorPhase::Send.to_string(), "send");
+        assert_eq!(IpcErrorPhase::Receive.to_string(), "receive");
+        assert_eq!(IpcErrorPhase::Parse.to_string(), "parse");
+        assert_eq!(IpcErrorPhase::Timeout.to_string(), "timeout");
+    }
+
+    // ── Method normalization tests ───────────────────────────────────
+
+    #[test]
+    fn normalize_method_passthrough() {
+        assert_eq!(normalize_method("game.evaluate_flow"), "game.evaluate_flow");
+        assert_eq!(normalize_method("health.liveness"), "health.liveness");
+    }
+
+    #[test]
+    fn normalize_method_strips_prefix() {
+        assert_eq!(
+            normalize_method("ludospring.game.evaluate_flow"),
+            "game.evaluate_flow"
+        );
+        assert_eq!(
+            normalize_method("biomeos.game.evaluate_flow"),
+            "game.evaluate_flow"
+        );
+    }
+
+    #[test]
+    fn normalize_method_strips_double_prefix() {
+        assert_eq!(
+            normalize_method("biomeos.ludospring.game.evaluate_flow"),
+            "game.evaluate_flow"
+        );
+    }
+
+    #[test]
+    fn normalize_method_empty_and_unknown() {
+        assert_eq!(normalize_method(""), "");
+        assert_eq!(normalize_method("unknown.method"), "unknown.method");
     }
 
     // ── DispatchOutcome tests ────────────────────────────────────────

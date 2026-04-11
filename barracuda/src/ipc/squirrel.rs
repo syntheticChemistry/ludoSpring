@@ -14,6 +14,69 @@
 
 use super::neural_bridge::NeuralBridge;
 
+// ── Typed inference wire types (neuralSpring ↔ Squirrel) ────────────
+
+/// Request for `inference.complete` — text generation / chat completion.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InferenceCompleteRequest {
+    /// Chat messages in OpenAI-compatible format.
+    pub messages: Vec<serde_json::Value>,
+    /// Model identifier (`"default"` delegates to Squirrel's active model).
+    #[serde(default = "default_model")]
+    pub model: String,
+    /// Maximum tokens to generate.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u32>,
+    /// Sampling temperature.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    /// Per-request metadata for provenance and routing.
+    #[serde(default)]
+    pub metadata: serde_json::Value,
+}
+
+fn default_model() -> String {
+    "default".to_owned()
+}
+
+/// Request for `inference.embed` — generate embeddings.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InferenceEmbedRequest {
+    /// Input text(s) to embed.
+    pub input: Vec<String>,
+    /// Embedding model identifier.
+    #[serde(default = "default_model")]
+    pub model: String,
+}
+
+/// Response from `inference.embed`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InferenceEmbedResponse {
+    /// One embedding vector per input.
+    pub embeddings: Vec<Vec<f64>>,
+    /// Model that produced the embeddings.
+    pub model: String,
+}
+
+/// Request for `inference.models` — list available models.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InferenceModelsRequest {
+    /// Optional filter by capability (e.g. `"completion"`, `"embedding"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capability: Option<String>,
+}
+
+/// A model entry from `inference.models`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ModelInfo {
+    /// Model identifier.
+    pub id: String,
+    /// Capabilities this model supports.
+    pub capabilities: Vec<String>,
+    /// Whether the model is locally available (vs. remote-only).
+    pub local: bool,
+}
+
 /// Result of a Squirrel AI operation.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SquirrelResult {

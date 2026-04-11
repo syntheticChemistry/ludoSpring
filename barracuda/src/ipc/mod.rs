@@ -44,6 +44,7 @@ mod server;
 #[cfg(feature = "tarpc-ipc")]
 pub mod tarpc_service;
 
+pub mod composition;
 pub mod coralreef;
 pub mod discovery;
 pub mod nestgate;
@@ -52,12 +53,13 @@ pub mod squirrel;
 pub mod toadstool;
 
 pub use discovery::{
-    PrimalEndpoint, PrimalRegistry, call_primal, discover_by_capability, discover_primals,
+    DiscoveryResult, DiscoveryTier, PrimalEndpoint, PrimalRegistry, call_primal,
+    discover_by_capability, discover_primal_tiered, discover_primals,
     discover_primals_in_directories,
 };
 pub use envelope::{
-    DispatchOutcome, IpcError, JsonRpcError, JsonRpcRequest, JsonRpcResponse, RpcErrorBody,
-    extract_rpc_result,
+    DispatchOutcome, IpcError, IpcErrorPhase, JsonRpcError, JsonRpcRequest, JsonRpcResponse,
+    PhasedIpcError, RpcErrorBody, extract_rpc_result, normalize_method,
 };
 pub use handlers::dispatch;
 pub use neural_bridge::NeuralBridge;

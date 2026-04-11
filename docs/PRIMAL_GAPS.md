@@ -2,10 +2,24 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 11, 2026 (proto-nucleate + code review)
+**Last updated:** April 11, 2026 (composition evolution — absorbed primalSpring patterns)
 **Proto-nucleate:** `primalSpring/graphs/downstream/ludospring_proto_nucleate.toml`
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `meta_tier`
+
+### Composition Patterns Absorbed (April 11, 2026)
+
+| Pattern | Source | Location |
+|---|---|---|
+| `IpcErrorPhase` + `PhasedIpcError` | primalSpring `ecoPrimal/src/ipc/error.rs` | `ipc/envelope.rs` |
+| Method normalization (`normalize_method`) | `SPRING_COMPOSITION_PATTERNS` §1 | `ipc/envelope.rs` + `ipc/handlers/mod.rs` |
+| Two-tier dispatch (lifecycle / infra / science) | `SPRING_COMPOSITION_PATTERNS` §4 | `ipc/handlers/mod.rs` |
+| Tiered discovery (`DiscoveryTier`, `DiscoveryResult`) | `SPRING_COMPOSITION_PATTERNS` §3 | `ipc/discovery/mod.rs` |
+| `NicheDependency` table | `SPRING_COMPOSITION_PATTERNS` §11 | `niche.rs` |
+| Typed inference wire types | neuralSpring `inference.*` | `ipc/squirrel.rs` |
+| `CompositionReport` + live validation | `SPRING_COMPOSITION_PATTERNS` §5 | `ipc/composition.rs` |
+| `--port` CLI flag | plasmidBin startup contract | `bin/ludospring.rs` |
+| `is_retriable` / `is_recoverable` / `is_method_not_found` | primalSpring `PhasedIpcError` | `ipc/envelope.rs` |
 
 ---
 
@@ -146,24 +160,26 @@ ludoSpring's validated implementations
 ### GAP-09: `nest_atomic` Fragment Missing vs. Nest-Side IPC Stubs
 
 **Primals:** NestGate, rhizoCrypt, loamSpine, sweetGrass (nest-side surface)
-**Status:** OPEN — graph/code mismatch
+**Status:** DOCUMENTED — stubs are **aspirational / validation-only** until
+the proto-nucleate or a Nest overlay graph declares them
 **Proto-nucleate:** `fragments` declares only `tower_atomic`, `node_atomic`,
 `meta_tier` — there is **no** `nest_atomic` fragment. The graph includes a
 `nestgate` node for `storage.*`, but not the provenance trio.
 **Code:** ludoSpring ships local IPC stubs for the full nest-adjacent surface:
 `ipc/nestgate.rs`, `ipc/provenance/rhizocrypt.rs`, `ipc/provenance/loamspine.rs`,
-`ipc/provenance/sweetgrass.rs` (storage plus provenance).
-**Impact:** Audit and fragment-consistency tooling cannot classify this
-deployment as `nest_atomic`, while the codebase already anticipates those
-capabilities. Unclear whether nest-side stubs are first-class composition targets
-or aspirational until the graph declares them.
-**Reconciliation:** Either upgrade `ludospring_proto_nucleate.toml` to add
-`nest_atomic` to `fragments` and (when ready) optional trio nodes, **or**
-document the stubs explicitly as aspirational / validation-only until the
-proto-nucleate (or an overlay graph) includes them.
-**Related:** GAP-03, GAP-05
+`ipc/provenance/sweetgrass.rs` (storage plus provenance). The `NicheDependency`
+table in `niche.rs` marks trio primals as `required: false`.
+**Decision (April 2026):** ludoSpring does **not** add `nest_atomic` to fragments
+at this time. NestGate-without-trio is a valid partial composition. The stubs
+remain as aspirational wiring — they gracefully degrade when trio primals are
+absent, and will activate when the Nest overlay graph is composed by biomeOS.
+The `CompositionReport` in `ipc/composition.rs` tracks trio primals as
+"absent" until they are deployed. When rhizoCrypt ships UDS transport (GAP-06)
+and loamSpine resolves its startup panic (GAP-07), the overlay graph can be
+reconsidered.
+**Related:** GAP-03, GAP-05, GAP-06, GAP-07
 **Owner:** primalSpring graph maintainers / ludoSpring
-**Tracking:** This file
+**Tracking:** This file + `ipc/composition.rs` runtime validation
 
 ---
 

@@ -30,58 +30,20 @@ pub(super) type HandlerResult = Result<serde_json::Value, JsonRpcError>;
 ///
 /// Returns a serialized JSON-RPC response (success or error).
 /// Emits structured metrics for Neural API Pathway Learner (passive).
+///
+/// Follows the two-tier dispatch pattern from `SPRING_COMPOSITION_PATTERNS`
+/// §4: lifecycle/infrastructure first, then domain science. Method names
+/// are normalized (§1) before matching to handle prefixed calls from
+/// biomeOS or peer springs.
 #[must_use]
 pub fn dispatch(req: &JsonRpcRequest) -> String {
     let start = std::time::Instant::now();
+    let method = super::envelope::normalize_method(&req.method);
 
-    let result = match req.method.as_str() {
-        "health.check" | "lifecycle.health" | "health" => lifecycle::handle_health(req),
-        "health.liveness" => lifecycle::handle_liveness(req),
-        "health.readiness" => lifecycle::handle_readiness(req),
-        "lifecycle.status" => lifecycle::handle_lifecycle_status(req),
-        "lifecycle.register" => neural::handle_lifecycle_register(req),
-        "capability.list" => lifecycle::handle_capability_list(req),
-        "capability.deregister" => neural::handle_capability_deregister(req),
-        "capability.discover" => neural::handle_capability_discover(req),
-        "capability.call" => neural::handle_capability_call(req),
-        "visualization.render"
-        | "visualization.render.stream"
-        | "visualization.render.scene"
-        | "visualization.render.dashboard"
-        | "visualization.export"
-        | "visualization.validate"
-        | "interaction.subscribe" => neural::handle_visualization_delegation(req),
-        METHOD_EVALUATE_FLOW => science::handle_evaluate_flow(req),
-        METHOD_FITTS_COST => science::handle_fitts_cost(req),
-        METHOD_ENGAGEMENT => science::handle_engagement(req),
-        METHOD_GENERATE_NOISE => science::handle_generate_noise(req),
-        METHOD_ANALYZE_UI => science::handle_analyze_ui(req),
-        METHOD_ACCESSIBILITY => science::handle_accessibility(req),
-        METHOD_WFC_STEP => science::handle_wfc_step(req),
-        METHOD_DIFFICULTY_ADJUSTMENT => science::handle_difficulty_adjustment(req),
-        METHOD_BEGIN_SESSION => delegation::handle_begin_session(req),
-        METHOD_RECORD_ACTION => delegation::handle_record_action(req),
-        METHOD_COMPLETE_SESSION => delegation::handle_complete_session(req),
-        METHOD_POLL_TELEMETRY => delegation::handle_poll_telemetry(req),
-        METHOD_NPC_DIALOGUE => delegation::handle_npc_dialogue(req),
-        METHOD_NARRATE_ACTION => delegation::handle_narrate_action(req),
-        METHOD_VOICE_CHECK => delegation::handle_voice_check(req),
-        METHOD_PUSH_SCENE => delegation::handle_push_scene(req),
-        METHOD_QUERY_VERTICES => delegation::handle_query_vertices(req),
-        METHOD_MINT_CERTIFICATE => delegation::handle_mint_certificate(req),
-        METHOD_STORAGE_PUT => delegation::handle_storage_put(req),
-        METHOD_STORAGE_GET => delegation::handle_storage_get(req),
-        METHOD_TOOLS_LIST => mcp::handle_tools_list(req),
-        METHOD_TOOLS_CALL => mcp::handle_tools_call(req),
-        "game.gpu.fog_of_war" => gpu::handle_gpu_fog_of_war(req),
-        "game.gpu.tile_lighting" => gpu::handle_gpu_tile_lighting(req),
-        "game.gpu.pathfind" => gpu::handle_gpu_pathfind(req),
-        "game.gpu.perlin_terrain" => gpu::handle_gpu_perlin_terrain(req),
-        "game.gpu.batch_raycast" => gpu::handle_gpu_batch_raycast(req),
-        _ => {
-            return serialize_error(&JsonRpcError::method_not_found(&req.id, &req.method));
-        }
-    };
+    let result = dispatch_lifecycle(&method, req)
+        .or_else(|| dispatch_infrastructure(&method, req))
+        .or_else(|| dispatch_science(&method, req))
+        .unwrap_or_else(|| Err(JsonRpcError::method_not_found(&req.id, &req.method)));
 
     #[cfg(feature = "ipc")]
     {
@@ -102,6 +64,70 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         Ok(value) => serialize_response(&JsonRpcResponse::ok(&req.id, value)),
         Err(err) => serialize_error(&err),
     }
+}
+
+/// Tier 1: lifecycle and health probes.
+fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
+    Some(match method {
+        "health.check" | "lifecycle.health" | "health" => lifecycle::handle_health(req),
+        "health.liveness" => lifecycle::handle_liveness(req),
+        "health.readiness" => lifecycle::handle_readiness(req),
+        "lifecycle.status" => lifecycle::handle_lifecycle_status(req),
+        "lifecycle.register" => neural::handle_lifecycle_register(req),
+        "capability.list" => lifecycle::handle_capability_list(req),
+        "capability.deregister" => neural::handle_capability_deregister(req),
+        "capability.discover" => neural::handle_capability_discover(req),
+        _ => return None,
+    })
+}
+
+/// Tier 2: infrastructure — MCP, Neural API delegation, capability routing.
+fn dispatch_infrastructure(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
+    Some(match method {
+        "capability.call" => neural::handle_capability_call(req),
+        "visualization.render"
+        | "visualization.render.stream"
+        | "visualization.render.scene"
+        | "visualization.render.dashboard"
+        | "visualization.export"
+        | "visualization.validate"
+        | "interaction.subscribe" => neural::handle_visualization_delegation(req),
+        METHOD_TOOLS_LIST => mcp::handle_tools_list(req),
+        METHOD_TOOLS_CALL => mcp::handle_tools_call(req),
+        _ => return None,
+    })
+}
+
+/// Tier 3: domain science, delegation, and GPU dispatch.
+fn dispatch_science(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
+    Some(match method {
+        METHOD_EVALUATE_FLOW => science::handle_evaluate_flow(req),
+        METHOD_FITTS_COST => science::handle_fitts_cost(req),
+        METHOD_ENGAGEMENT => science::handle_engagement(req),
+        METHOD_GENERATE_NOISE => science::handle_generate_noise(req),
+        METHOD_ANALYZE_UI => science::handle_analyze_ui(req),
+        METHOD_ACCESSIBILITY => science::handle_accessibility(req),
+        METHOD_WFC_STEP => science::handle_wfc_step(req),
+        METHOD_DIFFICULTY_ADJUSTMENT => science::handle_difficulty_adjustment(req),
+        METHOD_BEGIN_SESSION => delegation::handle_begin_session(req),
+        METHOD_RECORD_ACTION => delegation::handle_record_action(req),
+        METHOD_COMPLETE_SESSION => delegation::handle_complete_session(req),
+        METHOD_POLL_TELEMETRY => delegation::handle_poll_telemetry(req),
+        METHOD_NPC_DIALOGUE => delegation::handle_npc_dialogue(req),
+        METHOD_NARRATE_ACTION => delegation::handle_narrate_action(req),
+        METHOD_VOICE_CHECK => delegation::handle_voice_check(req),
+        METHOD_PUSH_SCENE => delegation::handle_push_scene(req),
+        METHOD_QUERY_VERTICES => delegation::handle_query_vertices(req),
+        METHOD_MINT_CERTIFICATE => delegation::handle_mint_certificate(req),
+        METHOD_STORAGE_PUT => delegation::handle_storage_put(req),
+        METHOD_STORAGE_GET => delegation::handle_storage_get(req),
+        "game.gpu.fog_of_war" => gpu::handle_gpu_fog_of_war(req),
+        "game.gpu.tile_lighting" => gpu::handle_gpu_tile_lighting(req),
+        "game.gpu.pathfind" => gpu::handle_gpu_pathfind(req),
+        "game.gpu.perlin_terrain" => gpu::handle_gpu_perlin_terrain(req),
+        "game.gpu.batch_raycast" => gpu::handle_gpu_batch_raycast(req),
+        _ => return None,
+    })
 }
 
 fn serialize_response(resp: &JsonRpcResponse) -> String {
@@ -208,6 +234,26 @@ mod tests {
         let req = make_request("game.nonexistent", serde_json::json!({}));
         let resp = dispatch(&req);
         assert!(resp.contains("-32601"));
+    }
+
+    #[test]
+    fn dispatch_normalizes_prefixed_method() {
+        let req = make_request(
+            "ludospring.game.evaluate_flow",
+            serde_json::json!({"challenge": 0.5, "skill": 0.5}),
+        );
+        let resp = dispatch(&req);
+        assert!(resp.contains("flow"), "normalized dispatch: {resp}");
+    }
+
+    #[test]
+    fn dispatch_normalizes_double_prefixed_method() {
+        let req = make_request(
+            "biomeos.ludospring.game.fitts_cost",
+            serde_json::json!({"distance": 100.0, "target_width": 20.0}),
+        );
+        let resp = dispatch(&req);
+        assert!(resp.contains("movement_time_ms"), "double-prefix: {resp}");
     }
 
     #[test]

@@ -2,7 +2,7 @@
 
 **Date:** April 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V40 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 733 workspace tests (707 barracuda + 26 forge). Composition parity: Python→Rust→IPC→NUCLEUS validation chain complete; 10 gaps tracked. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). exp100 NUCLEUS composition parity (27 checks). exp099 IPC parity (13/13). 10 primal gaps documented (GAP-01 to GAP-10), including GAP-09 (nest_atomic stubs vs missing fragment) and GAP-10 (game.* provider identity). `config/capability_registry.toml` machine-readable SSOT.
+**Status:** V41 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 779 workspace tests. Composition evolution: 9 primalSpring patterns absorbed. Three-layer validation chain complete: Python validates Rust, Rust validates IPC, IPC validates NUCLEUS composition. Runtime `CompositionReport` probes all 11 niche dependencies. `IpcErrorPhase` + method normalization + tiered discovery + three-tier dispatch hardened for biomeOS routing. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10).
 
 ---
 
@@ -54,22 +54,34 @@ validated HCI models benefit every primal in the ecosystem.
 | IPC Composition Parity | Rust library == IPC within analytical tolerance (1e-10) | 099 | 13 |
 | NUCLEUS Composition Parity | Python → Rust → IPC → Primal golden chain, niche integrity, capability discovery | 100 | 27 |
 
-### NUCLEUS Composition Parity V40
+### Composition Evolution V41
 
-The **Three-Layer Validation Chain** is complete end-to-end: **Layer 1** — Python↔Rust parity (`barracuda/tests/python_parity.rs`); **Layer 2** — Rust↔IPC parity (exp099); **Layer 3** — NUCLEUS composition parity (exp100). Together they establish Python→Rust→IPC→NUCLEUS equivalence; 10 primal gaps (GAP-01–GAP-10) are tracked until closed.
-
-Each layer validates the next:
+V41 completes the evolution from **validation spring** to **composition spring**:
+Python was the validation target for Rust. Now both Python and Rust are validation
+targets for the ecoPrimal NUCLEUS composition patterns. The golden chain traces a
+single computation (e.g. Fitts cost) from the published paper's formula through
+Python baseline → Rust library → IPC serialization → NUCLEUS primal graph.
 
 ```
 Layer 1: Python ↔ Rust    (python_parity.rs — parity vs Python baselines)
 Layer 2: Rust ↔ IPC       (exp099: 13/13, analytical tolerance 1e-10)
 Layer 3: NUCLEUS          (exp100: 27 checks — niche integrity, health, capability, science, golden chain)
+Layer 4: Composition      (CompositionReport — runtime probe of all 11 niche dependencies)
 ```
 
-Python was the validation target for Rust. Now both Python and Rust are validation
-targets for the ecoPrimal NUCLEUS composition patterns. The golden chain in exp100
-traces a single computation (e.g. Fitts cost) through all three layers, proving
-equivalence from the published paper's formula to the deployed primal graph.
+**V41 patterns absorbed from primalSpring ecosystem:**
+- `IpcErrorPhase` + `PhasedIpcError` — retry/recovery classification for IPC failures
+- Method normalization — strips biomeOS/peer prefixes before dispatch
+- Three-tier dispatch — lifecycle → infrastructure → science routing
+- Tiered discovery — 6-tier socket resolution chain with structured `DiscoveryResult`
+- `NicheDependency` table — 11 typed proto-nucleate entries in `niche.rs`
+- `CompositionReport` — runtime probe of all dependencies, reports live/absent/degraded
+- Typed `inference.*` wire types — ready for neuralSpring WGSL ML evolution
+- `--port` CLI flag — plasmidBin/orchestrator binding
+
+These patterns make ludoSpring a **reference implementation** for how springs absorb
+and validate composition standards. Other springs can use ludoSpring as a template
+for their own composition evolution.
 
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference

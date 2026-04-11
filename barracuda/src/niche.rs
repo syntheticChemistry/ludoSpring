@@ -108,6 +108,96 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
     ("readiness", "health.readiness"),
 ];
 
+// ── Niche Dependencies (SPRING_COMPOSITION_PATTERNS §11 — MUST) ─────
+
+/// A primal dependency declared at the niche level.
+///
+/// Aligns with the proto-nucleate graph's node list and makes
+/// capability-based discovery self-documenting. Per
+/// `SPRING_COMPOSITION_PATTERNS` §11, every spring MUST declare its
+/// dependencies as a typed table.
+#[derive(Debug, Clone, Copy)]
+pub struct NicheDependency {
+    /// Primal name (e.g. `"toadstool"`).
+    pub name: &'static str,
+    /// Primal's role in this composition (e.g. `"compute"`).
+    pub role: &'static str,
+    /// Whether the primal is required for core operation.
+    pub required: bool,
+    /// Primary capability domain for discovery.
+    pub capability: &'static str,
+}
+
+/// Primal dependencies for this niche — mirrors proto-nucleate graph nodes.
+pub const DEPENDENCIES: &[NicheDependency] = &[
+    NicheDependency {
+        name: "beardog",
+        role: "security",
+        required: true,
+        capability: "crypto",
+    },
+    NicheDependency {
+        name: "songbird",
+        role: "discovery",
+        required: true,
+        capability: "discovery",
+    },
+    NicheDependency {
+        name: "toadstool",
+        role: "compute",
+        required: true,
+        capability: "compute",
+    },
+    NicheDependency {
+        name: "coralreef",
+        role: "shader",
+        required: true,
+        capability: "shader",
+    },
+    NicheDependency {
+        name: "barracuda",
+        role: "tensor",
+        required: true,
+        capability: "tensor",
+    },
+    NicheDependency {
+        name: "squirrel",
+        role: "ai",
+        required: true,
+        capability: "ai",
+    },
+    NicheDependency {
+        name: "petaltongue",
+        role: "visualization",
+        required: false,
+        capability: "visualization",
+    },
+    NicheDependency {
+        name: "nestgate",
+        role: "storage",
+        required: true,
+        capability: "storage",
+    },
+    NicheDependency {
+        name: "rhizocrypt",
+        role: "provenance_dag",
+        required: false,
+        capability: "dag",
+    },
+    NicheDependency {
+        name: "loamspine",
+        role: "permanence",
+        required: false,
+        capability: "certificate",
+    },
+    NicheDependency {
+        name: "sweetgrass",
+        role: "attribution",
+        required: false,
+        capability: "braid",
+    },
+];
+
 /// Neural API Enhancement 2: dependency hints for the Pathway Learner.
 ///
 /// Maps each capability to its required input parameters and any
@@ -321,6 +411,35 @@ mod tests {
         let costs = cost_estimates();
         for cap in CAPABILITIES {
             assert!(costs.get(cap).is_some(), "missing cost entry for {cap}");
+        }
+    }
+
+    #[test]
+    fn dependencies_table_complete() {
+        assert_eq!(DEPENDENCIES.len(), 11, "11 proto-nucleate primals");
+        let names: Vec<&str> = DEPENDENCIES.iter().map(|d| d.name).collect();
+        for expected in [
+            "beardog",
+            "songbird",
+            "toadstool",
+            "coralreef",
+            "barracuda",
+            "squirrel",
+            "petaltongue",
+            "nestgate",
+            "rhizocrypt",
+            "loamspine",
+            "sweetgrass",
+        ] {
+            assert!(names.contains(&expected), "missing dependency: {expected}");
+        }
+    }
+
+    #[test]
+    fn dependencies_have_capabilities() {
+        for dep in DEPENDENCIES {
+            assert!(!dep.capability.is_empty(), "{} needs capability", dep.name);
+            assert!(!dep.role.is_empty(), "{} needs role", dep.name);
         }
     }
 

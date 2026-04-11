@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 11, 2026
-**Total:** 100 experiments, 733 workspace tests (707 barracuda + 26 forge) (V40)
+**Total:** 100 experiments, 779 workspace tests (V41)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
-**Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true` (V40)
-**Live V40 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity (niche integrity, health probes, capability discovery, science parity, golden chain).
+**Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
+**Live V41 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. 9 composition patterns absorbed from primalSpring. Runtime `CompositionReport` probes all 11 niche dependencies.
 
 ---
 

@@ -3,7 +3,28 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V40).
+This project does not use SemVer — versions are session-sequential (V1–V41).
+
+## [V41] — 2026-04-11
+
+### Composition Evolution — Absorbed primalSpring patterns
+
+Absorbs 9 hardened composition patterns from primalSpring, plasmidBin, and
+`SPRING_COMPOSITION_PATTERNS.md`. Completes the evolution from validation
+spring to composition spring.
+
+- **`IpcErrorPhase` + `PhasedIpcError`:** Annotates IPC errors with communication phase (connect, send, receive, parse, timeout) for smart retry logic. `is_retriable()`, `is_recoverable()`, `is_method_not_found()` classification methods.
+- **Method normalization:** `normalize_method()` strips `ludospring.`, `barracuda.`, `biomeos.`, `game.ludospring.` prefixes before dispatch. Handles double-prefixed calls from biomeOS routing.
+- **Three-tier dispatch:** `dispatch_lifecycle()` → `dispatch_infrastructure()` → `dispatch_science()` replaces flat 40-arm match. Clean separation of concerns.
+- **Tiered discovery:** `DiscoveryTier` enum (6 tiers: ExplicitEnv → XdgFamily → XdgPlain → TempFallback → DirectoryScan → NeuralApiSweep). `DiscoveryResult` returns `Found { endpoint, tier }` or `NotFound { target, searched }`.
+- **`NicheDependency` table:** 11 typed proto-nucleate entries in `niche.rs` with name, role, required flag, and capability domain.
+- **Typed inference wire types:** `InferenceCompleteRequest`, `InferenceEmbedRequest`/`Response`, `InferenceModelsRequest`, `ModelInfo` in `ipc/squirrel.rs`.
+- **`CompositionReport`:** New `ipc/composition.rs` module probes all 11 niche dependencies at runtime, reports live/absent counts and composition completeness.
+- **`--port` CLI flag:** `ludospring server --port 8080` for plasmidBin/orchestrator binding.
+- **Tests:** 733 → **779** (+46 composition pattern tests). Zero clippy warnings. Zero regressions.
+- **PRIMAL_GAPS.md:** Updated with absorbed patterns table and GAP-09 nest_atomic decision (aspirational stubs).
+- **plasmidBin metadata:** Session version bumped to V41.
+- **Handoff:** V38/V39/V40 archived; V41 handoff to `infra/wateringHole/handoffs/`.
 
 ## [V40] — 2026-04-11
 

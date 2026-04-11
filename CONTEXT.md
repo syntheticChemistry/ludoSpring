@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 11, 2026 (V40 — audit & documentation cleanup)
+**Last updated:** April 11, 2026 (V41 — composition evolution, absorbed primalSpring patterns)
 
 ## What is this?
 
@@ -53,12 +53,16 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 605 barracuda lib + 102 barracuda `--tests` (incl. 23 ipc integration) + 26 forge = 733 `#[test]` functions
+- **Tests**: 779 workspace `#[test]` functions (V41 — up from 733 in V40)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
-- **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural}.rs`
-- **Discovery**: `ipc/discovery/{mod, capabilities}.rs` — 6-format capability parser, semantic aliases
+- **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural, gpu}.rs` — three-tier dispatch (lifecycle → infrastructure → science)
+- **Discovery**: `ipc/discovery/{mod, capabilities}.rs` — 6-tier tiered discovery (`DiscoveryTier`, `DiscoveryResult`), 6-format capability parser, semantic aliases
+- **IPC errors**: `IpcErrorPhase` + `PhasedIpcError` with `is_retriable()` / `is_recoverable()` / `is_method_not_found()` classification (primalSpring pattern)
+- **Method normalization**: `normalize_method()` strips spring/primal prefixes before dispatch (biomeOS routing compat)
+- **Composition validation**: `ipc/composition.rs` — `CompositionReport` probes all 11 niche dependencies at runtime
+- **Niche dependencies**: `NicheDependency` table in `niche.rs` — 11 typed proto-nucleate entries
 - **IPC timeouts**: env-configurable via `LUDOSPRING_RPC_TIMEOUT_SECS`, `LUDOSPRING_PROBE_TIMEOUT_MS`
 - **CI**: `.github/workflows/ci.yml` — fmt, clippy, test, doc, cargo deny, llvm-cov 90% floor
 - **Lints**: `clippy::pedantic`, `clippy::nursery`, `-D warnings`, `unsafe_code = "forbid"`, `missing_docs = "deny"`
@@ -81,6 +85,34 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `SPRING_AS_NICHE_DEPLOYMENT_STANDARD.md`
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
 - **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)
+
+## V41: Composition Evolution — Absorbed primalSpring patterns (April 11, 2026)
+
+V41 absorbs 9 hardened composition patterns from primalSpring, plasmidBin, and
+wateringHole `SPRING_COMPOSITION_PATTERNS.md`. ludoSpring now validates its
+primal composition at runtime the same way Python validates Rust and Rust
+validates IPC: **Python → Rust → IPC → NUCLEUS composition → deployment**.
+
+### Absorbed patterns
+
+| Pattern | Source | Module |
+|---------|--------|--------|
+| `IpcErrorPhase` + `PhasedIpcError` | primalSpring `ecoPrimal/src/ipc/error.rs` | `ipc/envelope.rs` |
+| Method normalization (`normalize_method`) | `SPRING_COMPOSITION_PATTERNS` §1 | `ipc/envelope.rs` + `ipc/handlers/mod.rs` |
+| Three-tier dispatch (lifecycle / infra / science) | `SPRING_COMPOSITION_PATTERNS` §4 | `ipc/handlers/mod.rs` |
+| Tiered discovery (`DiscoveryTier`, `DiscoveryResult`) | `SPRING_COMPOSITION_PATTERNS` §3 | `ipc/discovery/mod.rs` |
+| `NicheDependency` table (11 primals) | `SPRING_COMPOSITION_PATTERNS` §11 | `niche.rs` |
+| Typed inference wire types (`inference.*`) | neuralSpring | `ipc/squirrel.rs` |
+| `CompositionReport` + live validation | `SPRING_COMPOSITION_PATTERNS` §5 | `ipc/composition.rs` |
+| `--port` CLI flag (plasmidBin startup) | plasmidBin contract | `bin/ludospring.rs` |
+| `is_retriable` / `is_recoverable` / `is_method_not_found` | primalSpring `PhasedIpcError` | `ipc/envelope.rs` |
+
+### Metrics
+
+- **Tests**: 733 → **779** (+46 new composition pattern tests)
+- **Clippy**: zero warnings (ludoSpring workspace)
+- **Gaps**: 10 tracked (unchanged), nest_atomic documented as aspirational
+- **plasmidBin**: metadata bumped to V41, `--port` flag aligned
 
 ## V40: Audit & documentation cleanup (April 11, 2026)
 
@@ -193,4 +225,4 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 
 ### Handoff
 
-`wateringHole/handoffs/LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md`
+`wateringHole/handoffs/archive/LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md` (archived)
