@@ -108,7 +108,11 @@ fn discover_neural_api() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if name.starts_with("neural-api") && name.ends_with(".sock") {
+                    if name.starts_with("neural-api")
+                        && Path::new(name)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(path);
                     }
                 }
@@ -123,7 +127,7 @@ fn probe_primal_via_capability(
     na: &Path,
     domain: &str,
     operation: &str,
-    params: serde_json::Value,
+    params: &serde_json::Value,
     check_name: &str,
 ) {
     let resp = rpc_call(
@@ -161,6 +165,10 @@ fn probe_primal_via_capability(
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "continuous game loop probes and session lifecycle"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp088_continuous_game_loop");
     h.print_provenance(&[&PROVENANCE]);
@@ -188,7 +196,7 @@ fn cmd_validate() {
         &na,
         "tensor",
         "tensor.create",
-        serde_json::json!({"shape": [2], "data": [0.5, 0.5]}),
+        &serde_json::json!({"shape": [2], "data": [0.5, 0.5]}),
         "route_tensor_create",
     );
 
@@ -197,7 +205,7 @@ fn cmd_validate() {
         &na,
         "ai",
         "query",
-        serde_json::json!({"messages": [{"role": "user", "content": "test"}]}),
+        &serde_json::json!({"messages": [{"role": "user", "content": "test"}]}),
         "route_ai_narration",
     );
 
@@ -206,7 +214,7 @@ fn cmd_validate() {
         &na,
         "visualization",
         "render.scene",
-        serde_json::json!({"scene": {"type": "test"}}),
+        &serde_json::json!({"scene": {"type": "test"}}),
         "route_visualization_render",
     );
 
@@ -215,7 +223,7 @@ fn cmd_validate() {
         &na,
         "dag",
         "session.create",
-        serde_json::json!({"agent": "exp088", "metadata": {}}),
+        &serde_json::json!({"agent": "exp088", "metadata": {}}),
         "route_dag_provenance",
     );
 
@@ -224,7 +232,7 @@ fn cmd_validate() {
         &na,
         "crypto",
         "blake3_hash",
-        serde_json::json!({"data": "dGVzdA=="}),
+        &serde_json::json!({"data": "dGVzdA=="}),
         "route_crypto_integrity",
     );
 

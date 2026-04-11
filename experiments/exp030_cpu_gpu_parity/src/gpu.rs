@@ -5,6 +5,12 @@
 //! consolidate the repetitive wgpu pipeline boilerplate. Each public
 //! `gpu_run_*` function remains a focused orchestrator.
 
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss
+)]
+
 use crate::shaders::{
     DDA_RAYCAST_WGSL, ENGAGEMENT_BATCH_WGSL, FOG_OF_WAR_WGSL, PATHFIND_WAVEFRONT_WGSL,
     PERLIN_2D_WGSL, TILE_LIGHTING_WGSL,
@@ -154,7 +160,6 @@ fn dispatch_and_read_f32(
         });
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, bg, &[]);
-        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
         let workgroups = (n as u32).div_ceil(workgroup_size);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
@@ -277,7 +282,6 @@ pub fn gpu_run_u32_unary(ctx: &GpuContext, shader_src: &str, input: &[u32]) -> V
         });
         pass.set_pipeline(&pipeline);
         pass.set_bind_group(0, &bg, &[]);
-        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
         let workgroups = (n as u32).div_ceil(64);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
@@ -402,7 +406,6 @@ pub fn gpu_run_engagement_batch(ctx: &GpuContext, components: &[f32], weights: &
     dispatch_and_read_f32(ctx, &pipeline, &bg, &output_buf, n, 64, 0.0)
 }
 
-#[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
 pub fn gpu_run_raycaster(
     ctx: &GpuContext,
     map_data: &[u32],
@@ -513,7 +516,6 @@ fn dispatch_and_read_u32(
         });
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, bg, &[]);
-        #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
         let workgroups = (n as u32).div_ceil(workgroup_size);
         pass.dispatch_workgroups(workgroups, 1, 1);
     }
@@ -526,6 +528,10 @@ fn dispatch_and_read_u32(
 // ── Game shader GPU runners ────────────────────────────────────────
 
 /// Fog-of-war: per-tile visibility from viewer position.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "WGSL fog pass matches uniform + storage binding layout"
+)]
 pub fn gpu_run_fog_of_war(
     ctx: &GpuContext,
     grid_w: u32,
@@ -587,7 +593,6 @@ pub fn gpu_run_fog_of_war(
 }
 
 /// Tile lighting: per-tile light intensity from point sources.
-#[expect(clippy::cast_precision_loss, reason = "grid dims fit in f32")]
 pub fn gpu_run_tile_lighting(
     ctx: &GpuContext,
     grid_w: u32,

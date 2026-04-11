@@ -2,14 +2,14 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** April 10, 2026
-**Version:** V39 (100 experiments — 83 science + 17 composition, 745+ workspace tests. Three-layer validation chain complete: Python → Rust → IPC composition → NUCLEUS deployment. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, 30 capabilities). exp100 NUCLEUS composition parity (27 checks). exp099 IPC parity (13 checks). Live plasmidBin validation: 95/141 composition checks passing (67.4%). 8 primal gaps documented. `config/capability_registry.toml` machine-readable SSOT.)
+**Date:** April 11, 2026
+**Version:** V40 (Audit & cleanup: CI-green — clippy 0 workspace-wide, fmt clean, cargo-deny clean; 10 primal gaps documented (GAP-09 nest_atomic stubs, GAP-10 game.* identity); `neural.rs` refactored (228→3×<100 LOC); exp030–exp100 clippy-clean; `load_baseline_f64` tested; provenance verified. 100 experiments — 83 science + 17 composition; 733 workspace tests (605 barracuda lib + 102 test targets + 26 forge). Three-layer validation chain: Python → Rust → IPC → NUCLEUS. ecoBin plasmidBin v0.9.0, 30 capabilities. exp100 (27 checks), exp099 (13 checks). Live plasmidBin: 95/141 composition (67.4%). `config/capability_registry.toml` SSOT.)
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance). Harvested to `infra/plasmidBin/ludospring/` (v0.9.0, sha256-verified).
 **Niche Status:** Deployable — UniBin (7 subcommands), deploy graph, niche YAML, Neural API domain registration, 30 capabilities, MCP `tools.list`/`tools.call` (13 tool descriptors: 8 science + 5 delegation), optional `tarpc-ipc` feature, `config/capability_registry.toml` SSOT
-**Audit Status:** Complete — zero hardcoded primal names, zero hardcoded paths, zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance`, all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + `cargo-llvm-cov` gated at 90% floor, `deny.toml` fixed for cargo-deny 0.19
+**Audit Status:** Complete — zero hardcoded primal names, zero hardcoded paths, zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance`, all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + `cargo-llvm-cov` gated at 90% floor. **V40 cleanup:** clippy **207→0**, `cargo fmt` clean, `deny.toml` migrated for current cargo-deny, test counts refreshed (**733** total), **10** primal gaps documented (GAP-01–GAP-10 in `docs/PRIMAL_GAPS.md`).
 
 ---
 
@@ -393,12 +393,12 @@ cargo run --features ipc --bin ludospring -- version
 | Artifact | Path | Purpose |
 |----------|------|---------|
 | UniBin binary | `barracuda/src/bin/ludospring.rs` | `server`, `status`, `version`, `dashboard`, `live-session`, `tufte-dashboard` subcommands |
-| Deploy graph | `deploy/ludospring.toml` | primalSpring deploy fragment: 27 capabilities, optional trio + viz deps |
+| Deploy graph | `deploy/ludospring.toml` | primalSpring deploy fragment: 27 (+ 3 infrastructure), optional trio + viz deps |
 | Gaming niche graph | `graphs/ludospring_gaming_niche.toml` | Composes ludoSpring + petalTongue into gaming niche |
 | Niche YAML | `niches/ludospring-game.yaml` | BYOB definition with organisms and customization |
 | Self-knowledge | `barracuda/src/niche.rs` | Identity, capabilities, semantic mappings, cost estimates, socket resolution |
 | Neural bridge | `barracuda/src/ipc/neural_bridge.rs` | Typed IPC client for biomeOS Neural API |
-| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 27 capabilities (game + health), local/external classification |
+| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 27 (+ 3 infrastructure) (game + health), local/external classification |
 | Domain registration | `barracuda/src/biomeos/mod.rs` | `game` domain registration via NeuralBridge |
 
 **Compliance with Spring-as-Niche Deployment Standard:**
@@ -460,7 +460,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (696 barracuda lib + 23 ipc integration + 26 forge = 745 workspace)
+# All tests (605 barracuda lib + 102 barracuda --tests targets incl. ipc integration + 26 forge = 733)
 cargo test --workspace
 
 # Run a specific experiment
@@ -487,7 +487,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 696 barracuda lib + 23 ipc integration + 26 forge = 745 total, 0 failures |
+| `cargo test --workspace` | 605 barracuda lib + 102 barracuda `--tests` (incl. 23 ipc integration) + 26 forge = 733 total, 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 100 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
@@ -684,7 +684,7 @@ Python baselines validate **correctness parity** only — they produce reference
 values that the Rust implementation must match. exp034 measures Rust-only
 throughput; the "inline-python" comparison is Rust code that mirrors Python logic.
 
-The flow is: run Python → capture JSON → transcribe values into Rust tests → run Rust tests. There is no automated single-run Python-vs-barraCuda CPU comparison. `combined_baselines.json` is not loaded by Rust code at runtime (V25 adds `load_baseline_f64` for this purpose).
+The flow is: run Python → capture JSON → transcribe values into Rust tests → run Rust tests. There is no automated single-run Python-vs-barraCuda CPU comparison. `combined_baselines.json` is not loaded by default in experiments; `validation::load_baseline_f64` is available for opt-in runtime loads and is covered by unit tests in `barracuda/src/validation/mod.rs`.
 
 ### Industry GPU Benchmarks
 GPU validation (exp030) confirms CPU-vs-GPU **correctness parity** via wgpu/WGSL.

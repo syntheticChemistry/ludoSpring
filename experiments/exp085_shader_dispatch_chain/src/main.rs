@@ -130,7 +130,11 @@ fn discover_socket(patterns: &[&str]) -> Option<PathBuf> {
                         .split('.')
                         .next()
                         .unwrap_or("");
-                    if !prefix.is_empty() && n.starts_with(prefix) && n.ends_with(".sock") {
+                    if !prefix.is_empty()
+                        && n.starts_with(prefix)
+                        && p.extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -140,6 +144,10 @@ fn discover_socket(patterns: &[&str]) -> Option<PathBuf> {
     None
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential shader dispatch checks"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp085_shader_dispatch_chain");
     h.print_provenance(&[&PROVENANCE]);

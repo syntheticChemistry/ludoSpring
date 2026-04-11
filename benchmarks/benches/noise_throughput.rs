@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! BM-002: Noise field generation throughput.
 
+#![allow(missing_docs)]
+
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ludospring_benchmarks::noise;
 

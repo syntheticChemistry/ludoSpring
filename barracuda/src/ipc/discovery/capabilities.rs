@@ -103,25 +103,29 @@ pub fn generate_semantic_aliases(caps: &mut Vec<String>) {
     if has("crypto", &snapshot) && !has("crypto.hash", &snapshot) {
         additions.push("crypto.hash".to_owned());
     }
-    if has("crypto", &snapshot) && !has("crypto.encrypt", &snapshot) {
-        if has("crypto.chacha20_poly1305_encrypt", &snapshot) {
-            additions.push("crypto.encrypt".to_owned());
-        }
+    if has("crypto", &snapshot)
+        && !has("crypto.encrypt", &snapshot)
+        && has("crypto.chacha20_poly1305_encrypt", &snapshot)
+    {
+        additions.push("crypto.encrypt".to_owned());
     }
-    if has("crypto", &snapshot) && !has("crypto.decrypt", &snapshot) {
-        if has("crypto.chacha20_poly1305_decrypt", &snapshot) {
-            additions.push("crypto.decrypt".to_owned());
-        }
+    if has("crypto", &snapshot)
+        && !has("crypto.decrypt", &snapshot)
+        && has("crypto.chacha20_poly1305_decrypt", &snapshot)
+    {
+        additions.push("crypto.decrypt".to_owned());
     }
-    if has("crypto", &snapshot) && !has("crypto.sign", &snapshot) {
-        if has("crypto.sign_ed25519", &snapshot) {
-            additions.push("crypto.sign".to_owned());
-        }
+    if has("crypto", &snapshot)
+        && !has("crypto.sign", &snapshot)
+        && has("crypto.sign_ed25519", &snapshot)
+    {
+        additions.push("crypto.sign".to_owned());
     }
-    if has("crypto", &snapshot) && !has("crypto.verify", &snapshot) {
-        if has("crypto.verify_ed25519", &snapshot) {
-            additions.push("crypto.verify".to_owned());
-        }
+    if has("crypto", &snapshot)
+        && !has("crypto.verify", &snapshot)
+        && has("crypto.verify_ed25519", &snapshot)
+    {
+        additions.push("crypto.verify".to_owned());
     }
 
     caps.extend(additions);

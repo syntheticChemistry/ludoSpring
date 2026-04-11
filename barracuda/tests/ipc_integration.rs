@@ -12,6 +12,7 @@
 //! evaluate locally.
 
 #![cfg(feature = "ipc")]
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 mod ipc_test_util;
 
@@ -21,6 +22,7 @@ use std::time::Duration;
 
 use ipc_test_util::IpcTestServer;
 
+#[allow(clippy::needless_pass_by_value)]
 fn send_rpc(stream: &mut UnixStream, method: &str, params: serde_json::Value) -> serde_json::Value {
     let req = serde_json::json!({
         "jsonrpc": "2.0",
@@ -97,7 +99,9 @@ fn fitts_cost_returns_movement_time() {
         serde_json::json!({"distance": 100.0, "target_width": 10.0}),
     );
     let result = resp.get("result").expect("result field");
-    let mt = result.get("movement_time_ms").and_then(|v| v.as_f64());
+    let mt = result
+        .get("movement_time_ms")
+        .and_then(serde_json::Value::as_f64);
     assert!(mt.is_some(), "should return movement_time_ms");
     assert!(mt.expect("mt") > 0.0, "movement time should be positive");
 
@@ -115,13 +119,15 @@ fn capability_list_returns_all_capabilities() {
     let resp = send_rpc(&mut stream, "capability.list", serde_json::json!({}));
     let result = resp.get("result").expect("result field");
 
-    let total = result.get("total_capabilities").and_then(|v| v.as_u64());
+    let total = result
+        .get("total_capabilities")
+        .and_then(serde_json::Value::as_u64);
     assert!(
         total.is_some_and(|n| n > 0),
         "should have total_capabilities > 0"
     );
 
-    let domains = result.get("domains").and_then(|v| v.as_array());
+    let domains = result.get("domains").and_then(serde_json::Value::as_array);
     assert!(
         domains.is_some_and(|d| !d.is_empty()),
         "should have domains from capability_domains"
@@ -668,7 +674,7 @@ fn composition_wfc_matches_library() {
     let result = resp.get("result").expect("result");
 
     assert_eq!(
-        result["options_removed"].as_u64().unwrap() as usize,
+        usize::try_from(result["options_removed"].as_u64().unwrap()).unwrap(),
         expected_removed
     );
 

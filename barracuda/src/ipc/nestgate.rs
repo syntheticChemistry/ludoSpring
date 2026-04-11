@@ -173,6 +173,7 @@ fn unavailable() -> StorageResult {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -262,7 +263,7 @@ mod tests {
     fn key_only_args_single_key() {
         let a = super::key_only_args("my-key");
         assert_eq!(a["key"], "my-key");
-        assert_eq!(a.as_object().map(|m| m.len()), Some(1));
+        assert_eq!(a.as_object().map(serde_json::Map::len), Some(1));
     }
 
     #[test]

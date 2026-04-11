@@ -56,24 +56,23 @@ fn main() {
     let tol = tolerances::ANALYTICAL_TOL;
 
     eprintln!("[exp100] Three-layer validation: Python → Rust → IPC → NUCLEUS");
-    eprintln!("[exp100] Niche: {} (domain: {})", niche::NICHE_NAME, niche::NICHE_DOMAIN);
+    eprintln!(
+        "[exp100] Niche: {} (domain: {})",
+        niche::NICHE_NAME,
+        niche::NICHE_DOMAIN
+    );
     eprintln!("[exp100] Capabilities: {}", niche::CAPABILITIES.len());
 
     // ── Layer 0: Self-knowledge integrity ───────────────────────────
     validate_niche_integrity(&mut h);
 
     // ── Layer 1: Discover ludoSpring primal via ecosystem conventions ─
-    let socket = match discover_primal() {
-        Some(s) => {
-            eprintln!("[exp100] Discovered ludoSpring at {}", s.display());
-            s
-        }
-        None => {
-            eprintln!("[exp100] ludoSpring not running — skip (exit 2)");
-            mark_skip(&mut h);
-            std::process::exit(2);
-        }
+    let Some(socket) = discover_primal() else {
+        eprintln!("[exp100] ludoSpring not running — skip (exit 2)");
+        mark_skip(&mut h);
+        std::process::exit(2);
     };
+    eprintln!("[exp100] Discovered ludoSpring at {}", socket.display());
 
     // ── Layer 2: Health probes (biomeOS discovery prerequisite) ──────
     validate_health_probes(&mut h, &socket);
@@ -101,7 +100,10 @@ fn validate_niche_integrity(h: &mut ValidationHarness) {
     h.check_bool("niche_name", niche::NICHE_NAME == "ludospring");
     h.check_bool("niche_domain", niche::NICHE_DOMAIN == "game");
     h.check_bool("capabilities_count", niche::CAPABILITIES.len() == 27);
-    h.check_bool("semantic_mappings_count", niche::SEMANTIC_MAPPINGS.len() == 27);
+    h.check_bool(
+        "semantic_mappings_count",
+        niche::SEMANTIC_MAPPINGS.len() == 27,
+    );
 
     let all_mapped = niche::SEMANTIC_MAPPINGS
         .iter()
@@ -109,11 +111,15 @@ fn validate_niche_integrity(h: &mut ValidationHarness) {
     h.check_bool("mappings_consistent", all_mapped);
 
     let deps = niche::operation_dependencies();
-    let all_deps = niche::CAPABILITIES.iter().all(|cap| deps.get(cap).is_some());
+    let all_deps = niche::CAPABILITIES
+        .iter()
+        .all(|cap| deps.get(cap).is_some());
     h.check_bool("dependencies_complete", all_deps);
 
     let costs = niche::cost_estimates();
-    let all_costs = niche::CAPABILITIES.iter().all(|cap| costs.get(cap).is_some());
+    let all_costs = niche::CAPABILITIES
+        .iter()
+        .all(|cap| costs.get(cap).is_some());
     h.check_bool("costs_complete", all_costs);
 }
 
@@ -156,9 +162,7 @@ fn rpc_call(
     let stream =
         UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
-        .set_read_timeout(Some(Duration::from_secs(
-            tolerances::RPC_TIMEOUT_SECS,
-        )))
+        .set_read_timeout(Some(Duration::from_secs(tolerances::RPC_TIMEOUT_SECS)))
         .map_err(|e| format!("timeout: {e}"))?;
     let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
     let mut payload = serde_json::to_string(&request).map_err(|e| format!("ser: {e}"))?;
@@ -430,7 +434,10 @@ fn validate_golden_chain(h: &mut ValidationHarness, socket: &Path, tol: f64) {
     ) {
         Ok(result) => {
             let ipc_id = result["index_of_difficulty"].as_f64().unwrap_or(f64::NAN);
-            h.check_bool("golden_rust_ipc_fitts", (rust_fitts_id - ipc_id).abs() <= tol);
+            h.check_bool(
+                "golden_rust_ipc_fitts",
+                (rust_fitts_id - ipc_id).abs() <= tol,
+            );
             h.check_bool("golden_py_ipc_fitts", (py_fitts_id - ipc_id).abs() <= tol);
         }
         Err(e) => {
@@ -443,17 +450,33 @@ fn validate_golden_chain(h: &mut ValidationHarness, socket: &Path, tol: f64) {
 
 fn mark_skip(h: &mut ValidationHarness) {
     let checks = [
-        "niche_name", "niche_domain", "capabilities_count",
-        "semantic_mappings_count", "mappings_consistent",
-        "dependencies_complete", "costs_complete",
-        "health_liveness", "health_readiness",
-        "capability_list_complete", "has_game_science",
-        "has_gpu_caps", "has_health_caps",
-        "nucleus_flow_balanced", "nucleus_flow_anxiety", "nucleus_flow_boredom",
-        "nucleus_fitts_100_10", "nucleus_fitts_200_20", "nucleus_fitts_500_50",
-        "nucleus_engagement", "nucleus_noise",
-        "golden_py_rust_flow", "golden_rust_ipc_flow", "golden_py_ipc_flow",
-        "golden_py_rust_fitts", "golden_rust_ipc_fitts", "golden_py_ipc_fitts",
+        "niche_name",
+        "niche_domain",
+        "capabilities_count",
+        "semantic_mappings_count",
+        "mappings_consistent",
+        "dependencies_complete",
+        "costs_complete",
+        "health_liveness",
+        "health_readiness",
+        "capability_list_complete",
+        "has_game_science",
+        "has_gpu_caps",
+        "has_health_caps",
+        "nucleus_flow_balanced",
+        "nucleus_flow_anxiety",
+        "nucleus_flow_boredom",
+        "nucleus_fitts_100_10",
+        "nucleus_fitts_200_20",
+        "nucleus_fitts_500_50",
+        "nucleus_engagement",
+        "nucleus_noise",
+        "golden_py_rust_flow",
+        "golden_rust_ipc_flow",
+        "golden_py_ipc_flow",
+        "golden_py_rust_fitts",
+        "golden_rust_ipc_fitts",
+        "golden_py_ipc_fitts",
     ];
     for name in checks {
         h.check_bool(name, false);

@@ -2,6 +2,7 @@
 //! Shared helpers for IPC integration tests: temp Unix sockets and `IpcServer` lifecycle.
 
 #![cfg(feature = "ipc")]
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -26,6 +27,11 @@ pub struct IpcTestServer {
 
 impl IpcTestServer {
     /// Binds [`IpcServer`](ludospring_barracuda::ipc::IpcServer) on `ipc_test_socket_dir()/server.sock`.
+    ///
+    /// # Panics
+    ///
+    /// If the socket directory cannot be created, or the server thread fails to bind the socket
+    /// within the startup wait window.
     pub fn start() -> Self {
         let dir = ipc_test_socket_dir();
         std::fs::create_dir_all(&dir).expect("ipc test socket dir");

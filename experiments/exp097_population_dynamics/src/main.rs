@@ -98,7 +98,11 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -124,6 +128,11 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    clippy::cast_possible_truncation,
+    reason = "validation harness; tensor JSON payloads use f32"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp097_population_dynamics");
     h.print_provenance(&[&PROVENANCE]);

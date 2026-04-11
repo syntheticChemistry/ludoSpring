@@ -308,6 +308,7 @@ fn compute_result_from_state_field(result: serde_json::Value) -> ComputeResult {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -403,7 +404,7 @@ mod tests {
             gpu_available: true,
             gpu_name: "Mock GPU".to_string(),
             f64_supported: false,
-            raw: raw.clone(),
+            raw,
         };
         assert!(caps.gpu_available);
         assert_eq!(caps.gpu_name, "Mock GPU");

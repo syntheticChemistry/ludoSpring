@@ -458,6 +458,7 @@ impl ValidationResult {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -618,6 +619,51 @@ mod tests {
     #[test]
     fn exit_skipped_code_is_two() {
         assert_eq!(super::EXIT_SKIPPED, 2);
+    }
+
+    // ── load_baseline_f64 ───────────────────────────────────────────
+
+    #[test]
+    fn load_baseline_f64_reads_nested_numeric() {
+        let path = std::env::temp_dir().join(format!(
+            "ludospring_load_baseline_ok_{}.json",
+            std::process::id()
+        ));
+        std::fs::write(&path, r#"{"outer":{"inner":2.5}}"#).unwrap();
+        let v = load_baseline_f64(&path, "outer.inner").unwrap();
+        assert!((v - 2.5).abs() < f64::EPSILON);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn load_baseline_f64_rejects_missing_path() {
+        let path = std::env::temp_dir().join("ludospring_load_baseline_missing_xyz.json");
+        let err = load_baseline_f64(&path, "a.b").unwrap_err();
+        assert!(err.contains("read") || err.contains("No such file"));
+    }
+
+    #[test]
+    fn load_baseline_f64_rejects_missing_key() {
+        let path = std::env::temp_dir().join(format!(
+            "ludospring_load_baseline_key_{}.json",
+            std::process::id()
+        ));
+        std::fs::write(&path, r#"{"only":1}"#).unwrap();
+        let err = load_baseline_f64(&path, "missing.leaf").unwrap_err();
+        assert!(err.contains("key not found"));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn load_baseline_f64_rejects_non_numeric_leaf() {
+        let path = std::env::temp_dir().join(format!(
+            "ludospring_load_baseline_type_{}.json",
+            std::process::id()
+        ));
+        std::fs::write(&path, r#"{"x":{"y":"not-a-number"}}"#).unwrap();
+        let err = load_baseline_f64(&path, "x.y").unwrap_err();
+        assert!(err.contains("not numeric"));
+        let _ = std::fs::remove_file(&path);
     }
 
     // ── Legacy ValidationResult tests ───────────────────────────────

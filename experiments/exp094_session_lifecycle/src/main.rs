@@ -22,6 +22,7 @@
 //! - ludoSpring graph: `graphs/composition/session_provenance.toml`
 //! - ludoSpring capability: `game.begin_session`, `game.record_action`, `game.complete_session`
 
+use base64::Engine;
 use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
@@ -77,7 +78,11 @@ fn discover_primal(prefix: &str) -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with(prefix) && n.ends_with(".sock") {
+                    if n.starts_with(prefix)
+                        && Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -103,6 +108,10 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "sequential JSON-RPC session lifecycle validation steps"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp094_session_lifecycle");
     h.print_provenance(&[&PROVENANCE]);
@@ -115,19 +124,19 @@ fn cmd_validate() {
         "  beardog:    {}",
         beardog
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  rhizocrypt: {}",
         rhizocrypt
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  nestgate:   {}",
         nestgate
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
 
     let Some(bd) = beardog else {
@@ -141,7 +150,6 @@ fn cmd_validate() {
         "experiment": "exp094",
         "timestamp": "2026-03-30T12:00:00Z"
     });
-    use base64::Engine;
     let hash_resp = rpc_call(
         &bd,
         "crypto.blake3_hash",

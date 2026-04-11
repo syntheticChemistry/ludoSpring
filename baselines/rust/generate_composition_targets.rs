@@ -33,7 +33,7 @@ use ludospring_barracuda::metrics::engagement::{EngagementSnapshot, compute_enga
 use ludospring_barracuda::procedural::noise::{fbm_2d, perlin_2d};
 use ludospring_barracuda::tolerances;
 
-fn main() {
+fn main() -> Result<(), serde_json::Error> {
     let mut targets = serde_json::Map::new();
 
     targets.insert("game.evaluate_flow".to_owned(), generate_flow_targets());
@@ -65,10 +65,8 @@ fn main() {
     );
 
     let json = serde_json::Value::Object(targets);
-    println!(
-        "{}",
-        serde_json::to_string_pretty(&json).expect("serialize targets")
-    );
+    println!("{}", serde_json::to_string_pretty(&json)?);
+    Ok(())
 }
 
 fn generate_flow_targets() -> serde_json::Value {

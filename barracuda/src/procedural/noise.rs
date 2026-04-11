@@ -347,7 +347,10 @@ mod tests {
             -y - z,
         ];
         for (i, &exp) in expected.iter().enumerate() {
-            #[expect(clippy::cast_possible_truncation)]
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "test loop index is 0..16, fits u8"
+            )]
             let val = grad3(i as u8, x, y, z);
             assert!(
                 (val - exp).abs() < f64::EPSILON,

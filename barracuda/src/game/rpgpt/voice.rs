@@ -188,6 +188,7 @@ pub fn select_voice_outputs(mut outputs: Vec<VoiceOutput>, max_voices: usize) ->
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -306,14 +307,14 @@ mod tests {
     fn temperature_ranges_valid() {
         for v in VoiceId::ALL {
             let t = v.recommended_temperature();
-            assert!((0.0..=1.0).contains(&t), "{:?} has temperature {t}", v);
+            assert!((0.0..=1.0).contains(&t), "{v:?} has temperature {t}");
         }
     }
 
     #[test]
     fn max_tokens_positive() {
         for v in VoiceId::ALL {
-            assert!(v.max_tokens() > 0, "{:?} has zero max_tokens", v);
+            assert!(v.max_tokens() > 0, "{v:?} has zero max_tokens");
         }
     }
 }

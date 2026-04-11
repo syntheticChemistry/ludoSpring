@@ -78,6 +78,7 @@ const fn shader_success(data: serde_json::Value) -> ShaderResult {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -102,7 +103,7 @@ mod tests {
         };
         let json = serde_json::to_string(&r).unwrap();
         let back: ShaderResult = serde_json::from_str(&json).unwrap();
-        assert_eq!(back.available, true);
+        assert!(back.available);
         assert_eq!(back.data["binary"], "cached");
     }
 }

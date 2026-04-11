@@ -17,15 +17,17 @@ fn squirrel_chat_metadata(data: &serde_json::Value) -> (String, u32) {
     let model = data
         .get("model")
         .and_then(serde_json::Value::as_str)
-        .map(str::to_owned)
-        .unwrap_or_else(|| "local".to_owned());
+        .map_or_else(|| "local".to_owned(), str::to_owned);
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "clamped to u32::MAX before cast"
+    )]
     let tokens = data
         .pointer("/usage/total_tokens")
         .or_else(|| data.get("total_tokens"))
         .or_else(|| data.get("tokens"))
         .and_then(serde_json::Value::as_u64)
-        .map(|n| n.min(u64::from(u32::MAX)) as u32)
-        .unwrap_or(0);
+        .map_or(0, |n| n.min(u64::from(u32::MAX)) as u32);
     (model, tokens)
 }
 

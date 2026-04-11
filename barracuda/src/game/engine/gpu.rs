@@ -256,6 +256,7 @@ pub struct PathfindResult {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -328,6 +329,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_precision_loss)]
     fn lighting_params_clamps_to_8() {
         let params = TileLightingParams {
             grid_w: 10,

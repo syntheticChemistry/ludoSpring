@@ -77,7 +77,11 @@ fn discover_primal(prefix: &str) -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with(prefix) && n.ends_with(".sock") {
+                    if n.starts_with(prefix)
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -100,7 +104,11 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -124,6 +132,8 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(clippy::too_many_lines, reason = "NUCLEUS session validation harness")]
+#[expect(clippy::cast_precision_loss, reason = "tick index 0..10 fits in f64")]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp098_nucleus_game_session");
     h.print_provenance(&[&PROVENANCE]);
@@ -139,37 +149,42 @@ fn cmd_validate() {
         "  barracuda:   {}",
         barracuda
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".into(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  squirrel:    {}",
-        squirrel
-            .as_ref()
-            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+        squirrel.as_ref().map_or_else(
+            || "NOT FOUND (optional)".into(),
+            |p| p.display().to_string(),
+        )
     );
     eprintln!(
         "  petaltongue: {}",
-        petaltongue
-            .as_ref()
-            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+        petaltongue.as_ref().map_or_else(
+            || "NOT FOUND (optional)".into(),
+            |p| p.display().to_string(),
+        )
     );
     eprintln!(
         "  rhizocrypt:  {}",
-        rhizocrypt
-            .as_ref()
-            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+        rhizocrypt.as_ref().map_or_else(
+            || "NOT FOUND (optional)".into(),
+            |p| p.display().to_string(),
+        )
     );
     eprintln!(
         "  beardog:     {}",
-        beardog
-            .as_ref()
-            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+        beardog.as_ref().map_or_else(
+            || "NOT FOUND (optional)".into(),
+            |p| p.display().to_string(),
+        )
     );
     eprintln!(
         "  nestgate:    {}",
-        nestgate
-            .as_ref()
-            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+        nestgate.as_ref().map_or_else(
+            || "NOT FOUND (optional)".into(),
+            |p| p.display().to_string(),
+        )
     );
 
     let Some(bc) = barracuda else {
@@ -185,9 +200,9 @@ fn cmd_validate() {
     let engagement_scores = [0.8, 0.6, 0.7, 0.5, 0.9];
     let engagement_weights = [0.25, 0.20, 0.20, 0.20, 0.15];
 
-    for tick in 0..TICK_COUNT {
+    for (tick, _) in (0..TICK_COUNT).enumerate() {
         let tick_start = Instant::now();
-        let skill_challenge_delta = 0.1 * f64::from(tick as i32 - 5);
+        let skill_challenge_delta = 0.1 * (tick as f64 - 5.0);
 
         // 1. barraCuda: flow evaluation
         let flow = rpc_call(
@@ -273,7 +288,7 @@ fn cmd_validate() {
 
     // Check 2: Per-tick science latency within 60Hz budget
     let max_latency = tick_latencies.iter().copied().fold(0.0_f64, f64::max);
-    eprintln!("  tick latencies (ms): {:?}", tick_latencies);
+    eprintln!("  tick latencies (ms): {tick_latencies:?}");
     eprintln!("  max tick latency: {max_latency:.2}ms (budget: {FRAME_BUDGET_MS:.2}ms)");
     h.check_bool("nucleus_tick_latency_budget", max_latency < FRAME_BUDGET_MS);
 

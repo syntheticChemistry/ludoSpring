@@ -85,7 +85,11 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -116,6 +120,7 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(clippy::too_many_lines, reason = "validation harness")]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp091_pcg_noise_composition");
     h.print_provenance(&[&PROVENANCE]);
@@ -153,7 +158,7 @@ fn cmd_validate() {
     if let Some(val) = p2d_mid.as_ref().ok().and_then(extract_result_f64) {
         h.check_bool(
             "perlin2d_nonlattice_range",
-            val >= PERLIN_RANGE_MIN && val <= PERLIN_RANGE_MAX,
+            (PERLIN_RANGE_MIN..=PERLIN_RANGE_MAX).contains(&val),
         );
     } else {
         h.check_bool("perlin2d_nonlattice_range", false);
@@ -195,7 +200,7 @@ fn cmd_validate() {
     if let Some(val) = p3d_mid.as_ref().ok().and_then(extract_result_f64) {
         h.check_bool(
             "perlin3d_nonlattice_range",
-            val >= PERLIN_RANGE_MIN && val <= PERLIN_RANGE_MAX,
+            (PERLIN_RANGE_MIN..=PERLIN_RANGE_MAX).contains(&val),
         );
     } else {
         h.check_bool("perlin3d_nonlattice_range", false);

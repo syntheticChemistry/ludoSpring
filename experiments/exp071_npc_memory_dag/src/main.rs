@@ -118,6 +118,7 @@ fn build_rich_history() -> Vec<NpcInteraction> {
     history
 }
 
+#[expect(clippy::cast_precision_loss, reason = "memory node counts fit in f64")]
 fn validate_recent_window(h: &mut ValidationHarness) {
     let history = build_rich_history();
     let assembler = NpcMemoryAssembler::default();
@@ -219,6 +220,7 @@ fn validate_historical_summary(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(clippy::cast_precision_loss, reason = "memory node counts fit in f64")]
 fn validate_empty_history(h: &mut ValidationHarness) {
     let assembler = NpcMemoryAssembler::default();
     let ctx = assembler.assemble("Maren", &[], "esteem", "internal_conflict");
@@ -246,6 +248,7 @@ fn validate_empty_history(h: &mut ValidationHarness) {
     h.check_bool("empty_summary_is_empty", ctx.historical_summary.is_empty());
 }
 
+#[expect(clippy::cast_precision_loss, reason = "memory node counts fit in f64")]
 fn validate_few_interactions(h: &mut ValidationHarness) {
     let interactions = build_session("maren", 1, 3, InteractionType::Dialogue, 0.5);
     let assembler = NpcMemoryAssembler::default();
@@ -265,8 +268,7 @@ fn validate_secret_reveals_excluded_from_routine(h: &mut ValidationHarness) {
     let assembler = NpcMemoryAssembler::default();
     let ctx = assembler.assemble("Maren", &history, "esteem", "internal_conflict");
 
-    let routine_count_str = ctx.historical_summary.clone();
-    let has_count = routine_count_str.contains("routine interactions");
+    let has_count = ctx.historical_summary.contains("routine interactions");
     h.check_bool("routine_count_in_summary", has_count);
 }
 

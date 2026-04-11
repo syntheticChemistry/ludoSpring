@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
-**Date:** April 10, 2026
-**Total:** 100 experiments, 745+ workspace tests (V39)
+**Date:** April 11, 2026
+**Total:** 100 experiments, 733 workspace tests (707 barracuda + 26 forge) (V40)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
-**Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true` (V39)
-**Live V39 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity (niche integrity, health probes, capability discovery, science parity, golden chain).
+**Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true` (V40)
+**Live V40 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity (niche integrity, health probes, capability discovery, science parity, golden chain).
 
 ---
 
@@ -444,7 +444,7 @@ composition that Python baselines serve for Rust code.
 
 *Requires live ludoSpring server on UDS. Graceful dry-mode when no server running.
 
-### Track 30: NUCLEUS Composition Parity — Python → Rust → IPC → Primal (V39)
+### Track 30: NUCLEUS Composition Parity — Python → Rust → IPC → Primal (V40)
 
 Three-layer chain complete. Python validated Rust; now both Python and Rust
 validate primal composition patterns through the full NUCLEUS graph.
@@ -607,7 +607,7 @@ cargo run -p ludospring-exp098                             # NUCLEUS Complete se
 # Requires live ludoSpring server
 cargo run -p ludospring-exp099                             # Composition validation (13 checks)
 
-# Run NUCLEUS Composition Parity (Track 30, V39)
+# Run NUCLEUS Composition Parity (Track 30, V40)
 # Requires live ludoSpring server (exit 2 = skip)
 cargo run -p ludospring-exp100                             # NUCLEUS parity (27 checks)
 

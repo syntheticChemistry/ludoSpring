@@ -807,7 +807,9 @@ fn detect_mislabeled_specimens(
         let cert_type_str = system
             .cert_attributes(cert_id)
             .and_then(|a| a.get("sample_type").map(String::as_str));
-        let collected_type_str = system.collected_sample_type(cert_id).map(|t| t.as_str());
+        let collected_type_str = system
+            .collected_sample_type(cert_id)
+            .map(SampleType::as_str);
 
         if let (Some(cert_st), Some(coll_st)) = (cert_type_str, collected_type_str) {
             if cert_st != coll_st {

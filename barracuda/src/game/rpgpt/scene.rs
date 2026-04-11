@@ -275,6 +275,7 @@ pub struct NarrationEntry {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -382,7 +383,10 @@ mod tests {
             actions_remaining: 3,
         };
         assert_eq!(grid.entities.len(), 2);
-        assert_eq!(grid.width * grid.height, grid.terrain.len() as u32);
+        assert_eq!(
+            (grid.width as usize) * (grid.height as usize),
+            grid.terrain.len()
+        );
     }
 
     #[test]

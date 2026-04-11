@@ -22,6 +22,10 @@ const PROVENANCE: BaselineProvenance = BaselineProvenance {
     command: "cargo run -p exp069_internal_voice_personality",
 };
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "small fixed voice counts; compared to literal constants"
+)]
 fn validate_voice_identity(h: &mut ValidationHarness) {
     let all = VoiceId::ALL;
 
@@ -153,6 +157,10 @@ fn validate_voice_check_evaluation(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "selection length checked against small literals"
+)]
 fn validate_selection_priority(h: &mut ValidationHarness) {
     let outputs = vec![
         VoiceOutput {
@@ -194,6 +202,10 @@ fn validate_selection_priority(h: &mut ValidationHarness) {
     h.check_bool("high_roll_15_third", selected[2].voice == VoiceId::Empathy);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "selection length checked against small literals"
+)]
 fn validate_empty_and_single(h: &mut ValidationHarness) {
     let empty: Vec<VoiceOutput> = vec![];
     let selected = select_voice_outputs(empty, 3);

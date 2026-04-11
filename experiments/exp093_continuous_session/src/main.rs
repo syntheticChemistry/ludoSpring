@@ -72,7 +72,11 @@ fn discover_neural_api() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if name.starts_with("neural-api") && name.ends_with(".sock") {
+                    if name.starts_with("neural-api")
+                        && std::path::Path::new(name)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(path);
                     }
                 }
@@ -95,7 +99,11 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -140,7 +148,7 @@ fn cmd_validate() {
     let mut flow_results = Vec::new();
 
     for tick in 0..10 {
-        let skill_challenge_delta = 0.1 * f64::from(tick as i32 - 5);
+        let skill_challenge_delta = 0.1 * (f64::from(tick) - 5.0);
 
         let start = Instant::now();
         let flow = rpc_call(
@@ -162,7 +170,7 @@ fn cmd_validate() {
 
     // Check per-tick latency is within 60Hz budget
     let max_latency = flow_latencies.iter().copied().fold(0.0_f64, f64::max);
-    eprintln!("  flow tick latencies (ms): {:?}", flow_latencies);
+    eprintln!("  flow tick latencies (ms): {flow_latencies:?}");
     eprintln!("  max flow tick latency: {max_latency:.2}ms (budget: {FRAME_BUDGET_MS:.2}ms)");
     h.check_bool("flow_tick_latency", max_latency < FRAME_BUDGET_MS);
 

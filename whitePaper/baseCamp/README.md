@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** April 10, 2026
+**Date:** April 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V39 — 100 experiments, 30 IPC capabilities, 745+ workspace tests. Three-layer validation chain complete: Python → Rust → IPC composition → NUCLEUS deployment. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). exp100 NUCLEUS composition parity (27 checks). exp099 IPC parity (13/13). 8 primal gaps documented (GAP-01 to GAP-08). `config/capability_registry.toml` machine-readable SSOT.
+**Status:** V40 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 733 workspace tests (707 barracuda + 26 forge). Composition parity: Python→Rust→IPC→NUCLEUS validation chain complete; 10 gaps tracked. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). exp100 NUCLEUS composition parity (27 checks). exp099 IPC parity (13/13). 10 primal gaps documented (GAP-01 to GAP-10), including GAP-09 (nest_atomic stubs vs missing fragment) and GAP-10 (game.* provider identity). `config/capability_registry.toml` machine-readable SSOT.
 
 ---
 
@@ -54,14 +54,16 @@ validated HCI models benefit every primal in the ecosystem.
 | IPC Composition Parity | Rust library == IPC within analytical tolerance (1e-10) | 099 | 13 |
 | NUCLEUS Composition Parity | Python → Rust → IPC → Primal golden chain, niche integrity, capability discovery | 100 | 27 |
 
-### NUCLEUS Composition Parity V39
+### NUCLEUS Composition Parity V40
 
-The validation chain is now complete. Each layer validates the next:
+The **Three-Layer Validation Chain** is complete end-to-end: **Layer 1** — Python↔Rust parity (`barracuda/tests/python_parity.rs`); **Layer 2** — Rust↔IPC parity (exp099); **Layer 3** — NUCLEUS composition parity (exp100). Together they establish Python→Rust→IPC→NUCLEUS equivalence; 10 primal gaps (GAP-01–GAP-10) are tracked until closed.
+
+Each layer validates the next:
 
 ```
-Layer 1: Python → Rust    (47 parity tests, 7 baseline scripts)
-Layer 2: Rust → IPC       (exp099: 13/13, analytical tolerance 1e-10)
-Layer 3: IPC → NUCLEUS    (exp100: 27 checks — niche integrity, health, capability, science, golden chain)
+Layer 1: Python ↔ Rust    (python_parity.rs — parity vs Python baselines)
+Layer 2: Rust ↔ IPC       (exp099: 13/13, analytical tolerance 1e-10)
+Layer 3: NUCLEUS          (exp100: 27 checks — niche integrity, health, capability, science, golden chain)
 ```
 
 Python was the validation target for Rust. Now both Python and Rust are validation
@@ -136,7 +138,7 @@ Nine experiments implementing the first playable plane of the RPGPT system:
 - **Zero `#[allow()]`** in production — all clippy lints centralized in `Cargo.toml`
 - **WGSL shaders extracted**: 11 standalone `.wgsl` files in `exp030/shaders/` for toadStool absorption
 - **petalTongue** integration: 3 dashboard binaries, all 7 `GameChannelType` channels wired
-- **GPU promotion**: 8 modules Tier A (pure math, embarrassingly parallel). Tier A WGSL shaders validated in exp030 (Perlin 2D, fBm, engagement batch, DDA raycaster — 24/24 GPU parity checks). metalForge evolved to capability-based routing (SubstrateKind, Capability, route(), fallback_chain). NPU→GPU direct PCIe transfer model validated. toadStool JSON-RPC 2.0 dispatch client wire format validated. biomeOS DeploymentGraph (5-node, 60Hz budget) validated.
+- **GPU promotion**: 8 modules Tier A (pure math, embarrassingly parallel). Tier A WGSL shaders validated in exp030 (Perlin 2D, fBm, engagement batch, DDA raycaster — 32/32 GPU parity checks). metalForge evolved to capability-based routing (SubstrateKind, Capability, route(), fallback_chain). NPU→GPU direct PCIe transfer model validated. toadStool JSON-RPC 2.0 dispatch client wire format validated. biomeOS DeploymentGraph (5-node, 60Hz budget) validated.
 - **NCBI integration**: Direct E-utilities access (esearch, esummary) for QS gene data — nestgate provider documented but needs module wiring
 - **NUCLEUS atomics**: Tower Atomic (BearDog + Songbird) validated via JSON-RPC 2.0 over Unix sockets
 - **wetSpring cross-spring**: Anderson QS disorder model (W = 3.5H' + 8.0·O₂) with Perlin noise landscapes and game metrics
@@ -240,7 +242,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # 674 barracuda + 47 parity + 19 proptest + 11 IPC integration
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 733 workspace tests (707 barracuda + 26 forge)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike
@@ -248,7 +250,7 @@ cargo run --bin exp026_game_telemetry -- validate   # telemetry protocol: 13/13 
 cargo run --bin exp027_veloren_adapter -- validate  # Veloren adapter: 9/9 checks
 cargo run --bin exp028_fishfolk_adapter -- validate # Fish Folk adapter: 7/7 checks
 cargo run --bin exp029_abstreet_adapter -- validate # A/B Street adapter: 8/8 checks
-cargo run --bin exp030_cpu_gpu_parity               # CPU-vs-GPU parity: 24/24 checks
+cargo run --bin exp030_cpu_gpu_parity               # CPU-vs-GPU parity: 32/32 checks
 cargo run --bin exp031_dispatch_routing              # dispatch routing: 10/10 checks
 cargo run --bin exp032_mixed_hardware                # mixed hardware: 18/18 checks
 cargo run --bin exp033_nucleus_pipeline              # NUCLEUS pipeline: 19/19 checks

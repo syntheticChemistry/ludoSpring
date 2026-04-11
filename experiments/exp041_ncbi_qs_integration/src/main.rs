@@ -120,17 +120,18 @@ fn cmd_validate() {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    match args.get(1).map(String::as_str) {
-        Some("validate") | None => cmd_validate(),
-        Some(other) => {
-            eprintln!("Unknown command: {other}");
+    if let Some(cmd) = args.get(1).map(String::as_str) {
+        if cmd != "validate" {
+            eprintln!("Unknown command: {cmd}");
             eprintln!("Usage: exp041_ncbi_qs_integration [validate]");
             std::process::exit(1);
         }
     }
+    cmd_validate();
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

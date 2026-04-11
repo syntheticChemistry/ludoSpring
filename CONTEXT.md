@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 10, 2026 (V39 — NUCLEUS composition parity)
+**Last updated:** April 11, 2026 (V40 — audit & documentation cleanup)
 
 ## What is this?
 
@@ -26,7 +26,7 @@ experiments, and GPU-accelerated computation where it matters.
 - **Transport**: XDG-compliant socket path resolution, capability-based discovery
 - **No cross-primal Rust imports**: all coordination via runtime IPC
 
-## Capabilities (27 JSON-RPC methods + MCP tools)
+## Capabilities (30 total: 27 in `niche.rs` + 3 infrastructure — `health.check`, `lifecycle.status`, `capability.list`; MCP tools)
 
 Game science: `game.evaluate_flow`, `game.fitts_cost`, `game.engagement`,
 `game.generate_noise`, `game.wfc_step`, `game.analyze_ui`,
@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 696 barracuda lib + 23 barracuda integration + 26 forge = 745 `#[test]` functions
+- **Tests**: 605 barracuda lib + 102 barracuda `--tests` (incl. 23 ipc integration) + 26 forge = 733 `#[test]` functions
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
@@ -82,7 +82,18 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
 - **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)
 
-## V39: NUCLEUS Composition Parity (April 10, 2026)
+## V40: Audit & documentation cleanup (April 11, 2026)
+
+Workspace-wide quality pass and doc alignment with `docs/PRIMAL_GAPS.md`:
+
+- **Clippy:** 207 warnings → 0 (`cargo clippy --workspace --all-features -- -D warnings`)
+- **`deny.toml`:** Migrated for current `cargo-deny` / workspace policy
+- **Tests:** Authoritative counts — 605 barracuda lib + 102 `--tests` targets + 26 forge = **733** total
+- **Gaps:** **10** primal gaps (GAP-01–GAP-10); see `docs/PRIMAL_GAPS.md` — notably **GAP-09** (nest_atomic stubs), **GAP-10** (`game.*` identity)
+- **`ipc/handlers/neural.rs`:** Split for maintainability (was one large module; now sub–100 LOC units)
+- **Experiments exp030–exp100:** Clippy-clean; `load_baseline_f64` coverage verified
+
+## V39: NUCLEUS Composition Parity (April 11, 2026)
 
 V39 evolves ludoSpring from Layer 2 (Rust→IPC) into full Layer 3 (IPC→NUCLEUS)
 validation. Python validated Rust; now both Python and Rust validate the primal
@@ -104,7 +115,7 @@ composition patterns.
 - **Forge naming**: `fraud_batch` → `anti_cheat_batch`
 - **Makefile parity**: `make test` now includes forge (matches CI)
 
-## V38: Composition Validation Chain (April 10, 2026)
+## V38: Composition Validation Chain (April 11, 2026)
 
 ludoSpring ships a UniBin (`ludospring`) with `server`, `status`, `version`,
 and visualization subcommands for local IPC deployment. The ecoBin is now
@@ -148,6 +159,8 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 | 099 | Composition validation | 13/13* | Rust library == IPC parity (all 8 science methods) |
 
 ### Primal gap matrix
+
+**10 primal gaps (GAP-01–GAP-10)** — canonical registry and remediation detail: [`docs/PRIMAL_GAPS.md`](docs/PRIMAL_GAPS.md) (**GAP-09:** nest_atomic stubs; **GAP-10:** `game.*` identity). The table below summarizes composition-experiment impact (live plasmidBin / exp084–098); IDs in the doc may order topics differently.
 
 | Gap | Owner | Severity | Checks gained when fixed |
 |-----|-------|----------|--------------------------|

@@ -227,6 +227,7 @@ pub fn chemistry_palette() -> Result<BlockPalette, String> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

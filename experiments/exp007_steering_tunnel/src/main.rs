@@ -30,7 +30,7 @@ fn validate_known_values(h: &mut ValidationHarness) {
         tolerances::STEERING_A_MS,
         tolerances::STEERING_B_MS,
     );
-    let expected = tolerances::STEERING_A_MS + tolerances::STEERING_B_MS * (100.0 / 20.0);
+    let expected = tolerances::STEERING_B_MS.mul_add(100.0 / 20.0, tolerances::STEERING_A_MS);
     h.check_abs(
         "steering T = a + b*(D/W) (Python baseline)",
         t,

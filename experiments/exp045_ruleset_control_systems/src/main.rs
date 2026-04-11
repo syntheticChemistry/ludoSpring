@@ -35,6 +35,10 @@ const PROVENANCE: BaselineProvenance = BaselineProvenance {
 // Validation
 // ===========================================================================
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential checks"
+)]
 fn validate_pf2e(h: &mut ValidationHarness) {
     let pf2e = Pathfinder2e;
     let summary = pf2e.summary();

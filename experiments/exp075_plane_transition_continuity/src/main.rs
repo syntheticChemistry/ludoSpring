@@ -156,6 +156,7 @@ fn validate_transition_vertex(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(clippy::cast_precision_loss, reason = "inventory counts fit in f64")]
 fn validate_inventory_preservation(h: &mut ValidationHarness) {
     let pre = pre_transition_snapshot();
     let mut post = pre.clone();
@@ -202,6 +203,7 @@ fn validate_disposition_preservation(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(clippy::cast_precision_loss, reason = "condition counts fit in f64")]
 fn validate_condition_mapping_dialogue_to_tactical(h: &mut ValidationHarness) {
     let conditions = vec![
         Condition {
@@ -240,6 +242,7 @@ fn validate_condition_mapping_dialogue_to_tactical(h: &mut ValidationHarness) {
     h.check_bool("exhausted_becomes_fatigued", fatigued.is_some());
 }
 
+#[expect(clippy::cast_precision_loss, reason = "condition counts fit in f64")]
 fn validate_condition_mapping_tactical_to_dialogue(h: &mut ValidationHarness) {
     let conditions = vec![
         Condition {
@@ -263,6 +266,10 @@ fn validate_condition_mapping_tactical_to_dialogue(h: &mut ValidationHarness) {
     h.check_bool("wounded_persists_to_dialogue", wounded.is_some());
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "knowledge entry counts fit in f64"
+)]
 fn validate_knowledge_carries_forward(h: &mut ValidationHarness) {
     let pre = pre_transition_snapshot();
     let mut post = pre.clone();
@@ -274,11 +281,10 @@ fn validate_knowledge_carries_forward(h: &mut ValidationHarness) {
         v.check_passed(&TransitionIssue::KnowledgeLost),
     );
 
-    let cross_plane: Vec<&KnowledgeEntry> =
-        post.knowledge.iter().filter(|k| k.cross_plane).collect();
+    let cross_plane_count = post.knowledge.iter().filter(|k| k.cross_plane).count();
     h.check_abs(
         "cross_plane_knowledge_count",
-        cross_plane.len() as f64,
+        cross_plane_count as f64,
         2.0,
         0.0,
     );
@@ -300,6 +306,10 @@ fn validate_hp_preservation(h: &mut ValidationHarness) {
     h.check_abs("hp_max_52", f64::from(post.character.hp_max), 52.0, 0.0);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "item and condition counts fit in f64"
+)]
 fn validate_round_trip(h: &mut ValidationHarness) {
     // Dialogue -> Tactical
     let pre = pre_transition_snapshot();
@@ -360,9 +370,13 @@ fn validate_unmapped_conditions_dropped(h: &mut ValidationHarness) {
     h.check_bool("unmapped_dropped", mapped.is_empty());
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "condition and item counts fit in f64"
+)]
 fn validate_no_state_leak(h: &mut ValidationHarness) {
     let pre = pre_transition_snapshot();
-    let post = pre.clone();
+    let post = pre;
 
     // Plane-specific metadata should not leak
     let sword = post.inventory.iter().find(|i| i.id == "sword_01");

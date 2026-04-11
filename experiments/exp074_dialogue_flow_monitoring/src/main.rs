@@ -108,6 +108,10 @@ fn validate_flow_no_dda(h: &mut ValidationHarness) {
     h.check_bool("flow_minimal_dda", adjustment.abs() < 0.3);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "exchange counts are tiny; compared to literal constants"
+)]
 fn validate_dialogue_tracker_flow_integration(h: &mut ValidationHarness) {
     let mut tracker = DialogueFlowTracker::default();
 
@@ -149,6 +153,10 @@ fn validate_dialogue_tracker_flow_integration(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "stall counts are tiny; compared to literal constants"
+)]
 fn validate_stall_detection(h: &mut ValidationHarness) {
     let mut tracker = DialogueFlowTracker::default();
 
@@ -203,6 +211,14 @@ fn validate_option_overload(h: &mut ValidationHarness) {
     );
 
     // Hick's law shows this is too many
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "option counts from tracker are small integers"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "avg_options is non-negative from DialogueFlowTracker"
+    )]
     let rt_avg = hick_reaction_time(tracker.avg_options() as usize, 200.0, 150.0);
     h.check_bool("hick_warns_overload", rt_avg > 550.0);
 }

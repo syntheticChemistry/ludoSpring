@@ -24,6 +24,7 @@
 //! - ludoSpring graph: `graphs/composition/session_provenance.toml`
 
 use base64::Engine;
+use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::{BaselineProvenance, ValidationHarness};
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
@@ -79,7 +80,11 @@ fn discover_primal(prefix: &str) -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with(prefix) && n.ends_with(".sock") {
+                    if n.starts_with(prefix)
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -105,6 +110,10 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential checks"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp095_content_ownership");
     h.print_provenance(&[&PROVENANCE]);
@@ -118,25 +127,25 @@ fn cmd_validate() {
         "  beardog:    {}",
         beardog
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  loamspine:  {}",
         loamspine
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  rhizocrypt: {}",
         rhizocrypt
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  sweetgrass: {}",
         sweetgrass
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
 
     let (Some(bd), Some(ls), Some(rc), Some(sg)) = (beardog, loamspine, rhizocrypt, sweetgrass)
@@ -241,14 +250,13 @@ fn cmd_validate() {
         .ok()
         .and_then(|r| r.pointer("/result/shares"))
         .and_then(|v| v.as_array())
-        .map(|arr| {
+        .is_some_and(|arr| {
             let sum: f64 = arr
                 .iter()
                 .filter_map(|s| s.get("share").and_then(serde_json::Value::as_f64))
                 .sum();
-            (sum - 1.0).abs() < 1e-10
-        })
-        .unwrap_or(false);
+            (sum - 1.0).abs() < tolerances::ANALYTICAL_TOL
+        });
     h.check_bool("attribution_shares_sum_to_one", shares_ok);
 
     // ── Step 6: Query certificate still exists ───────────────

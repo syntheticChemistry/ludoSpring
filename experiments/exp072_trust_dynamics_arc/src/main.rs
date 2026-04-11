@@ -30,6 +30,10 @@ const PROVENANCE: BaselineProvenance = BaselineProvenance {
     command: "cargo run -p exp072_trust_dynamics_arc",
 };
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "NPC fixture: trust model and narrative data"
+)]
 fn maren() -> NpcPersonality {
     NpcPersonality {
         id: "maren_blacksmith".into(),
@@ -298,6 +302,10 @@ fn validate_betrayal_asymmetry(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_arc_progression(h: &mut ValidationHarness) {
     let npc = maren();
 
@@ -337,6 +345,10 @@ fn validate_arc_progression(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_quorum_threshold(h: &mut ValidationHarness) {
     // Simulate Quorum mechanic: when multiple NPCs share high need,
     // collective event triggers (exp059 math)
@@ -366,6 +378,10 @@ fn validate_quorum_threshold(h: &mut ValidationHarness) {
     h.check_bool("quorum_not_reached_below", !quorum_not_reached);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_trust_history(h: &mut ValidationHarness) {
     let mut npc = maren();
     npc.trust.apply_delta("Bring rare materials", 0.5);

@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 10, 2026 (V39)
+**Last Updated:** April 11, 2026 — **V40 is current** (V39 handoff doc below remains the published NUCLEUS parity snapshot until a V40-named handoff ships)
 
 ---
 
@@ -25,12 +25,12 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V39** | [Central: LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md) | Apr 10 | NUCLEUS composition parity (Python → Rust → IPC → Primal), ecoBin harvest to plasmidBin v0.9.0, exp100 (27 checks), capability_registry.toml, 8 primal gaps, actions for all primal + spring teams |
+| **V40** (doc V39) | [Central: LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md) | Apr 10 | **Current: V40** — NUCLEUS composition parity (Python → Rust → IPC → Primal), ecoBin harvest to plasmidBin v0.9.0, exp100 (27 checks), capability_registry.toml, **10 primal gaps**, actions for all primal + spring teams |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 745+ workspace tests, V39 NUCLEUS composition parity)
+ludoSpring (game science, 100 experiments, 733 workspace tests, V40 NUCLEUS composition parity)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -83,7 +83,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## V39 Composition Gap Matrix
+## V40 Composition Gap Matrix (10 gaps; V39 doc snapshot)
 
 | GAP | Owner | Severity | Impact |
 |-----|-------|----------|--------|
@@ -98,7 +98,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **Score**: 95/141 (67.4%) + exp099 13/13 + exp100 27 checks (NUCLEUS parity). Projected with all fixes: ~143/154 (92.9%).
 
-See [V39 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md) for full details per team.
+See [V39 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md) for full details per team (filename V39; **V40 is current** for gap count and status).
 
 ## Archive
 

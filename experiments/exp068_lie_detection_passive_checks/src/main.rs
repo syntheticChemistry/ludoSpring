@@ -55,7 +55,8 @@ fn maren_knowledge() -> KnowledgeBounds {
 fn simulate_checks(skill_modifier: i32, dc: u8, trials: usize) -> f64 {
     let mut successes = 0usize;
     for i in 0..trials {
-        let die_roll = (i % 20) as i32 + 1; // deterministic 1-20 cycling
+        // deterministic 1–20 cycling; `i % 20` always fits in i32
+        let die_roll = i32::try_from(i % 20).map_or(1, |v| v + 1);
         let result = VoiceCheckResult::evaluate(
             VoiceId::Perception,
             skill_modifier,
@@ -80,22 +81,17 @@ fn validate_detection_rates(h: &mut ValidationHarness) {
     let trials = 1000;
     let dc = 15u8;
 
-    let rate_skill_5 = simulate_checks(5, dc, trials);
-    let rate_skill_10 = simulate_checks(10, dc, trials);
-    let rate_skill_15 = simulate_checks(15, dc, trials);
-    let rate_skill_20 = simulate_checks(20, dc, trials);
+    let rates = [5, 10, 15, 20].map(|m| simulate_checks(m, dc, trials));
 
-    h.check_bool("low_skill_lower_rate", rate_skill_5 < rate_skill_10);
-    h.check_bool("mid_skill_lower_than_high", rate_skill_10 < rate_skill_15);
-    h.check_bool("high_skill_lower_than_max", rate_skill_15 <= rate_skill_20);
-    h.check_bool("max_skill_high_rate", rate_skill_20 > 0.9);
-    h.check_bool("low_skill_low_rate", rate_skill_5 < 0.6);
+    h.check_bool("low_skill_lower_rate", rates[0] < rates[1]);
+    h.check_bool("mid_skill_lower_than_high", rates[1] < rates[2]);
+    h.check_bool("high_skill_lower_than_max", rates[2] <= rates[3]);
+    h.check_bool("max_skill_high_rate", rates[3] > 0.9);
+    h.check_bool("low_skill_low_rate", rates[0] < 0.6);
 
     h.check_bool(
         "monotonic_skill_rate",
-        rate_skill_5 <= rate_skill_10
-            && rate_skill_10 <= rate_skill_15
-            && rate_skill_15 <= rate_skill_20,
+        rates[0] <= rates[1] && rates[1] <= rates[2] && rates[2] <= rates[3],
     );
 }
 

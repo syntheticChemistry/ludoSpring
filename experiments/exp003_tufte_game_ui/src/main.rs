@@ -142,6 +142,7 @@ fn rts_hud() -> Vec<UiElement> {
     ]
 }
 
+#[expect(clippy::cast_precision_loss, reason = "small UI element counts")]
 fn main() {
     let mut h = ValidationHarness::new("exp003_tufte_game_ui");
     h.print_provenance(&[&PROVENANCE]);

@@ -68,24 +68,21 @@ fn cmd_validate() {
         let hash_test = "aGVsbG8gd29ybGQ=";
         let hash_params = serde_json::json!({ "algorithm": "blake3", "data": hash_test });
         let start = Instant::now();
-        match rpc_call(&ep.socket, "crypto.hash", &hash_params) {
-            Ok(resp) => {
-                let latency = start.elapsed().as_millis();
-                let has_result = resp.get("result").is_some();
-                let hash_val = resp
-                    .pointer("/result/hash")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("");
+        if let Ok(resp) = rpc_call(&ep.socket, "crypto.hash", &hash_params) {
+            let latency = start.elapsed().as_millis();
+            let has_result = resp.get("result").is_some();
+            let hash_val = resp
+                .pointer("/result/hash")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
 
-                h.check_bool("crypto_rpc_responds", has_result);
-                h.check_bool("blake3_hash_nonempty", !hash_val.is_empty());
-                h.check_bool("crypto_latency_under_100ms", latency < 100);
-            }
-            Err(_) => {
-                h.check_bool("crypto_rpc_responds", false);
-                h.check_bool("blake3_hash_nonempty", false);
-                h.check_bool("crypto_latency_under_100ms", false);
-            }
+            h.check_bool("crypto_rpc_responds", has_result);
+            h.check_bool("blake3_hash_nonempty", !hash_val.is_empty());
+            h.check_bool("crypto_latency_under_100ms", latency < 100);
+        } else {
+            h.check_bool("crypto_rpc_responds", false);
+            h.check_bool("blake3_hash_nonempty", false);
+            h.check_bool("crypto_latency_under_100ms", false);
         }
 
         // --- Check 4: Deterministic hashing ---

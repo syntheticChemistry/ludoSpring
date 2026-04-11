@@ -245,6 +245,10 @@ fn validate_custody_chain(h: &mut ValidationHarness) {
 // 3. Fraud Detection
 // ===========================================================================
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential checks"
+)]
 fn validate_fraud_detection(h: &mut ValidationHarness) {
     let owner = Did::new("did:key:owner_fraud");
     let alice = Did::new("did:key:alice");

@@ -93,7 +93,10 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && p.extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -119,6 +122,10 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential pipeline checks"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp092_composite_pipeline");
     h.print_provenance(&[&PROVENANCE]);

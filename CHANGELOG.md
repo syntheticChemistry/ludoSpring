@@ -3,7 +3,21 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V39).
+This project does not use SemVer — versions are session-sequential (V1–V40).
+
+## [V40] — 2026-04-11
+
+### Audit & workspace cleanup (April 11, 2026)
+
+Documentation and tooling aligned with the April 2026 code review:
+
+- **Clippy:** Workspace-wide `cargo clippy --all-features -- -D warnings` — **207 → 0** warnings across crates (including experiments exp030–exp100).
+- **`cargo fmt`:** Clean — no formatting diffs on touched surfaces.
+- **`cargo deny` / `deny.toml`:** Policy file migrated for current `cargo-deny` and workspace layout; supply-chain gate passes in CI.
+- **`ipc/handlers/neural.rs`:** Refactored from a single ~228 LOC module into three submodules under **100 LOC** each (dispatch, delegation, helpers).
+- **Baseline loader:** `validation::load_baseline_f64` exercised by unit tests in `barracuda/src/validation/mod.rs`; provenance blocks re-verified against current baselines.
+- **Primal gaps:** **10** gaps documented as **GAP-01–GAP-10** in `docs/PRIMAL_GAPS.md` — including **GAP-09** (`nest_atomic` vs Nest-side IPC stubs) and **GAP-10** (`game.*` primal identity — ludoSpring not a graph node).
+- **Test counts (authoritative):** 605 barracuda `lib` tests + 102 barracuda `--tests` integration targets + 26 metalForge forge tests = **733** total workspace `#[test]` functions (see README Quality table).
 
 ## [V39] — 2026-04-10
 

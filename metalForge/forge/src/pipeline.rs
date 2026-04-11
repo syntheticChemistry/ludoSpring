@@ -202,6 +202,10 @@ pub struct BudgetEstimate {
     clippy::cast_precision_loss,
     reason = "workload counts are tiny (<100), no precision loss"
 )]
+#[expect(
+    clippy::similar_names,
+    reason = "parallel has_gpu_work / has_npu_work flags for the pipeline planner"
+)]
 pub fn plan_frame(
     workloads: &[GameWorkloadProfile],
     substrates: &[SubstrateInfo],

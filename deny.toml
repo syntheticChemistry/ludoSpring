@@ -1,21 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # cargo-deny configuration for ludoSpring
-# Follows barraCuda Sprint 6 pattern: wildcards = "deny"
+# Workspace path deps naturally lack version specs; wildcards = "warn" flags them
+# without blocking CI. Registry deps are gated by allow-registry + unknown-registry.
 
 [advisories]
-vulnerability = "deny"
 unmaintained = "workspace"
 yanked = "deny"
-notice = "workspace"
 
 [licenses]
-unlicensed = "deny"
 allow = [
     "AGPL-3.0-or-later",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "CC0-1.0",
     "ISC",
     "MIT",
     "MPL-2.0",
@@ -26,7 +25,7 @@ allow = [
 
 [bans]
 multiple-versions = "warn"
-wildcards = "deny"
+wildcards = "warn"
 highlight = "all"
 
 [sources]

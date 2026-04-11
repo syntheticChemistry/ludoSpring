@@ -299,6 +299,7 @@ fn unavailable(reason: &str) -> SquirrelResult {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -491,7 +492,8 @@ mod tests {
 
     #[test]
     fn unavailable_messages_are_distinct_per_entrypoint() {
-        let cases: Vec<(&str, fn() -> Result<SquirrelResult, String>)> = vec![
+        type UnavailableCaseFn = fn() -> Result<SquirrelResult, String>;
+        let cases: Vec<(&str, UnavailableCaseFn)> = vec![
             ("AI narration", || npc_dialogue("n", "p", "i", &[])),
             ("narration", || narrate_action("a", "c")),
             ("voice check", || voice_check("v", "p", "g")),

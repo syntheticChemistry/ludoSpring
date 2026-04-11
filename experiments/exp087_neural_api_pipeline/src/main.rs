@@ -100,7 +100,11 @@ fn discover_neural_api() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if name.starts_with("neural-api") && name.ends_with(".sock") {
+                    if name.starts_with("neural-api")
+                        && Path::new(name)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(path);
                     }
                 }
@@ -110,6 +114,10 @@ fn discover_neural_api() -> Option<PathBuf> {
     None
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "sequential Neural API JSON-RPC validation phases"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp087_neural_api_pipeline");
     h.print_provenance(&[&PROVENANCE]);
@@ -210,14 +218,13 @@ fn cmd_validate() {
     );
     let cont_ok = cont_exec.as_ref().is_ok_and(has_result);
     h.check_bool("graph_start_continuous", cont_ok);
-    if !cont_ok {
-        if cont_exec
+    if !cont_ok
+        && cont_exec
             .as_ref()
             .is_ok_and(|r| has_error_code(r, METHOD_NOT_FOUND))
-        {
-            eprintln!("  GAP: graph.start_continuous not exposed (GAP-018)");
-            eprintln!("    Needed for 60Hz game loop composition");
-        }
+    {
+        eprintln!("  GAP: graph.start_continuous not exposed (GAP-018)");
+        eprintln!("    Needed for 60Hz game loop composition");
     }
 
     // ── Phase 6: Capability routing (tensor → barraCuda) ──────
@@ -329,9 +336,10 @@ fn dry_mode_gaps(h: &mut ValidationHarness) {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    match args.get(1).map(String::as_str) {
-        Some("validate") | None => cmd_validate(),
+    let mut args = std::env::args();
+    let _prog = args.next();
+    match args.next().as_deref() {
+        None | Some("validate") => cmd_validate(),
         Some(other) => {
             eprintln!("Unknown command: {other}");
             std::process::exit(1);

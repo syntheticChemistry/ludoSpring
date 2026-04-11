@@ -226,6 +226,7 @@ impl NeuralBridge {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -312,8 +313,7 @@ mod tests {
             });
 
             thread::sleep(Duration::from_millis(30));
-            let bridge =
-                NeuralBridge::with_socket_and_timeout(path.clone(), Duration::from_millis(80));
+            let bridge = NeuralBridge::with_socket_and_timeout(path, Duration::from_millis(80));
             let err = bridge
                 .capability_call(
                     "game",
@@ -341,7 +341,6 @@ mod tests {
             let _ = std::fs::remove_file(&path);
             let listener = UnixListener::bind(&path).expect("bind");
             let path_clone = path.clone();
-            let dir_clone = dir.clone();
             let bad = thread::spawn(move || {
                 if let Ok((mut stream, _)) = listener.accept() {
                     let mut line = String::new();
@@ -351,7 +350,7 @@ mod tests {
                 }
                 drop(listener);
                 let _ = std::fs::remove_file(&path_clone);
-                let _ = std::fs::remove_dir(&dir_clone);
+                let _ = std::fs::remove_dir(dir);
             });
 
             thread::sleep(Duration::from_millis(30));
@@ -375,7 +374,6 @@ mod tests {
             let _ = std::fs::remove_file(&path);
             let listener = UnixListener::bind(&path).expect("bind");
             let path_clone = path.clone();
-            let dir_clone = dir.clone();
             let srv = thread::spawn(move || {
                 if let Ok((mut stream, _)) = listener.accept() {
                     let mut line = String::new();
@@ -391,7 +389,7 @@ mod tests {
                 }
                 drop(listener);
                 let _ = std::fs::remove_file(&path_clone);
-                let _ = std::fs::remove_dir(&dir_clone);
+                let _ = std::fs::remove_dir(dir);
             });
 
             thread::sleep(Duration::from_millis(30));

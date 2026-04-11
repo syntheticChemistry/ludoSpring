@@ -86,7 +86,11 @@ fn discover_primal(prefix: &str) -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with(prefix) && n.ends_with(".sock") {
+                    if n.starts_with(prefix)
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -109,7 +113,11 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && std::path::Path::new(n)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -137,6 +145,10 @@ fn dry_mode(h: &mut ValidationHarness) {
     }
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential checks"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp096_npc_dialogue_composition");
     h.print_provenance(&[&PROVENANCE]);
@@ -150,25 +162,25 @@ fn cmd_validate() {
         "  squirrel:    {}",
         squirrel
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  barracuda:   {}",
         barracuda
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  rhizocrypt:  {}",
         rhizocrypt
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
     eprintln!(
         "  petaltongue: {}",
         petaltongue
             .as_ref()
-            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+            .map_or_else(|| "NOT FOUND".to_string(), |p| p.display().to_string(),)
     );
 
     // barraCuda is required for science checks

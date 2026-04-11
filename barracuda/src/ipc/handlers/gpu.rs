@@ -35,6 +35,10 @@ fn tile_count_or_err(id: &serde_json::Value, w: u32, h: u32) -> Result<u32, Json
         .ok_or_else(|| JsonRpcError::invalid_params(id, "grid_w * grid_h overflows u32"))
 }
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "f64→f32 narrowing is the function's purpose — GPU buffers are f32"
+)]
 fn f32_vec_from_opt_f64(
     id: &serde_json::Value,
     v: Option<Vec<f64>>,
@@ -67,6 +71,10 @@ fn u32_vec_from_opt(
     }
 }
 
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "u32 is Copy; serde_json::Value ownership is consumed by the toadstool call"
+)]
 fn dispatch_gpu(
     req: &JsonRpcRequest,
     op: GpuOp,
@@ -100,6 +108,10 @@ fn dispatch_gpu(
 }
 
 /// `game.gpu.fog_of_war`
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "f64→f32 narrowing for GPU buffers — game coordinates are small"
+)]
 pub(super) fn handle_gpu_fog_of_war(req: &JsonRpcRequest) -> HandlerResult {
     let p: GpuFogOfWarParams = parse_params(req)?;
     let n = tile_count_or_err(&req.id, p.grid_w, p.grid_h)? as usize;
@@ -129,6 +141,10 @@ pub(super) fn handle_gpu_fog_of_war(req: &JsonRpcRequest) -> HandlerResult {
 }
 
 /// `game.gpu.tile_lighting`
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "f64→f32 narrowing for GPU buffers — game coordinates and light params are small"
+)]
 pub(super) fn handle_gpu_tile_lighting(req: &JsonRpcRequest) -> HandlerResult {
     let p: GpuTileLightingParams = parse_params(req)?;
     let n = tile_count_or_err(&req.id, p.grid_w, p.grid_h)? as usize;
@@ -228,6 +244,11 @@ pub(super) fn handle_gpu_pathfind(req: &JsonRpcRequest) -> HandlerResult {
 }
 
 /// `game.gpu.perlin_terrain`
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    reason = "GPU buffers require f32; grid coords and seed offset are small values"
+)]
 pub(super) fn handle_gpu_perlin_terrain(req: &JsonRpcRequest) -> HandlerResult {
     let p: GpuPerlinTerrainParams = parse_params(req)?;
     let n = tile_count_or_err(&req.id, p.grid_w, p.grid_h)? as usize;

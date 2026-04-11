@@ -172,6 +172,26 @@ fn run_routing_checks<S: ludospring_barracuda::validation::ValidationSink>(
     h.check_bool("graceful_degradation_all_cpu", all_cpu_no_gpu);
 }
 
+fn cmd_discover() {
+    let substrates = discover_substrates();
+    if substrates.is_empty() {
+        println!("  No adapters found.");
+        return;
+    }
+
+    for (i, s) in substrates.iter().enumerate() {
+        println!("  Substrate {i}:");
+        println!("    Name:    {}", s.name);
+        println!("    Type:    {:?}", s.device_type);
+        println!("    Backend: {:?}", s.backend);
+        println!("    Vendor:  0x{:04x}", s.vendor);
+        println!();
+    }
+
+    println!("  GPU available: {}", has_any_gpu(&substrates));
+    println!("  Discrete GPU:  {}", has_discrete_gpu(&substrates));
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,24 +211,4 @@ mod tests {
             total - passed
         );
     }
-}
-
-fn cmd_discover() {
-    let substrates = discover_substrates();
-    if substrates.is_empty() {
-        println!("  No adapters found.");
-        return;
-    }
-
-    for (i, s) in substrates.iter().enumerate() {
-        println!("  Substrate {i}:");
-        println!("    Name:    {}", s.name);
-        println!("    Type:    {:?}", s.device_type);
-        println!("    Backend: {:?}", s.backend);
-        println!("    Vendor:  0x{:04x}", s.vendor);
-        println!();
-    }
-
-    println!("  GPU available: {}", has_any_gpu(&substrates));
-    println!("  Discrete GPU:  {}", has_discrete_gpu(&substrates));
 }

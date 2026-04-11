@@ -245,6 +245,7 @@ impl JsonRpcError {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use std::error::Error;
@@ -477,13 +478,13 @@ mod tests {
             ) {
                 let kind = io_kind_from_byte(kind_byte);
                 let err = match variant {
-                    0 => IpcError::Connect(std::io::Error::new(kind, msg.clone())),
-                    1 => IpcError::Timeout(std::io::Error::new(kind, msg.clone())),
-                    2 => IpcError::Io(std::io::Error::new(kind, msg.clone())),
-                    3 => IpcError::Serialization(msg.clone()),
+                    0 => IpcError::Connect(std::io::Error::new(kind, msg)),
+                    1 => IpcError::Timeout(std::io::Error::new(kind, msg)),
+                    2 => IpcError::Io(std::io::Error::new(kind, msg)),
+                    3 => IpcError::Serialization(msg),
                     4 => IpcError::RpcError {
                         code,
-                        message: msg.clone(),
+                        message: msg,
                     },
                     5 => IpcError::NoResult,
                     _ => IpcError::NotFound(msg),

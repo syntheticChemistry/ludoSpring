@@ -162,6 +162,251 @@ fn viz_degraded_peer(req: &JsonRpcRequest, reason: &str) -> HandlerResult {
     )
 }
 
+/// Degraded visualization response when the `ipc` feature is disabled.
+#[cfg(not(feature = "ipc"))]
+fn viz_delegation_without_ipc(
+    req: &JsonRpcRequest,
+    method: &str,
+    params: &serde_json::Value,
+    domain: &str,
+) -> HandlerResult {
+    match method {
+        "visualization.export" => to_json(
+            &req.id,
+            json!({
+                "ipc_delegated": false,
+                "degraded": true,
+                "status": "not_forwarded",
+                "note": "Visualization export is IPC-delegated to a visualization primal; the ipc feature is disabled in this build, so nothing was queued.",
+                "method": method,
+                "domain": domain,
+            }),
+        ),
+        "visualization.validate" => to_json(
+            &req.id,
+            json!({
+                "degraded": true,
+                "visualization_peer": "unavailable",
+                "domain": domain,
+                "bindings_echo": params.get("bindings").cloned().unwrap_or_else(|| json!({})),
+                "state": {
+                    "composition": "unknown",
+                    "tufte_preflight": "skipped_build_without_ipc",
+                },
+            }),
+        ),
+        "interaction.subscribe" => to_json(
+            &req.id,
+            json!({
+                "acknowledged": true,
+                "subscribed": false,
+                "degraded": true,
+                "detail": "interaction.subscribe is IPC-delegated; the ipc feature is disabled in this build.",
+                "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
+                "domain": domain,
+            }),
+        ),
+        _ => viz_degraded_peer(
+            req,
+            "ipc feature disabled; visualization delegation unavailable",
+        ),
+    }
+}
+
+/// Degraded visualization response when no visualization peer is discovered.
+#[cfg(feature = "ipc")]
+fn viz_delegation_no_peer(
+    req: &JsonRpcRequest,
+    method: &str,
+    params: &serde_json::Value,
+    domain: &str,
+) -> HandlerResult {
+    match method {
+        "visualization.export" => to_json(
+            &req.id,
+            json!({
+                "ipc_delegated": false,
+                "degraded": true,
+                "status": "not_forwarded",
+                "note": "Export requests are normally queued to the visualization primal over IPC; no peer was discovered, so nothing was forwarded. ludoSpring does not write export files locally.",
+                "method": method,
+                "domain": domain,
+            }),
+        ),
+        "visualization.validate" => to_json(
+            &req.id,
+            json!({
+                "degraded": true,
+                "visualization_peer": "unavailable",
+                "domain": domain,
+                "bindings_echo": params.get("bindings").cloned().unwrap_or_else(|| json!({})),
+                "state": {
+                    "composition": "unknown",
+                    "tufte_preflight": "skipped_peer_unavailable",
+                },
+            }),
+        ),
+        "interaction.subscribe" => to_json(
+            &req.id,
+            json!({
+                "acknowledged": true,
+                "subscribed": false,
+                "degraded": true,
+                "detail": "Subscription is acknowledged locally but not established: no visualization primal was discovered.",
+                "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
+                "domain": domain,
+            }),
+        ),
+        _ => viz_degraded_peer(req, "no visualization-capable primal found"),
+    }
+}
+
+/// Extract a string field from JSON params with a default.
+fn param_str<'a>(params: &'a serde_json::Value, key: &str, default: &'a str) -> &'a str {
+    params
+        .get(key)
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or(default)
+}
+
+/// Forward render-family calls (render, stream, scene, dashboard) to petalTongue.
+#[cfg(feature = "ipc")]
+fn viz_render_dispatch(
+    client: &crate::visualization::VisualizationPushClient,
+    req: &JsonRpcRequest,
+    method: &str,
+    params: &serde_json::Value,
+) -> HandlerResult {
+    let session_id = param_str(params, "session_id", "");
+    match method {
+        "visualization.render" => {
+            let title = param_str(params, "title", "Untitled");
+            let data = params.get("data").cloned().unwrap_or_else(|| json!({}));
+            client
+                .push_render(session_id, title, &data)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            viz_delegated_ok(req)
+        }
+        "visualization.render.stream" => {
+            let action = param_str(params, "action", "append");
+            let data = params.get("data").cloned().unwrap_or_else(|| json!({}));
+            client
+                .push_stream(session_id, action, &data)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            viz_delegated_ok(req)
+        }
+        "visualization.render.scene" => {
+            let channel = param_str(params, "channel", "default");
+            let scene = params.get("scene").cloned().unwrap_or_else(|| json!({}));
+            client
+                .push_scene(session_id, channel, &scene)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            viz_delegated_ok(req)
+        }
+        "visualization.render.dashboard" => {
+            let panels: Vec<serde_json::Value> = params
+                .get("panels")
+                .and_then(serde_json::Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            client
+                .push_dashboard(session_id, &panels)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            viz_delegated_ok(req)
+        }
+        _ => unreachable!("render dispatch called for non-render method"),
+    }
+}
+
+/// Forward management calls (export, validate, subscribe) to petalTongue.
+#[cfg(feature = "ipc")]
+fn viz_management_dispatch(
+    client: &crate::visualization::VisualizationPushClient,
+    req: &JsonRpcRequest,
+    method: &str,
+    params: &serde_json::Value,
+    domain: &str,
+) -> HandlerResult {
+    match method {
+        "visualization.export" => {
+            let session_id = param_str(params, "session_id", "");
+            let modality = param_str(params, "modality", "svg");
+            let peer_result = client
+                .export(session_id, modality)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            to_json(
+                &req.id,
+                json!({
+                    "ipc_delegated": true,
+                    "degraded": false,
+                    "status": "forwarded_to_peer",
+                    "note": "Export request was sent to the visualization primal over IPC. ludoSpring does not materialize export files locally; the peer handles queuing or generation.",
+                    "session_id": session_id,
+                    "modality": modality,
+                    "peer": peer_result,
+                    "domain": domain,
+                }),
+            )
+        }
+        "visualization.validate" => {
+            let bindings = params.get("bindings").cloned().unwrap_or_else(|| json!({}));
+            let peer_validation = client
+                .validate(&bindings)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            to_json(
+                &req.id,
+                json!({
+                    "delegated": true,
+                    "degraded": false,
+                    "domain": domain,
+                    "visualization_peer": "available",
+                    "peer_validation": peer_validation,
+                }),
+            )
+        }
+        "interaction.subscribe" => {
+            let session_id = param_str(params, "session_id", "");
+            let peer = client
+                .subscribe_interaction(session_id)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            to_json(
+                &req.id,
+                json!({
+                    "acknowledged": true,
+                    "subscribed": true,
+                    "degraded": false,
+                    "delegated": true,
+                    "session_id": session_id,
+                    "domain": domain,
+                    "peer": peer,
+                }),
+            )
+        }
+        _ => Err(JsonRpcError::internal(
+            &req.id,
+            "visualization dispatch: unexpected method",
+        )),
+    }
+}
+
+/// Forward a visualization call to a discovered petalTongue peer.
+#[cfg(feature = "ipc")]
+fn viz_delegation_with_peer(
+    client: &crate::visualization::VisualizationPushClient,
+    req: &JsonRpcRequest,
+    method: &str,
+    params: &serde_json::Value,
+    domain: &str,
+) -> HandlerResult {
+    match method {
+        "visualization.render"
+        | "visualization.render.stream"
+        | "visualization.render.scene"
+        | "visualization.render.dashboard" => viz_render_dispatch(client, req, method, params),
+        _ => viz_management_dispatch(client, req, method, params, domain),
+    }
+}
+
 /// petalTongue-style visualization JSON-RPC: capability discovery + [`crate::visualization::VisualizationPushClient`], or explicit degraded results.
 pub(super) fn handle_visualization_delegation(req: &JsonRpcRequest) -> HandlerResult {
     let params = req.params.clone().unwrap_or_else(|| json!({}));
@@ -170,225 +415,17 @@ pub(super) fn handle_visualization_delegation(req: &JsonRpcRequest) -> HandlerRe
 
     #[cfg(not(feature = "ipc"))]
     {
-        return match method {
-            "visualization.export" => to_json(
-                &req.id,
-                json!({
-                    "ipc_delegated": false,
-                    "degraded": true,
-                    "status": "not_forwarded",
-                    "note": "Visualization export is IPC-delegated to a visualization primal; the ipc feature is disabled in this build, so nothing was queued.",
-                    "method": method,
-                    "domain": domain,
-                }),
-            ),
-            "visualization.validate" => to_json(
-                &req.id,
-                json!({
-                    "degraded": true,
-                    "visualization_peer": "unavailable",
-                    "domain": domain,
-                    "bindings_echo": params.get("bindings").cloned().unwrap_or_else(|| json!({})),
-                    "state": {
-                        "composition": "unknown",
-                        "tufte_preflight": "skipped_build_without_ipc",
-                    },
-                }),
-            ),
-            "interaction.subscribe" => to_json(
-                &req.id,
-                json!({
-                    "acknowledged": true,
-                    "subscribed": false,
-                    "degraded": true,
-                    "detail": "interaction.subscribe is IPC-delegated; the ipc feature is disabled in this build.",
-                    "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
-                    "domain": domain,
-                }),
-            ),
-            _ => viz_degraded_peer(
-                req,
-                "ipc feature disabled; visualization delegation unavailable",
-            ),
-        };
+        return viz_delegation_without_ipc(req, method, &params, domain);
     }
 
     #[cfg(feature = "ipc")]
     {
         use crate::visualization::VisualizationPushClient;
 
-        let client = match VisualizationPushClient::discover() {
-            Ok(c) => c,
-            Err(_) => {
-                return match method {
-                    "visualization.export" => to_json(
-                        &req.id,
-                        json!({
-                            "ipc_delegated": false,
-                            "degraded": true,
-                            "status": "not_forwarded",
-                            "note": "Export requests are normally queued to the visualization primal over IPC; no peer was discovered, so nothing was forwarded. ludoSpring does not write export files locally.",
-                            "method": method,
-                            "domain": domain,
-                        }),
-                    ),
-                    "visualization.validate" => to_json(
-                        &req.id,
-                        json!({
-                            "degraded": true,
-                            "visualization_peer": "unavailable",
-                            "domain": domain,
-                            "bindings_echo": params.get("bindings").cloned().unwrap_or_else(|| json!({})),
-                            "state": {
-                                "composition": "unknown",
-                                "tufte_preflight": "skipped_peer_unavailable",
-                            },
-                        }),
-                    ),
-                    "interaction.subscribe" => to_json(
-                        &req.id,
-                        json!({
-                            "acknowledged": true,
-                            "subscribed": false,
-                            "degraded": true,
-                            "detail": "Subscription is acknowledged locally but not established: no visualization primal was discovered.",
-                            "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
-                            "domain": domain,
-                        }),
-                    ),
-                    _ => viz_degraded_peer(req, "no visualization-capable primal found"),
-                };
-            }
+        let Ok(client) = VisualizationPushClient::discover() else {
+            return viz_delegation_no_peer(req, method, &params, domain);
         };
 
-        match method {
-            "visualization.render" => {
-                let session_id = params
-                    .get("session_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                let title = params
-                    .get("title")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("Untitled");
-                let data = params.get("data").cloned().unwrap_or_else(|| json!({}));
-                client
-                    .push_render(session_id, title, &data)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                viz_delegated_ok(req)
-            }
-            "visualization.render.stream" => {
-                let session_id = params
-                    .get("session_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                let action = params
-                    .get("action")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("append");
-                let data = params.get("data").cloned().unwrap_or_else(|| json!({}));
-                client
-                    .push_stream(session_id, action, &data)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                viz_delegated_ok(req)
-            }
-            "visualization.render.scene" => {
-                let session_id = params
-                    .get("session_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                let channel = params
-                    .get("channel")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("default");
-                let scene = params.get("scene").cloned().unwrap_or_else(|| json!({}));
-                client
-                    .push_scene(session_id, channel, &scene)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                viz_delegated_ok(req)
-            }
-            "visualization.render.dashboard" => {
-                let session_id = params
-                    .get("session_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                let panels: Vec<serde_json::Value> = params
-                    .get("panels")
-                    .and_then(|p| p.as_array())
-                    .map(|v| v.clone())
-                    .unwrap_or_default();
-                client
-                    .push_dashboard(session_id, &panels)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                viz_delegated_ok(req)
-            }
-            "visualization.export" => {
-                let session_id = params
-                    .get("session_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                let modality = params
-                    .get("modality")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("svg");
-                let peer_result = client
-                    .export(session_id, modality)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                to_json(
-                    &req.id,
-                    json!({
-                        "ipc_delegated": true,
-                        "degraded": false,
-                        "status": "forwarded_to_peer",
-                        "note": "Export request was sent to the visualization primal over IPC. ludoSpring does not materialize export files locally; the peer handles queuing or generation.",
-                        "session_id": session_id,
-                        "modality": modality,
-                        "peer": peer_result,
-                        "domain": domain,
-                    }),
-                )
-            }
-            "visualization.validate" => {
-                let bindings = params.get("bindings").cloned().unwrap_or_else(|| json!({}));
-                let peer_validation = client
-                    .validate(&bindings)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                to_json(
-                    &req.id,
-                    json!({
-                        "delegated": true,
-                        "degraded": false,
-                        "domain": domain,
-                        "visualization_peer": "available",
-                        "peer_validation": peer_validation,
-                    }),
-                )
-            }
-            "interaction.subscribe" => {
-                let session_id = params
-                    .get("session_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                let peer = client
-                    .subscribe_interaction(session_id)
-                    .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
-                to_json(
-                    &req.id,
-                    json!({
-                        "acknowledged": true,
-                        "subscribed": true,
-                        "degraded": false,
-                        "delegated": true,
-                        "session_id": session_id,
-                        "domain": domain,
-                        "peer": peer,
-                    }),
-                )
-            }
-            _ => Err(JsonRpcError::internal(
-                &req.id,
-                "visualization dispatch: unexpected method",
-            )),
-        }
+        viz_delegation_with_peer(&client, req, method, &params, domain)
     }
 }

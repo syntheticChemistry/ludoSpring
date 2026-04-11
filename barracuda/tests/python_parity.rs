@@ -506,7 +506,7 @@ fn parity_fitts_doom_sniper_far_tiny() {
         tolerances::FITTS_A_MOUSE_MS,
         tolerances::FITTS_B_MOUSE_MS,
     );
-    let python = 1149.637_531_717_192_6;
+    let python = 1_149.637_531_717_192_6;
     assert!(
         (rust - python).abs() < tolerances::ANALYTICAL_TOL,
         "sniper_far_tiny: Rust={rust}, Python={python}"
@@ -778,7 +778,9 @@ fn parity_lsystem_turtle_ff_end() {
     // lsystem_growth.py.turtle_FF_end = [2.0, 0.0]
     use ludospring_barracuda::procedural::lsystem::turtle_interpret;
     let points = turtle_interpret("FF", 1.0, 90.0);
-    let end = points.last().expect("at least one point");
+    let Some(end) = points.last() else {
+        panic!("at least one point");
+    };
     assert!(
         (end.0 - 2.0).abs() < tolerances::ANALYTICAL_TOL,
         "turtle FF x: Rust={}, Python=2.0",
@@ -796,8 +798,10 @@ fn parity_lsystem_turtle_square_dist() {
     // lsystem_growth.py.turtle_square_dist = 2.8818119592750155e-16
     use ludospring_barracuda::procedural::lsystem::turtle_interpret;
     let points = turtle_interpret("F+F+F+F", 1.0, 90.0);
-    let end = points.last().expect("at least one point");
-    let dist = (end.0 * end.0 + end.1 * end.1).sqrt();
+    let Some(end) = points.last() else {
+        panic!("at least one point");
+    };
+    let dist = end.0.hypot(end.1);
     assert!(
         dist < tolerances::STRICT_ANALYTICAL_TOL,
         "turtle square distance: Rust={dist:.2e}, should be near-zero"

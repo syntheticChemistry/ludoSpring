@@ -126,7 +126,8 @@ impl DialogueCheck {
         } else {
             die_values
         };
-        let result = D6PoolResult::from_dice(effective_dice, crate::tolerances::D6_SUCCESS_THRESHOLD);
+        let result =
+            D6PoolResult::from_dice(effective_dice, crate::tolerances::D6_SUCCESS_THRESHOLD);
         let degree = resolve_d6_pool(result.successes, result.pool_size);
         Self {
             skill: skill.into(),

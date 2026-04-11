@@ -433,6 +433,7 @@ pub fn compile_area_description(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::game::engine::action::{ActionCost, ActionOutcome, Effect, TriggerEvent};
@@ -504,11 +505,7 @@ mod tests {
         };
 
         let cues = compile_outcome(&outcome, &reg);
-        let critical: Vec<_> = cues
-            .iter()
-            .filter(|c| c.priority == CuePriority::Critical)
-            .collect();
-        assert!(!critical.is_empty());
+        assert!(cues.iter().any(|c| c.priority == CuePriority::Critical));
     }
 
     #[test]

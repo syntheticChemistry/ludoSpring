@@ -3,6 +3,7 @@
 name = "ludospring-exp054"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 publish = false
 
 [[bin]]

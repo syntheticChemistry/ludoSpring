@@ -98,7 +98,7 @@ fn cap_call(
     na: &Path,
     capability: &str,
     operation: &str,
-    params: serde_json::Value,
+    params: &serde_json::Value,
 ) -> Result<serde_json::Value, String> {
     rpc_call(
         na,
@@ -126,7 +126,11 @@ fn discover_neural_api() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if name.starts_with("neural-api") && name.ends_with(".sock") {
+                    if name.starts_with("neural-api")
+                        && std::path::Path::new(name)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(path);
                     }
                 }
@@ -136,6 +140,7 @@ fn discover_neural_api() -> Option<PathBuf> {
     None
 }
 
+#[expect(clippy::too_many_lines, reason = "e2e neural API validation harness")]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp083_neural_api_e2e");
     h.print_provenance(&[&PROVENANCE]);
@@ -155,7 +160,7 @@ fn cmd_validate() {
         b"NUCLEUS Nest Atomic validation",
     );
     let test_key =
-        base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &[0xAA_u8; 32]);
+        base64::Engine::encode(&base64::engine::general_purpose::STANDARD, [0xAA_u8; 32]);
 
     // ── BearDog: Blake3 hash ───────────────────────────────────────────
     let start = Instant::now();
@@ -163,7 +168,7 @@ fn cmd_validate() {
         &na,
         "crypto",
         "blake3_hash",
-        serde_json::json!({ "data": test_data }),
+        &serde_json::json!({ "data": test_data }),
     ) {
         Ok(resp) => {
             let _latency = start.elapsed();
@@ -181,7 +186,7 @@ fn cmd_validate() {
         &na,
         "crypto",
         "sha3_256",
-        serde_json::json!({ "data": test_data }),
+        &serde_json::json!({ "data": test_data }),
     )
     .map(|r| !result_field(&r, "hash").is_empty())
     .unwrap_or(false);
@@ -194,7 +199,7 @@ fn cmd_validate() {
                 &na,
                 "crypto",
                 "chacha20_poly1305_encrypt",
-                serde_json::json!({ "plaintext": test_data, "key": test_key }),
+                &serde_json::json!({ "plaintext": test_data, "key": test_key }),
             )
             .ok()?;
             let ct = result_field(&enc, "ciphertext");
@@ -205,7 +210,7 @@ fn cmd_validate() {
             }
             let dec = cap_call(
             &na, "crypto", "chacha20_poly1305_decrypt",
-            serde_json::json!({ "ciphertext": ct, "nonce": nonce, "tag": tag, "key": test_key }),
+            &serde_json::json!({ "ciphertext": ct, "nonce": nonce, "tag": tag, "key": test_key }),
         ).ok()?;
             Some(result_field(&dec, "plaintext") == test_data)
         })()
@@ -217,7 +222,7 @@ fn cmd_validate() {
         &na,
         "crypto",
         "sign",
-        serde_json::json!({ "message": test_data }),
+        &serde_json::json!({ "message": test_data }),
     )
     .map(|r| result_field(&r, "signature"))
     .unwrap_or_default();
@@ -228,7 +233,7 @@ fn cmd_validate() {
         &na,
         "crypto",
         "blake3_hash",
-        serde_json::json!({ "data": test_data }),
+        &serde_json::json!({ "data": test_data }),
     )
     .map(|r| result_field(&r, "hash"))
     .unwrap_or_default();
@@ -238,7 +243,7 @@ fn cmd_validate() {
     );
 
     // ── Songbird: Discovery peers ──────────────────────────────────────
-    let peers_ok = cap_call(&na, "discovery", "peers", serde_json::json!({}))
+    let peers_ok = cap_call(&na, "discovery", "peers", &serde_json::json!({}))
         .map(|r| r.get("result").is_some())
         .unwrap_or(false);
     h.check_bool("songbird_discovery_peers_via_neural", peers_ok);
@@ -248,7 +253,7 @@ fn cmd_validate() {
         &na,
         "compute",
         "dispatch.capabilities",
-        serde_json::json!({}),
+        &serde_json::json!({}),
     )
     .map(|r| r.get("result").is_some())
     .unwrap_or(false);
@@ -261,14 +266,14 @@ fn cmd_validate() {
             &na,
             "storage",
             "store",
-            serde_json::json!({ "family_id": "dev0", "key": "exp083_test", "value": val }),
+            &serde_json::json!({ "family_id": "dev0", "key": "exp083_test", "value": val }),
         )
         .ok()?;
         let ret = cap_call(
             &na,
             "storage",
             "retrieve",
-            serde_json::json!({ "family_id": "dev0", "key": "exp083_test" }),
+            &serde_json::json!({ "family_id": "dev0", "key": "exp083_test" }),
         )
         .ok()?;
         let stored_val = ret
@@ -280,13 +285,13 @@ fn cmd_validate() {
     h.check_bool("nestgate_store_retrieve_roundtrip", store_retrieve_ok);
 
     // ── Squirrel: AI providers ─────────────────────────────────────────
-    let ai_ok = cap_call(&na, "ai", "list_providers", serde_json::json!({}))
+    let ai_ok = cap_call(&na, "ai", "list_providers", &serde_json::json!({}))
         .map(|r| r.get("result").is_some())
         .unwrap_or(false);
     h.check_bool("squirrel_ai_providers_via_neural", ai_ok);
 
     // ── Squirrel: Tool list ────────────────────────────────────────────
-    let tools_ok = cap_call(&na, "tool", "list", serde_json::json!({}))
+    let tools_ok = cap_call(&na, "tool", "list", &serde_json::json!({}))
         .map(|r| r.get("result").is_some())
         .unwrap_or(false);
     h.check_bool("squirrel_tool_list_via_neural", tools_ok);
@@ -298,7 +303,7 @@ fn cmd_validate() {
                 &na,
                 "crypto",
                 "blake3_hash",
-                serde_json::json!({ "data": test_data }),
+                &serde_json::json!({ "data": test_data }),
             )
             .ok()
             .map(|r| result_field(&r, "hash"))?;
@@ -310,7 +315,7 @@ fn cmd_validate() {
                 &na,
                 "crypto",
                 "sign",
-                serde_json::json!({ "message": hash }),
+                &serde_json::json!({ "message": hash }),
             )
             .ok()
             .map(|r| result_field(&r, "signature"))?;
@@ -322,14 +327,14 @@ fn cmd_validate() {
                 serde_json::json!({"hash": hash, "signature": sig, "algo": "blake3+ed25519"});
             cap_call(
             &na, "storage", "store",
-            serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083", "value": record }),
+            &serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083", "value": record }),
         ).ok()?;
 
             let ret = cap_call(
                 &na,
                 "storage",
                 "retrieve",
-                serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083" }),
+                &serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083" }),
             )
             .ok()?;
 

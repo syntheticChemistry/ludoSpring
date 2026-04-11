@@ -32,6 +32,10 @@ fn make_output(voice: VoiceId, priority: PassiveCheckPriority, roll: i32) -> Voi
     }
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_max_three(h: &mut ValidationHarness) {
     let outputs = vec![
         make_output(VoiceId::Perception, PassiveCheckPriority::Critical, 12),
@@ -75,6 +79,10 @@ fn validate_tie_breaking(h: &mut ValidationHarness) {
     h.check_bool("lowest_roll_third", selected[2].voice == VoiceId::Rhetoric);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_fewer_than_max(h: &mut ValidationHarness) {
     let outputs = vec![make_output(VoiceId::Logic, PassiveCheckPriority::High, 15)];
     let selected = select_voice_outputs(outputs, 3);
@@ -88,6 +96,10 @@ fn validate_fewer_than_max(h: &mut ValidationHarness) {
     h.check_abs("two_voices_returns_two", selected.len() as f64, 2.0, 0.0);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_zero_max(h: &mut ValidationHarness) {
     let outputs = vec![make_output(
         VoiceId::Logic,
@@ -98,11 +110,19 @@ fn validate_zero_max(h: &mut ValidationHarness) {
     h.check_abs("zero_max_returns_empty", selected.len() as f64, 0.0, 0.0);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_empty_input(h: &mut ValidationHarness) {
     let selected = select_voice_outputs(vec![], 3);
     h.check_abs("empty_input_returns_empty", selected.len() as f64, 0.0, 0.0);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_all_same_priority(h: &mut ValidationHarness) {
     let outputs = vec![
         make_output(VoiceId::Logic, PassiveCheckPriority::Medium, 10),
@@ -120,6 +140,10 @@ fn validate_all_same_priority(h: &mut ValidationHarness) {
     h.check_bool("third_roll_third", selected[2].voice == VoiceId::Perception);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_check_result_gating(h: &mut ValidationHarness) {
     let checks = [
         VoiceCheckResult::evaluate(VoiceId::Logic, 10, 10, 15, PassiveCheckPriority::High),
@@ -135,10 +159,14 @@ fn validate_check_result_gating(h: &mut ValidationHarness) {
     ];
 
     let passed: Vec<&VoiceCheckResult> = checks.iter().filter(|c| c.success).collect();
-    let failed: Vec<&VoiceCheckResult> = checks.iter().filter(|c| !c.success).collect();
 
     h.check_abs("two_checks_pass", passed.len() as f64, 2.0, 0.0);
-    h.check_abs("two_checks_fail", failed.len() as f64, 2.0, 0.0);
+    h.check_abs(
+        "two_checks_fail",
+        checks.iter().filter(|c| !c.success).count() as f64,
+        2.0,
+        0.0,
+    );
 
     h.check_bool("logic_passes_20_vs_15", checks[0].success);
     h.check_bool("empathy_fails_8_vs_15", !checks[1].success);
@@ -159,6 +187,10 @@ fn validate_check_result_gating(h: &mut ValidationHarness) {
     h.check_abs("filtered_outputs_count", selected.len() as f64, 2.0, 0.0);
 }
 
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "validation harness: small counts as f64"
+)]
 fn validate_large_batch(h: &mut ValidationHarness) {
     let outputs: Vec<VoiceOutput> = VoiceId::ALL
         .iter()
@@ -170,7 +202,11 @@ fn validate_large_batch(h: &mut ValidationHarness) {
                 2 => PassiveCheckPriority::Medium,
                 _ => PassiveCheckPriority::Low,
             };
-            make_output(v, priority, (20 - i as i32).max(1))
+            make_output(
+                v,
+                priority,
+                i32::try_from(i).map_or(1, |ii| (20 - ii).max(1)),
+            )
         })
         .collect();
 

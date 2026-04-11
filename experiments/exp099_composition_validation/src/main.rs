@@ -109,13 +109,10 @@ fn main() {
     let mut h = ValidationHarness::new("exp099_composition_validation");
     h.print_provenance(&[&PROVENANCE]);
 
-    let socket = match discover_ludospring_socket() {
-        Some(s) => s,
-        None => {
-            eprintln!("[exp099] ludoSpring socket not found — dry_mode (all checks forced false).");
-            mark_dry_mode(&mut h);
-            std::process::exit(h.summary());
-        }
+    let Some(socket) = discover_ludospring_socket() else {
+        eprintln!("[exp099] ludoSpring socket not found — dry_mode (all checks forced false).");
+        mark_dry_mode(&mut h);
+        std::process::exit(h.summary());
     };
 
     eprintln!("[exp099] Connected to ludoSpring at {}", socket.display());
@@ -171,7 +168,7 @@ fn validate_flow(h: &mut ValidationHarness, socket: &Path, tol: f64) {
                 let state_ok = result["state"].as_str() == Some(expected_state.as_str());
                 let score_ok = result["flow_score"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected_score).abs() <= tol);
+                    .is_some_and(|v| (v - expected_score).abs() <= tol);
                 let in_flow_ok = result["in_flow"].as_bool() == Some(expected_in_flow);
                 h.check_bool(name, state_ok && score_ok && in_flow_ok);
             }
@@ -205,10 +202,10 @@ fn validate_fitts(h: &mut ValidationHarness, socket: &Path, tol: f64) {
             Ok(result) => {
                 let mt_ok = result["movement_time_ms"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected_mt).abs() <= tol);
+                    .is_some_and(|v| (v - expected_mt).abs() <= tol);
                 let id_ok = result["index_of_difficulty"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected_id).abs() <= tol);
+                    .is_some_and(|v| (v - expected_id).abs() <= tol);
                 h.check_bool(name, mt_ok && id_ok);
             }
             Err(e) => {
@@ -265,10 +262,10 @@ fn validate_engagement(h: &mut ValidationHarness, socket: &Path, tol: f64) {
             Ok(result) => {
                 let composite_ok = result["composite"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected.composite).abs() <= tol);
+                    .is_some_and(|v| (v - expected.composite).abs() <= tol);
                 let apm_ok = result["actions_per_minute"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected.actions_per_minute).abs() <= tol);
+                    .is_some_and(|v| (v - expected.actions_per_minute).abs() <= tol);
                 h.check_bool(name, composite_ok && apm_ok);
             }
             Err(e) => {
@@ -292,7 +289,7 @@ fn validate_noise(h: &mut ValidationHarness, socket: &Path, tol: f64) {
         Ok(result) => {
             let ok = result["value"]
                 .as_f64()
-                .map_or(false, |v| (v - expected).abs() <= tol);
+                .is_some_and(|v| (v - expected).abs() <= tol);
             h.check_bool("noise_fbm_4oct", ok);
         }
         Err(e) => {
@@ -332,10 +329,10 @@ fn validate_dda(h: &mut ValidationHarness, socket: &Path, tol: f64) {
             Ok(result) => {
                 let adj_ok = result["adjustment"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected_adj).abs() <= tol);
+                    .is_some_and(|v| (v - expected_adj).abs() <= tol);
                 let skill_ok = result["estimated_skill"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected_skill).abs() <= tol);
+                    .is_some_and(|v| (v - expected_skill).abs() <= tol);
                 h.check_bool(name, adj_ok && skill_ok);
             }
             Err(e) => {
@@ -392,7 +389,7 @@ fn validate_accessibility(h: &mut ValidationHarness, socket: &Path, tol: f64) {
             Ok(result) => {
                 let score_ok = result["score"]
                     .as_f64()
-                    .map_or(false, |v| (v - expected.score).abs() <= tol);
+                    .is_some_and(|v| (v - expected.score).abs() <= tol);
                 h.check_bool(name, score_ok);
             }
             Err(e) => {
@@ -405,6 +402,10 @@ fn validate_accessibility(h: &mut ValidationHarness, socket: &Path, tol: f64) {
 
 // ── WFC ─────────────────────────────────────────────────────────────
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "WFC options_removed fits in usize on validation hosts"
+)]
 fn validate_wfc(h: &mut ValidationHarness, socket: &Path) {
     let (w, ht, n) = (4, 4, 3);
     let rules = AdjacencyRules::unconstrained(n);
@@ -420,7 +421,7 @@ fn validate_wfc(h: &mut ValidationHarness, socket: &Path) {
         Ok(result) => {
             let ok = result["options_removed"]
                 .as_u64()
-                .map_or(false, |v| v as usize == expected_removed);
+                .is_some_and(|v| v as usize == expected_removed);
             h.check_bool("wfc_4x4x3", ok);
         }
         Err(e) => {

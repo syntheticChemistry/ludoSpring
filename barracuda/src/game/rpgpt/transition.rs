@@ -194,6 +194,7 @@ pub fn verify_transition(
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::super::plane::PlaneType;
     use super::*;
@@ -362,7 +363,7 @@ mod tests {
             vec![],
         );
         let mut post = pre.clone();
-        post.npc_dispositions[0].trust = 1.0 + 1e-6 * 1000.0;
+        post.npc_dispositions[0].trust = 1e-6f64.mul_add(1000.0, 1.0);
         let v = verify_transition(&pre, &post, &[]);
         assert_eq!(v.issues, vec![TransitionIssue::DispositionChanged]);
     }
@@ -508,7 +509,7 @@ mod tests {
             vec![NpcDisposition {
                 npc_id: "n".into(),
                 trust: 0.0,
-                emotional_state: "".into(),
+                emotional_state: String::new(),
                 hostile: true,
             }],
             vec![KnowledgeEntry {

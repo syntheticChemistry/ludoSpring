@@ -236,7 +236,8 @@ pub fn validate_trio_integration(h: &mut ValidationHarness) {
 
 #[expect(
     clippy::cast_precision_loss,
-    reason = "validation counts fit in f64 mantissa"
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential checks; counts fit in f64 mantissa"
 )]
 pub fn validate_full_scenario(h: &mut ValidationHarness) {
     let alice = Did::new("did:key:alice_scenario");

@@ -254,7 +254,7 @@ impl TelemetryEvent {
 }
 
 #[cfg(test)]
-#[expect(clippy::expect_used, reason = "test module: fail-fast on setup errors")]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

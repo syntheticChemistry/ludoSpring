@@ -134,6 +134,8 @@ fn professor_knowledge() -> KnowledgeBounds {
     }
 }
 
+#[expect(clippy::too_many_lines, reason = "validation harness")]
+#[expect(clippy::cast_precision_loss, reason = "small counts fit in f64")]
 fn validate_maren(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
 
@@ -328,6 +330,7 @@ fn validate_multi_npc(h: &mut ValidationHarness) {
     );
 }
 
+#[expect(clippy::cast_precision_loss, reason = "small counts fit in f64")]
 fn validate_totals(h: &mut ValidationHarness) {
     let maren = maren_knowledge();
     let sheriff = sheriff_knowledge();

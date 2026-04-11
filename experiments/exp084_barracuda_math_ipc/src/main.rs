@@ -114,7 +114,11 @@ fn discover_neural_api() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if name.starts_with("neural-api") && name.ends_with(".sock") {
+                    if name.starts_with("neural-api")
+                        && path
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(path);
                     }
                 }
@@ -137,7 +141,10 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda") && n.ends_with(".sock") {
+                    if n.starts_with("barracuda")
+                        && p.extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    {
                         return Some(p);
                     }
                 }
@@ -147,6 +154,10 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
     None
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "validation harness with many sequential IPC checks"
+)]
 fn cmd_validate() {
     let mut h = ValidationHarness::new("exp084_barracuda_math_ipc");
     h.print_provenance(&[&PROVENANCE]);

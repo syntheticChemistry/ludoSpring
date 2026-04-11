@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! BM-001: Entity-component tick throughput.
 
+#![allow(missing_docs)]
+
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ludospring_benchmarks::ecs;
 

@@ -389,7 +389,6 @@ fn is_completion_action(action: &str) -> bool {
 }
 
 #[cfg(test)]
-#[expect(clippy::expect_used, reason = "test module: fail-fast on setup errors")]
 mod tests {
     use super::*;
     use crate::metrics::engagement::compute_engagement;

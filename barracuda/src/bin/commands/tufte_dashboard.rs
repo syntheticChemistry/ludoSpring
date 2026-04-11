@@ -9,8 +9,7 @@ use ludospring_barracuda::metrics::tufte_gaming::{UiElement, analyze_game_ui};
 use ludospring_barracuda::visualization::PetalTonguePushClient;
 
 use super::hud_fixtures::{
-    fps_hud_elements, puzzle_hud_elements, rpg_hud_elements, rts_hud_elements,
-    sandbox_hud_elements,
+    fps_hud_elements, puzzle_hud_elements, rpg_hud_elements, rts_hud_elements, sandbox_hud_elements,
 };
 
 use serde_json::{Value, json};

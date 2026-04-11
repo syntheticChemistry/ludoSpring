@@ -263,6 +263,7 @@ pub fn call_primal(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -324,7 +325,7 @@ mod tests {
         let dir =
             std::env::temp_dir().join(format!("ludospring-disc-empty-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("mkdir");
-        let reg = discover_primals_in_directories(&[dir.clone()]);
+        let reg = discover_primals_in_directories(std::slice::from_ref(&dir));
         assert_eq!(reg.endpoint_count(), 0);
         std::fs::remove_dir(&dir).ok();
     }

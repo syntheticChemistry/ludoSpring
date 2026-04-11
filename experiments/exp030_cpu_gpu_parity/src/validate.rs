@@ -6,6 +6,12 @@
 //! matching the barraCuda CPU reference to within documented tolerances.
 //! GPU checks are conditionally skipped when no adapter is available.
 
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss
+)]
+
 use crate::gpu::{
     gpu_run_engagement_batch, gpu_run_f32_3buf, gpu_run_f32_unary, gpu_run_fog_of_war,
     gpu_run_pathfind_step, gpu_run_perlin, gpu_run_raycaster, gpu_run_tile_lighting,
@@ -28,12 +34,6 @@ const PROVENANCE: BaselineProvenance = BaselineProvenance {
     command: "cargo run -p exp030_cpu_gpu_parity -- validate",
 };
 
-#[expect(
-    clippy::too_many_lines,
-    clippy::cast_precision_loss,
-    clippy::similar_names,
-    reason = "validation orchestrator — sequential check groups"
-)]
 pub fn cmd_validate() {
     let mut h = ValidationHarness::new("exp030_cpu_gpu_parity");
     h.print_provenance(&[&PROVENANCE]);
@@ -77,7 +77,6 @@ fn run_cpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>) {
 
     let seed: u64 = 42;
     let next = barcuda_math::lcg_step(seed);
-    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let expected_lcg = 42_u64
         .wrapping_mul(6_364_136_223_846_793_005)
         .wrapping_add(1) as f64;
@@ -102,6 +101,10 @@ fn run_cpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>) {
     h.check_abs("mean_cpu_known", cpu_mean, 5.0, tolerances::ANALYTICAL_TOL);
 }
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "GPU parity checks are intentionally sequential for readability"
+)]
 fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::gpu::GpuContext) {
     let sig_input: Vec<f32> = vec![-2.0, -1.0, 0.0, 1.0, 2.0];
     let gpu_sig = gpu_run_f32_unary(ctx, SIGMOID_WGSL, &sig_input);
@@ -170,7 +173,6 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let cpu_abs: Vec<f32> = abs_input.iter().map(|x| x.abs()).collect();
     h.check_bool("abs_gpu_exact", gpu_abs == cpu_abs);
 
-    #[expect(clippy::cast_precision_loss, reason = "counts fit in f64 mantissa")]
     let reduce_sum_input: Vec<f32> = (0..256).map(|i| i as f32).collect();
     let gpu_partial = gpu_run_f32_unary(ctx, REDUCE_SUM_WGSL, &reduce_sum_input);
     let gpu_total: f32 = gpu_partial.iter().sum();
@@ -193,11 +195,6 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         noise_coords.push(y);
     }
     let gpu_noise = gpu_run_perlin(ctx, &perm_u32, &noise_coords);
-    #[expect(
-        clippy::cast_precision_loss,
-        clippy::cast_possible_truncation,
-        reason = "counts fit in f64 mantissa; value bounded"
-    )]
     let cpu_noise: Vec<f32> = (0..n_noise)
         .map(|i| {
             let x = (i as f64) * 0.1;
@@ -261,11 +258,6 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let octaves = 4u32;
     let lacunarity: f32 = 2.0;
     let persistence: f32 = 0.5;
-    #[expect(
-        clippy::cast_precision_loss,
-        clippy::cast_possible_truncation,
-        reason = "counts fit in f64 mantissa; value bounded"
-    )]
     let fbm_cpu: Vec<f32> = (0..n_fbm)
         .map(|i| {
             let x = (i as f64) * 0.05;
@@ -273,7 +265,7 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
             noise::fbm_2d(x, y, octaves, f64::from(lacunarity), f64::from(persistence)) as f32
         })
         .collect();
-    let mut fbm_gpu = vec![0.0_f32; n_fbm];
+    let mut fbm_accum = vec![0.0_f32; n_fbm];
     let mut amplitude: f32 = 1.0;
     let mut frequency: f32 = 1.0;
     let mut max_value: f32 = 0.0;
@@ -285,16 +277,16 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         }
         let octave_result = gpu_run_perlin(ctx, &perm_u32, &octave_coords);
         for (j, val) in octave_result.iter().enumerate() {
-            fbm_gpu[j] += val * amplitude;
+            fbm_accum[j] += val * amplitude;
         }
         max_value += amplitude;
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-    for v in &mut fbm_gpu {
+    for v in &mut fbm_accum {
         *v /= max_value;
     }
-    let fbm_max_err = fbm_gpu
+    let fbm_max_err = fbm_accum
         .iter()
         .zip(fbm_cpu.iter())
         .map(|(g, c)| (g - c).abs())
@@ -345,7 +337,6 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         .iter()
         .map(|&a| {
             let hit = raycaster::cast_ray(&ray_player, f64::from(a), &grid_map, 20.0);
-            #[expect(clippy::cast_possible_truncation, reason = "value bounded")]
             hit.map_or(20.0_f32, |h| h.distance as f32)
         })
         .collect();
@@ -382,16 +373,16 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let fog_n = (fog_w * fog_h) as usize;
     let fog_terrain: Vec<f32> = (0..fog_n).map(|_| 0.0_f32).collect();
     let fog_prev: Vec<u32> = vec![0; fog_n];
-    let fog_vx = 4.0_f32;
-    let fog_vy = 4.0_f32;
+    let fog_center_x = 4.0_f32;
+    let fog_center_y = 4.0_f32;
     let sight_r_sq = 9.0_f32;
 
     let gpu_fog = gpu_run_fog_of_war(
         ctx,
         fog_w,
         fog_h,
-        fog_vx,
-        fog_vy,
+        fog_center_x,
+        fog_center_y,
         sight_r_sq,
         &fog_terrain,
         &fog_prev,
@@ -399,8 +390,8 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let cpu_fog = cpu_fog_of_war(
         fog_w,
         fog_h,
-        fog_vx,
-        fog_vy,
+        fog_center_x,
+        fog_center_y,
         sight_r_sq,
         &fog_terrain,
         &fog_prev,
@@ -409,10 +400,7 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
 
     let fog_visible_count = gpu_fog.iter().filter(|&&v| v == 2).count();
     h.check_bool("fog_of_war_has_visible_tiles", fog_visible_count > 0);
-    h.check_bool(
-        "fog_of_war_has_hidden_tiles",
-        gpu_fog.iter().any(|&v| v == 0),
-    );
+    h.check_bool("fog_of_war_has_hidden_tiles", gpu_fog.contains(&0));
 
     // -- Game shader parity: Tile Lighting --
     let light_w = 8_u32;
@@ -560,19 +548,19 @@ fn cpu_pathfind_step(
     let next_dist = current_dist + 1;
     let offsets: [(i32, i32); 4] = [(0, -1), (0, 1), (1, 0), (-1, 0)];
 
-    for idx in 0..n {
-        if dist_map[idx] != current_dist {
+    for (idx, &cell) in dist_map.iter().enumerate().take(n) {
+        if cell != current_dist {
             continue;
         }
         let x = (idx as u32) % grid_w;
         let y = (idx as u32) / grid_w;
         for &(ox, oy) in &offsets {
-            let nx = x as i32 + ox;
-            let ny = y as i32 + oy;
-            if nx < 0 || ny < 0 || nx >= grid_w as i32 || ny >= grid_h as i32 {
+            let nx = x.cast_signed() + ox;
+            let ny = y.cast_signed() + oy;
+            if nx < 0 || ny < 0 || nx >= grid_w.cast_signed() || ny >= grid_h.cast_signed() {
                 continue;
             }
-            let nidx = (ny as u32 * grid_w + nx as u32) as usize;
+            let nidx = (ny.cast_unsigned() * grid_w + nx.cast_unsigned()) as usize;
             if terrain[nidx] >= 0.9 {
                 continue;
             }

@@ -97,13 +97,13 @@ fn run_validation<S: ludospring_barracuda::validation::ValidationSink>(
     h.check_bool("multiple_genera_have_qs", distinct_genera.len() >= 3);
 
     // 4. luxS is the most widespread (AI-2 is universal)
-    let luxs_genera: HashSet<&str> = fixture
+    let genera_lux_s: HashSet<&str> = fixture
         .genus_gene_hits
         .iter()
         .filter(|r| r.gene == "luxS")
         .map(|r| r.genus.as_str())
         .collect();
-    let luxi_genera: HashSet<&str> = fixture
+    let genera_lux_i: HashSet<&str> = fixture
         .genus_gene_hits
         .iter()
         .filter(|r| r.gene == "luxI")
@@ -111,7 +111,7 @@ fn run_validation<S: ludospring_barracuda::validation::ValidationSink>(
         .collect();
     h.check_bool(
         "luxS_most_widespread",
-        luxs_genera.len() >= luxi_genera.len(),
+        genera_lux_s.len() >= genera_lux_i.len(),
     );
 
     // 5. E. coli uses AI-2 (luxS), not AHL (luxI) as primary QS system
@@ -159,6 +159,7 @@ fn main() {
 }
 
 #[cfg(test)]
+#[expect(clippy::expect_used, reason = "test assertions")]
 mod tests {
     use super::*;
 
