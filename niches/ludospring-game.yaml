@@ -8,8 +8,8 @@
 # Deploy graph: graphs/ludospring_deploy.toml
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
-# Date: March 16, 2026
-# Version: V23 (cross-ecosystem deep debt — 75 experiments, 394 tests + 12 proptest + 6 IPC integration)
+# Date: April 10, 2026
+# Version: V38 (99 experiments, 745 #[test] functions, 97 validation binaries)
 
 niche:
   id: "ludospring-game"

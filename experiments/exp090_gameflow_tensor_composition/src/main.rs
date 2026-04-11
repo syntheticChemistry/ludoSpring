@@ -56,8 +56,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -133,24 +133,27 @@ fn cmd_validate() {
     eprintln!("  barraCuda socket: {}", sock.display());
 
     // ── Flow: sigmoid composition ────────────────────────────
-    let sig_boundary = rpc_call(
-        &sock,
-        "math.sigmoid",
-        &serde_json::json!({"data": [0.0]}),
+    let sig_boundary = rpc_call(&sock, "math.sigmoid", &serde_json::json!({"data": [0.0]}));
+    h.check_bool(
+        "flow_boundary_sigmoid",
+        sig_boundary.as_ref().is_ok_and(has_result),
     );
-    h.check_bool("flow_boundary_sigmoid", sig_boundary.as_ref().is_ok_and(has_result));
 
-    let sig_challenge = rpc_call(
-        &sock,
-        "math.sigmoid",
-        &serde_json::json!({"data": [0.5]}),
+    let sig_challenge = rpc_call(&sock, "math.sigmoid", &serde_json::json!({"data": [0.5]}));
+    h.check_bool(
+        "flow_slight_challenge",
+        sig_challenge.as_ref().is_ok_and(has_result),
     );
-    h.check_bool("flow_slight_challenge", sig_challenge.as_ref().is_ok_and(has_result));
 
     if let Ok(ref resp) = sig_challenge {
         if let Some(arr) = resp.pointer("/result/result").and_then(|v| v.as_array()) {
             if let Some(val) = arr.first().and_then(serde_json::Value::as_f64) {
-                h.check_abs("flow_challenge_tolerance", val, FLOW_SLIGHT_CHALLENGE, tolerances::ANALYTICAL_TOL);
+                h.check_abs(
+                    "flow_challenge_tolerance",
+                    val,
+                    FLOW_SLIGHT_CHALLENGE,
+                    tolerances::ANALYTICAL_TOL,
+                );
             }
         }
     }
@@ -158,7 +161,12 @@ fn cmd_validate() {
     if let Ok(ref resp) = sig_boundary {
         if let Some(arr) = resp.pointer("/result/result").and_then(|v| v.as_array()) {
             if let Some(val) = arr.first().and_then(serde_json::Value::as_f64) {
-                h.check_abs("flow_tolerance", val, FLOW_BOUNDARY_EXPECTED, tolerances::ANALYTICAL_TOL);
+                h.check_abs(
+                    "flow_tolerance",
+                    val,
+                    FLOW_BOUNDARY_EXPECTED,
+                    tolerances::ANALYTICAL_TOL,
+                );
             }
         }
     }
@@ -175,42 +183,58 @@ fn cmd_validate() {
     h.check_bool("engagement_weighted_mean", wm_ok);
 
     if wm_ok {
-        if let Some(val) = wm.as_ref().ok().and_then(|r| r.pointer("/result/result")).and_then(serde_json::Value::as_f64) {
-            h.check_abs("engagement_tolerance", val, ENGAGEMENT_EXPECTED, tolerances::ANALYTICAL_TOL);
+        if let Some(val) = wm
+            .as_ref()
+            .ok()
+            .and_then(|r| r.pointer("/result/result"))
+            .and_then(serde_json::Value::as_f64)
+        {
+            h.check_abs(
+                "engagement_tolerance",
+                val,
+                ENGAGEMENT_EXPECTED,
+                tolerances::ANALYTICAL_TOL,
+            );
         }
     }
 
     // ── DDA: sigmoid for performance-to-difficulty mapping ───
-    let dda_hard = rpc_call(
-        &sock,
-        "math.sigmoid",
-        &serde_json::json!({"data": [-1.0]}),
-    );
+    let dda_hard = rpc_call(&sock, "math.sigmoid", &serde_json::json!({"data": [-1.0]}));
     h.check_bool("dda_too_hard", dda_hard.as_ref().is_ok_and(has_result));
 
-    let dda_easy = rpc_call(
-        &sock,
-        "math.sigmoid",
-        &serde_json::json!({"data": [1.0]}),
-    );
+    let dda_easy = rpc_call(&sock, "math.sigmoid", &serde_json::json!({"data": [1.0]}));
     h.check_bool("dda_too_easy", dda_easy.as_ref().is_ok_and(has_result));
 
     // Verify DDA values match expected and symmetry holds
-    let hard_val = dda_hard.as_ref().ok()
+    let hard_val = dda_hard
+        .as_ref()
+        .ok()
         .and_then(|r| r.pointer("/result/result"))
         .and_then(|v| v.as_array())
         .and_then(|a| a.first())
         .and_then(serde_json::Value::as_f64);
-    let easy_val = dda_easy.as_ref().ok()
+    let easy_val = dda_easy
+        .as_ref()
+        .ok()
         .and_then(|r| r.pointer("/result/result"))
         .and_then(|v| v.as_array())
         .and_then(|a| a.first())
         .and_then(serde_json::Value::as_f64);
     if let Some(hv) = hard_val {
-        h.check_abs("dda_hard_tolerance", hv, DDA_TOO_HARD_EXPECTED, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "dda_hard_tolerance",
+            hv,
+            DDA_TOO_HARD_EXPECTED,
+            tolerances::ANALYTICAL_TOL,
+        );
     }
     if let Some(ev) = easy_val {
-        h.check_abs("dda_easy_tolerance", ev, DDA_TOO_EASY_EXPECTED, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "dda_easy_tolerance",
+            ev,
+            DDA_TOO_EASY_EXPECTED,
+            tolerances::ANALYTICAL_TOL,
+        );
     }
     if let (Some(hv), Some(ev)) = (hard_val, easy_val) {
         h.check_abs("dda_symmetric", hv + ev, 1.0, tolerances::ANALYTICAL_TOL);
@@ -224,17 +248,25 @@ fn cmd_validate() {
     );
     h.check_bool("tensor_create_scores", tc.as_ref().is_ok_and(has_result));
 
-    if let Some(tid) = tc.as_ref().ok().and_then(|r| r.pointer("/result/tensor_id")).and_then(serde_json::Value::as_str) {
+    if let Some(tid) = tc
+        .as_ref()
+        .ok()
+        .and_then(|r| r.pointer("/result/tensor_id"))
+        .and_then(serde_json::Value::as_str)
+    {
         let reduce = rpc_call(
             &sock,
             "tensor.reduce",
             &serde_json::json!({"tensor_id": tid, "op": "sum"}),
         );
-        h.check_bool("tensor_reduce_sum", reduce.as_ref().is_ok_and(|r| {
-            r.pointer("/result/result")
-                .and_then(serde_json::Value::as_f64)
-                .is_some_and(|v| (v - 3.5).abs() < 0.01)
-        }));
+        h.check_bool(
+            "tensor_reduce_sum",
+            reduce.as_ref().is_ok_and(|r| {
+                r.pointer("/result/result")
+                    .and_then(serde_json::Value::as_f64)
+                    .is_some_and(|v| (v - 3.5).abs() < 0.01)
+            }),
+        );
     }
 
     h.finish();

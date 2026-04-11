@@ -276,7 +276,10 @@ mod tests {
     #[test]
     fn perlin_3d_at_integer_coords_is_zero() {
         let v = perlin_3d(1.0, 2.0, 3.0);
-        assert!(v.abs() < ANALYTICAL_TOL, "3D perlin at integers should be ~0");
+        assert!(
+            v.abs() < ANALYTICAL_TOL,
+            "3D perlin at integers should be ~0"
+        );
     }
 
     #[test]

@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
-**Date:** March 31, 2026
-**Total:** 98 experiments, 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace tests (V37.1)
-**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition
-**Lints:** All 98 experiment Cargo.toml files inherit `[lints] workspace = true` (V37.1)
-**Live V37.1 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals
+**Date:** April 10, 2026
+**Total:** 99 experiments, 696 barracuda lib + 23 ipc integration + 26 forge = 745 workspace tests (V38)
+**Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation
+**Lints:** All 99 experiment Cargo.toml files inherit `[lints] workspace = true` (V38)
+**Live V38 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099 composition validation: 13/13 (Rust == IPC parity).
 
 ---
 
@@ -423,6 +423,27 @@ game mechanics, and a full NUCLEUS game tick. Every `game.*` capability in
 | 097 | `ludospring-exp097` | 10 | **10/10 PASS** | Population dynamics as tensor composition (replicator, LV, WF, Markov) | — |
 | 098 | `ludospring-exp098` | 6 | **5/6** | NUCLEUS Complete game session (full stack, 10-tick continuous) | rhizoCrypt: no UDS |
 
+### Track 29: Composition Validation — Rust → IPC Parity (V38)
+
+Three-layer validation chain proving that calling ludoSpring's science methods
+via JSON-RPC IPC produces identical results to calling the Rust library directly.
+Golden targets generated from direct library calls serve the same role for IPC
+composition that Python baselines serve for Rust code.
+
+**Evolution path**:
+  Python baseline → Rust library → **IPC composition (THIS TRACK)** → NUCLEUS deployment
+
+**Artifacts**:
+- `baselines/rust/composition_targets.json` — golden targets from direct Rust calls
+- `baselines/rust/generate_composition_targets.rs` — generator (cargo example)
+- 7 composition parity tests in `barracuda/tests/ipc_integration.rs`
+
+| # | Package | Checks | Status | What it validates |
+|---|---------|--------|--------|-------------------|
+| 099 | `ludospring-exp099` | 13 | PASS* | Flow x2, Fitts x2, Engagement x2, Noise, DDA x3, Accessibility x2, WFC — all within ANALYTICAL_TOL (1e-10) |
+
+*Requires live ludoSpring server on UDS. Graceful dry-mode when no server running.
+
 ### metalForge Dispatch (Capability-Based Routing)
 
 | Binary | Checks | Status | Modules Validated |
@@ -567,6 +588,10 @@ cargo run -p ludospring-exp095                             # Content ownership (
 cargo run -p ludospring-exp096                             # NPC dialogue composition (10 checks)
 cargo run -p ludospring-exp097                             # Population dynamics (10 checks)
 cargo run -p ludospring-exp098                             # NUCLEUS Complete session (6 checks)
+
+# Run Composition Validation (Track 29, V38)
+# Requires live ludoSpring server
+cargo run -p ludospring-exp099                             # Composition validation (13 checks)
 
 # Run all tests
 cargo test --features ipc --lib --tests

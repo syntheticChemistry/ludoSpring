@@ -28,7 +28,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "baselines/python/lysogeny_population_dynamics.py",
+    script: "N/A (composition — population dynamics via tensor IPC)",
     commit: "4b683e3e",
     date: "2026-03-30",
     command: "cargo run -p ludospring-exp097",
@@ -61,8 +61,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -141,7 +141,10 @@ fn cmd_validate() {
         "tensor.create",
         &serde_json::json!({"shape": [3], "data": REPLICATOR_POP.map(|v| v as f32)}),
     );
-    h.check_bool("replicator_tensor_create", pop.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "replicator_tensor_create",
+        pop.as_ref().is_ok_and(has_result),
+    );
 
     // Apply fitness: scale each element (simulate via 3 separate scale ops)
     // Since tensor.scale is scalar multiply, we compose fitness-weighted pop manually:
@@ -158,7 +161,10 @@ fn cmd_validate() {
         "tensor.create",
         &serde_json::json!({"shape": [3], "data": fitness_weighted.iter().map(|v| *v as f32).collect::<Vec<_>>()}),
     );
-    h.check_bool("replicator_fitness_scale", fw_tensor.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "replicator_fitness_scale",
+        fw_tensor.as_ref().is_ok_and(has_result),
+    );
 
     // Reduce to get sum for normalization
     if let Some(tid) = fw_tensor
@@ -188,13 +194,33 @@ fn cmd_validate() {
 
     // Verify proportional growth: normalized values match expected
     let normalized: Vec<f64> = fitness_weighted.iter().map(|v| v / fw_sum).collect();
-    h.check_abs("replicator_proportional_growth", normalized[0], REPLICATOR_EXPECTED_0, tolerances::ANALYTICAL_TOL);
-    h.check_abs("replicator_strategy_1", normalized[1], REPLICATOR_EXPECTED_1, tolerances::ANALYTICAL_TOL);
-    h.check_abs("replicator_strategy_2", normalized[2], REPLICATOR_EXPECTED_2, tolerances::ANALYTICAL_TOL);
+    h.check_abs(
+        "replicator_proportional_growth",
+        normalized[0],
+        REPLICATOR_EXPECTED_0,
+        tolerances::ANALYTICAL_TOL,
+    );
+    h.check_abs(
+        "replicator_strategy_1",
+        normalized[1],
+        REPLICATOR_EXPECTED_1,
+        tolerances::ANALYTICAL_TOL,
+    );
+    h.check_abs(
+        "replicator_strategy_2",
+        normalized[2],
+        REPLICATOR_EXPECTED_2,
+        tolerances::ANALYTICAL_TOL,
+    );
 
     // Population conservation: sum of normalized = 1.0
     let norm_sum: f64 = normalized.iter().sum();
-    h.check_abs("population_conservation", norm_sum, 1.0, tolerances::ANALYTICAL_TOL);
+    h.check_abs(
+        "population_conservation",
+        norm_sum,
+        1.0,
+        tolerances::ANALYTICAL_TOL,
+    );
 
     // ── Markov transition: matrix × state vector ─────────────
     // 2-state Markov chain: [[0.7, 0.3], [0.4, 0.6]]
@@ -204,7 +230,10 @@ fn cmd_validate() {
         "tensor.create",
         &serde_json::json!({"shape": [2, 2], "data": [0.7_f32, 0.3, 0.4, 0.6]}),
     );
-    h.check_bool("markov_transition_create", transition.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "markov_transition_create",
+        transition.as_ref().is_ok_and(has_result),
+    );
 
     let state = rpc_call(
         &sock,
@@ -213,8 +242,16 @@ fn cmd_validate() {
     );
 
     if let (Some(t_id), Some(s_id)) = (
-        transition.as_ref().ok().and_then(|r| r.pointer("/result/tensor_id")).and_then(serde_json::Value::as_str),
-        state.as_ref().ok().and_then(|r| r.pointer("/result/tensor_id")).and_then(serde_json::Value::as_str),
+        transition
+            .as_ref()
+            .ok()
+            .and_then(|r| r.pointer("/result/tensor_id"))
+            .and_then(serde_json::Value::as_str),
+        state
+            .as_ref()
+            .ok()
+            .and_then(|r| r.pointer("/result/tensor_id"))
+            .and_then(serde_json::Value::as_str),
     ) {
         let step = rpc_call(
             &sock,
@@ -229,7 +266,12 @@ fn cmd_validate() {
     // ── Wright-Fisher: fixation probability = 1/N (neutral) ─
     // Analytical result, composed from barraCuda arithmetic
     let fixation = 1.0 / WF_POPULATION_SIZE;
-    h.check_abs("wright_fisher_fixation", fixation, WF_FIXATION_EXPECTED, tolerances::ANALYTICAL_TOL);
+    h.check_abs(
+        "wright_fisher_fixation",
+        fixation,
+        WF_FIXATION_EXPECTED,
+        tolerances::ANALYTICAL_TOL,
+    );
 
     h.finish();
 }

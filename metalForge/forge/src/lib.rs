@@ -383,6 +383,9 @@ mod tests {
 
         assert!(budget.fits, "mixed hardware should fit 60 Hz");
         assert!(budget.npu_total_ms > 0.0, "NPU should have work");
-        assert!(budget.npu_gpu_transfer_ms > 0.0, "should have NPU→GPU transfer");
+        assert!(
+            budget.npu_gpu_transfer_ms > 0.0,
+            "should have NPU→GPU transfer"
+        );
     }
 }

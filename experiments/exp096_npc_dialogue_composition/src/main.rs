@@ -55,8 +55,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(10)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -146,10 +146,30 @@ fn cmd_validate() {
     let rhizocrypt = discover_primal("rhizocrypt");
     let petaltongue = discover_primal("petaltongue");
 
-    eprintln!("  squirrel:    {}", squirrel.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  barracuda:   {}", barracuda.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  rhizocrypt:  {}", rhizocrypt.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  petaltongue: {}", petaltongue.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
+    eprintln!(
+        "  squirrel:    {}",
+        squirrel
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  barracuda:   {}",
+        barracuda
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  rhizocrypt:  {}",
+        rhizocrypt
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  petaltongue: {}",
+        petaltongue
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
 
     // barraCuda is required for science checks
     let Some(bc) = barracuda else {
@@ -160,7 +180,10 @@ fn cmd_validate() {
     // ── Squirrel: AI reachability + NPC query ────────────────
     if let Some(ref sq) = squirrel {
         let health = rpc_call(sq, "health.liveness", &serde_json::json!({}));
-        h.check_bool("squirrel_ai_reachable", health.as_ref().is_ok_and(has_result));
+        h.check_bool(
+            "squirrel_ai_reachable",
+            health.as_ref().is_ok_and(has_result),
+        );
 
         let npc_query = rpc_call(
             sq,
@@ -170,7 +193,10 @@ fn cmd_validate() {
                 "max_tokens": 100
             }),
         );
-        h.check_bool("squirrel_npc_query", npc_query.as_ref().is_ok_and(has_result));
+        h.check_bool(
+            "squirrel_npc_query",
+            npc_query.as_ref().is_ok_and(has_result),
+        );
 
         // Internal voice with temperature constraint
         let voice = rpc_call(
@@ -190,12 +216,11 @@ fn cmd_validate() {
     }
 
     // ── barraCuda: Flow evaluation via sigmoid ───────────────
-    let flow = rpc_call(
-        &bc,
-        "math.sigmoid",
-        &serde_json::json!({"data": [0.0]}),
+    let flow = rpc_call(&bc, "math.sigmoid", &serde_json::json!({"data": [0.0]}));
+    h.check_bool(
+        "barracuda_flow_sigmoid",
+        flow.as_ref().is_ok_and(has_result),
     );
-    h.check_bool("barracuda_flow_sigmoid", flow.as_ref().is_ok_and(has_result));
 
     if let Some(val) = flow
         .as_ref()
@@ -205,7 +230,12 @@ fn cmd_validate() {
         .and_then(|a| a.first())
         .and_then(serde_json::Value::as_f64)
     {
-        h.check_abs("flow_balanced_tolerance", val, FLOW_BALANCED_EXPECTED, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "flow_balanced_tolerance",
+            val,
+            FLOW_BALANCED_EXPECTED,
+            tolerances::ANALYTICAL_TOL,
+        );
     }
 
     // ── barraCuda: Trust accumulation via weighted_mean ──────
@@ -214,7 +244,10 @@ fn cmd_validate() {
         "stats.weighted_mean",
         &serde_json::json!({"values": TRUST_ACTIONS, "weights": TRUST_WEIGHTS}),
     );
-    h.check_bool("barracuda_trust_weighted_mean", trust.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "barracuda_trust_weighted_mean",
+        trust.as_ref().is_ok_and(has_result),
+    );
 
     if let Some(val) = trust
         .as_ref()
@@ -222,7 +255,12 @@ fn cmd_validate() {
         .and_then(|r| r.pointer("/result/result"))
         .and_then(serde_json::Value::as_f64)
     {
-        h.check_abs("trust_tolerance", val, TRUST_EXPECTED, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "trust_tolerance",
+            val,
+            TRUST_EXPECTED,
+            tolerances::ANALYTICAL_TOL,
+        );
     }
 
     // ── rhizoCrypt: Record dialogue event ────────────────────
@@ -237,7 +275,10 @@ fn cmd_validate() {
                 "topic": "old_ruins"
             }),
         );
-        h.check_bool("rhizocrypt_dialogue_event", event.as_ref().is_ok_and(has_result));
+        h.check_bool(
+            "rhizocrypt_dialogue_event",
+            event.as_ref().is_ok_and(has_result),
+        );
     } else {
         h.check_bool("rhizocrypt_dialogue_event", false);
     }
@@ -251,13 +292,16 @@ fn cmd_validate() {
         "math.log2",
         &serde_json::json!({"data": [hick_options]}),
     );
-    h.check_bool("dialogue_flow_hick_check", log_resp.as_ref().is_ok_and(|r| {
-        r.pointer("/result/result")
-            .and_then(|v| v.as_array())
-            .and_then(|a| a.first())
-            .and_then(serde_json::Value::as_f64)
-            .is_some_and(|v| (v - hick_options.log2()).abs() < tolerances::ANALYTICAL_TOL)
-    }));
+    h.check_bool(
+        "dialogue_flow_hick_check",
+        log_resp.as_ref().is_ok_and(|r| {
+            r.pointer("/result/result")
+                .and_then(|v| v.as_array())
+                .and_then(|a| a.first())
+                .and_then(serde_json::Value::as_f64)
+                .is_some_and(|v| (v - hick_options.log2()).abs() < tolerances::ANALYTICAL_TOL)
+        }),
+    );
 
     // ── petalTongue: Scene push (optional) ───────────────────
     if let Some(ref pt) = petaltongue {
@@ -270,7 +314,10 @@ fn cmd_validate() {
                 "options": ["Ask about ruins", "Ask about town", "Leave", "Bribe"]
             }),
         );
-        h.check_bool("petaltongue_scene_push", scene.as_ref().is_ok_and(has_result));
+        h.check_bool(
+            "petaltongue_scene_push",
+            scene.as_ref().is_ok_and(has_result),
+        );
     } else {
         h.check_bool("petaltongue_scene_push", false);
     }

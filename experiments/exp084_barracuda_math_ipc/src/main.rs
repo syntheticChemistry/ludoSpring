@@ -71,8 +71,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -96,7 +96,8 @@ fn has_result(resp: &serde_json::Value) -> bool {
 }
 
 fn error_code(resp: &serde_json::Value) -> Option<i64> {
-    resp.pointer("/error/code").and_then(serde_json::Value::as_i64)
+    resp.pointer("/error/code")
+        .and_then(serde_json::Value::as_i64)
 }
 
 fn error_message(resp: &serde_json::Value) -> String {
@@ -286,7 +287,9 @@ fn cmd_validate() {
         if routed {
             eprintln!("  Neural API routes compute → barraCuda successfully");
         } else {
-            eprintln!("  GAP (biomeOS): Neural API compute domain routes to toadStool, not barraCuda");
+            eprintln!(
+                "  GAP (biomeOS): Neural API compute domain routes to toadStool, not barraCuda"
+            );
             eprintln!("  biomeOS bootstrap graph maps compute→toadStool; needs math→barraCuda");
             if let Ok(ref resp) = cap_route {
                 eprintln!("    Response: {resp}");
@@ -363,12 +366,19 @@ fn probe_math(
             h.check_bool(check_name, false);
         }
         Ok(resp) if error_code(&resp) == Some(INVALID_PARAMS) => {
-            eprintln!("  FAIL: {method} → -32602 invalid_params: {}", error_message(&resp));
+            eprintln!(
+                "  FAIL: {method} → -32602 invalid_params: {}",
+                error_message(&resp)
+            );
             eprintln!("    Method EXISTS but param schema doesn't match");
             h.check_bool(check_name, false);
         }
         Ok(resp) => {
-            eprintln!("  FAIL: {method} → {}: {}", error_code(&resp).unwrap_or(0), error_message(&resp));
+            eprintln!(
+                "  FAIL: {method} → {}: {}",
+                error_code(&resp).unwrap_or(0),
+                error_message(&resp)
+            );
             h.check_bool(check_name, false);
         }
         Err(e) => {

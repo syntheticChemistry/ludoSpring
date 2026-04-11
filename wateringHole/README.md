@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** March 31, 2026 (V37.1)
+**Last Updated:** April 10, 2026 (V38)
 
 ---
 
@@ -25,13 +25,12 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V35** | [Central: LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md) | Mar 30 | Primal composition gap discovery: 5 experiments against live primals, 5 critical gaps documented (barraCuda missing, Neural API registration, coralReef transport, continuous executor, nucleus graphs) |
-| **V34** | [LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md](handoffs/LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md) | Mar 29 | Dependency path fixes, workspace alignment |
+| **V38** | [Central: LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md) | Apr 10 | Three-layer validation chain (Python → Rust → IPC), ecoBin harvest to plasmidBin v0.8.0, 30 capabilities, 8 primal gaps, composition patterns for NUCLEUS, actions for all primal + spring teams |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 88 experiments, 734 workspace tests, V35 primal composition gap discovery)
+ludoSpring (game science, 99 experiments, 745 workspace tests, V38 composition validation chain)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -67,7 +66,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `stats::dot` | `metrics::engagement` | Weighted engagement composite |
 | `rng::lcg_step` | `procedural::bsp` | Deterministic BSP generation |
 | `rng::state_to_f64` | `procedural::bsp` | Split ratio from LCG state |
-| `validation::ValidationHarness` | All 82 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
+| `validation::ValidationHarness` | All 99 experiments | hotSpring-pattern check harness with pluggable `ValidationSink` |
 
 ### Absorption Opportunities
 
@@ -84,24 +83,30 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## V35 Composition Gap Summary
+## V38 Composition Gap Matrix
 
-| Gap | Owner | Priority |
-|-----|-------|----------|
-| barraCuda not in plasmidBin | barraCuda | P0 |
-| Primals not registered with Neural API | biomeOS | P0 |
-| coralReef HTTP vs raw JSON-RPC on UDS | coralReef | P1 |
-| barraCuda math not on JSON-RPC | barraCuda | P1 |
-| Tensor element-wise ops not on IPC | barraCuda | P1 |
-| Continuous executor stub | biomeOS | P2 |
-| Nucleus vs runtime graph separation | biomeOS | P2 |
+| GAP | Owner | Severity | Impact |
+|-----|-------|----------|--------|
+| GAP-06: No UDS transport | **rhizoCrypt** | CRITICAL | Blocks 4 experiments |
+| GAP-07: Startup panic (runtime nesting) | **loamSpine** | CRITICAL | Blocks 1 experiment |
+| GAP-08: Fitts/Hick formula mismatch | **barraCuda** | HIGH | -4 composition checks |
+| Neural API capability registration | **biomeOS** | HIGH | -14 checks (exp087, 088) |
+| GAP-01: coralReef IPC client not exercised | **coralReef** | MEDIUM | Shader pipeline |
+| GAP-05: Trio not in proto-nucleate | **primalSpring** | MEDIUM | Graph completeness |
+| Inter-primal discovery gap | **toadStool** | MEDIUM | -1 check |
+| Perlin3D lattice invariant | **barraCuda** | MEDIUM | -1 check |
 
-See central handoff for full details per team.
+**Score**: 95/141 (67.4%) + exp099 13/13. Projected with all fixes: ~143/154 (92.9%).
+
+See [V38 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md) for full details per team.
 
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V37.1 | Central: `LUDOSPRING_V371_PLASMIDBINLIVE_GAP_MATRIX_HANDOFF_MAR31_2026.md` | V38 Composition Validation Chain |
+| V35 | Central: `LUDOSPRING_V35_PRIMAL_COMPOSITION_GAP_DISCOVERY_HANDOFF_MAR30_2026.md` | V38 Composition Validation Chain |
+| V34 | `handoffs/LUDOSPRING_V34_NUCLEUS_NEST_HANDOFF_MAR29_2026.md` | V38 Composition Validation Chain |
 | V32 | `handoffs/archive/LUDOSPRING_V32_COMPREHENSIVE_AUDIT_DEEP_DEBT_HANDOFF_MAR29_2026.md` | V34 Nucleus Nest |
 | V31 | `handoffs/archive/LUDOSPRING_V31_DEEP_DEBT_ESOTERICWEBB_ALIGNMENT_HANDOFF_MAR28_2026.md` | V32 Comprehensive Audit + Deep Debt |
 | V30 | `handoffs/archive/LUDOSPRING_V30_DEEP_EVOLUTION_MODERN_RUST_HANDOFF_MAR23_2026.md` | V31 Deep Debt + esotericWebb |

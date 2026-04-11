@@ -196,7 +196,9 @@ fn validate_maren(h: &mut ValidationHarness) {
         kb.query("cellar door") == KnowledgeQueryResult::LiedAbout,
     );
 
-    let exp_lie = kb.get_lie("experiments").or_exit("lie for 'experiments' not found");
+    let exp_lie = kb
+        .get_lie("experiments")
+        .or_exit("lie for 'experiments' not found");
     h.check_abs(
         "maren_experiment_dc",
         f64::from(exp_lie.detection_dc),
@@ -317,7 +319,9 @@ fn validate_multi_npc(h: &mut ValidationHarness) {
         10.0,
         0.0,
     );
-    let sheriff_family_lie = sheriff.get_lie("family").or_exit("sheriff lie for 'family' not found");
+    let sheriff_family_lie = sheriff
+        .get_lie("family")
+        .or_exit("sheriff lie for 'family' not found");
     h.check_bool(
         "professor_research_dc_lower_than_sheriff",
         prof_lie.detection_dc < sheriff_family_lie.detection_dc,

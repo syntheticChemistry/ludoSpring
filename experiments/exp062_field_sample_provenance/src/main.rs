@@ -489,7 +489,8 @@ fn validate_ipc_wire_format(h: &mut ValidationHarness) {
         dag_req.method == "dag.append_vertex",
     );
 
-    let roundtrip = serde_json::to_string(&mint_req).or_exit("failed to serialize mint_req for roundtrip");
+    let roundtrip =
+        serde_json::to_string(&mint_req).or_exit("failed to serialize mint_req for roundtrip");
     let parsed: SampleJsonRpcRequest =
         serde_json::from_str(&roundtrip).or_exit("failed to deserialize mint_req roundtrip");
     h.check_bool(

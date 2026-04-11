@@ -77,6 +77,7 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
         "game.gpu.tile_lighting" => gpu::handle_gpu_tile_lighting(req),
         "game.gpu.pathfind" => gpu::handle_gpu_pathfind(req),
         "game.gpu.perlin_terrain" => gpu::handle_gpu_perlin_terrain(req),
+        "game.gpu.batch_raycast" => gpu::handle_gpu_batch_raycast(req),
         _ => {
             return serialize_error(&JsonRpcError::method_not_found(&req.id, &req.method));
         }
@@ -665,6 +666,39 @@ mod tests {
         let req = make_request(METHOD_STORAGE_GET, serde_json::json!({ "key": "k1" }));
         let result = result_json(&dispatch(&req));
         assert_eq!(result["available"], false);
+    }
+
+    #[test]
+    fn gpu_batch_raycast_degrades_without_toadstool() {
+        let req = make_request(
+            "game.gpu.batch_raycast",
+            serde_json::json!({
+                "grid_w": 8,
+                "grid_h": 8,
+                "origins_x": [1.5],
+                "origins_y": [1.5],
+                "angles": [0.0]
+            }),
+        );
+        let result = result_json(&dispatch(&req));
+        assert_eq!(result["available"], false);
+        assert_eq!(result["fallback"], "cpu");
+    }
+
+    #[test]
+    fn gpu_batch_raycast_rejects_mismatched_arrays() {
+        let req = make_request(
+            "game.gpu.batch_raycast",
+            serde_json::json!({
+                "grid_w": 4,
+                "grid_h": 4,
+                "origins_x": [1.0, 2.0],
+                "origins_y": [1.0],
+                "angles": [0.0]
+            }),
+        );
+        let resp = dispatch(&req);
+        assert!(resp.contains("-32602"), "expected invalid params: {resp}");
     }
 
     #[test]

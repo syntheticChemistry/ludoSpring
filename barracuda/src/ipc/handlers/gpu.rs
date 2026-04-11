@@ -6,7 +6,8 @@ use serde_json::json;
 use crate::game::engine::gpu::{FogOfWarParams, GpuOp, PointLight, TileLightingParams};
 use crate::ipc::envelope::{JsonRpcError, JsonRpcRequest};
 use crate::ipc::params::{
-    GpuFogOfWarParams, GpuPathfindParams, GpuPerlinTerrainParams, GpuTileLightingParams,
+    GpuBatchRaycastParams, GpuFogOfWarParams, GpuPathfindParams, GpuPerlinTerrainParams,
+    GpuTileLightingParams,
 };
 use crate::ipc::toadstool;
 use crate::procedural::noise::perlin_perm_table_u32;
@@ -30,9 +31,8 @@ fn tile_count_or_err(id: &serde_json::Value, w: u32, h: u32) -> Result<u32, Json
             "grid_w and grid_h must be positive",
         ));
     }
-    w.checked_mul(h).ok_or_else(|| {
-        JsonRpcError::invalid_params(id, "grid_w * grid_h overflows u32")
-    })
+    w.checked_mul(h)
+        .ok_or_else(|| JsonRpcError::invalid_params(id, "grid_w * grid_h overflows u32"))
 }
 
 fn f32_vec_from_opt_f64(
@@ -73,22 +73,17 @@ fn dispatch_gpu(
     element_count: u32,
     buffers: serde_json::Value,
 ) -> HandlerResult {
-    let shader = op.wgsl_source().ok_or_else(|| {
-        JsonRpcError::internal(&req.id, "GPU op has no embedded WGSL source")
-    })?;
+    let shader = op
+        .wgsl_source()
+        .ok_or_else(|| JsonRpcError::internal(&req.id, "GPU op has no embedded WGSL source"))?;
     let wg_n = op.workgroup_size();
     let workgroup_size = [wg_n, 1, 1];
     let dispatch_x = op.dispatch_count(element_count).max(1);
     let dispatch_size = [dispatch_x, 1, 1];
 
-    let result = toadstool::dispatch_submit(
-        shader,
-        "main",
-        workgroup_size,
-        dispatch_size,
-        &buffers,
-    )
-    .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
+    let result =
+        toadstool::dispatch_submit(shader, "main", workgroup_size, dispatch_size, &buffers)
+            .map_err(|e| JsonRpcError::internal(&req.id, &e))?;
 
     if result.available {
         to_json(
@@ -229,12 +224,7 @@ pub(super) fn handle_gpu_pathfind(req: &JsonRpcRequest) -> HandlerResult {
         }
     });
 
-    dispatch_gpu(
-        req,
-        GpuOp::PathfindStep,
-        p.grid_w * p.grid_h,
-        buffers,
-    )
+    dispatch_gpu(req, GpuOp::PathfindStep, p.grid_w * p.grid_h, buffers)
 }
 
 /// `game.gpu.perlin_terrain`
@@ -263,4 +253,62 @@ pub(super) fn handle_gpu_perlin_terrain(req: &JsonRpcRequest) -> HandlerResult {
     });
 
     dispatch_gpu(req, GpuOp::PerlinTerrain, n as u32, buffers)
+}
+
+/// `game.gpu.batch_raycast`
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "f64→f32 narrowing for GPU buffers — game coordinates are small"
+)]
+pub(super) fn handle_gpu_batch_raycast(req: &JsonRpcRequest) -> HandlerResult {
+    let p: GpuBatchRaycastParams = parse_params(req)?;
+    let n = tile_count_or_err(&req.id, p.grid_w, p.grid_h)? as usize;
+    let ray_count = p.origins_x.len();
+
+    if p.origins_y.len() != ray_count || p.angles.len() != ray_count {
+        return Err(JsonRpcError::invalid_params(
+            &req.id,
+            "origins_x, origins_y, and angles must have equal length",
+        ));
+    }
+    if ray_count == 0 {
+        return Err(JsonRpcError::invalid_params(
+            &req.id,
+            "at least one ray required",
+        ));
+    }
+
+    let walls = f32_vec_from_opt_f64(&req.id, p.walls, n, 0.0)?;
+
+    let mut ray_data: Vec<f32> = Vec::with_capacity(ray_count * 4);
+    for i in 0..ray_count {
+        let angle = p.angles[i];
+        ray_data.push(p.origins_x[i] as f32);
+        ray_data.push(p.origins_y[i] as f32);
+        ray_data.push(angle.cos() as f32);
+        ray_data.push(angle.sin() as f32);
+    }
+    let output = vec![0.0f32; ray_count];
+
+    let buffers = serde_json::json!({
+        "ludospring_gpu_v1": true,
+        "op": GpuOp::BatchRaycast.shader_name(),
+        "uniform": {
+            "grid_w": p.grid_w,
+            "grid_h": p.grid_h,
+            "ray_count": ray_count,
+        },
+        "storage": {
+            "walls_f32": walls,
+            "rays_f32": ray_data,
+            "output_f32": output,
+        }
+    });
+
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "ray count validated above, fits u32 for any practical grid"
+    )]
+    let count = ray_count as u32;
+    dispatch_gpu(req, GpuOp::BatchRaycast, count, buffers)
 }

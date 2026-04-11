@@ -75,8 +75,9 @@ fn cmd_status() {
     };
 
     let params = serde_json::json!({});
-    match ludospring_barracuda::ipc::call_primal(&endpoint, "health.check", &params)
-        .or_else(|_| ludospring_barracuda::ipc::call_primal(&endpoint, "lifecycle.health", &params))
+    match ludospring_barracuda::ipc::call_primal(&endpoint, "health.liveness", &params)
+        .or_else(|_| ludospring_barracuda::ipc::call_primal(&endpoint, "lifecycle.status", &params))
+        .or_else(|_| ludospring_barracuda::ipc::call_primal(&endpoint, "health.check", &params))
     {
         Ok(resp) => {
             println!(

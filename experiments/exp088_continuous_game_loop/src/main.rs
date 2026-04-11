@@ -69,8 +69,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(15)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -249,11 +249,7 @@ fn cmd_validate() {
 
                 std::thread::sleep(Duration::from_millis(200));
 
-                let status = rpc_call(
-                    &na,
-                    "graph.status",
-                    &serde_json::json!({"session_id": sid}),
-                );
+                let status = rpc_call(&na, "graph.status", &serde_json::json!({"session_id": sid}));
                 h.check_bool(
                     "continuous_graph_status",
                     status.as_ref().is_ok_and(has_result),
@@ -264,10 +260,7 @@ fn cmd_validate() {
                     "graph.stop_continuous",
                     &serde_json::json!({"session_id": sid}),
                 );
-                h.check_bool(
-                    "continuous_graph_stop",
-                    stop.as_ref().is_ok_and(has_result),
-                );
+                h.check_bool("continuous_graph_stop", stop.as_ref().is_ok_and(has_result));
             } else {
                 h.check_bool("continuous_graph_status", false);
                 h.check_bool("continuous_graph_stop", false);
@@ -337,17 +330,14 @@ fn deploy_composition_graph(na: &Path) {
         eprintln!("  WARN: cannot read game_loop_continuous.toml — graph not deployed");
         return;
     };
-    let resp = rpc_call(
-        na,
-        "graph.save",
-        &serde_json::json!({"toml": content}),
-    );
+    let resp = rpc_call(na, "graph.save", &serde_json::json!({"toml": content}));
     match resp {
         Ok(ref r) if has_result(r) => {
             eprintln!("  Deployed graph: game_loop_continuous.toml");
         }
         Ok(ref r) => {
-            let msg = r.pointer("/error/message")
+            let msg = r
+                .pointer("/error/message")
                 .and_then(serde_json::Value::as_str)
                 .unwrap_or("unknown");
             eprintln!("  WARN: graph.save → {msg}");

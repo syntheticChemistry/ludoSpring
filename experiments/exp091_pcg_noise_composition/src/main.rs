@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "baselines/python/exp009_perlin.py + exp011_wfc.py",
+    script: "baselines/python/perlin_noise.py (WFC: analytical)",
     commit: "4b683e3e",
     date: "2026-03-30",
     command: "cargo run -p ludospring-exp091",
@@ -48,8 +48,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -96,7 +96,8 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
 }
 
 fn extract_result_f64(resp: &serde_json::Value) -> Option<f64> {
-    resp.pointer("/result/result").and_then(serde_json::Value::as_f64)
+    resp.pointer("/result/result")
+        .and_then(serde_json::Value::as_f64)
 }
 
 fn dry_mode(h: &mut ValidationHarness) {
@@ -133,7 +134,12 @@ fn cmd_validate() {
         &serde_json::json!({"x": 1.0, "y": 1.0}),
     );
     if let Some(val) = p2d_lattice.as_ref().ok().and_then(extract_result_f64) {
-        h.check_abs("perlin2d_lattice_zero", val, PERLIN_LATTICE_EXPECTED, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "perlin2d_lattice_zero",
+            val,
+            PERLIN_LATTICE_EXPECTED,
+            tolerances::ANALYTICAL_TOL,
+        );
     } else {
         h.check_bool("perlin2d_lattice_zero", false);
     }
@@ -145,7 +151,10 @@ fn cmd_validate() {
         &serde_json::json!({"x": 0.5, "y": 0.5}),
     );
     if let Some(val) = p2d_mid.as_ref().ok().and_then(extract_result_f64) {
-        h.check_bool("perlin2d_nonlattice_range", val >= PERLIN_RANGE_MIN && val <= PERLIN_RANGE_MAX);
+        h.check_bool(
+            "perlin2d_nonlattice_range",
+            val >= PERLIN_RANGE_MIN && val <= PERLIN_RANGE_MAX,
+        );
     } else {
         h.check_bool("perlin2d_nonlattice_range", false);
     }
@@ -158,10 +167,7 @@ fn cmd_validate() {
     );
     let first = p2d_mid.as_ref().ok().and_then(extract_result_f64);
     let second = p2d_again.as_ref().ok().and_then(extract_result_f64);
-    h.check_bool(
-        "perlin2d_deterministic",
-        first.is_some() && first == second,
-    );
+    h.check_bool("perlin2d_deterministic", first.is_some() && first == second);
 
     // ── Perlin 3D: lattice point = 0.0 ──────────────────────
     let p3d_lattice = rpc_call(
@@ -170,7 +176,12 @@ fn cmd_validate() {
         &serde_json::json!({"x": 1.0, "y": 1.0, "z": 1.0}),
     );
     if let Some(val) = p3d_lattice.as_ref().ok().and_then(extract_result_f64) {
-        h.check_abs("perlin3d_lattice_zero", val, PERLIN_LATTICE_EXPECTED, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "perlin3d_lattice_zero",
+            val,
+            PERLIN_LATTICE_EXPECTED,
+            tolerances::ANALYTICAL_TOL,
+        );
     } else {
         h.check_bool("perlin3d_lattice_zero", false);
     }
@@ -182,7 +193,10 @@ fn cmd_validate() {
         &serde_json::json!({"x": 0.3, "y": 0.7, "z": 0.1}),
     );
     if let Some(val) = p3d_mid.as_ref().ok().and_then(extract_result_f64) {
-        h.check_bool("perlin3d_nonlattice_range", val >= PERLIN_RANGE_MIN && val <= PERLIN_RANGE_MAX);
+        h.check_bool(
+            "perlin3d_nonlattice_range",
+            val >= PERLIN_RANGE_MIN && val <= PERLIN_RANGE_MAX,
+        );
     } else {
         h.check_bool("perlin3d_nonlattice_range", false);
     }
@@ -197,19 +211,30 @@ fn cmd_validate() {
             0.0, 1.0, 1.0
         ]}),
     );
-    h.check_bool("wfc_tensor_create_adjacency", adj.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "wfc_tensor_create_adjacency",
+        adj.as_ref().is_ok_and(has_result),
+    );
 
-    if let Some(tid) = adj.as_ref().ok().and_then(|r| r.pointer("/result/tensor_id")).and_then(serde_json::Value::as_str) {
+    if let Some(tid) = adj
+        .as_ref()
+        .ok()
+        .and_then(|r| r.pointer("/result/tensor_id"))
+        .and_then(serde_json::Value::as_str)
+    {
         let reduce = rpc_call(
             &sock,
             "tensor.reduce",
             &serde_json::json!({"tensor_id": tid, "op": "min"}),
         );
-        h.check_bool("wfc_tensor_reduce_min_entropy", reduce.as_ref().is_ok_and(|r| {
-            r.pointer("/result/result")
-                .and_then(serde_json::Value::as_f64)
-                .is_some_and(|v| (v - 0.0).abs() < tolerances::ANALYTICAL_TOL)
-        }));
+        h.check_bool(
+            "wfc_tensor_reduce_min_entropy",
+            reduce.as_ref().is_ok_and(|r| {
+                r.pointer("/result/result")
+                    .and_then(serde_json::Value::as_f64)
+                    .is_some_and(|v| (v - 0.0).abs() < tolerances::ANALYTICAL_TOL)
+            }),
+        );
     }
 
     // ── RNG: seeded deterministic output ─────────────────────
@@ -223,8 +248,14 @@ fn cmd_validate() {
         "rng.uniform",
         &serde_json::json!({"n": 5, "min": 0.0, "max": 1.0, "seed": 42}),
     );
-    let r1 = rng1.as_ref().ok().and_then(|r| r.pointer("/result/result").cloned());
-    let r2 = rng2.as_ref().ok().and_then(|r| r.pointer("/result/result").cloned());
+    let r1 = rng1
+        .as_ref()
+        .ok()
+        .and_then(|r| r.pointer("/result/result").cloned());
+    let r2 = rng2
+        .as_ref()
+        .ok()
+        .and_then(|r| r.pointer("/result/result").cloned());
     h.check_bool("rng_seeded_deterministic", r1.is_some() && r1 == r2);
 
     h.finish();

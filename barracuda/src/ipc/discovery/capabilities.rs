@@ -129,7 +129,13 @@ pub fn generate_semantic_aliases(caps: &mut Vec<String>) {
 
 /// Auto-register base capabilities for any responsive primal.
 pub fn inject_base_capabilities(caps: &mut Vec<String>) {
-    for base in ["system.ping", "health.check", "health.liveness"] {
+    for base in [
+        "system.ping",
+        "health.check",
+        "health.liveness",
+        "health.readiness",
+        "capability.list",
+    ] {
         if !caps.iter().any(|c| c == base) {
             caps.push(base.to_owned());
         }
@@ -226,7 +232,10 @@ mod tests {
         assert!(caps.contains(&"crypto".to_owned()));
         assert!(caps.contains(&"crypto.blake3_hash".to_owned()));
         assert!(caps.contains(&"crypto.hash".to_owned()), "semantic alias");
-        assert!(caps.contains(&"crypto.encrypt".to_owned()), "semantic alias");
+        assert!(
+            caps.contains(&"crypto.encrypt".to_owned()),
+            "semantic alias"
+        );
         assert!(caps.contains(&"crypto.sign".to_owned()), "semantic alias");
         assert!(caps.contains(&"security".to_owned()));
         assert!(caps.contains(&"security.evaluate".to_owned()));
@@ -243,24 +252,34 @@ mod tests {
         let caps = extract_from_any(&result);
         assert_eq!(
             caps,
-            vec!["network.discovery", "network.federation", "ipc.jsonrpc", "crypto.delegate"]
+            vec![
+                "network.discovery",
+                "network.federation",
+                "ipc.jsonrpc",
+                "crypto.delegate"
+            ]
         );
     }
 
     #[test]
-    fn inject_base_adds_ping() {
+    fn inject_base_adds_all_standard_capabilities() {
         let mut caps = vec!["crypto".to_owned()];
         inject_base_capabilities(&mut caps);
         assert!(caps.contains(&"system.ping".to_owned()));
         assert!(caps.contains(&"health.check".to_owned()));
         assert!(caps.contains(&"health.liveness".to_owned()));
+        assert!(caps.contains(&"health.readiness".to_owned()));
+        assert!(caps.contains(&"capability.list".to_owned()));
     }
 
     #[test]
     fn inject_base_does_not_duplicate() {
         let mut caps = vec!["system.ping".to_owned(), "health.check".to_owned()];
         inject_base_capabilities(&mut caps);
-        assert_eq!(caps.iter().filter(|c| c.as_str() == "system.ping").count(), 1);
+        assert_eq!(
+            caps.iter().filter(|c| c.as_str() == "system.ping").count(),
+            1
+        );
     }
 
     mod proptest_fuzz {

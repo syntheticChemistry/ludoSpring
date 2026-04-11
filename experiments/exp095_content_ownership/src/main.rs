@@ -48,8 +48,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -114,12 +114,33 @@ fn cmd_validate() {
     let rhizocrypt = discover_primal("rhizocrypt");
     let sweetgrass = discover_primal("sweetgrass");
 
-    eprintln!("  beardog:    {}", beardog.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  loamspine:  {}", loamspine.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  rhizocrypt: {}", rhizocrypt.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  sweetgrass: {}", sweetgrass.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
+    eprintln!(
+        "  beardog:    {}",
+        beardog
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  loamspine:  {}",
+        loamspine
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  rhizocrypt: {}",
+        rhizocrypt
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  sweetgrass: {}",
+        sweetgrass
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
 
-    let (Some(bd), Some(ls), Some(rc), Some(sg)) = (beardog, loamspine, rhizocrypt, sweetgrass) else {
+    let (Some(bd), Some(ls), Some(rc), Some(sg)) = (beardog, loamspine, rhizocrypt, sweetgrass)
+    else {
         dry_mode(&mut h);
         h.finish();
     };
@@ -156,7 +177,10 @@ fn cmd_validate() {
             "to": "creator_b"
         }),
     );
-    h.check_bool("rhizocrypt_trade_event", trade.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "rhizocrypt_trade_event",
+        trade.as_ref().is_ok_and(has_result),
+    );
 
     // ── Step 3: Record attribution via sweetGrass ────────────
     let attr_a = rpc_call(
@@ -169,7 +193,10 @@ fn cmd_validate() {
             "role": "original_creator"
         }),
     );
-    h.check_bool("sweetgrass_attribution_creator_a", attr_a.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "sweetgrass_attribution_creator_a",
+        attr_a.as_ref().is_ok_and(has_result),
+    );
 
     let attr_b = rpc_call(
         &sg,
@@ -181,7 +208,10 @@ fn cmd_validate() {
             "role": "modifier"
         }),
     );
-    h.check_bool("sweetgrass_attribution_creator_b", attr_b.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "sweetgrass_attribution_creator_b",
+        attr_b.as_ref().is_ok_and(has_result),
+    );
 
     // ── Step 4: Sign ownership chain via BearDog ─────────────
     let sign = rpc_call(
@@ -189,7 +219,10 @@ fn cmd_validate() {
         "crypto.sign_ed25519",
         &serde_json::json!({"message": base64::engine::general_purpose::STANDARD.encode(format!("{cert_id}:creator_a:0.7:creator_b:0.3"))}),
     );
-    h.check_bool("beardog_sign_ownership", sign.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "beardog_sign_ownership",
+        sign.as_ref().is_ok_and(has_result),
+    );
 
     // ── Step 5: Query attribution → verify shares sum to 1.0 ─
     let query = rpc_call(
@@ -197,7 +230,10 @@ fn cmd_validate() {
         "attribution.query",
         &serde_json::json!({"cert_id": cert_id}),
     );
-    h.check_bool("sweetgrass_query_shares", query.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "sweetgrass_query_shares",
+        query.as_ref().is_ok_and(has_result),
+    );
 
     // Verify conservation: shares must sum to 1.0
     let shares_ok = query
@@ -221,7 +257,10 @@ fn cmd_validate() {
         "certificate.query",
         &serde_json::json!({"cert_id": cert_id}),
     );
-    h.check_bool("loamspine_query_certificate", cert_query.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "loamspine_query_certificate",
+        cert_query.as_ref().is_ok_and(has_result),
+    );
 
     h.finish();
 }

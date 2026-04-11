@@ -49,6 +49,10 @@ name = "ludospring"
 path = "src/bin/ludospring.rs"
 required-features = ["ipc"]
 
+[[example]]
+name = "generate_composition_targets"
+path = "../baselines/rust/generate_composition_targets.rs"
+
 [dev-dependencies]
 proptest = { workspace = true }
 

@@ -114,7 +114,9 @@ fn validate_dc_affects_rate(h: &mut ValidationHarness) {
 fn validate_lie_tell_association(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
 
-    let experiment_lie = kb.get_lie("experiments").or_exit("lie for 'experiments' not found");
+    let experiment_lie = kb
+        .get_lie("experiments")
+        .or_exit("lie for 'experiments' not found");
     h.check_bool(
         "experiment_tell_mentions_scars",
         experiment_lie.tell.contains("burn scars"),
@@ -137,7 +139,9 @@ fn validate_lie_tell_association(h: &mut ValidationHarness) {
 
 fn validate_perception_vs_empathy(h: &mut ValidationHarness) {
     let kb = maren_knowledge();
-    let experiment_lie = kb.get_lie("experiments").or_exit("lie for 'experiments' not found");
+    let experiment_lie = kb
+        .get_lie("experiments")
+        .or_exit("lie for 'experiments' not found");
 
     h.check_bool(
         "perception_can_detect_experiments",

@@ -53,8 +53,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -78,7 +78,8 @@ fn has_result(resp: &serde_json::Value) -> bool {
 }
 
 fn error_code(resp: &serde_json::Value) -> Option<i64> {
-    resp.pointer("/error/code").and_then(serde_json::Value::as_i64)
+    resp.pointer("/error/code")
+        .and_then(serde_json::Value::as_i64)
 }
 
 fn error_message(resp: &serde_json::Value) -> String {
@@ -125,7 +126,10 @@ fn report_error(method: &str, resp: &serde_json::Value) {
             eprintln!("  FAIL: {method} → -32601 method_not_found");
         }
         Some(c) if c == INVALID_PARAMS => {
-            eprintln!("  FAIL: {method} → -32602 invalid_params: {}", error_message(resp));
+            eprintln!(
+                "  FAIL: {method} → -32602 invalid_params: {}",
+                error_message(resp)
+            );
         }
         _ => {
             eprintln!("  FAIL: {method} → {}", error_message(resp));

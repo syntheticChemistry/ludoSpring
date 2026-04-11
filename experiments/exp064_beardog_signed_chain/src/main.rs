@@ -325,7 +325,8 @@ fn validate_serialization(h: &mut ValidationHarness) {
     let sig = kp.sign(message);
 
     let sig_json = serde_json::to_string(&sig.to_vec()).or_exit("failed to serialize signature");
-    let sig_back: Vec<u8> = serde_json::from_str(&sig_json).or_exit("failed to deserialize signature");
+    let sig_back: Vec<u8> =
+        serde_json::from_str(&sig_json).or_exit("failed to deserialize signature");
     let mut sig_arr = [0u8; 64];
     sig_arr.copy_from_slice(&sig_back);
 
@@ -336,7 +337,8 @@ fn validate_serialization(h: &mut ValidationHarness) {
 
     let pk_json =
         serde_json::to_string(&kp.public_key.to_vec()).or_exit("failed to serialize public key");
-    let pk_back: Vec<u8> = serde_json::from_str(&pk_json).or_exit("failed to deserialize public key");
+    let pk_back: Vec<u8> =
+        serde_json::from_str(&pk_json).or_exit("failed to deserialize public key");
     let mut pk_arr = [0u8; 32];
     pk_arr.copy_from_slice(&pk_back);
     h.check_bool("serial_pubkey_roundtrip", pk_arr == kp.public_key);

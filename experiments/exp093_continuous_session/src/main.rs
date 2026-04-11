@@ -45,8 +45,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -170,7 +170,12 @@ fn cmd_validate() {
     let mid_score = flow_results.get(5).copied();
     let expected_mid = 0.5; // sigmoid(0.0) = 0.5
     if let Some(ms) = mid_score {
-        h.check_abs("flow_deterministic", ms, expected_mid, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "flow_deterministic",
+            ms,
+            expected_mid,
+            tolerances::ANALYTICAL_TOL,
+        );
     } else {
         h.check_bool("flow_deterministic", false);
     }

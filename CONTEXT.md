@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** March 31, 2026 (V37.1 — plasmidBin live validation)
+**Last updated:** April 10, 2026 (V38 — composition validation chain)
 
 ## What is this?
 
@@ -53,8 +53,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace total
-- **Experiments**: 98 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition)
+- **Tests**: 696 barracuda lib + 23 barracuda integration + 26 forge = 745 `#[test]` functions
+- **Experiments**: 99 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 1 composition validation)
 - **Coverage**: 91.27% line coverage (85% floor enforced via `cargo-llvm-cov`; target 90%+)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural}.rs`
@@ -82,13 +82,27 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 - wateringHole `SPRING_CROSS_EVOLUTION_STANDARD.md` v1.0
 - **esotericWebb alignment** — IPC response shapes compatible with esotericWebb `LudoSpringClient` (gen4 product integration)
 
-## V37.1: Live plasmidBin Validation (March 31, 2026)
+## V38: Composition Validation Chain (April 10, 2026)
 
-ludoSpring does not ship a binary. It proves that its validated science can be
-replicated through primal composition alone. 15 experiments (exp084-098) probe
-live primals deployed from `infra/plasmidBin/` and document gaps.
+ludoSpring ships a UniBin (`ludospring`) with `server`, `status`, `version`,
+and visualization subcommands for local IPC deployment. The ecoBin is now
+harvested to `infra/plasmidBin/` (v0.8.0, 3.1M PIE binary, sha256-verified).
 
-**Score: 95/141 (67.4%)** — 5 experiments fully PASS.
+### Three-layer validation chain
+
+```text
+Python baseline → validates → Rust library code       (Layer 1: established)
+Rust library    → validates → IPC composition          (Layer 2: NEW in V38)
+IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments)
+```
+
+**Layer 2 artifacts:**
+- `baselines/rust/composition_targets.json` — golden targets from Rust library
+- `baselines/rust/generate_composition_targets.rs` — generator (cargo example)
+- 7 composition parity tests in `barracuda/tests/ipc_integration.rs`
+- exp099 — standalone composition validation experiment (13 checks)
+
+**Composition experiments score: 95/141 (67.4%)** — 5 experiments fully PASS.
 
 ### Live results
 
@@ -109,6 +123,7 @@ live primals deployed from `infra/plasmidBin/` and document gaps.
 | 096 | NPC dialogue | 5/10 | barraCuda math works. rhizoCrypt/Squirrel/petalTongue missing |
 | 097 | Population dynamics | **10/10** | Replicator, Markov, Wright-Fisher all correct |
 | 098 | NUCLEUS game session | 5/6 | Full 10-tick loop. Only rhizoCrypt provenance missing |
+| 099 | Composition validation | 13/13* | Rust library == IPC parity (all 8 science methods) |
 
 ### Primal gap matrix
 

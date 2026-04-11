@@ -46,8 +46,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(10)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -135,12 +135,42 @@ fn cmd_validate() {
     let beardog = discover_primal("beardog");
     let nestgate = discover_primal("nestgate");
 
-    eprintln!("  barracuda:   {}", barracuda.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  squirrel:    {}", squirrel.as_ref().map_or("NOT FOUND (optional)".into(), |p| p.display().to_string()));
-    eprintln!("  petaltongue: {}", petaltongue.as_ref().map_or("NOT FOUND (optional)".into(), |p| p.display().to_string()));
-    eprintln!("  rhizocrypt:  {}", rhizocrypt.as_ref().map_or("NOT FOUND (optional)".into(), |p| p.display().to_string()));
-    eprintln!("  beardog:     {}", beardog.as_ref().map_or("NOT FOUND (optional)".into(), |p| p.display().to_string()));
-    eprintln!("  nestgate:    {}", nestgate.as_ref().map_or("NOT FOUND (optional)".into(), |p| p.display().to_string()));
+    eprintln!(
+        "  barracuda:   {}",
+        barracuda
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  squirrel:    {}",
+        squirrel
+            .as_ref()
+            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  petaltongue: {}",
+        petaltongue
+            .as_ref()
+            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  rhizocrypt:  {}",
+        rhizocrypt
+            .as_ref()
+            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  beardog:     {}",
+        beardog
+            .as_ref()
+            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  nestgate:    {}",
+        nestgate
+            .as_ref()
+            .map_or("NOT FOUND (optional)".into(), |p| p.display().to_string())
+    );
 
     let Some(bc) = barracuda else {
         dry_mode(&mut h);
@@ -250,7 +280,12 @@ fn cmd_validate() {
     // Check 3: Flow scores correct (midpoint = sigmoid(0.0) = 0.5)
     let mid_score = flow_scores.get(5).copied();
     if let Some(ms) = mid_score {
-        h.check_abs("nucleus_flow_scores_correct", ms, 0.5, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "nucleus_flow_scores_correct",
+            ms,
+            0.5,
+            tolerances::ANALYTICAL_TOL,
+        );
     } else {
         h.check_bool("nucleus_flow_scores_correct", false);
     }
@@ -272,7 +307,12 @@ fn cmd_validate() {
         .and_then(|r| r.pointer("/result/result"))
         .and_then(serde_json::Value::as_f64)
     {
-        h.check_abs("nucleus_engagement_composite", val, expected_engagement, tolerances::ANALYTICAL_TOL);
+        h.check_abs(
+            "nucleus_engagement_composite",
+            val,
+            expected_engagement,
+            tolerances::ANALYTICAL_TOL,
+        );
     } else {
         h.check_bool("nucleus_engagement_composite", false);
     }

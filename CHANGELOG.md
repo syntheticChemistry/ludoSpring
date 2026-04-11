@@ -3,7 +3,48 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V37).
+This project does not use SemVer — versions are session-sequential (V1–V38).
+
+## [V38] — 2026-04-10
+
+### Added — Composition Validation Chain (Track 29)
+
+Three-layer validation chain proving Python → Rust → IPC → NUCLEUS parity:
+
+- **`baselines/rust/composition_targets.json`** — golden reference values from direct Rust library calls for all 8 science methods (flow, Fitts, engagement, noise, DDA, accessibility, WFC, analyze_ui)
+- **`baselines/rust/generate_composition_targets.rs`** — registered as cargo example; generates targets with provenance metadata
+- **7 composition parity tests** in `ipc_integration.rs` — each starts IpcTestServer, calls a science method via JSON-RPC, and asserts the response matches the direct Rust library call within `ANALYTICAL_TOL` (1e-10)
+- **exp099 — Composition Validation experiment** — standalone 13-check experiment validating all science methods via IPC against Rust library, with dry-mode when no server running
+- **`game.gpu.batch_raycast` IPC handler** — DDA batch line-of-sight via toadStool GPU delegation with CPU fallback
+- **`coralReef` IPC client** (`ipc/coralreef.rs`) — typed client for shader compilation services via NeuralBridge with graceful degradation
+- **`condition_map.rs`** — extracted from `transition.rs` for single-responsibility condition mapping between RPGPT planes
+- **5 external primal degradation tests** — verify graceful behavior when Squirrel, NestGate, Provenance trio, GPU dispatch, and health probes are unavailable
+- **`docs/PRIMAL_GAPS.md`** — centralized documentation for 8 identified primal composition gaps (GAP-01 to GAP-08)
+
+### Changed — ecoBin Harvest + plasmidBin Deployment
+
+- **ecoBin built and harvested** to `infra/plasmidBin/ludospring/` — 3.1M PIE ELF x86-64, sha256-verified
+- **`metadata.toml` updated** to v0.8.0 with 30 capabilities (was 5), checksum, expanded provenance
+- **`manifest.lock` updated** — ludospring v0.8.0, timestamp refreshed
+- **Discovery method ordering** — `capability.list` tried before `capabilities.list` (canonical naming)
+- **Health probe ordering** — `health.liveness` → `lifecycle.status` → `health.check`
+- **Circuit breaker configurable** — `LUDOSPRING_CIRCUIT_COOLDOWN_MS`, `LUDOSPRING_CIRCUIT_MAX_RETRIES`, `LUDOSPRING_CIRCUIT_RETRY_DELAY_MS` env vars
+- **Coverage gate raised** — `cargo llvm-cov` floor 85% → 90%
+- **`baselines/python/tolerances.py`** — expanded to 30+ constants matching Rust `gpu.rs`, `validation.rs`, `game.rs`
+
+### Fixed
+
+- Baseline provenance hash aligned to current commit in `tests/validation.rs`
+- `CONTEXT.md` corrected "ludoSpring does not ship a binary" → documents UniBin subcommands
+- `combined_baselines.json` regenerated, no drift
+
+### Test counts
+
+- barracuda lib: 696 (was 592)
+- barracuda ipc integration: 23 (was 16)
+- metalForge/forge: 26
+- **Total: 745** (was 732)
+- Experiments: 99 (was 98)
 
 ## [V37.1] — 2026-03-31
 

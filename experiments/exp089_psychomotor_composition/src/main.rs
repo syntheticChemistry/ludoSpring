@@ -60,8 +60,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -241,7 +241,9 @@ fn cmd_validate() {
                 .and_then(|v| v.as_array())
                 .and_then(|a| a.first())
                 .and_then(serde_json::Value::as_f64)
-                .is_some_and(|v| (v - (path_length / path_width).log2()).abs() < tolerances::ANALYTICAL_TOL)
+                .is_some_and(|v| {
+                    (v - (path_length / path_width).log2()).abs() < tolerances::ANALYTICAL_TOL
+                })
         }),
     );
 

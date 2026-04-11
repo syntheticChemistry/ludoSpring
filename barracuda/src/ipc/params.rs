@@ -330,6 +330,24 @@ pub struct GpuPerlinTerrainParams {
     pub seed: Option<u64>,
 }
 
+/// Parameters for `game.gpu.batch_raycast` (DDA batch line-of-sight).
+#[derive(Debug, Deserialize)]
+pub struct GpuBatchRaycastParams {
+    /// Grid width in tiles.
+    pub grid_w: u32,
+    /// Grid height in tiles.
+    pub grid_h: u32,
+    /// Ray origin X positions (tile coordinates, fractional).
+    pub origins_x: Vec<f64>,
+    /// Ray origin Y positions.
+    pub origins_y: Vec<f64>,
+    /// Ray direction angles in radians.
+    pub angles: Vec<f64>,
+    /// Optional per-tile wall map (1.0 = solid, 0.0 = open); defaults to open.
+    #[serde(default)]
+    pub walls: Option<Vec<f64>>,
+}
+
 /// Parameters for `tools.call` (MCP tool invocation).
 #[derive(Debug, Deserialize)]
 pub struct ToolsCallParams {

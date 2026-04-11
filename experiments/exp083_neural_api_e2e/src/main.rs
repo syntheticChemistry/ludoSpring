@@ -154,14 +154,17 @@ fn cmd_validate() {
         &base64::engine::general_purpose::STANDARD,
         b"NUCLEUS Nest Atomic validation",
     );
-    let test_key = base64::Engine::encode(
-        &base64::engine::general_purpose::STANDARD,
-        &[0xAA_u8; 32],
-    );
+    let test_key =
+        base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &[0xAA_u8; 32]);
 
     // ── BearDog: Blake3 hash ───────────────────────────────────────────
     let start = Instant::now();
-    let blake3_hash = match cap_call(&na, "crypto", "blake3_hash", serde_json::json!({ "data": test_data })) {
+    let blake3_hash = match cap_call(
+        &na,
+        "crypto",
+        "blake3_hash",
+        serde_json::json!({ "data": test_data }),
+    ) {
         Ok(resp) => {
             let _latency = start.elapsed();
             result_field(&resp, "hash")
@@ -174,42 +177,61 @@ fn cmd_validate() {
     h.check_bool("blake3_hash_via_neural", !blake3_hash.is_empty());
 
     // ── BearDog: SHA3-256 hash ─────────────────────────────────────────
-    let sha3_ok = cap_call(&na, "crypto", "sha3_256", serde_json::json!({ "data": test_data }))
-        .map(|r| !result_field(&r, "hash").is_empty())
-        .unwrap_or(false);
+    let sha3_ok = cap_call(
+        &na,
+        "crypto",
+        "sha3_256",
+        serde_json::json!({ "data": test_data }),
+    )
+    .map(|r| !result_field(&r, "hash").is_empty())
+    .unwrap_or(false);
     h.check_bool("sha3_256_via_neural", sha3_ok);
 
     // ── BearDog: ChaCha20-Poly1305 encrypt/decrypt ─────────────────────
-    let roundtrip_ok = (|| {
-        let enc = cap_call(
-            &na, "crypto", "chacha20_poly1305_encrypt",
-            serde_json::json!({ "plaintext": test_data, "key": test_key }),
-        ).ok()?;
-        let ct = result_field(&enc, "ciphertext");
-        let nonce = result_field(&enc, "nonce");
-        let tag = result_field(&enc, "tag");
-        if ct.is_empty() || nonce.is_empty() {
-            return Some(false);
-        }
-        let dec = cap_call(
+    let roundtrip_ok =
+        (|| {
+            let enc = cap_call(
+                &na,
+                "crypto",
+                "chacha20_poly1305_encrypt",
+                serde_json::json!({ "plaintext": test_data, "key": test_key }),
+            )
+            .ok()?;
+            let ct = result_field(&enc, "ciphertext");
+            let nonce = result_field(&enc, "nonce");
+            let tag = result_field(&enc, "tag");
+            if ct.is_empty() || nonce.is_empty() {
+                return Some(false);
+            }
+            let dec = cap_call(
             &na, "crypto", "chacha20_poly1305_decrypt",
             serde_json::json!({ "ciphertext": ct, "nonce": nonce, "tag": tag, "key": test_key }),
         ).ok()?;
-        Some(result_field(&dec, "plaintext") == test_data)
-    })()
-    .unwrap_or(false);
+            Some(result_field(&dec, "plaintext") == test_data)
+        })()
+        .unwrap_or(false);
     h.check_bool("chacha20_encrypt_decrypt_roundtrip", roundtrip_ok);
 
     // ── BearDog: Ed25519 sign ──────────────────────────────────────────
-    let signature = cap_call(&na, "crypto", "sign", serde_json::json!({ "message": test_data }))
-        .map(|r| result_field(&r, "signature"))
-        .unwrap_or_default();
+    let signature = cap_call(
+        &na,
+        "crypto",
+        "sign",
+        serde_json::json!({ "message": test_data }),
+    )
+    .map(|r| result_field(&r, "signature"))
+    .unwrap_or_default();
     h.check_bool("ed25519_sign_via_neural", !signature.is_empty());
 
     // ── BearDog: Deterministic hashing ─────────────────────────────────
-    let h2 = cap_call(&na, "crypto", "blake3_hash", serde_json::json!({ "data": test_data }))
-        .map(|r| result_field(&r, "hash"))
-        .unwrap_or_default();
+    let h2 = cap_call(
+        &na,
+        "crypto",
+        "blake3_hash",
+        serde_json::json!({ "data": test_data }),
+    )
+    .map(|r| result_field(&r, "hash"))
+    .unwrap_or_default();
     h.check_bool(
         "blake3_deterministic_via_neural",
         !blake3_hash.is_empty() && blake3_hash == h2,
@@ -222,23 +244,35 @@ fn cmd_validate() {
     h.check_bool("songbird_discovery_peers_via_neural", peers_ok);
 
     // ── ToadStool: Compute dispatch capabilities ───────────────────────
-    let compute_ok = cap_call(&na, "compute", "dispatch.capabilities", serde_json::json!({}))
-        .map(|r| r.get("result").is_some())
-        .unwrap_or(false);
+    let compute_ok = cap_call(
+        &na,
+        "compute",
+        "dispatch.capabilities",
+        serde_json::json!({}),
+    )
+    .map(|r| r.get("result").is_some())
+    .unwrap_or(false);
     h.check_bool("toadstool_compute_caps_via_neural", compute_ok);
 
     // ── NestGate: Store/retrieve roundtrip ─────────────────────────────
     let store_retrieve_ok = (|| {
         let val = serde_json::json!({"experiment": "exp083", "composition": "NUCLEUS"});
         cap_call(
-            &na, "storage", "store",
+            &na,
+            "storage",
+            "store",
             serde_json::json!({ "family_id": "dev0", "key": "exp083_test", "value": val }),
-        ).ok()?;
+        )
+        .ok()?;
         let ret = cap_call(
-            &na, "storage", "retrieve",
+            &na,
+            "storage",
+            "retrieve",
             serde_json::json!({ "family_id": "dev0", "key": "exp083_test" }),
-        ).ok()?;
-        let stored_val = ret.pointer("/result/value")
+        )
+        .ok()?;
+        let stored_val = ret
+            .pointer("/result/value")
             .or_else(|| ret.pointer("/result/result/value"));
         Some(stored_val.is_some())
     })()
@@ -258,33 +292,55 @@ fn cmd_validate() {
     h.check_bool("squirrel_tool_list_via_neural", tools_ok);
 
     // ── Cross-Domain: Provenance chain ─────────────────────────────────
-    let provenance_ok = (|| {
-        let hash = cap_call(&na, "crypto", "blake3_hash", serde_json::json!({ "data": test_data }))
-            .ok().map(|r| result_field(&r, "hash"))?;
-        if hash.is_empty() { return Some(false); }
+    let provenance_ok =
+        (|| {
+            let hash = cap_call(
+                &na,
+                "crypto",
+                "blake3_hash",
+                serde_json::json!({ "data": test_data }),
+            )
+            .ok()
+            .map(|r| result_field(&r, "hash"))?;
+            if hash.is_empty() {
+                return Some(false);
+            }
 
-        let sig = cap_call(&na, "crypto", "sign", serde_json::json!({ "message": hash }))
-            .ok().map(|r| result_field(&r, "signature"))?;
-        if sig.is_empty() { return Some(false); }
+            let sig = cap_call(
+                &na,
+                "crypto",
+                "sign",
+                serde_json::json!({ "message": hash }),
+            )
+            .ok()
+            .map(|r| result_field(&r, "signature"))?;
+            if sig.is_empty() {
+                return Some(false);
+            }
 
-        let record = serde_json::json!({"hash": hash, "signature": sig, "algo": "blake3+ed25519"});
-        cap_call(
+            let record =
+                serde_json::json!({"hash": hash, "signature": sig, "algo": "blake3+ed25519"});
+            cap_call(
             &na, "storage", "store",
             serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083", "value": record }),
         ).ok()?;
 
-        let ret = cap_call(
-            &na, "storage", "retrieve",
-            serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083" }),
-        ).ok()?;
+            let ret = cap_call(
+                &na,
+                "storage",
+                "retrieve",
+                serde_json::json!({ "family_id": "dev0", "key": "provenance_exp083" }),
+            )
+            .ok()?;
 
-        let val = ret.pointer("/result/value")
-            .or_else(|| ret.pointer("/result/result/value"))?;
-        let stored_hash = val.get("hash").and_then(|v| v.as_str()).unwrap_or("");
-        let stored_sig = val.get("signature").and_then(|v| v.as_str()).unwrap_or("");
-        Some(stored_hash == hash && stored_sig == sig)
-    })()
-    .unwrap_or(false);
+            let val = ret
+                .pointer("/result/value")
+                .or_else(|| ret.pointer("/result/result/value"))?;
+            let stored_hash = val.get("hash").and_then(|v| v.as_str()).unwrap_or("");
+            let stored_sig = val.get("signature").and_then(|v| v.as_str()).unwrap_or("");
+            Some(stored_hash == hash && stored_sig == sig)
+        })()
+        .unwrap_or(false);
     h.check_bool("provenance_chain_integrity", provenance_ok);
 
     // ── Capability registry completeness ───────────────────────────────

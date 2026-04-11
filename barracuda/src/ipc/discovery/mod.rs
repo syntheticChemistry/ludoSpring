@@ -147,7 +147,7 @@ fn probe_lifecycle_status(path: &Path) -> Option<PrimalEndpoint> {
     })
 }
 
-/// Fallback probe: `health.check` for primal name, `capabilities.list` for capabilities.
+/// Fallback probe: `health.check` for primal name, `capability.list` (or `capabilities.list`) for capabilities.
 fn probe_health_then_capabilities(path: &Path) -> Option<PrimalEndpoint> {
     let health = rpc_probe(path, "health.check")?;
     let health_result = health.get("result")?;
@@ -161,7 +161,9 @@ fn probe_health_then_capabilities(path: &Path) -> Option<PrimalEndpoint> {
 
     let mut caps = Vec::new();
 
-    if let Some(caps_resp) = rpc_probe(path, "capabilities.list") {
+    if let Some(caps_resp) =
+        rpc_probe(path, "capability.list").or_else(|| rpc_probe(path, "capabilities.list"))
+    {
         if let Some(result) = caps_resp.get("result") {
             caps = capabilities::extract_from_any(result);
         }

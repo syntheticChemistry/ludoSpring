@@ -50,14 +50,35 @@ pub use sweetgrass::*;
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
-/// Cooldown period after a circuit opens (5 seconds, per healthSpring V32).
-const CIRCUIT_COOLDOWN_MS: u64 = 5_000;
+/// Default cooldown period after a circuit opens (5 seconds, per healthSpring V32).
+const DEFAULT_CIRCUIT_COOLDOWN_MS: u64 = 5_000;
 
-/// Maximum retry count with exponential backoff.
-const MAX_RETRIES: u32 = 2;
+/// Default maximum retry count with exponential backoff.
+const DEFAULT_MAX_RETRIES: u32 = 2;
 
-/// Base delay between retries (doubles each attempt).
-const BASE_RETRY_DELAY_MS: u64 = 50;
+/// Default base delay between retries (doubles each attempt).
+const DEFAULT_BASE_RETRY_DELAY_MS: u64 = 50;
+
+fn circuit_cooldown_ms() -> u64 {
+    std::env::var("LUDOSPRING_CIRCUIT_COOLDOWN_MS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_CIRCUIT_COOLDOWN_MS)
+}
+
+fn max_retries() -> u32 {
+    std::env::var("LUDOSPRING_CIRCUIT_MAX_RETRIES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_MAX_RETRIES)
+}
+
+fn base_retry_delay_ms() -> u64 {
+    std::env::var("LUDOSPRING_CIRCUIT_RETRY_DELAY_MS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_BASE_RETRY_DELAY_MS)
+}
 
 /// Timestamp (epoch ms) when the circuit last opened. 0 = circuit closed.
 static CIRCUIT_OPEN_SINCE: AtomicU64 = AtomicU64::new(0);
@@ -69,7 +90,7 @@ fn circuit_allows() -> bool {
         return true;
     }
     let now = epoch_ms();
-    if now.saturating_sub(opened) >= CIRCUIT_COOLDOWN_MS {
+    if now.saturating_sub(opened) >= circuit_cooldown_ms() {
         CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
         return true;
     }
@@ -115,14 +136,16 @@ where
         return None;
     };
 
-    for attempt in 0..=MAX_RETRIES {
+    let retries = max_retries();
+    let delay_base = base_retry_delay_ms();
+    for attempt in 0..=retries {
         match f(&bridge) {
             Ok(value) => {
                 reset_circuit();
                 return Some(value);
             }
-            Err(_) if attempt < MAX_RETRIES => {
-                let delay = BASE_RETRY_DELAY_MS * (1 << attempt);
+            Err(_) if attempt < retries => {
+                let delay = delay_base * (1 << attempt);
                 std::thread::sleep(std::time::Duration::from_millis(delay));
             }
             Err(_) => {
@@ -137,7 +160,10 @@ where
 
 /// Result of a provenance operation; includes availability status.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[expect(clippy::derive_partial_eq_without_eq, reason = "wire types with Value field — Eq is not meaningful")]
+#[expect(
+    clippy::derive_partial_eq_without_eq,
+    reason = "wire types with Value field — Eq is not meaningful"
+)]
 pub struct ProvenanceResult {
     /// Session ID, vertex ID, or braid ID from the trio.
     pub id: String,
@@ -152,7 +178,10 @@ pub struct ProvenanceResult {
 /// Follows the `provenance-trio-types` `DehydrationSummary` wire format,
 /// extracted as a typed struct rather than raw JSON.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[expect(clippy::derive_partial_eq_without_eq, reason = "wire types with Value field — Eq is not meaningful")]
+#[expect(
+    clippy::derive_partial_eq_without_eq,
+    reason = "wire types with Value field — Eq is not meaningful"
+)]
 pub struct DehydrationSummary {
     /// Merkle root of the dehydrated DAG.
     pub merkle_root: String,

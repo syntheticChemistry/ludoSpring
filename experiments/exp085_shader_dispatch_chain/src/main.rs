@@ -87,8 +87,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(10)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -124,7 +124,12 @@ fn discover_socket(patterns: &[&str]) -> Option<PathBuf> {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    let prefix = patterns.first().unwrap_or(&"").split('.').next().unwrap_or("");
+                    let prefix = patterns
+                        .first()
+                        .unwrap_or(&"")
+                        .split('.')
+                        .next()
+                        .unwrap_or("");
                     if !prefix.is_empty() && n.starts_with(prefix) && n.ends_with(".sock") {
                         return Some(p);
                     }

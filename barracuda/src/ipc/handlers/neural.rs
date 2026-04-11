@@ -206,7 +206,10 @@ pub(super) fn handle_visualization_delegation(req: &JsonRpcRequest) -> HandlerRe
                     "domain": domain,
                 }),
             ),
-            _ => viz_degraded_peer(req, "ipc feature disabled; visualization delegation unavailable"),
+            _ => viz_degraded_peer(
+                req,
+                "ipc feature disabled; visualization delegation unavailable",
+            ),
         };
     }
 

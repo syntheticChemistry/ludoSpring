@@ -2,14 +2,14 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** March 31, 2026
-**Version:** V37.1 (98 experiments — 83 science + 15 composition, 734 workspace tests. Live plasmidBin validation: 95/141 composition checks passing (67.4%). 5 experiments fully PASS against live primals. 10 primal evolution gaps documented and handed off. BearDog+NestGate IPC contracts validated. barraCuda tensor/stats/noise/activation all working via UDS. Projected 92.2% with rhizoCrypt UDS + loamSpine fix + barraCuda formula alignment.)
+**Date:** April 10, 2026
+**Version:** V38 (99 experiments — 83 science + 16 composition, 745 workspace tests. Three-layer validation chain: Python → Rust → IPC composition → NUCLEUS deployment. ecoBin harvested to plasmidBin (v0.8.0, 3.1M PIE, 30 capabilities). 7 composition parity tests prove Rust library == IPC within 1e-10. Live plasmidBin validation: 95/141 composition checks passing (67.4%). 6 experiments fully PASS against live primals. 8 primal evolution gaps documented.)
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
-**barraCuda:** v0.3.7 (standalone, default-features = false — CPU-only default, GPU opt-in)
-**ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance)
-**Niche Status:** Deployable — UniBin (7 subcommands), deploy graph, niche YAML, Neural API domain registration, 27 capabilities (25 game + 2 health probes), MCP `tools.list`/`tools.call` (13 tool descriptors: 8 science + 5 delegation), optional `tarpc-ipc` feature, structured `capability_domains` registry
-**Audit Status:** Complete — zero hardcoded primal names (capability-based discovery via `niche::ECOSYSTEM_SOCKET_DIR`), zero hardcoded paths (`LUDOSPRING_OUTPUT_DIR` + XDG socket chain), zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, zero manual `eprintln!("FATAL:...")` patterns (all migrated to `OrExit`), all validation experiments use `ValidationHarness` + `BaselineProvenance`, all provenance hashes aligned to current baselines (`4b683e3e`), all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check, `cargo-llvm-cov` gated at 85% floor, `deny.toml` fixed for cargo-deny 0.19
+**barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)
+**ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance). Harvested to `infra/plasmidBin/ludospring/` (sha256-verified).
+**Niche Status:** Deployable — UniBin (7 subcommands), deploy graph, niche YAML, Neural API domain registration, 30 capabilities, MCP `tools.list`/`tools.call` (13 tool descriptors: 8 science + 5 delegation), optional `tarpc-ipc` feature, structured `capability_domains` registry
+**Audit Status:** Complete — zero hardcoded primal names, zero hardcoded paths, zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings, zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance`, all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check, `cargo-llvm-cov` gated at 90% floor, `deny.toml` fixed for cargo-deny 0.19
 
 ---
 
@@ -433,7 +433,7 @@ ludoSpring/
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
 │   │   └── bin/           # ludospring UniBin (7 subcommands) + commands/ modules
 │   └── tests/             # python_parity, validation, determinism, proptest_invariants, ipc_integration
-├── experiments/           # 83 experiments
+├── experiments/           # 99 experiments
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Capability-based routing (26 tests, 4 domain modules, GPU>NPU>CPU)
@@ -460,7 +460,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (424 barracuda lib + 26 forge + 47 Python parity + 2 doctests = 734 workspace)
+# All tests (696 barracuda lib + 23 ipc integration + 26 forge = 745 workspace)
 cargo test --workspace
 
 # Run a specific experiment
@@ -487,9 +487,9 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 424 barracuda lib + 26 forge + 47 parity + 2 doctests + experiment tests = 734 total, 0 failures |
+| `cargo test --workspace` | 696 barracuda lib + 23 ipc integration + 26 forge = 745 total, 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
-| 83 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
+| 99 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 19 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick, JSON-RPC, capability parsing, DispatchOutcome) |
@@ -504,7 +504,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 | Structured logging | `tracing` for all library IPC/biomeOS; `ValidationSink` trait for validation output |
 | Hardcoded primal names | 0 — `discover_primals()` by capability, `viz_register()` parameterized, zero name literals |
 | Hardcoded paths | 0 — `LUDOSPRING_OUTPUT_DIR` env var + `temp_dir()` + XDG-compliant socket chain |
-| IPC integration tests | 11 tests (lifecycle, capability list, game methods, error handling, neural bridge, discovery, push client) |
+| IPC integration tests | 23 tests (lifecycle, capability list, game methods, error handling, neural bridge, discovery, push client, 7 composition parity, 5 degradation) |
 | MCP support | `tools.list` + `tools.call` for AI integration (13 tool descriptors: 8 science + 5 delegation) |
 | tarpc option | `tarpc-ipc` feature with `LudoSpringService` trait mirroring JSON-RPC surface |
 | GPU tolerances | Named constants in `tolerances::gpu` + `tolerances::validation` (single source of truth; raycaster tolerances re-exported from validation where shared) |

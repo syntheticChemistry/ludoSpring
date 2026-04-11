@@ -593,7 +593,12 @@ fn cmd_validate() {
         SubstrateInfo::default_npu(),
     ];
     let hw = HardwareProfile::mixed_gpu_npu();
-    let plan = plan_frame(&mixed_workloads, &mixed_substrates, &hw, PipelineDepth::Double);
+    let plan = plan_frame(
+        &mixed_workloads,
+        &mixed_substrates,
+        &hw,
+        PipelineDepth::Double,
+    );
 
     h.check_bool(
         "forge_mixed_has_npu_band",
@@ -681,10 +686,7 @@ fn cmd_validate() {
         coordination_hz: 60.0,
     };
     h.check_bool("npu_graph_fits_60hz", graph_with_npu.fits_in_frame());
-    let has_npu_node = graph_with_npu
-        .nodes
-        .iter()
-        .any(|n| n.id.contains("npu"));
+    let has_npu_node = graph_with_npu.nodes.iter().any(|n| n.id.contains("npu"));
     h.check_bool("biome_graph_includes_npu_node", has_npu_node);
 
     h.finish();

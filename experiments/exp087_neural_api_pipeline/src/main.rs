@@ -61,8 +61,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(15)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -131,10 +131,7 @@ fn cmd_validate() {
 
     // ── Phase 1: Health + capability discovery ────────────────
     let health = rpc_call(&na, "health.liveness", &serde_json::json!({}));
-    h.check_bool(
-        "neural_api_healthy",
-        health.as_ref().is_ok_and(has_result),
-    );
+    h.check_bool("neural_api_healthy", health.as_ref().is_ok_and(has_result));
 
     // ── Phase 2: Graph listing ────────────────────────────────
     let graph_list = rpc_call(&na, "graph.list", &serde_json::json!({}));
@@ -284,7 +281,11 @@ fn deploy_composition_graphs(na: &Path) {
         .and_then(|p| p.parent())
         .map(|root| root.join("graphs/composition"));
 
-    let graph_files = ["math_pipeline.toml", "engagement_pipeline.toml", "game_loop_continuous.toml"];
+    let graph_files = [
+        "math_pipeline.toml",
+        "engagement_pipeline.toml",
+        "game_loop_continuous.toml",
+    ];
 
     for filename in &graph_files {
         let Some(ref dir) = graph_dir else { continue };
@@ -293,17 +294,14 @@ fn deploy_composition_graphs(na: &Path) {
             eprintln!("  WARN: cannot read {filename} — graph not deployed");
             continue;
         };
-        let resp = rpc_call(
-            na,
-            "graph.save",
-            &serde_json::json!({"toml": content}),
-        );
+        let resp = rpc_call(na, "graph.save", &serde_json::json!({"toml": content}));
         match resp {
             Ok(ref r) if has_result(r) => {
                 eprintln!("  Deployed graph: {filename}");
             }
             Ok(ref r) => {
-                let msg = r.pointer("/error/message")
+                let msg = r
+                    .pointer("/error/message")
                     .and_then(serde_json::Value::as_str)
                     .unwrap_or("unknown");
                 eprintln!("  WARN: graph.save({filename}) → {msg}");

@@ -27,7 +27,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const PROVENANCE: BaselineProvenance = BaselineProvenance {
-    script: "baselines/python/exp004_goms.py + exp008_four_keys.py",
+    script: "baselines/python/goms_model.py + fun_keys_model.py",
     commit: "4b683e3e",
     date: "2026-03-30",
     command: "cargo run -p ludospring-exp092",
@@ -56,8 +56,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -140,17 +140,29 @@ fn cmd_validate() {
     h.check_bool("goms_klm_mean", klm_mean_ok);
 
     if klm_mean_ok {
-        if let Some(val) = klm_mean.as_ref().ok()
+        if let Some(val) = klm_mean
+            .as_ref()
+            .ok()
             .and_then(|r| r.pointer("/result/result"))
             .and_then(serde_json::Value::as_f64)
         {
-            h.check_abs("goms_klm_tolerance", val, GOMS_KLM_EXPECTED_MEAN, tolerances::ANALYTICAL_TOL);
+            h.check_abs(
+                "goms_klm_tolerance",
+                val,
+                GOMS_KLM_EXPECTED_MEAN,
+                tolerances::ANALYTICAL_TOL,
+            );
         }
     }
 
     // GOMS sum composed from mean * count
     let composed_sum = GOMS_KLM_EXPECTED_MEAN * 4.0;
-    h.check_abs("goms_klm_sum_composed", composed_sum, GOMS_KLM_EXPECTED_SUM, tolerances::ANALYTICAL_TOL);
+    h.check_abs(
+        "goms_klm_sum_composed",
+        composed_sum,
+        GOMS_KLM_EXPECTED_SUM,
+        tolerances::ANALYTICAL_TOL,
+    );
 
     // ── Four Keys: weighted mean via stats IPC ───────────────
     let fk_wm = rpc_call(
@@ -162,11 +174,18 @@ fn cmd_validate() {
     h.check_bool("four_keys_weighted_mean", fk_ok);
 
     if fk_ok {
-        if let Some(val) = fk_wm.as_ref().ok()
+        if let Some(val) = fk_wm
+            .as_ref()
+            .ok()
             .and_then(|r| r.pointer("/result/result"))
             .and_then(serde_json::Value::as_f64)
         {
-            h.check_abs("four_keys_tolerance", val, FOUR_KEYS_EXPECTED, tolerances::ANALYTICAL_TOL);
+            h.check_abs(
+                "four_keys_tolerance",
+                val,
+                FOUR_KEYS_EXPECTED,
+                tolerances::ANALYTICAL_TOL,
+            );
         }
     }
 
@@ -178,7 +197,9 @@ fn cmd_validate() {
     );
     h.check_bool("four_keys_tensor_path", tc.as_ref().is_ok_and(has_result));
 
-    if let Some(tid) = tc.as_ref().ok()
+    if let Some(tid) = tc
+        .as_ref()
+        .ok()
         .and_then(|r| r.pointer("/result/tensor_id"))
         .and_then(serde_json::Value::as_str)
     {
@@ -187,7 +208,9 @@ fn cmd_validate() {
             "tensor.scale",
             &serde_json::json!({"tensor_id": tid, "scalar": 0.25}),
         );
-        if let Some(sid) = scaled.as_ref().ok()
+        if let Some(sid) = scaled
+            .as_ref()
+            .ok()
             .and_then(|r| r.pointer("/result/result_id"))
             .and_then(serde_json::Value::as_str)
         {
@@ -196,11 +219,14 @@ fn cmd_validate() {
                 "tensor.reduce",
                 &serde_json::json!({"tensor_id": sid, "op": "sum"}),
             );
-            h.check_bool("four_keys_tensor_reduce", reduce.as_ref().is_ok_and(|r| {
-                r.pointer("/result/result")
-                    .and_then(serde_json::Value::as_f64)
-                    .is_some_and(|v| (v - FOUR_KEYS_EXPECTED).abs() < 0.01)
-            }));
+            h.check_bool(
+                "four_keys_tensor_reduce",
+                reduce.as_ref().is_ok_and(|r| {
+                    r.pointer("/result/result")
+                        .and_then(serde_json::Value::as_f64)
+                        .is_some_and(|v| (v - FOUR_KEYS_EXPECTED).abs() < 0.01)
+                }),
+            );
         }
     }
 

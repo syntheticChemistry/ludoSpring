@@ -44,6 +44,7 @@ mod server;
 #[cfg(feature = "tarpc-ipc")]
 pub mod tarpc_service;
 
+pub mod coralreef;
 pub mod discovery;
 pub mod nestgate;
 pub mod provenance;

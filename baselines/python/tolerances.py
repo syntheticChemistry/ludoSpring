@@ -135,3 +135,72 @@ CONNECT_PROBE_TIMEOUT_MS = 200
 
 DDA_NEAR_ZERO = 1e-12
 """Near-zero threshold for DDA ray direction components."""
+
+# === validation.rs (additional) ===
+
+PERLIN_SAFE_BOUND = 1.5
+"""Conservative Perlin amplitude bound vs theoretical ±sqrt(2)/2."""
+
+BSP_AREA_CONSERVATION_TOL = 1e-6
+"""BSP leaf area sum vs rectangle area, f64 accumulation."""
+
+STRICT_ANALYTICAL_TOL = 1e-15
+"""Same-formula cross-language comparison, sub-ULP class."""
+
+NUMERICAL_FLOOR = 1e-9
+"""Denominator floor for scoring divisions."""
+
+DDA_ADJUSTMENT_EPSILON = 1e-6
+"""Difficulty hold vs noise threshold."""
+
+SPAN_FLOOR = 1e-6
+"""Flow falloff denominator floor."""
+
+TRUST_EQUALITY_TOL = 1e-12
+"""Trust serialization noise vs exact epsilon."""
+
+# === game.rs (additional) ===
+
+MS_PER_SECOND = 1000.0
+"""Unit conversion: milliseconds per second."""
+
+SECONDS_PER_MINUTE = 60.0
+"""Unit conversion: seconds per minute."""
+
+DEFAULT_DT_S = 1.0 / 60.0
+"""Default time step from 60 Hz frame rate."""
+
+# === gpu.rs ===
+
+GPU_UNARY_ABS_TOL = 1e-6
+"""f32 unary math GPU tolerance in [-10,10]."""
+
+GPU_PERLIN_ABS_TOL = 1e-3
+"""Perlin f32 accumulation GPU tolerance."""
+
+GPU_FBM_ABS_TOL = 2e-3
+"""4-octave fBm GPU tolerance."""
+
+GPU_FBM_ABS_TOL_LOOSE = 0.01
+"""Worst-case GPU fBm variance."""
+
+GPU_REDUCTION_ABS_TOL = 1e-4
+"""Dot product / reduction GPU tolerance."""
+
+GPU_SOFTMAX_ABS_TOL = 1e-5
+"""Softmax GPU tolerance."""
+
+GPU_ENGAGEMENT_REL_TOL = 1e-4
+"""Engagement batch GPU relative tolerance."""
+
+GPU_LCG_ABS_TOL = 1e-10
+"""LCG exact in f32 range GPU tolerance."""
+
+GPU_REDUCE_SUM_ABS_TOL = 1.0
+"""Large f32 sum GPU tolerance."""
+
+GPU_ENGAGEMENT_ABS_TOL = 1e-4
+"""Engagement absolute GPU tolerance."""
+
+GPU_LIGHTING_ABS_TOL = 1e-5
+"""1/r² multi-light GPU tolerance."""

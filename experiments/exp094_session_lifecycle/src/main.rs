@@ -46,8 +46,8 @@ fn rpc_call(
         "params": params,
         "id": 1
     });
-    let stream = UnixStream::connect(socket)
-        .map_err(|e| format!("connect {}: {e}", socket.display()))?;
+    let stream =
+        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .map_err(|e| format!("timeout: {e}"))?;
@@ -111,9 +111,24 @@ fn cmd_validate() {
     let rhizocrypt = discover_primal("rhizocrypt");
     let nestgate = discover_primal("nestgate");
 
-    eprintln!("  beardog:    {}", beardog.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  rhizocrypt: {}", rhizocrypt.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
-    eprintln!("  nestgate:   {}", nestgate.as_ref().map_or("NOT FOUND".into(), |p| p.display().to_string()));
+    eprintln!(
+        "  beardog:    {}",
+        beardog
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  rhizocrypt: {}",
+        rhizocrypt
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
+    eprintln!(
+        "  nestgate:   {}",
+        nestgate
+            .as_ref()
+            .map_or("NOT FOUND".into(), |p| p.display().to_string())
+    );
 
     let Some(bd) = beardog else {
         dry_mode(&mut h);
@@ -150,10 +165,16 @@ fn cmd_validate() {
             "provenance.session_create",
             &serde_json::json!({"agent": "ludospring", "session_id": session_id}),
         );
-        h.check_bool("rhizocrypt_session_create", create.as_ref().is_ok_and(has_result));
+        h.check_bool(
+            "rhizocrypt_session_create",
+            create.as_ref().is_ok_and(has_result),
+        );
 
         // ── Step 3: Append 3 game action vertices ────────────
-        for (i, action) in ["player_move", "enemy_attack", "item_pickup"].iter().enumerate() {
+        for (i, action) in ["player_move", "enemy_attack", "item_pickup"]
+            .iter()
+            .enumerate()
+        {
             let append = rpc_call(
                 rc,
                 "provenance.vertex_append",
@@ -175,7 +196,10 @@ fn cmd_validate() {
             "provenance.vertex_query",
             &serde_json::json!({"session_id": session_id}),
         );
-        h.check_bool("rhizocrypt_vertex_count", query.as_ref().is_ok_and(has_result));
+        h.check_bool(
+            "rhizocrypt_vertex_count",
+            query.as_ref().is_ok_and(has_result),
+        );
     } else {
         for name in &[
             "rhizocrypt_session_create",
@@ -194,7 +218,10 @@ fn cmd_validate() {
         "crypto.sign_ed25519",
         &serde_json::json!({"message": base64::engine::general_purpose::STANDARD.encode(&session_id)}),
     );
-    h.check_bool("beardog_sign_session", sign_resp.as_ref().is_ok_and(has_result));
+    h.check_bool(
+        "beardog_sign_session",
+        sign_resp.as_ref().is_ok_and(has_result),
+    );
 
     // ── Step 6: Store + retrieve via NestGate ────────────────
     if let Some(ref ng) = nestgate {
@@ -208,8 +235,8 @@ fn cmd_validate() {
             "storage.retrieve",
             &serde_json::json!({"family_id": "ludotest", "key": session_id}),
         );
-        let roundtrip = store.as_ref().is_ok_and(has_result)
-            && retrieve.as_ref().is_ok_and(has_result);
+        let roundtrip =
+            store.as_ref().is_ok_and(has_result) && retrieve.as_ref().is_ok_and(has_result);
         h.check_bool("nestgate_store_roundtrip", roundtrip);
     } else {
         h.check_bool("nestgate_store_roundtrip", false);

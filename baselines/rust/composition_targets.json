@@ -1,0 +1,340 @@
+{
+  "_provenance": {
+    "evolution_path": "Python → Rust → IPC composition → NUCLEUS deployment",
+    "generated_by": "direct Rust library calls (no IPC)",
+    "generator": "baselines/rust/generate_composition_targets.rs",
+    "purpose": "golden targets for primal composition validation",
+    "tolerances": {
+      "analytical": 1e-10,
+      "game_state": 0.01,
+      "noise_mean": 0.05
+    }
+  },
+  "game.accessibility": {
+    "full_features": {
+      "expected": {
+        "issues_count": 0,
+        "score": 1.0,
+        "strengths_count": 6
+      },
+      "params": {
+        "audio_cues": true,
+        "braille": true,
+        "color_independent": true,
+        "descriptions": true,
+        "haptic": true,
+        "scalable_text": true
+      }
+    },
+    "no_features": {
+      "expected": {
+        "issues_count": 6,
+        "score": 0.0,
+        "strengths_count": 0
+      },
+      "params": {
+        "audio_cues": false,
+        "braille": false,
+        "color_independent": false,
+        "descriptions": false,
+        "haptic": false,
+        "scalable_text": false
+      }
+    }
+  },
+  "game.difficulty_adjustment": {
+    "all_losses": {
+      "expected": {
+        "adjustment": -1.0,
+        "estimated_skill": 0.0,
+        "trend": 0.0
+      },
+      "params": {
+        "outcomes": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_success_rate": 0.7
+      }
+    },
+    "all_wins": {
+      "expected": {
+        "adjustment": 0.6000000000000001,
+        "estimated_skill": 1.0,
+        "trend": 0.0
+      },
+      "params": {
+        "outcomes": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "target_success_rate": 0.7
+      }
+    },
+    "balanced": {
+      "expected": {
+        "adjustment": -0.5999999999999999,
+        "estimated_skill": 0.5,
+        "trend": -0.19999999999999996
+      },
+      "params": {
+        "outcomes": [
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "target_success_rate": 0.7
+      }
+    }
+  },
+  "game.engagement": {
+    "active_session": {
+      "expected": {
+        "actions_per_minute": 20.0,
+        "challenge_appetite": 0.03,
+        "composite": 0.1426666666666667,
+        "deliberation": 0.05,
+        "exploration_rate": 1.0,
+        "persistence": 0.1
+      },
+      "params": {
+        "action_count": 100,
+        "challenge_seeking": 3,
+        "deliberate_pauses": 5,
+        "exploration_breadth": 5,
+        "retry_count": 10,
+        "session_duration_s": 300.0
+      }
+    },
+    "idle_session": {
+      "expected": {
+        "actions_per_minute": 0.5,
+        "challenge_appetite": 0.0,
+        "composite": 0.005666666666666667,
+        "deliberation": 0.0,
+        "exploration_rate": 0.1,
+        "persistence": 0.0
+      },
+      "params": {
+        "action_count": 5,
+        "challenge_seeking": 0,
+        "deliberate_pauses": 0,
+        "exploration_breadth": 1,
+        "retry_count": 0,
+        "session_duration_s": 600.0
+      }
+    },
+    "zero_session": {
+      "expected": {
+        "actions_per_minute": 0.0,
+        "challenge_appetite": 0.0,
+        "composite": 0.0,
+        "deliberation": 0.0,
+        "exploration_rate": 0.0,
+        "persistence": 0.0
+      },
+      "params": {
+        "action_count": 0,
+        "challenge_seeking": 0,
+        "deliberate_pauses": 0,
+        "exploration_breadth": 0,
+        "retry_count": 0,
+        "session_duration_s": 0.0
+      }
+    }
+  },
+  "game.evaluate_flow": {
+    "anxiety_high_challenge": {
+      "expected": {
+        "flow_score": 0.3529411764705883,
+        "in_flow": false,
+        "state": "anxiety"
+      },
+      "params": {
+        "challenge": 0.9,
+        "skill": 0.2
+      }
+    },
+    "apathy_zero": {
+      "expected": {
+        "flow_score": 1.0,
+        "in_flow": true,
+        "state": "flow"
+      },
+      "params": {
+        "challenge": 0.0,
+        "skill": 0.0
+      }
+    },
+    "boredom_low_challenge": {
+      "expected": {
+        "flow_score": 0.3529411764705882,
+        "in_flow": false,
+        "state": "boredom"
+      },
+      "params": {
+        "challenge": 0.1,
+        "skill": 0.8
+      }
+    },
+    "flow_balanced": {
+      "expected": {
+        "flow_score": 1.0,
+        "in_flow": true,
+        "state": "flow"
+      },
+      "params": {
+        "challenge": 0.5,
+        "skill": 0.5
+      }
+    },
+    "flow_edge_upper": {
+      "expected": {
+        "flow_score": 1.0,
+        "in_flow": true,
+        "state": "flow"
+      },
+      "params": {
+        "challenge": 0.64,
+        "skill": 0.5
+      }
+    },
+    "mastery_corner": {
+      "expected": {
+        "flow_score": 0.0,
+        "in_flow": false,
+        "state": "boredom"
+      },
+      "params": {
+        "challenge": 0.0,
+        "skill": 1.0
+      }
+    }
+  },
+  "game.fitts_cost": {
+    "hick_n7": {
+      "expected": {
+        "reaction_time_ms": 650.0
+      },
+      "method": "hick_reaction_time",
+      "params": {
+        "n": 7
+      }
+    },
+    "mouse_d100_w10": {
+      "expected": {
+        "index_of_difficulty": 4.392317422778761,
+        "movement_time_ms": 708.847613416814
+      },
+      "params": {
+        "distance": 100.0,
+        "target_width": 10.0
+      }
+    },
+    "mouse_d200_w20": {
+      "expected": {
+        "index_of_difficulty": 4.392317422778761,
+        "movement_time_ms": 708.847613416814
+      },
+      "params": {
+        "distance": 200.0,
+        "target_width": 20.0
+      }
+    },
+    "mouse_d50_w5": {
+      "expected": {
+        "index_of_difficulty": 4.392317422778761,
+        "movement_time_ms": 708.847613416814
+      },
+      "params": {
+        "distance": 50.0,
+        "target_width": 5.0
+      }
+    },
+    "steering_d100_w20": {
+      "expected": {
+        "steering_time_ms": 35.0
+      },
+      "method": "steering_time",
+      "params": {
+        "distance": 100.0,
+        "width": 20.0
+      }
+    },
+    "touch_large_target": {
+      "expected": {
+        "index_of_difficulty": 0.5849625007211562,
+        "movement_time_ms": 137.74437510817341
+      },
+      "params": {
+        "distance": 10.0,
+        "target_width": 40.0
+      }
+    }
+  },
+  "game.generate_noise": {
+    "fbm_4oct": {
+      "expected": {
+        "value": 0.3813570584214563
+      },
+      "params": {
+        "octaves": 4,
+        "x": 1.23,
+        "y": 4.56
+      }
+    },
+    "perlin_0_5_0_7": {
+      "expected": {
+        "value": 0.0
+      },
+      "params": {
+        "octaves": 1,
+        "x": 0.5,
+        "y": 0.7
+      }
+    },
+    "perlin_1_2": {
+      "expected": {
+        "value": 0.0
+      },
+      "params": {
+        "octaves": 1,
+        "x": 1.0,
+        "y": 2.0
+      }
+    },
+    "perlin_lattice_0_0": {
+      "expected": {
+        "value": 0.0
+      },
+      "params": {
+        "octaves": 1,
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  }
+}

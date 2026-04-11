@@ -41,8 +41,7 @@ pub const PERLIN_2D_WGSL: &str = include_str!("../shaders/perlin_2d.wgsl");
 pub const ENGAGEMENT_BATCH_WGSL: &str = include_str!("../shaders/engagement_batch.wgsl");
 pub const DDA_RAYCAST_WGSL: &str = include_str!("../shaders/dda_raycast.wgsl");
 
-pub const FOG_OF_WAR_WGSL: &str =
-    include_str!("../../../barracuda/shaders/game/fog_of_war.wgsl");
+pub const FOG_OF_WAR_WGSL: &str = include_str!("../../../barracuda/shaders/game/fog_of_war.wgsl");
 pub const TILE_LIGHTING_WGSL: &str =
     include_str!("../../../barracuda/shaders/game/tile_lighting.wgsl");
 pub const PATHFIND_WAVEFRONT_WGSL: &str =

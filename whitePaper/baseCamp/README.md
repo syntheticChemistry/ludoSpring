@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** March 29, 2026
+**Date:** April 10, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V32 — 82 experiments, 27 IPC capabilities, 674 barracuda + 19 forge + 47 Python parity + 3 doctests, 19 proptest + 11 IPC integration. Full audit + deep debt evolution (110 files changed). All provenance hashes aligned (`4b683e3e`), all tolerances centralized (named constants with citations), zero manual FATAL patterns (27 files migrated to `OrExit`), zero hardcoded primal names (capability-based discovery via `niche::ECOSYSTEM_SOCKET_DIR`), zero `#[allow()]`, zero `unsafe`, zero TODO/FIXME. exp030 rewritten to `ValidationHarness`. CI hardened with baseline drift check. `deny.toml` fixed for cargo-deny 0.19. 3 deprecated binaries removed. `specs/BARRACUDA_REQUIREMENTS.md` created. 5 new parity tests
+**Status:** V38 — 99 experiments, 30 IPC capabilities, 696 barracuda lib + 23 ipc integration + 26 forge = 745 workspace tests. Three-layer validation chain: Python → Rust → IPC composition → NUCLEUS deployment. ecoBin harvested to plasmidBin (v0.8.0, 3.1M PIE, sha256-verified). 7 composition parity tests prove Rust == IPC within 1e-10. exp099 composition validation (13/13). 8 primal gaps documented (GAP-01 to GAP-08).
 
 ---
 

@@ -285,13 +285,9 @@ fn validate_cross_primal_roundtrip(h: &mut ValidationHarness) {
     let card_cert = trio::CardCertificate::new(&alice_loam, "Grizzly Bears", "10E", 268, spine_id);
 
     let cast_hex = cast_id.to_hex();
-    let action_braid = trio::GameActionBraid::new(
-        &alice_sweet,
-        "cast_spell",
-        Some("Grizzly Bears"),
-        &cast_hex,
-    )
-    .or_exit("action braid creation from vertex hex failed");
+    let action_braid =
+        trio::GameActionBraid::new(&alice_sweet, "cast_spell", Some("Grizzly Bears"), &cast_hex)
+            .or_exit("action braid creation from vertex hex failed");
 
     h.check_bool(
         "roundtrip_dag_vertex_exists",

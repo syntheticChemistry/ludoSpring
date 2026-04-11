@@ -111,6 +111,7 @@ members = [
     "experiments/exp096_npc_dialogue_composition",
     "experiments/exp097_population_dynamics",
     "experiments/exp098_nucleus_game_session",
+    "experiments/exp099_composition_validation",
 ]
 
 [workspace.package]

@@ -17,6 +17,7 @@
 //! - [`transition`] — World state preservation across plane transitions
 //! - [`scene`] — petalTongue scene binding types for game UI rendering
 
+pub mod condition_map;
 pub mod dialogue;
 pub mod knowledge;
 pub mod memory;

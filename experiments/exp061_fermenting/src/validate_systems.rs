@@ -377,13 +377,9 @@ pub fn validate_full_scenario(h: &mut ValidationHarness) {
     reason = "validation counts fit in f64 mantissa"
 )]
 pub fn validate_composable_deployment(h: &mut ValidationHarness) {
-    let mint_calls = protocol::mint_ipc_sequence(
-        "did:key:alice_ferment",
-        "Flame Sword",
-        "weapon",
-        "rare",
-    )
-    .or_exit("mint IPC sequence serialization");
+    let mint_calls =
+        protocol::mint_ipc_sequence("did:key:alice_ferment", "Flame Sword", "weapon", "rare")
+            .or_exit("mint IPC sequence serialization");
     h.check_abs(
         "ipc_mint_requires_three_calls",
         mint_calls.len() as f64,
@@ -406,10 +402,9 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
     let all_jsonrpc_2_0 = mint_calls.iter().all(|c| c.jsonrpc == "2.0");
     h.check_bool("ipc_all_calls_jsonrpc_2_0", all_jsonrpc_2_0);
 
-    let cert_params = serde_json::from_value::<protocol::CertMintRequest>(
-        mint_calls[0].params.clone(),
-    )
-    .or_exit("CertMintRequest deserialization");
+    let cert_params =
+        serde_json::from_value::<protocol::CertMintRequest>(mint_calls[0].params.clone())
+            .or_exit("CertMintRequest deserialization");
     h.check_bool(
         "ipc_cert_mint_has_owner",
         cert_params.owner_did == "did:key:alice_ferment",
@@ -419,9 +414,8 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
         cert_params.item_attributes.get("rarity") == Some(&"rare".to_string()),
     );
 
-    let trade_calls =
-        protocol::trade_ipc_sequence("cert-001", "did:key:alice", "did:key:bob")
-            .or_exit("trade IPC sequence serialization");
+    let trade_calls = protocol::trade_ipc_sequence("cert-001", "did:key:alice", "did:key:bob")
+        .or_exit("trade IPC sequence serialization");
     h.check_abs(
         "ipc_trade_requires_three_calls",
         trade_calls.len() as f64,
@@ -433,10 +427,9 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
         trade_calls[0].method == "certificate.transfer",
     );
 
-    let transfer_params = serde_json::from_value::<protocol::CertTransferRequest>(
-        trade_calls[0].params.clone(),
-    )
-    .or_exit("CertTransferRequest deserialization");
+    let transfer_params =
+        serde_json::from_value::<protocol::CertTransferRequest>(trade_calls[0].params.clone())
+            .or_exit("CertTransferRequest deserialization");
     h.check_bool(
         "ipc_trade_transfer_from_alice",
         transfer_params.from_did == "did:key:alice",
@@ -454,8 +447,7 @@ pub fn validate_composable_deployment(h: &mut ValidationHarness) {
         0.0,
     );
 
-    let mint_json =
-        serde_json::to_string(&mint_calls[0]).or_exit("mint call serialization");
+    let mint_json = serde_json::to_string(&mint_calls[0]).or_exit("mint call serialization");
     let roundtrip = serde_json::from_str::<protocol::JsonRpcRequest>(&mint_json)
         .or_exit("mint call roundtrip deserialization");
     h.check_bool(

@@ -58,7 +58,12 @@ pub fn cmd_validate() {
 fn run_cpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>) {
     let cpu_sig: Vec<f64> = vec![-2.0, -1.0, 0.0, 1.0, 2.0];
     let cpu_sig_out: Vec<f64> = cpu_sig.iter().map(|&x| barcuda_math::sigmoid(x)).collect();
-    h.check_abs("sigmoid_cpu_at_zero", cpu_sig_out[2], 0.5, tolerances::ANALYTICAL_TOL);
+    h.check_abs(
+        "sigmoid_cpu_at_zero",
+        cpu_sig_out[2],
+        0.5,
+        tolerances::ANALYTICAL_TOL,
+    );
 
     let relu_neg = f64::max(-3.0, 0.0);
     let relu_pos = f64::max(3.0, 0.0);
@@ -109,7 +114,12 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         .zip(cpu_sig_f32.iter())
         .map(|(g, c)| (g - c).abs())
         .fold(0.0_f32, f32::max);
-    h.check_abs("sigmoid_gpu_parity", f64::from(sig_max_err), 0.0, tolerances::GPU_UNARY_ABS_TOL);
+    h.check_abs(
+        "sigmoid_gpu_parity",
+        f64::from(sig_max_err),
+        0.0,
+        tolerances::GPU_UNARY_ABS_TOL,
+    );
 
     let relu_input: Vec<f32> = vec![-3.0, -1.0, 0.0, 1.0, 3.0];
     let gpu_relu = gpu_run_f32_unary(ctx, RELU_WGSL, &relu_input);
@@ -120,7 +130,12 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let dot_b: Vec<f32> = vec![5.0, 6.0, 7.0, 8.0];
     let gpu_products = gpu_run_f32_3buf(ctx, DOT_PRODUCT_WGSL, &dot_a, &dot_b);
     let gpu_dot_sum: f32 = gpu_products.iter().sum();
-    h.check_abs("dot_gpu_parity", f64::from(gpu_dot_sum), 70.0, tolerances::GPU_REDUCTION_ABS_TOL);
+    h.check_abs(
+        "dot_gpu_parity",
+        f64::from(gpu_dot_sum),
+        70.0,
+        tolerances::GPU_REDUCTION_ABS_TOL,
+    );
 
     let softmax_input: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
     let gpu_sm = gpu_run_f32_unary(ctx, SOFTMAX_WGSL, &softmax_input);
@@ -130,7 +145,12 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         .zip(cpu_sm.iter())
         .map(|(g, c)| (g - c).abs())
         .fold(0.0_f32, f32::max);
-    h.check_abs("softmax_gpu_parity", f64::from(sm_max_err), 0.0, tolerances::GPU_SOFTMAX_ABS_TOL);
+    h.check_abs(
+        "softmax_gpu_parity",
+        f64::from(sm_max_err),
+        0.0,
+        tolerances::GPU_SOFTMAX_ABS_TOL,
+    );
 
     let scale_input: Vec<f32> = vec![0.0, 1.0, 2.0, 3.0, 4.0];
     let gpu_scale = gpu_run_f32_unary(ctx, SCALE_WGSL, &scale_input);
@@ -190,8 +210,16 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         .zip(cpu_noise.iter())
         .map(|(g, c)| (g - c).abs())
         .fold(0.0_f32, f32::max);
-    h.check_abs("perlin_gpu_parity", f64::from(noise_max_err), 0.0, tolerances::GPU_PERLIN_ABS_TOL);
-    h.check_bool("perlin_gpu_range_bounded", gpu_noise.iter().all(|&v| (-1.1..=1.1).contains(&v)));
+    h.check_abs(
+        "perlin_gpu_parity",
+        f64::from(noise_max_err),
+        0.0,
+        tolerances::GPU_PERLIN_ABS_TOL,
+    );
+    h.check_bool(
+        "perlin_gpu_range_bounded",
+        gpu_noise.iter().all(|&v| (-1.1..=1.1).contains(&v)),
+    );
 
     let gpu_noise2 = gpu_run_perlin(ctx, &perm_u32, &noise_coords);
     h.check_bool("perlin_gpu_deterministic", gpu_noise == gpu_noise2);
@@ -271,7 +299,12 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         .zip(fbm_cpu.iter())
         .map(|(g, c)| (g - c).abs())
         .fold(0.0_f32, f32::max);
-    h.check_abs("fbm_gpu_parity", f64::from(fbm_max_err), 0.0, tolerances::GPU_FBM_ABS_TOL_LOOSE);
+    h.check_abs(
+        "fbm_gpu_parity",
+        f64::from(fbm_max_err),
+        0.0,
+        tolerances::GPU_FBM_ABS_TOL_LOOSE,
+    );
 
     // -- Raycaster GPU parity --
     let map_w = 8u32;
@@ -318,7 +351,13 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
         .collect();
 
     let gpu_distances = gpu_run_raycaster(
-        ctx, &map_data, map_w, map_h, player_x, player_y, &ray_angles,
+        ctx,
+        &map_data,
+        map_w,
+        map_h,
+        player_x,
+        player_y,
+        &ray_angles,
     );
 
     let ray_max_err = gpu_distances
@@ -347,35 +386,64 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let fog_vy = 4.0_f32;
     let sight_r_sq = 9.0_f32;
 
-    let gpu_fog = gpu_run_fog_of_war(ctx, fog_w, fog_h, fog_vx, fog_vy, sight_r_sq, &fog_terrain, &fog_prev);
-    let cpu_fog = cpu_fog_of_war(fog_w, fog_h, fog_vx, fog_vy, sight_r_sq, &fog_terrain, &fog_prev);
+    let gpu_fog = gpu_run_fog_of_war(
+        ctx,
+        fog_w,
+        fog_h,
+        fog_vx,
+        fog_vy,
+        sight_r_sq,
+        &fog_terrain,
+        &fog_prev,
+    );
+    let cpu_fog = cpu_fog_of_war(
+        fog_w,
+        fog_h,
+        fog_vx,
+        fog_vy,
+        sight_r_sq,
+        &fog_terrain,
+        &fog_prev,
+    );
     h.check_bool("fog_of_war_gpu_parity", gpu_fog == cpu_fog);
 
     let fog_visible_count = gpu_fog.iter().filter(|&&v| v == 2).count();
     h.check_bool("fog_of_war_has_visible_tiles", fog_visible_count > 0);
-    h.check_bool("fog_of_war_has_hidden_tiles", gpu_fog.iter().any(|&v| v == 0));
+    h.check_bool(
+        "fog_of_war_has_hidden_tiles",
+        gpu_fog.iter().any(|&v| v == 0),
+    );
 
     // -- Game shader parity: Tile Lighting --
     let light_w = 8_u32;
     let light_h = 8_u32;
     let light_n = (light_w * light_h) as usize;
     let light_terrain: Vec<f32> = (0..light_n).map(|_| 0.0_f32).collect();
-    let lights: Vec<[f32; 4]> = vec![
-        [4.0, 4.0, 1.0, 5.0],
-        [1.0, 1.0, 0.5, 3.0],
-    ];
+    let lights: Vec<[f32; 4]> = vec![[4.0, 4.0, 1.0, 5.0], [1.0, 1.0, 0.5, 3.0]];
     let ambient = 0.1_f32;
 
-    let gpu_light = gpu_run_tile_lighting(ctx, light_w, light_h, 2, ambient, &light_terrain, &lights);
+    let gpu_light =
+        gpu_run_tile_lighting(ctx, light_w, light_h, 2, ambient, &light_terrain, &lights);
     let cpu_light = cpu_tile_lighting(light_w, light_h, 2, ambient, &light_terrain, &lights);
     let light_max_err = gpu_light
         .iter()
         .zip(cpu_light.iter())
         .map(|(g, c)| (g - c).abs())
         .fold(0.0_f32, f32::max);
-    h.check_abs("lighting_gpu_parity", f64::from(light_max_err), 0.0, tolerances::GPU_LIGHTING_ABS_TOL);
-    h.check_bool("lighting_center_bright", gpu_light[(4 * light_w + 4) as usize] > ambient);
-    h.check_bool("lighting_clamped", gpu_light.iter().all(|&v| (0.0..=1.0).contains(&v)));
+    h.check_abs(
+        "lighting_gpu_parity",
+        f64::from(light_max_err),
+        0.0,
+        tolerances::GPU_LIGHTING_ABS_TOL,
+    );
+    h.check_bool(
+        "lighting_center_bright",
+        gpu_light[(4 * light_w + 4) as usize] > ambient,
+    );
+    h.check_bool(
+        "lighting_clamped",
+        gpu_light.iter().all(|&v| (0.0..=1.0).contains(&v)),
+    );
 
     // -- Game shader parity: Pathfind Wavefront --
     let pf_w = 8_u32;
@@ -388,7 +456,8 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let mut cpu_dist = gpu_dist.clone();
 
     for step in 0..4_u32 {
-        let (new_dist, _frontier) = gpu_run_pathfind_step(ctx, pf_w, pf_h, step, &pf_terrain, &gpu_dist);
+        let (new_dist, _frontier) =
+            gpu_run_pathfind_step(ctx, pf_w, pf_h, step, &pf_terrain, &gpu_dist);
         gpu_dist = new_dist;
         cpu_dist = cpu_pathfind_step(pf_w, pf_h, step, &pf_terrain, &cpu_dist);
     }
@@ -410,7 +479,10 @@ fn run_gpu_checks<S: ValidationSink>(h: &mut ValidationHarness<S>, ctx: &crate::
     let gpu_start = std::time::Instant::now();
     let _gpu = gpu_run_f32_unary(ctx, SIGMOID_WGSL, &bench_input);
     let gpu_bench_us = gpu_start.elapsed().as_micros();
-    h.check_bool("batch_speedup_nonnegative", gpu_bench_us <= cpu_bench_us + 10000);
+    h.check_bool(
+        "batch_speedup_nonnegative",
+        gpu_bench_us <= cpu_bench_us + 10000,
+    );
 }
 
 // ── CPU reference implementations for game shader parity ───────────
