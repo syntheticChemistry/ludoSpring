@@ -4,7 +4,7 @@
     "generated_by": "direct Rust library calls (no IPC)",
     "generated_note": "Record git commit (git rev-parse HEAD) and date when regenerating composition_targets.json",
     "generator": "baselines/rust/generate_composition_targets.rs",
-    "git_commit": null,
+    "git_commit": "fb18537",
     "git_commit_note": "Populate with `git rev-parse HEAD` when regenerating composition_targets.json",
     "methods": [
       "game.evaluate_flow",

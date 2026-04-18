@@ -136,7 +136,7 @@ CONNECT_PROBE_TIMEOUT_MS = 200
 DDA_NEAR_ZERO = 1e-12
 """Near-zero threshold for DDA ray direction components."""
 
-# === validation.rs (additional) ===
+# === validation.rs (spatial / procedural) ===
 
 PERLIN_SAFE_BOUND = 1.5
 """Conservative Perlin amplitude bound vs theoretical ±sqrt(2)/2."""
