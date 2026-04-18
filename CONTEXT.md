@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 11, 2026 (V42 — composition evolution: `lifecycle.composition` wired, capability-first discovery, `nest_atomic` declared, provenance unified)
+**Last updated:** April 17, 2026 (V43 — three-layer composition validation: Python→Rust→IPC golden chain. `validate_composition` binary, `composition_parity.rs`, `check_composition_drift`. 790+ tests, plasmidBin v0.10.0)
 
 ## What is this?
 
@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 781 workspace `#[test]` functions (V42 — up from 779 in V41)
+- **Tests**: 790+ workspace `#[test]` functions (V43 — up from 781 in V42)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
@@ -107,7 +107,7 @@ is capability-first, and fragments declare the full atomic surface.
 
 ### Metrics
 
-- **Tests**: 779 → **781** (+1 `lifecycle_composition_returns_report`)
+- **Tests**: 781 → **790+** (composition parity, WFC, accessibility tests)
 - **Clippy**: zero warnings (workspace-wide)
 - **Fragments**: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
 - **GAP-09**: updated to RESOLVED (nest_atomic declared, trio `required: false`)

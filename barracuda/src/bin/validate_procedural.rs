@@ -2,7 +2,7 @@
 //! Validates procedural generation (Perlin lattice, fBm, BSP area, L-system Fibonacci)
 //! against Python baselines.
 #![forbid(unsafe_code)]
-#![allow(clippy::expect_used)]
+#![expect(clippy::expect_used, reason = "validation binary uses expect for assertion clarity")]
 
 use ludospring_barracuda::procedural::bsp::{Rect, generate_bsp};
 use ludospring_barracuda::procedural::lsystem::presets;

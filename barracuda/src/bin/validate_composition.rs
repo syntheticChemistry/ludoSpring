@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
-#![allow(missing_docs)]
+#![allow(missing_docs)] // validation binary — no public API
 //! Composition validation — Layer 3: IPC parity against golden targets.
 //!
 //! Validates that ludoSpring's `game.*` methods return identical results

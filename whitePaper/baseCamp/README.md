@@ -1,6 +1,6 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** April 11, 2026
+**Date:** April 17, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
 **Status:** V43 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Composition evolution complete: Python validated Rust; now Rust+Python validate NUCLEUS composition patterns. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable via JSON-RPC. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin banned-crate enforcement in `deny.toml`. ecoBin harvested to plasmidBin (v0.10.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-09 RESOLVED). Three-layer validation complete: `validate_composition` binary + `composition_parity.rs` + `check_composition_drift`.
 
@@ -283,7 +283,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 781 workspace tests (V42)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 790+ workspace tests (V43)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike
