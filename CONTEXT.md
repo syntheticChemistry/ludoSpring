@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 790+ workspace `#[test]` functions (V43 — up from 781 in V42)
+- **Tests**: 790+ workspace `#[test]` functions (V44 — up from 781 in V42)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
@@ -143,8 +143,8 @@ composition patterns.
 
 ### Key changes
 
-- **exp100 — NUCLEUS Composition Parity**: Three-layer validator (niche integrity,
-  health probes, capability discovery, science parity, golden chain Python→Rust→IPC)
+- **exp100 — NUCLEUS Composition Parity**: Four-layer validator (niche integrity,
+  health probes, capability discovery, science parity, golden chain Python→Rust→IPC→primal proof)
 - **Coverage enforced in CI**: `cargo-llvm-cov --fail-under-lines 90` added to
   `.github/workflows/ci.yml`
 - **`config/capability_registry.toml`**: Machine-readable SSOT for capabilities,
@@ -163,7 +163,7 @@ ludoSpring ships a UniBin (`ludospring`) with `server`, `status`, `version`,
 and visualization subcommands for local IPC deployment. The ecoBin is now
 harvested to `infra/plasmidBin/` (v0.10.0, 3.1M PIE binary, sha256-verified).
 
-### Three-layer validation chain
+### Four-layer validation chain
 
 ```text
 Python baseline → validates → Rust library code       (Layer 1: established)

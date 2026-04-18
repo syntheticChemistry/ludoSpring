@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 17, 2026 — **V43 is current**
+**Last Updated:** April 17, 2026 — **V44 is current**
 
 ---
 
@@ -25,12 +25,12 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V43** | [LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md) | Apr 17 | **Current: V43** — Three-layer composition validation complete: `validate_composition` binary, `composition_parity.rs` (Layer 2.5), `check_composition_drift`, WFC golden targets, `TensorSession` sigmoid. 790+ tests, plasmidBin v0.10.0. Per-primal learnings and handback items for all teams. |
+| **V44** | [LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md) | Apr 17 | **Current: V44** — Level 5 primal proof: `validate_primal_proof` calls 10 barraCuda IPC methods against Python golden values. Four-layer validation. Per-primal action items. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 790+ workspace tests, V43 three-layer composition validation)
+ludoSpring (game science, 100 experiments, 790+ workspace tests, V44 four-layer validation + primal proof)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -105,6 +105,7 @@ See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_CO
 | Version | File | Superseded by |
 |---------|------|---------------|
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
+| V43 | [LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md) | V44 Primal Proof |
 | V42 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md` | V43 Three-Layer Validation |
 | V38 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md` | V39 NUCLEUS Composition Parity |
 | V37.1 | Central: `infra/wateringHole/handoffs/archive/` | V38 Composition Validation Chain |

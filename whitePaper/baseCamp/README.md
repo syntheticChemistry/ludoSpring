@@ -93,12 +93,12 @@ for their own composition evolution.
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
 - **exp100** (`ludospring-exp100`) — 27-check NUCLEUS composition parity validator: niche integrity (7), health probes (2), capability discovery (4), science parity (8), golden chain (6)
-- **ecoBin v0.9.0** — Harvested to `infra/plasmidBin/ludospring/` (sha256-verified)
+- **ecoBin v0.10.0** — Harvested to `infra/plasmidBin/ludospring/` (sha256-verified)
 - **Shared HUD fixtures** — `hud_fixtures.rs` extracted from dashboard binaries, eliminating duplication
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
 
-### Three-Layer Composition Validation (V43)
+### Four-Layer Validation — Python → Rust → IPC → Primal Proof (V44)
 
 The validation lifecycle now extends beyond Python↔Rust parity to prove
 that peer-reviewed science works identically when composed from NUCLEUS
@@ -110,12 +110,21 @@ primals via IPC:
 | 2 | Rust library | Golden JSON (`composition_targets.json`) | `composition_parity.rs` (6 tests) |
 | 2.5 | Golden JSON | Library recomputation | `check_composition_drift` (CI) |
 | 3 | Golden JSON | IPC composition | `validate_composition` binary |
+| 5 | Python golden values | barraCuda IPC (primal proof) | `validate_primal_proof` binary |
+
+**Level 5 primal proof (V44):** `validate_primal_proof` calls barraCuda's
+JSON-RPC UDS socket directly — 10 IPC methods (`activation.fitts`,
+`activation.hick`, `math.sigmoid`, `math.log2`, `stats.mean`, `stats.std_dev`,
+`noise.perlin2d`, `rng.uniform`, `tensor.create`, `health.liveness`) compared
+against the same Python golden values used for Level 2. Exit 0/1/2. This
+proves: peer-reviewed science → Python → Rust → primal IPC = PASS.
 
 **Golden chain example (Fitts's law):**
 - Python `interaction_laws.py` computes `log2(100/10 + 1) * 150 + 50 = 543.43` ms
 - Rust `fitts_movement_time(100.0, 10.0, 50.0, 150.0)` matches within `1e-10`
 - `composition_targets.json["game.fitts_cost"]["mouse_d100_w10"]` stores `543.43`
 - `validate_composition` calls `game.fitts_cost` over IPC → same `543.43`
+- `validate_primal_proof` calls barraCuda `activation.fitts` → same `708.85` (Level 5)
 
 Each layer independently validates the one below it. Drift at any layer is
 caught by the guard (test or CI check) before it propagates.
@@ -283,7 +292,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 790+ workspace tests (V43)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 790+ workspace tests (V44)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

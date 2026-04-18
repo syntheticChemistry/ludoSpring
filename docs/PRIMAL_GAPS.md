@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 17, 2026 (V43 — three-layer composition validation, 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 17, 2026 (V44 — four-layer validation: Python→Rust→IPC→primal proof. `validate_primal_proof` Level 5 binary. 790+ tests, plasmidBin v0.10.0)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
