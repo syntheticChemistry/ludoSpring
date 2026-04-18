@@ -7,21 +7,32 @@ This project does not use SemVer — versions are session-sequential (V1–V45).
 
 ## [V45] — 2026-04-18
 
-### Level 5 guideStone — Self-Validating NUCLEUS Node
+### Level 5 guideStone — Self-Validating NUCLEUS Node (readiness 3)
 
 ludoSpring now has a proper guideStone binary (`ludospring_guidestone`)
 that uses the primalSpring composition API rather than raw IPC socket
-calls. The guideStone discovers NUCLEUS primals via capability-based
-routing, validates domain science against Python golden values, and
-inherits primalSpring's base composition certification (6 layers).
+calls. The guideStone carries five certified properties validated in
+bare mode (no primals needed), discovers NUCLEUS primals via capability-
+based routing, and validates domain science against Python golden values.
 
-- **`ludospring_guidestone` binary:** Level 5 guideStone. Uses `primalspring::composition::{CompositionContext, validate_parity, validate_liveness}` for capability-routed IPC. Validates Fitts, Hick, sigmoid, log2, stats.mean, stats.std_dev, Perlin, rng, tensor via `method_to_capability_domain()` routing. Exit 0/1/2 (certified/failed/bare-only). Requires `guidestone` feature.
-- **`primalspring` dependency:** Added as optional path dependency (`../../primalSpring/ecoPrimal`), gated behind `guidestone` feature. Brings composition API, `ValidationResult`, and ecosystem tolerances.
-- **`validate_all` updated:** Includes `ludospring_guidestone` with exit-2 skip handling.
-- **CI updated:** `cargo build --bin ludospring_guidestone --features guidestone` step added.
-- **Five certified properties:** Deterministic output, reference-traceable, self-verifying, environment-agnostic, tolerance-documented.
-- **`validate_primal_proof` retained:** Raw IPC validator still present for comparison/fallback.
-- **Validation ladder:** Level 1 (Python) ✓, Level 2 (Rust) ✓, Level 3 (IPC composition) ✓, Level 5 (guideStone) ✓, Level 6 (NUCLEUS deployment) pending.
+- **`ludospring_guidestone` binary:** Level 5 guideStone. Three layers:
+  - **Layer 0 (Bare):** 15 checks across 5 certified properties — determinism
+    (recompute Fitts, Hick, sigmoid, log2, mean, variance from formulas),
+    traceability (7 golden values sourced to papers), self-verification
+    (tamper detection via tolerance guard), environment-agnostic (pure Rust),
+    tolerance ordering (DETERMINISTIC < IPC_ROUND_TRIP ≤ WGSL_SHADER).
+  - **Layer 1 (Discovery):** `validate_liveness` for `tensor` + `compute`.
+  - **Layer 2 (Domain Science):** 15 composition IPC checks — Fitts, Hick,
+    sigmoid, log2, stats.mean, stats.variance, stats.std_dev, Perlin,
+    rng.uniform, tensor.create, tensor.matmul (identity parity),
+    compute.capabilities, health.readiness.
+  Exit 0/1/2 (certified/failed/bare-only). Requires `guidestone` feature.
+- **Bare mode achieves readiness Level 3:** guideStone passes all structural
+  checks without any live primals, producing exit 2 with zero failures.
+- **`primalspring` dependency:** Optional path dep gated behind `guidestone` feature.
+- **`validate_all` updated:** Includes `ludospring_guidestone` with exit-2 skip.
+- **CI updated:** `cargo build --features guidestone` step.
+- **`validate_primal_proof` retained:** Raw IPC validator for comparison/fallback.
 
 ## [V44] — 2026-04-17
 

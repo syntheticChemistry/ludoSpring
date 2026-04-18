@@ -40,13 +40,24 @@ Python baseline (peer-reviewed)
 |----------|-------|
 | Binary | `ludospring_guidestone` |
 | Feature | `guidestone` (enables `primalspring` path dep) |
-| API | `primalspring::composition::{CompositionContext, validate_parity, validate_liveness}` |
+| API | `primalspring::composition::{CompositionContext, validate_parity, validate_liveness, validate_parity_vec}` |
 | Discovery | `CompositionContext::from_live_discovery_with_fallback()` (UDS → TCP) |
 | Routing | `method_to_capability_domain()` → capability → primal |
 | Tolerances | `primalspring::tolerances::IPC_ROUND_TRIP_TOL` (1e-10) |
 | Exit codes | 0 = certified, 1 = failed, 2 = bare-only (no NUCLEUS) |
+| Readiness | **Level 3** — bare mode passes all 15 structural checks without primals |
 
-### Validated Methods (domain science via composition API)
+### Layer 0: Bare Properties (15 checks, no primals needed)
+
+| Property | Checks | What it validates |
+|----------|--------|-------------------|
+| Deterministic Output | 6 | Recompute Fitts, Hick, sigmoid, log₂, mean, variance from formulas |
+| Reference-Traceable | 7 | Every golden value is finite and sourced to a paper |
+| Self-Verifying | 2 | Tampered values detected by tolerance guard |
+| Environment-Agnostic | 2 | Pure Rust, no GPU/network deps for bare mode |
+| Tolerance-Documented | 3 | IPC_ROUND_TRIP_TOL positive, ordering correct, BARE < IPC |
+
+### Layer 2: Domain Science (15 IPC checks, requires NUCLEUS)
 
 | Method | Capability | Golden Value | Source |
 |--------|-----------|--------------|--------|
@@ -55,10 +66,14 @@ Python baseline (peer-reviewed)
 | `math.sigmoid` | tensor | 0.6225 | Logistic function |
 | `math.log2` | tensor | 3.0 | Exact |
 | `stats.mean` | tensor | 3.0 | np.mean([1,2,3,4,5]) |
+| `stats.variance` | tensor | 4.0 | np.var([2,4,4,4,5,5,7,9]) |
 | `stats.std_dev` | tensor | (existence) | — |
 | `noise.perlin2d` | tensor | 0.0 | Origin invariant |
 | `rng.uniform` | tensor | (existence) | — |
 | `tensor.create` | tensor | (existence) | — |
+| `tensor.matmul` | tensor | [3,7,2,5] | I×A = A identity parity |
+| `compute.capabilities` | compute | (existence) | — |
+| `health.readiness` | security | (existence) | — |
 
 ### Evolution from V44
 
