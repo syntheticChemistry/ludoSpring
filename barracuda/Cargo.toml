@@ -18,6 +18,8 @@ gpu = ["barracuda/gpu", "dep:wgpu", "dep:tokio"]
 ipc = ["dep:clap", "dep:tracing", "dep:tracing-subscriber", "dep:signal-hook", "dep:tokio"]
 # Typed tarpc surface alongside JSON-RPC (UNIVERSAL_IPC_STANDARD_V3).
 tarpc-ipc = ["dep:tarpc", "dep:tokio"]
+# Level 5 guideStone: self-validating NUCLEUS node via primalSpring composition API.
+guidestone = ["dep:primalspring"]
 
 [dependencies]
 serde = { workspace = true }
@@ -43,6 +45,7 @@ wgpu = { version = "28", default-features = false, features = [
 ], optional = true }
 tokio = { version = "1", features = ["rt", "net", "io-util", "sync"], optional = true }
 tarpc = { version = "0.37", features = ["full"], optional = true }
+primalspring = { path = "../../primalSpring/ecoPrimal", optional = true }
 
 [[bin]]
 name = "ludospring"
@@ -74,6 +77,11 @@ required-features = ["ipc"]
 name = "validate_primal_proof"
 path = "src/bin/validate_primal_proof.rs"
 required-features = ["ipc"]
+
+[[bin]]
+name = "ludospring_guidestone"
+path = "src/bin/ludospring_guidestone.rs"
+required-features = ["guidestone"]
 
 [[example]]
 name = "generate_composition_targets"

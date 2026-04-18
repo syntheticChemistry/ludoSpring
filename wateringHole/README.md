@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 17, 2026 — **V44 is current**
+**Last Updated:** April 18, 2026 — **V45 is current**
 
 ---
 
@@ -25,12 +25,12 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V44** | [LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md) | Apr 17 | **Current: V44** — Level 5 primal proof: `validate_primal_proof` calls 10 barraCuda IPC methods against Python golden values. Four-layer validation. Per-primal action items. |
+| **V45** | [LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md](handoffs/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md) | Apr 18 | **Current: V45** — Level 5 guideStone: `ludospring_guidestone` uses primalSpring composition API. Five-layer validation. Inherits base certification. Per-primal action items. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 790+ workspace tests, V44 four-layer validation + primal proof)
+ludoSpring (game science, 100 experiments, 790+ workspace tests, V45 five-layer validation + guideStone)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -105,6 +105,7 @@ See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_CO
 | Version | File | Superseded by |
 |---------|------|---------------|
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
+| V44 | [LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md) | V45 guideStone |
 | V43 | [LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md) | V44 Primal Proof |
 | V42 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md` | V43 Three-Layer Validation |
 | V38 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md` | V39 NUCLEUS Composition Parity |

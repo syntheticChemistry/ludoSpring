@@ -43,6 +43,9 @@ jobs:
       - name: Build primal proof binary
         run: cargo build -p ludospring-barracuda --bin validate_primal_proof --features ipc
 
+      - name: Build guideStone binary
+        run: cargo build -p ludospring-barracuda --bin ludospring_guidestone --features guidestone
+
       - name: Doc check
         run: cargo doc --workspace --no-deps
 

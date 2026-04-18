@@ -2,7 +2,7 @@
 
 **Date:** April 17, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V44 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Level 5 primal proof operational: `validate_primal_proof` calls 10 barraCuda IPC methods (Fitts, Hick, sigmoid, log2, mean, std_dev, Perlin, rng, tensor, health) against Python golden values. Four-layer validation: Python→Rust→IPC composition→primal proof. `lifecycle.composition` handler wired. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin harvested to plasmidBin (v0.10.0, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 PARTIAL).
+**Status:** V45 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Level 5 guideStone operational: `ludospring_guidestone` uses primalSpring composition API (`CompositionContext`, `validate_parity`, `validate_liveness`) for capability-routed IPC validation of game science (Fitts, Hick, sigmoid, log2, mean, std_dev, Perlin, rng, tensor). Five-layer validation: Python→Rust→IPC composition→primal proof→guideStone. Inherits primalSpring base certification (6 layers). Five certified guideStone properties. `lifecycle.composition` handler wired. Capability-first discovery. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to `19e402c0`. ecoBin: plasmidBin v0.10.0. 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 guideStone wired).
 
 ---
 
@@ -98,11 +98,11 @@ Key artifacts:
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
 
-### Four-Layer Validation — Python → Rust → IPC → Primal Proof (V44)
+### Five-Layer Validation — Python → Rust → IPC → Primal Proof → guideStone (V45)
 
-The validation lifecycle now extends beyond Python↔Rust parity to prove
-that peer-reviewed science works identically when composed from NUCLEUS
-primals via IPC:
+The validation lifecycle now extends to the guideStone level: a
+self-validating NUCLEUS node that uses the primalSpring composition API
+for capability-routed IPC rather than raw socket calls:
 
 | Layer | Source | Target | Guard |
 |-------|--------|--------|-------|
@@ -110,21 +110,24 @@ primals via IPC:
 | 2 | Rust library | Golden JSON (`composition_targets.json`) | `composition_parity.rs` (6 tests) |
 | 2.5 | Golden JSON | Library recomputation | `check_composition_drift` (CI) |
 | 3 | Golden JSON | IPC composition | `validate_composition` binary |
-| 5 | Python golden values | barraCuda IPC (primal proof) | `validate_primal_proof` binary |
+| 5a | Python golden values | barraCuda raw IPC | `validate_primal_proof` binary |
+| 5b | Python golden values | Composition API IPC | `ludospring_guidestone` binary |
 
-**Level 5 primal proof (V44):** `validate_primal_proof` calls barraCuda's
-JSON-RPC UDS socket directly — 10 IPC methods (`activation.fitts`,
-`activation.hick`, `math.sigmoid`, `math.log2`, `stats.mean`, `stats.std_dev`,
-`noise.perlin2d`, `rng.uniform`, `tensor.create`, `health.liveness`) compared
-against the same Python golden values used for Level 2. Exit 0/1/2. This
-proves: peer-reviewed science → Python → Rust → primal IPC = PASS.
+**Level 5 guideStone (V45):** `ludospring_guidestone` uses `primalspring::composition`
+to discover primals by capability and validate domain science. Routes via
+`method_to_capability_domain()`: `activation.fitts` → "tensor" → barraCuda.
+Validates: Fitts, Hick, sigmoid, log2, stats.mean, stats.std_dev, Perlin,
+rng.uniform, tensor.create. Inherits primalSpring base certification (6 layers).
+Five certified properties: deterministic, reference-traceable, self-verifying,
+environment-agnostic, tolerance-documented. Exit 0/1/2.
 
 **Golden chain example (Fitts's law):**
 - Python `interaction_laws.py` computes `log2(100/10 + 1) * 150 + 50 = 543.43` ms
 - Rust `fitts_movement_time(100.0, 10.0, 50.0, 150.0)` matches within `1e-10`
 - `composition_targets.json["game.fitts_cost"]["mouse_d100_w10"]` stores `543.43`
 - `validate_composition` calls `game.fitts_cost` over IPC → same `543.43`
-- `validate_primal_proof` calls barraCuda `activation.fitts` → same `708.85` (Level 5)
+- `validate_primal_proof` calls barraCuda `activation.fitts` → same `708.85` (raw IPC)
+- `ludospring_guidestone` validates `activation.fitts` via composition API → same `708.85`
 
 Each layer independently validates the one below it. Drift at any layer is
 caught by the guard (test or CI check) before it propagates.

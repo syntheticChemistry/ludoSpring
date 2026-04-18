@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 17, 2026 (V44 — four-layer validation: Python→Rust→IPC→primal proof. `validate_primal_proof` Level 5 binary. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 18, 2026 (V45 — five-layer validation: Python→Rust→IPC→primal proof→guideStone. `ludospring_guidestone` Level 5 guideStone via primalSpring composition API. 790+ tests, plasmidBin v0.10.0)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
@@ -53,13 +53,17 @@ the coralReef client.
 ### GAP-02: barraCuda Direct Rust Import (Not IPC)
 
 **Primal:** barraCuda
-**Status:** PARTIAL — Level 5 `validate_primal_proof` binary wired (V44,
-April 17 2026). Proves Fitts, Hick, sigmoid, log2, stats.mean, Perlin,
-stats.std_dev, rng.uniform, tensor.create via barraCuda JSON-RPC IPC
-against Python golden values. Library path dep retained for Level 2 tests.
-**Proto-nucleate:** Required via IPC — 10 methods validated, domain-level
-methods (`math.flow.evaluate`, `math.engagement.composite`) remain gaps.
-**Impact:** Level 5 primal proof is operational for core math; domain
+**Status:** PARTIAL → guideStone wired (V45, April 18 2026).
+`ludospring_guidestone` binary uses primalSpring composition API
+(`CompositionContext`, `validate_parity`, `validate_liveness`) for
+capability-routed IPC. Validates Fitts, Hick, sigmoid, log2, stats.mean,
+stats.std_dev, Perlin, rng, tensor via `method_to_capability_domain()`
+routing to barraCuda. `validate_primal_proof` (raw IPC) retained for
+comparison. Library path dep retained for Level 2 tests.
+**Proto-nucleate:** Required via IPC — 10 methods validated via guideStone,
+domain-level methods (`math.flow.evaluate`, `math.engagement.composite`)
+remain gaps.
+**Impact:** Level 5 guideStone operational for core math; domain
 compositions need either upstream absorption or ludoSpring-side IPC dispatch.
 
 **Current usage (library dep — Level 2 validation):**

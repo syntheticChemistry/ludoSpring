@@ -3,7 +3,25 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V44).
+This project does not use SemVer — versions are session-sequential (V1–V45).
+
+## [V45] — 2026-04-18
+
+### Level 5 guideStone — Self-Validating NUCLEUS Node
+
+ludoSpring now has a proper guideStone binary (`ludospring_guidestone`)
+that uses the primalSpring composition API rather than raw IPC socket
+calls. The guideStone discovers NUCLEUS primals via capability-based
+routing, validates domain science against Python golden values, and
+inherits primalSpring's base composition certification (6 layers).
+
+- **`ludospring_guidestone` binary:** Level 5 guideStone. Uses `primalspring::composition::{CompositionContext, validate_parity, validate_liveness}` for capability-routed IPC. Validates Fitts, Hick, sigmoid, log2, stats.mean, stats.std_dev, Perlin, rng, tensor via `method_to_capability_domain()` routing. Exit 0/1/2 (certified/failed/bare-only). Requires `guidestone` feature.
+- **`primalspring` dependency:** Added as optional path dependency (`../../primalSpring/ecoPrimal`), gated behind `guidestone` feature. Brings composition API, `ValidationResult`, and ecosystem tolerances.
+- **`validate_all` updated:** Includes `ludospring_guidestone` with exit-2 skip handling.
+- **CI updated:** `cargo build --bin ludospring_guidestone --features guidestone` step added.
+- **Five certified properties:** Deterministic output, reference-traceable, self-verifying, environment-agnostic, tolerance-documented.
+- **`validate_primal_proof` retained:** Raw IPC validator still present for comparison/fallback.
+- **Validation ladder:** Level 1 (Python) ✓, Level 2 (Rust) ✓, Level 3 (IPC composition) ✓, Level 5 (guideStone) ✓, Level 6 (NUCLEUS deployment) pending.
 
 ## [V44] — 2026-04-17
 

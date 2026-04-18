@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 17, 2026 (V44 — Level 5 primal proof: `validate_primal_proof` calls barraCuda over IPC (10 methods) against Python golden values. Four-layer validation: Python→Rust→IPC composition→primal proof. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 18, 2026 (V45 — Level 5 guideStone: `ludospring_guidestone` uses primalSpring composition API for capability-routed IPC validation. Five-layer validation: Python→Rust→IPC composition→primal proof→guideStone. 790+ tests, plasmidBin v0.10.0)
 
 ## What is this?
 
@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 790+ workspace `#[test]` functions (V44 — up from 781 in V42)
+- **Tests**: 790+ workspace `#[test]` functions (V45 — up from 781 in V42)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
