@@ -36,6 +36,10 @@ fn main() -> Result<(), String> {
             name: "validate_composition",
             skip_on_exit_2: true,
         },
+        Validator {
+            name: "validate_primal_proof",
+            skip_on_exit_2: true,
+        },
     ];
 
     let mut any_fail = false;
@@ -46,7 +50,7 @@ fn main() -> Result<(), String> {
     {
         let path = exe_dir.join(name);
         if !Path::new(&path).exists() {
-            if name == "validate_composition" {
+            if name == "validate_composition" || name == "validate_primal_proof" {
                 eprintln!("  ○ {name} (binary not built — requires `ipc` feature; skipping)");
             } else {
                 eprintln!("  ✗ {name} (binary missing at {})", path.display());

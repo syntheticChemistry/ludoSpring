@@ -2,7 +2,7 @@
 
 **Date:** April 17, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V43 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Composition evolution complete: Python validated Rust; now Rust+Python validate NUCLEUS composition patterns. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable via JSON-RPC. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin banned-crate enforcement in `deny.toml`. ecoBin harvested to plasmidBin (v0.10.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-09 RESOLVED). Three-layer validation complete: `validate_composition` binary + `composition_parity.rs` + `check_composition_drift`.
+**Status:** V44 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Level 5 primal proof operational: `validate_primal_proof` calls 10 barraCuda IPC methods (Fitts, Hick, sigmoid, log2, mean, std_dev, Perlin, rng, tensor, health) against Python golden values. Four-layer validation: Python→Rust→IPC composition→primal proof. `lifecycle.composition` handler wired. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin harvested to plasmidBin (v0.10.0, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 PARTIAL).
 
 ---
 

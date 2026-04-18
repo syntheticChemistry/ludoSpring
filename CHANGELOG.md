@@ -3,7 +3,21 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V43).
+This project does not use SemVer — versions are session-sequential (V1–V44).
+
+## [V44] — 2026-04-17
+
+### Level 5 Primal Proof — barraCuda IPC Validation
+
+The primal proof is operational: `validate_primal_proof` calls barraCuda
+over JSON-RPC UDS (not library imports) and compares results against
+Python golden values. This is the first binary that proves ludoSpring's
+domain math works through the sovereign primal compute stack.
+
+- **`validate_primal_proof` binary:** Level 5 validator. Discovers barraCuda socket (env override `BARRACUDA_SOCK` or XDG scan), calls 10 IPC methods (`activation.fitts`, `activation.hick`, `math.sigmoid`, `math.log2`, `stats.mean`, `stats.std_dev`, `noise.perlin2d`, `rng.uniform`, `tensor.create`, `health.liveness`), compares scalar results against Python baseline golden values using `ANALYTICAL_TOL`. Exit 0/1/2 (pass/fail/skip). Requires `ipc` feature.
+- **`validate_all` updated:** Includes `validate_primal_proof` with exit-2 skip handling.
+- **GAP-02 updated:** Status `PARTIAL` — 10 barraCuda methods validated via IPC; domain-level methods (`math.flow.evaluate`, `math.engagement.composite`) remain gaps for upstream absorption.
+- **Validation ladder status:** Level 1 (Python) ✓, Level 2 (Rust) ✓, Level 3 (IPC composition) ✓, Level 5 (primal proof) ✓ (core math), Level 6 (clean-machine) pending.
 
 ## [V43] — 2026-04-17
 

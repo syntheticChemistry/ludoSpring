@@ -70,6 +70,11 @@ name = "validate_composition"
 path = "src/bin/validate_composition.rs"
 required-features = ["ipc"]
 
+[[bin]]
+name = "validate_primal_proof"
+path = "src/bin/validate_primal_proof.rs"
+required-features = ["ipc"]
+
 [[example]]
 name = "generate_composition_targets"
 path = "../baselines/rust/generate_composition_targets.rs"

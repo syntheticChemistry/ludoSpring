@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 17, 2026 (V43 — three-layer composition validation: Python→Rust→IPC golden chain. `validate_composition` binary, `composition_parity.rs`, `check_composition_drift`. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 17, 2026 (V44 — Level 5 primal proof: `validate_primal_proof` calls barraCuda over IPC (10 methods) against Python golden values. Four-layer validation: Python→Rust→IPC composition→primal proof. 790+ tests, plasmidBin v0.10.0)
 
 ## What is this?
 

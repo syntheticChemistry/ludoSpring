@@ -40,6 +40,9 @@ jobs:
       - name: Composition targets drift check
         run: cargo run -p ludospring-barracuda --example check_composition_drift
 
+      - name: Build primal proof binary
+        run: cargo build -p ludospring-barracuda --bin validate_primal_proof --features ipc
+
       - name: Doc check
         run: cargo doc --workspace --no-deps
 

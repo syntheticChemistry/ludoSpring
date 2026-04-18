@@ -23,6 +23,7 @@ use super::gpu_context::GpuContext;
 /// example after device loss).
 #[must_use]
 pub fn sigmoid_batch_gpu(ctx: &GpuContext, values: &[f32]) -> Vec<f32> {
+    #[expect(clippy::expect_used, reason = "documented panic on device loss")]
     try_sigmoid_batch_gpu(ctx, values).expect("TensorSession sigmoid batch")
 }
 

@@ -53,22 +53,40 @@ the coralReef client.
 ### GAP-02: barraCuda Direct Rust Import (Not IPC)
 
 **Primal:** barraCuda
-**Status:** OPEN — direct path dependency (`default-features = false`);
-compile-time `barracuda::` usage unchanged (April 2026 review)
-**Proto-nucleate:** Required via IPC (`tensor.fitts`, `tensor.flow_sigmoid`, etc.)
-**Impact:** For `composition_model = "pure"`, barraCuda should be called via
-`tensor.*` capability IPC through biomeOS, not via compile-time Rust imports.
+**Status:** PARTIAL — Level 5 `validate_primal_proof` binary wired (V44,
+April 17 2026). Proves Fitts, Hick, sigmoid, log2, stats.mean, Perlin,
+stats.std_dev, rng.uniform, tensor.create via barraCuda JSON-RPC IPC
+against Python golden values. Library path dep retained for Level 2 tests.
+**Proto-nucleate:** Required via IPC — 10 methods validated, domain-level
+methods (`math.flow.evaluate`, `math.engagement.composite`) remain gaps.
+**Impact:** Level 5 primal proof is operational for core math; domain
+compositions need either upstream absorption or ludoSpring-side IPC dispatch.
 
-**Current usage:**
+**Current usage (library dep — Level 2 validation):**
 - `barracuda::activations::sigmoid` in `interaction/flow.rs`
 - `barracuda::stats::dot` in `metrics/engagement.rs`
 - `barracuda::rng::lcg_step` in `procedural/bsp.rs`
 - `barracuda::device::WgpuDevice` + `barracuda::session::TensorSession` in `gpu_context.rs`
 
-**Migration path:** Replace direct imports with `capability_call("tensor", op, args)`
-as barraCuda IPC surface matures. Keep path dep for validation binaries.
+**IPC-validated methods (Level 5 — `validate_primal_proof`):**
+- `activation.fitts`, `activation.hick` — interaction laws
+- `math.sigmoid`, `math.log2` — math primitives
+- `stats.mean`, `stats.std_dev` — statistics
+- `noise.perlin2d` — procedural generation
+- `rng.uniform` — stochastic operations
+- `tensor.create` — GPU tensor surface
+- `health.liveness`, `capabilities.list` — ecosystem probes
+
+**Remaining IPC gaps (domain compositions not in barraCuda):**
+- `math.flow.evaluate` — composable from sigmoid + clamp
+- `math.engagement.composite` — composable from stats.weighted_mean + tensor ops
+- Full tensor pipeline (`tensor.matmul`, `tensor.sigmoid` fused) — Tier B
+
+**Migration path:** Domain-level methods should either be absorbed upstream
+by barraCuda or composed from existing barraCuda primitives at the spring
+binary level. Keep library path dep for Level 2 validation binaries.
 **Owner:** barraCuda IPC surface / ludoSpring
-**Tracking:** This file
+**Tracking:** This file + `validate_primal_proof` exit codes
 
 ---
 
