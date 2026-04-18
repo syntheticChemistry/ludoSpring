@@ -114,7 +114,7 @@ This brings in: `serde`, `serde_json`, `toml`, `tracing`, `clap`,
 
 ```toml
 # primalSpring/graphs/downstream/downstream_manifest.toml
-guidestone_readiness = 2   # was 1
+guidestone_readiness = 3   # was 1→2→3
 validation_capabilities = [
     "activation.fitts", "activation.hick",
     "math.sigmoid", "math.log2",
@@ -150,11 +150,12 @@ validation_capabilities = [
 
 ### primalSpring
 
-- **Readiness level:** ludoSpring moves from Level 1 → Level 2 in the
-  guideStone readiness table. Next: Level 3 (bare guideStone works offline)
-  requires structural validation without live primals.
-- **Manifest updated:** `guidestone_readiness = 2`, `validation_capabilities`
-  expanded with 9 domain methods.
+- **Readiness level:** ludoSpring moves from Level 1 → **Level 3** in the
+  guideStone readiness table. Bare mode passes all 15 structural checks
+  without live primals. Next: Level 4 (NUCLEUS guideStone validates with
+  live primals) then Level 5 (certified).
+- **Manifest updated:** `guidestone_readiness = 3`, `validation_capabilities`
+  expanded with 11 domain methods (including `stats.variance`, `compute.capabilities`).
 
 ### biomeOS
 
@@ -187,7 +188,7 @@ validation_capabilities = [
 | `experiments/README.md` | V45 |
 | `niches/ludospring-game.yaml` | V45 |
 | `wateringHole/README.md` | V45 active, V44 archived |
-| `primalSpring/graphs/downstream/downstream_manifest.toml` | `guidestone_readiness = 2`, expanded capabilities |
+| `primalSpring/graphs/downstream/downstream_manifest.toml` | `guidestone_readiness = 3`, expanded capabilities |
 | `primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` | V45 guideStone |
 | `infra/wateringHole/PRIMAL_REGISTRY.md` | V45 guideStone |
 | `infra/wateringHole/ECOSYSTEM_EVOLUTION_CYCLE.md` | V45 guideStone |
@@ -198,7 +199,7 @@ validation_capabilities = [
 |--------|-------|
 | Tests | 790+ |
 | Validators | 7 (3 core + composition + primal_proof + guidestone + meta-runner) |
-| guideStone readiness | Level 2 (properties documented, binary compiles + skips without NUCLEUS) |
+| guideStone readiness | **Level 3** (bare mode passes 15 structural checks without primals) |
 | Gaps | 10 (GAP-02 guideStone wired, others unchanged) |
 | Clippy | 0 warnings (`-D warnings`) |
 | Coverage | 90%+ (llvm-cov, CI-enforced) |

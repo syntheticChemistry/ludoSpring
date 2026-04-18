@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 18, 2026 (V45 — Level 5 guideStone: `ludospring_guidestone` uses primalSpring composition API for capability-routed IPC validation. Five-layer validation: Python→Rust→IPC composition→primal proof→guideStone. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 18, 2026 (V45 — guideStone readiness 3: `ludospring_guidestone` bare mode validates 5 certified properties (15 checks) without primals, NUCLEUS mode validates 15 domain IPC checks via primalSpring composition API. Three layers: bare → discovery → domain science. 790+ tests, plasmidBin v0.10.0)
 
 ## What is this?
 

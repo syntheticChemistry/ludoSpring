@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V45** | [LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md](handoffs/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md) | Apr 18 | **Current: V45** — Level 5 guideStone: `ludospring_guidestone` uses primalSpring composition API. Five-layer validation. Inherits base certification. Per-primal action items. |
+| **V45** | [LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md](handoffs/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md) | Apr 18 | **Current: V45** — guideStone readiness 3: bare mode (15 checks, 5 certified properties) + domain IPC (15 checks, 13 methods). Three layers: bare → discovery → domain science. |
 
 ## Cross-Spring Context
 
@@ -105,8 +105,8 @@ See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_CO
 | Version | File | Superseded by |
 |---------|------|---------------|
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
-| V44 | [LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md) | V45 guideStone |
-| V43 | [LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md) | V44 Primal Proof |
+| V44 | `handoffs/archive/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md` | V45 guideStone |
+| V43 | `handoffs/archive/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md` | V44 Primal Proof |
 | V42 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md` | V43 Three-Layer Validation |
 | V38 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md` | V39 NUCLEUS Composition Parity |
 | V37.1 | Central: `infra/wateringHole/handoffs/archive/` | V38 Composition Validation Chain |

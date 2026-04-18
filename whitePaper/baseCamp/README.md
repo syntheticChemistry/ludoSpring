@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** April 17, 2026
+**Date:** April 18, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V45 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Level 5 guideStone operational: `ludospring_guidestone` uses primalSpring composition API (`CompositionContext`, `validate_parity`, `validate_liveness`) for capability-routed IPC validation of game science (Fitts, Hick, sigmoid, log2, mean, std_dev, Perlin, rng, tensor). Five-layer validation: Python→Rust→IPC composition→primal proof→guideStone. Inherits primalSpring base certification (6 layers). Five certified guideStone properties. `lifecycle.composition` handler wired. Capability-first discovery. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to `19e402c0`. ecoBin: plasmidBin v0.10.0. 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 guideStone wired).
+**Status:** V45 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. guideStone readiness **3** (bare mode passes): `ludospring_guidestone` carries 15 bare certified-property checks (no primals needed) + 15 domain IPC checks via primalSpring composition API. Three layers: bare properties → discovery → domain science. Five-layer validation: Python→Rust→IPC composition→primal proof→guideStone. Inherits primalSpring base certification (6 layers). `lifecycle.composition` handler wired. Capability-first discovery. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to `19e402c0`. ecoBin: plasmidBin v0.10.0. 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 guideStone wired).
 
 ---
 
@@ -295,7 +295,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 790+ workspace tests (V44)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 790+ workspace tests (V45)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

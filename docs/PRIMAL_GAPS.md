@@ -53,18 +53,21 @@ the coralReef client.
 ### GAP-02: barraCuda Direct Rust Import (Not IPC)
 
 **Primal:** barraCuda
-**Status:** PARTIAL → guideStone wired (V45, April 18 2026).
-`ludospring_guidestone` binary uses primalSpring composition API
-(`CompositionContext`, `validate_parity`, `validate_liveness`) for
-capability-routed IPC. Validates Fitts, Hick, sigmoid, log2, stats.mean,
-stats.std_dev, Perlin, rng, tensor via `method_to_capability_domain()`
-routing to barraCuda. `validate_primal_proof` (raw IPC) retained for
-comparison. Library path dep retained for Level 2 tests.
-**Proto-nucleate:** Required via IPC — 10 methods validated via guideStone,
+**Status:** PARTIAL → guideStone readiness 3 (V45, April 18 2026).
+`ludospring_guidestone` binary — bare mode validates 5 certified properties
+(15 checks) without live primals; NUCLEUS mode validates 15 domain IPC
+checks via primalSpring composition API (`CompositionContext`,
+`validate_parity`, `validate_liveness`, `validate_parity_vec`). Validates
+Fitts, Hick, sigmoid, log2, stats.mean, stats.variance, stats.std_dev,
+Perlin, rng, tensor.create, tensor.matmul, compute.capabilities,
+health.readiness via `method_to_capability_domain()` routing.
+`validate_primal_proof` (raw IPC) retained for comparison. Library path dep
+retained for Level 2 tests.
+**Proto-nucleate:** Required via IPC — 13 methods validated via guideStone,
 domain-level methods (`math.flow.evaluate`, `math.engagement.composite`)
 remain gaps.
-**Impact:** Level 5 guideStone operational for core math; domain
-compositions need either upstream absorption or ludoSpring-side IPC dispatch.
+**Impact:** guideStone readiness 3 (bare passes); domain compositions need
+either upstream absorption or ludoSpring-side IPC dispatch.
 
 **Current usage (library dep — Level 2 validation):**
 - `barracuda::activations::sigmoid` in `interaction/flow.rs`
@@ -72,19 +75,19 @@ compositions need either upstream absorption or ludoSpring-side IPC dispatch.
 - `barracuda::rng::lcg_step` in `procedural/bsp.rs`
 - `barracuda::device::WgpuDevice` + `barracuda::session::TensorSession` in `gpu_context.rs`
 
-**IPC-validated methods (Level 5 — `validate_primal_proof`):**
+**IPC-validated methods (guideStone readiness 3 — `ludospring_guidestone`):**
 - `activation.fitts`, `activation.hick` — interaction laws
 - `math.sigmoid`, `math.log2` — math primitives
-- `stats.mean`, `stats.std_dev` — statistics
+- `stats.mean`, `stats.variance`, `stats.std_dev` — statistics
 - `noise.perlin2d` — procedural generation
 - `rng.uniform` — stochastic operations
-- `tensor.create` — GPU tensor surface
-- `health.liveness`, `capabilities.list` — ecosystem probes
+- `tensor.create`, `tensor.matmul` — GPU tensor surface
+- `compute.capabilities` — compute probes
+- `health.readiness` — ecosystem probes
 
 **Remaining IPC gaps (domain compositions not in barraCuda):**
 - `math.flow.evaluate` — composable from sigmoid + clamp
 - `math.engagement.composite` — composable from stats.weighted_mean + tensor ops
-- Full tensor pipeline (`tensor.matmul`, `tensor.sigmoid` fused) — Tier B
 
 **Migration path:** Domain-level methods should either be absorbed upstream
 by barraCuda or composed from existing barraCuda primitives at the spring
