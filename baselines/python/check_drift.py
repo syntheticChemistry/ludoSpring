@@ -20,10 +20,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-
-# Matches Rust tolerances::ANALYTICAL_TOL — both sides use the same bound
-# so a drift detected here guarantees a Rust parity failure.
-TOLERANCE = 1e-10
+sys.path.insert(0, str(Path(__file__).parent))
+from tolerances import ANALYTICAL_TOL as TOLERANCE  # single source — mirrors Rust tolerances::ANALYTICAL_TOL
 
 
 def flatten(obj, prefix=""):

@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
-**Date:** April 11, 2026
-**Total:** 100 experiments, 781 workspace tests (V42)
+**Date:** April 17, 2026
+**Total:** 100 experiments, 790+ workspace tests (V43)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
 **Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
-**Live V42 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable. Capability-first discovery. `nest_atomic` in fragments. Provenance unified to `19e402c0`.
+**Live V43 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable. Capability-first discovery. `nest_atomic` in fragments. Provenance unified to `19e402c0`. 6 composition_parity.rs tests PASS (Layer 2.5). validate_composition binary wired (Layer 3, exit 2 skip without server).
 
 ---
 

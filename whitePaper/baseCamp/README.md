@@ -2,7 +2,7 @@
 
 **Date:** April 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V42 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 781 workspace tests. Composition evolution complete: Python validated Rust; now Rust+Python validate NUCLEUS composition patterns. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable via JSON-RPC. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin banned-crate enforcement in `deny.toml`. ecoBin harvested to plasmidBin (v0.9.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-09 RESOLVED).
+**Status:** V43 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. Composition evolution complete: Python validated Rust; now Rust+Python validate NUCLEUS composition patterns. `lifecycle.composition` handler wired — runtime proto-nucleate probe externally callable via JSON-RPC. Capability-first discovery (`by_capability` → name fallback). Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to single commit `19e402c0`. ecoBin banned-crate enforcement in `deny.toml`. ecoBin harvested to plasmidBin (v0.10.0, 3.1M PIE, sha256-verified). 10 primal gaps tracked (GAP-01–GAP-10, GAP-09 RESOLVED). Three-layer validation complete: `validate_composition` binary + `composition_parity.rs` + `check_composition_drift`.
 
 ---
 
@@ -97,6 +97,28 @@ Key artifacts:
 - **Shared HUD fixtures** — `hud_fixtures.rs` extracted from dashboard binaries, eliminating duplication
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
+
+### Three-Layer Composition Validation (V43)
+
+The validation lifecycle now extends beyond Python↔Rust parity to prove
+that peer-reviewed science works identically when composed from NUCLEUS
+primals via IPC:
+
+| Layer | Source | Target | Guard |
+|-------|--------|--------|-------|
+| 1 | Python baselines | Rust library | `python_parity.rs` + `check_drift.py` |
+| 2 | Rust library | Golden JSON (`composition_targets.json`) | `composition_parity.rs` (6 tests) |
+| 2.5 | Golden JSON | Library recomputation | `check_composition_drift` (CI) |
+| 3 | Golden JSON | IPC composition | `validate_composition` binary |
+
+**Golden chain example (Fitts's law):**
+- Python `interaction_laws.py` computes `log2(100/10 + 1) * 150 + 50 = 543.43` ms
+- Rust `fitts_movement_time(100.0, 10.0, 50.0, 150.0)` matches within `1e-10`
+- `composition_targets.json["game.fitts_cost"]["mouse_d100_w10"]` stores `543.43`
+- `validate_composition` calls `game.fitts_cost` over IPC → same `543.43`
+
+Each layer independently validates the one below it. Drift at any layer is
+caught by the guard (test or CI check) before it propagates.
 
 ### RPGPT Dialogue Plane (V18–V19)
 

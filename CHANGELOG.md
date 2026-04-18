@@ -3,7 +3,30 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V42).
+This project does not use SemVer — versions are session-sequential (V1–V43).
+
+## [V43] — 2026-04-17
+
+### Three-Layer Composition Validation — Python→Rust→IPC Golden Chain
+
+The full validation lifecycle is now wired end-to-end: Python baselines
+validate Rust library code (Layer 1), Rust library produces golden
+`composition_targets.json` (Layer 2), and IPC calls validate primal
+composition against those golden targets (Layer 3).
+
+- **`validate_composition` binary:** Layer 3 IPC validator. Loads golden targets from `composition_targets.json`, discovers ludoSpring socket, calls `game.*` methods over JSON-RPC, compares to golden values. Validates `lifecycle.composition` report and health probes. Exit 0/1/2 (pass/fail/skip). Requires `ipc` feature.
+- **`composition_parity.rs` (Layer 2.5):** 6 integration tests validating every method group in `composition_targets.json` against direct library calls — catches drift before IPC testing.
+- **`check_composition_drift` example:** Analogous to `check_drift.py` for Python baselines. Recomputes all targets, compares to stored JSON. Runs in CI.
+- **`composition_targets.json` expanded:** Added `game.wfc_step` (WFC entropy collapse), expanded `_provenance` with `methods` array and `pending_regeneration` flag. 7 method groups with named tolerances.
+- **`validate_all` updated:** Runs `validate_composition` with exit-2 skip handling (server not running = honest skip, not failure).
+- **IPC Fitts dispatch expanded:** `handle_fitts_cost` now branches on `hick_reaction_time` and `steering_time` methods, matching golden targets.
+- **`TensorSession` sigmoid wired:** `game::engine::tensor_ops` implements sigmoid batch via barraCuda `TensorSession` (GPU feature gate). Upstream `SessionOp::Sigmoid` added to barraCuda.
+- **plasmidBin harvest:** v0.10.0, sha256-verified, `manifest.lock` synced.
+- **`NUCLEUS_SPRING_ALIGNMENT.md`:** Updated to 790+ tests, three-layer validation in detail.
+- **`NICHE_STARTER_PATTERNS.md`:** Added ludoSpring game science composition example.
+- **`#[allow]` in test modules:** Reverted `#[expect]` on test modules to `#[allow]` — `#[expect]` requires the lint to fire in every module, which is not guaranteed for `unwrap_used`/`expect_used` in test code. Production code retains `#[expect]` where appropriate.
+- **Clippy clean:** `cargo clippy --all-targets --features ipc -- -D warnings` passes with zero warnings.
+- **Tests:** 781 → **790+** (+6 composition parity, +3 examples).
 
 ## [V42] — 2026-04-11
 

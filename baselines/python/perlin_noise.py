@@ -11,7 +11,7 @@ References:
 
 Provenance:
   Script: baselines/python/perlin_noise.py
-  Date: 2026-03-11
+  Date: 2026-03-11 (created); see combined_baselines.json _provenance for latest run
   Python: CPython 3.10+ (stdlib only, no dependencies)
   Command: python3 baselines/python/perlin_noise.py
 """

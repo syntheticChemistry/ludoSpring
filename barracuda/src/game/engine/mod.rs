@@ -53,4 +53,6 @@ pub mod gpu;
 #[cfg(feature = "gpu")]
 pub mod gpu_context;
 pub mod session;
+#[cfg(feature = "gpu")]
+pub mod tensor_ops;
 pub mod world;

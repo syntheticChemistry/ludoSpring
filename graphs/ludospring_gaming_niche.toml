@@ -32,6 +32,17 @@ id = "gaming_niche_deploy"
 description = "Gaming niche — ludoSpring + petalTongue atop Tower Atomic"
 coordination = "Sequential"
 
+[graph.metadata]
+resolve = true
+fragments = ["tower_atomic", "node_atomic", "nest_atomic", "meta_tier"]
+composition_model = "pure"
+owner = "ludoSpring"
+domain = "game_science"
+particle_profile = "balanced"
+transport = "uds_only"
+tcp_ports = 0
+btsp_enforced = true
+
 # =============================================================================
 # Phase 1: Tower Atomic (security + discovery foundation)
 # =============================================================================
@@ -191,6 +202,7 @@ SONGBIRD_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/songbird-${FAMILY_ID}.sock"
 [nodes.constraints]
 timeout_ms = 45000
 
+# NOTE: These use toadstool.* naming; wire protocol uses compute.* — alignment tracked in PRIMAL_GAPS.md
 [nodes.capabilities_provided]
 "compute.health" = "toadstool.health"
 "compute.execute" = "toadstool.execute"

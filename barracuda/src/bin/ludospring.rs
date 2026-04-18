@@ -119,7 +119,7 @@ struct Cli {
 enum Command {
     /// Start the IPC server (germination mode).
     Server {
-        /// TCP port for plasmidBin/orchestrator binding (sets LUDOSPRING_PORT).
+        /// TCP port for plasmidBin/orchestrator binding (informational — logged only).
         #[arg(long)]
         port: Option<u16>,
     },

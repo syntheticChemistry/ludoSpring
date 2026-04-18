@@ -204,6 +204,32 @@ mod tests {
     }
 
     #[test]
+    fn fitts_cost_hick_reaction_time() {
+        let req = make_request(
+            "game.fitts_cost",
+            serde_json::json!({"method": "hick_reaction_time", "n": 7}),
+        );
+        let resp = dispatch(&req);
+        assert!(
+            resp.contains("reaction_time_ms"),
+            "expected Hick result: {resp}"
+        );
+    }
+
+    #[test]
+    fn fitts_cost_steering_time() {
+        let req = make_request(
+            "game.fitts_cost",
+            serde_json::json!({"method": "steering_time", "distance": 100.0, "width": 20.0}),
+        );
+        let resp = dispatch(&req);
+        assert!(
+            resp.contains("steering_time_ms"),
+            "expected steering result: {resp}"
+        );
+    }
+
+    #[test]
     fn engagement_returns_composite() {
         let req = make_request(
             "game.engagement",

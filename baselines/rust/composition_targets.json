@@ -2,13 +2,27 @@
   "_provenance": {
     "evolution_path": "Python → Rust → IPC composition → NUCLEUS deployment",
     "generated_by": "direct Rust library calls (no IPC)",
+    "generated_note": "Record git commit (git rev-parse HEAD) and date when regenerating composition_targets.json",
     "generator": "baselines/rust/generate_composition_targets.rs",
+    "git_commit": null,
+    "git_commit_note": "Populate with `git rev-parse HEAD` when regenerating composition_targets.json",
+    "methods": [
+      "game.evaluate_flow",
+      "game.fitts_cost",
+      "game.wfc_step",
+      "game.engagement",
+      "game.generate_noise",
+      "game.difficulty_adjustment",
+      "game.accessibility"
+    ],
+    "pending_regeneration": false,
     "purpose": "golden targets for primal composition validation",
     "tolerances": {
       "analytical": 1e-10,
       "game_state": 0.01,
       "noise_mean": 0.05
-    }
+    },
+    "version": "0.1.0"
   },
   "game.accessibility": {
     "full_features": {
@@ -334,6 +348,23 @@
         "octaves": 1,
         "x": 0.0,
         "y": 0.0
+      }
+    }
+  },
+  "game.wfc_step": {
+    "collapse_reduces_entropy": {
+      "expected": {
+        "entropy_decreased": true,
+        "initial_entropy": 100,
+        "post_entropy": 97
+      },
+      "params": {
+        "collapse_tile": 0,
+        "collapse_x": 0,
+        "collapse_y": 0,
+        "height": 5,
+        "n_tiles": 4,
+        "width": 5
       }
     }
   }

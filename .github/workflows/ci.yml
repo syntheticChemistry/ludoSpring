@@ -32,10 +32,13 @@ jobs:
       - name: Workspace check (all crates compile)
         run: cargo check --workspace
 
-      - name: Test (barracuda + forge)
+      - name: Test (barracuda + forge, incl. composition parity)
         run: |
           cargo test -p ludospring-barracuda --features ipc --lib --tests
           cargo test -p ludospring-forge --lib --tests
+
+      - name: Composition targets drift check
+        run: cargo run -p ludospring-barracuda --example check_composition_drift
 
       - name: Doc check
         run: cargo doc --workspace --no-deps

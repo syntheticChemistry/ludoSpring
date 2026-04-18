@@ -25,6 +25,17 @@ version = "37.0"
 description = "ludoSpring game-science primal atop Node Atomic"
 coordination = "Sequential"
 
+[graph.metadata]
+resolve = true
+fragments = ["tower_atomic", "node_atomic", "nest_atomic", "meta_tier"]
+composition_model = "pure"
+owner = "ludoSpring"
+domain = "game_science"
+particle_profile = "balanced"
+transport = "uds_only"
+tcp_ports = 0
+btsp_enforced = true
+
 # ── Phase 1: Tower Atomic (security + network foundation) ────
 
 [[graph.node]]
@@ -83,6 +94,7 @@ by_capability = "game"
 health_method = "health.liveness"
 spawn = true
 depends_on = ["beardog", "songbird"]
+# NOTE: Subset of niche::CAPABILITIES (27 FQNs) — deploy graph lists core science capabilities only
 capabilities = [
     "game.analyze_ui",
     "game.evaluate_flow",

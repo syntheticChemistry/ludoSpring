@@ -3,7 +3,7 @@
 # ludoSpring — Primal Gaps
 
 **Last updated:** April 11, 2026 (V42 — composition evolution: `lifecycle.composition` wired, `nest_atomic` declared, provenance unified)
-**Proto-nucleate:** `primalSpring/graphs/downstream/ludospring_proto_nucleate.toml`
+**Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
 
@@ -75,7 +75,7 @@ as barraCuda IPC surface matures. Keep path dep for validation binaries.
 ### GAP-03: Fragment Metadata Missing `nest_atomic`
 
 **Primal:** NestGate (partial Nest)
-**Status:** OPEN — unchanged in `ludospring_proto_nucleate.toml` (see GAP-09)
+**Status:** RESOLVED (V42) — `nest_atomic` added to `downstream_manifest.toml` (see GAP-09)
 **Proto-nucleate:** NestGate node is present, but `fragments` metadata lists
 only `["tower_atomic", "node_atomic", "meta_tier"]`.
 **Impact:** Structural audit tools that check fragment consistency will miss the
@@ -93,14 +93,16 @@ Nest dependency. NestGate without provenance trio is partial Nest.
 ### GAP-04: TensorSession Not Exercised in Product Paths
 
 **Primal:** barraCuda
-**Status:** OPEN — `GpuContext::tensor_session()` exists but has no call sites
-in production code (April 2026 review)
-**Impact:** GPU promotion story (Tier A shader rewire to `TensorSession` fused
-ops) is infrastructure-only; no validation that the composition actually works
-end-to-end through `TensorSession`.
+**Status:** PARTIAL — `game::engine::tensor_ops` (`sigmoid_batch_gpu`,
+`validate_sigmoid_cpu_gpu_parity`) exercises `GpuContext::tensor_session()` for
+Tier A sigmoid with CPU reference parity; broader engine migration and a
+dedicated validation experiment remain open (April 2026).
+**Impact:** Tier A sigmoid now has an in-tree `TensorSession` product hook;
+GPU promotion for other ops (e.g. dot) and full gameplay integration are still
+outstanding.
 
-**Proposed validation:** Wire `TensorSession` for at least one Tier A op
-(sigmoid or dot) in a game engine path and add a validation experiment.
+**Proposed validation:** Extend `TensorSession` coverage (e.g. dot) and add a
+standalone validation experiment beyond the engine parity helpers.
 **Owner:** ludoSpring
 **Tracking:** This file
 
@@ -109,8 +111,8 @@ end-to-end through `TensorSession`.
 ### GAP-05: Provenance Trio Not in Proto-Nucleate
 
 **Primal:** rhizoCrypt, loamSpine, sweetGrass
-**Status:** OPEN — typed IPC clients in `ipc/provenance/`; still no trio nodes
-in `ludospring_proto_nucleate.toml` (see GAP-09)
+**Status:** PARTIAL — typed IPC clients in `ipc/provenance/`; trio nodes
+depend on Nest Atomic overlay (see GAP-09); `nest_atomic` now in fragments
 **Impact:** biomeOS deploying the proto-nucleate graph won't spawn or discover
 trio primals; provenance functionality depends on external graph composition.
 
@@ -220,6 +222,88 @@ the biomeOS rule that maps the deployed graph to the ludoSpring process for
 - **GAP-06** (rhizoCrypt TCP-only) → rhizoCrypt team
 - **GAP-07** (loamSpine panic) → loamSpine team
 - **GAP-08** (barraCuda formula mismatch) → barraCuda team
+
+---
+
+## Composition Validation Evolution (April 17, 2026)
+
+ludoSpring now implements the full three-layer validation stack:
+
+| Layer | Artifact | Validates | Binary/Test |
+|-------|----------|-----------|-------------|
+| 1 | `combined_baselines.json` | Python → Rust | `python_parity.rs`, `check_drift.py` |
+| 2 | `composition_targets.json` | Rust library → golden targets | `composition_parity.rs`, `check_composition_drift` |
+| 3 | IPC parity | Golden targets → primal composition | `validate_composition` (requires running server) |
+
+### Composition methods validated
+
+| Method | Layer 1 (Python) | Layer 2 (Rust targets) | Layer 3 (IPC) |
+|--------|-----------------|----------------------|---------------|
+| `game.evaluate_flow` | ✓ | ✓ | ✓ (exp099, exp100, validate_composition) |
+| `game.fitts_cost` | ✓ | ✓ | ✓ |
+| `game.engagement` | ✓ | ✓ | ✓ |
+| `game.generate_noise` | ✓ | ✓ | ✓ |
+| `game.difficulty_adjustment` | ✗ (Python DDA uses different model) | ✓ | ✓ |
+| `game.accessibility` | ✗ (no Python baseline) | ✓ | ✓ |
+| `game.wfc_step` | ✗ (no Python WFC) | ✓ | ✓ (exp099) |
+| `lifecycle.composition` | — | — | ✓ (validate_composition) |
+| `health.liveness` | — | — | ✓ |
+| `health.readiness` | — | — | ✓ |
+
+---
+
+## Per-Primal Learnings (V43 Audit)
+
+Findings from the V43 three-layer validation buildout. These complement
+the gaps above with operational learnings for primal teams.
+
+### coralReef — required vs used
+
+`niche::DEPENDENCIES` marks coralReef `required: true` but the runtime GPU
+path does not call `shader.compile`. `lifecycle.composition` reports "missing
+required" in environments without coralReef even though ludoSpring runs fine.
+
+**Action:** Either wire `compile_wgsl` into a prewarm path, or set
+`required: false` until integrated. Tracked as part of GAP-01.
+
+### toadStool — naming inconsistency
+
+Deploy graph `ludospring_gaming_niche.toml` uses `toadstool.health` but
+code uses `compute.health` / `compute.dispatch.submit`. This causes
+confusion during graph validation.
+
+**Action:** Align all deploy graph capability names with wire protocol names.
+
+### petalTongue — silent push failure
+
+`game.push_scene` handler returns `pushed: true` even when
+`VisualizationPushClient::push_scene()` fails (error swallowed with
+`let _ = ...`). Operators can't detect visualization failures.
+
+**Action:** Propagate push errors into JSON-RPC result for honest telemetry.
+
+### Squirrel — incomplete inference surface
+
+`InferenceCompleteRequest`, `InferenceEmbedRequest` etc. are defined in
+`ipc/squirrel.rs` but no `inference.*` wrapper functions are wired. Context
+helpers (`context.create`, `context.update`) exist without game IPC exposure.
+
+**Action:** Either expose through `game.*` capabilities or document as
+internal-only.
+
+### NestGate — unused API surface
+
+`exists`, `list`, `metadata`, `delete` are implemented in the NestGate client
+but not exposed as `game.*` capabilities. Risk of API drift.
+
+**Action:** Expose or trim to match actual usage.
+
+### Neural API — error contract
+
+Registration ack and `capability.call` error JSON shapes are undocumented.
+Springs can't distinguish "routed but primal failed" vs "Neural API down".
+
+**Action:** biomeOS team to version error shapes.
 
 ---
 

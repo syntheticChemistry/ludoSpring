@@ -34,20 +34,57 @@ pub(super) fn handle_evaluate_flow(req: &JsonRpcRequest) -> HandlerResult {
 }
 
 pub(super) fn handle_fitts_cost(req: &JsonRpcRequest) -> HandlerResult {
-    use crate::interaction::input_laws::{fitts_index_of_difficulty, fitts_movement_time};
-    use crate::tolerances::{FITTS_A_MOUSE_MS, FITTS_B_MOUSE_MS};
+    use crate::interaction::input_laws::{
+        fitts_index_of_difficulty, fitts_movement_time, hick_reaction_time, steering_time,
+    };
+    use crate::ipc::envelope::JsonRpcError;
+    use crate::ipc::params::{HICK_REACTION_TIME_METHOD, STEERING_TIME_METHOD};
+    use crate::tolerances::{
+        FITTS_A_MOUSE_MS, FITTS_B_MOUSE_MS, HICK_A_MS, HICK_B_MS, STEERING_A_MS, STEERING_B_MS,
+    };
 
     let p: FittsCostParams = parse_params(req)?;
-    let a = p.a.unwrap_or(FITTS_A_MOUSE_MS);
-    let b = p.b.unwrap_or(FITTS_B_MOUSE_MS);
 
-    to_json(
-        &req.id,
-        FittsCostResult {
-            movement_time_ms: fitts_movement_time(p.distance, p.target_width, a, b),
-            index_of_difficulty: fitts_index_of_difficulty(p.distance, p.target_width),
-        },
-    )
+    match p.method.as_deref() {
+        Some(HICK_REACTION_TIME_METHOD) => {
+            let n = p.n.ok_or_else(|| {
+                JsonRpcError::invalid_params(&req.id, "hick_reaction_time requires integer `n`")
+            })? as usize;
+            let rt = hick_reaction_time(n, HICK_A_MS, HICK_B_MS);
+            to_json(&req.id, serde_json::json!({ "reaction_time_ms": rt }))
+        }
+        Some(STEERING_TIME_METHOD) => {
+            let distance = p.distance.ok_or_else(|| {
+                JsonRpcError::invalid_params(&req.id, "steering_time requires `distance`")
+            })?;
+            let width = p.target_width.ok_or_else(|| {
+                JsonRpcError::invalid_params(
+                    &req.id,
+                    "steering_time requires `width` or `target_width`",
+                )
+            })?;
+            let st = steering_time(distance, width, STEERING_A_MS, STEERING_B_MS);
+            to_json(&req.id, serde_json::json!({ "steering_time_ms": st }))
+        }
+        _ => {
+            let distance = p.distance.ok_or_else(|| {
+                JsonRpcError::invalid_params(&req.id, "fitts_cost requires `distance`")
+            })?;
+            let target_width = p.target_width.ok_or_else(|| {
+                JsonRpcError::invalid_params(&req.id, "fitts_cost requires `target_width`")
+            })?;
+            let a = p.a.unwrap_or(FITTS_A_MOUSE_MS);
+            let b = p.b.unwrap_or(FITTS_B_MOUSE_MS);
+
+            to_json(
+                &req.id,
+                FittsCostResult {
+                    movement_time_ms: fitts_movement_time(distance, target_width, a, b),
+                    index_of_difficulty: fitts_index_of_difficulty(distance, target_width),
+                },
+            )
+        }
+    }
 }
 
 pub(super) fn handle_engagement(req: &JsonRpcRequest) -> HandlerResult {

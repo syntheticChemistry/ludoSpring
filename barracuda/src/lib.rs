@@ -97,6 +97,9 @@ pub mod capability_domains;
 /// Domain-specific tolerances for validation (no magic numbers).
 pub mod tolerances;
 
+/// Composition golden targets (`baselines/rust/composition_targets.json`).
+pub mod composition_targets;
+
 /// Validation harness and test utilities.
 pub mod validation;
 

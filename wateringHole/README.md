@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 11, 2026 — **V42 is current**
+**Last Updated:** April 17, 2026 — **V43 is current**
 
 ---
 
@@ -25,12 +25,12 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V42** | [Central: LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md) | Apr 11 | **Current: V42** — Composition evolution: `lifecycle.composition` wired, capability-first discovery, `nest_atomic` declared, provenance unified, ecoBin banned-crate enforcement. 781 tests, 10 gaps (GAP-09 RESOLVED). Actions for all primal + spring teams. |
+| **V43** | [LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md](handoffs/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md) | Apr 17 | **Current: V43** — Three-layer composition validation complete: `validate_composition` binary, `composition_parity.rs` (Layer 2.5), `check_composition_drift`, WFC golden targets, `TensorSession` sigmoid. 790+ tests, plasmidBin v0.10.0. Per-primal learnings and handback items for all teams. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 781 workspace tests, V42 composition evolution)
+ludoSpring (game science, 100 experiments, 790+ workspace tests, V43 three-layer composition validation)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -96,7 +96,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | Inter-primal discovery gap | **toadStool** | MEDIUM | -1 check |
 | Perlin3D lattice invariant | **barraCuda** | MEDIUM | -1 check |
 
-**Score**: 95/141 (67.4%) + exp099 13/13 + exp100 27 checks (NUCLEUS parity). `lifecycle.composition` handler live (V42). Projected with all fixes: ~143/154 (92.9%).
+**Score**: 95/141 (67.4%) + 6 composition parity tests (Layer 2.5) PASS + exp099 13/13 + exp100 27 checks (NUCLEUS parity). `lifecycle.composition` handler live (V42). Projected with all fixes: ~143/154 (92.9%).
 
 See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md) for full details per team.
 
@@ -105,6 +105,7 @@ See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_CO
 | Version | File | Superseded by |
 |---------|------|---------------|
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
+| V42 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md` | V43 Three-Layer Validation |
 | V38 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V38_COMPOSITION_VALIDATION_CHAIN_HANDOFF_APR10_2026.md` | V39 NUCLEUS Composition Parity |
 | V37.1 | Central: `infra/wateringHole/handoffs/archive/` | V38 Composition Validation Chain |
 | V35 | Central: `infra/wateringHole/handoffs/archive/` | V38 Composition Validation Chain |

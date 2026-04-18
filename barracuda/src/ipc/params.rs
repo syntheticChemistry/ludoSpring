@@ -18,17 +18,35 @@ pub struct EvaluateFlowParams {
 }
 
 /// Parameters for `game.fitts_cost`.
+///
+/// Default mode is mouse Fitts (`movement_time_ms` + `index_of_difficulty`).
+/// Set `method` to [`HICK_REACTION_TIME_METHOD`] or [`STEERING_TIME_METHOD`] for
+/// alternate input-law models used by composition baselines.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FittsCostParams {
-    /// Distance to target center (pixels or arbitrary units).
-    pub distance: f64,
-    /// Target width along movement axis.
-    pub target_width: f64,
+    /// Distance to target center (pixels or arbitrary units); required for mouse Fitts and steering.
+    #[serde(default)]
+    pub distance: Option<f64>,
+    /// Target width along movement axis (mouse Fitts); for steering, may be sent as `width`.
+    #[serde(default, alias = "width")]
+    pub target_width: Option<f64>,
     /// Optional Fitts `a` parameter (defaults to mouse constant).
     pub a: Option<f64>,
     /// Optional Fitts `b` parameter (defaults to mouse constant).
     pub b: Option<f64>,
+    /// When `Some("hick_reaction_time")`, uses [`HICK_REACTION_TIME_METHOD`] and `n`.
+    /// When `Some("steering_time")`, uses [`STEERING_TIME_METHOD`] with `distance` and width.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub method: Option<String>,
+    /// Number of equiprobable choices for Hick's law (when `method` is Hick).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub n: Option<u32>,
 }
+
+/// `FittsCostParams.method` value for Hick's law reaction time.
+pub const HICK_REACTION_TIME_METHOD: &str = "hick_reaction_time";
+/// `FittsCostParams.method` value for Accot–Zhai steering time.
+pub const STEERING_TIME_METHOD: &str = "steering_time";
 
 /// Parameters for `game.engagement`.
 #[derive(Debug, Serialize, Deserialize)]
@@ -399,8 +417,33 @@ mod tests {
             "b": 2.0
         }))
         .expect("valid");
-        assert!((p.distance - 10.0).abs() < f64::EPSILON);
+        assert!((p.distance.expect("d") - 10.0).abs() < f64::EPSILON);
+        assert!((p.target_width.expect("tw") - 2.0).abs() < f64::EPSILON);
         assert!((p.a.expect("a") - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn fitts_cost_deserializes_hick() {
+        let p: FittsCostParams = serde_json::from_value(serde_json::json!({
+            "method": "hick_reaction_time",
+            "n": 7
+        }))
+        .expect("valid");
+        assert_eq!(p.method.as_deref(), Some(super::HICK_REACTION_TIME_METHOD));
+        assert_eq!(p.n, Some(7));
+    }
+
+    #[test]
+    fn fitts_cost_deserializes_steering_width_alias() {
+        let p: FittsCostParams = serde_json::from_value(serde_json::json!({
+            "method": "steering_time",
+            "distance": 100.0,
+            "width": 20.0
+        }))
+        .expect("valid");
+        assert_eq!(p.method.as_deref(), Some(super::STEERING_TIME_METHOD));
+        assert!((p.distance.expect("d") - 100.0).abs() < f64::EPSILON);
+        assert!((p.target_width.expect("w") - 20.0).abs() < f64::EPSILON);
     }
 
     #[test]

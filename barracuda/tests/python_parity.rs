@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Rust-vs-Python parity tests.
 //!
 //! Compares Rust implementations against the exact values produced by
@@ -35,6 +36,7 @@ use ludospring_barracuda::procedural::bsp::{Rect, generate_bsp};
 use ludospring_barracuda::procedural::lsystem::presets;
 use ludospring_barracuda::procedural::noise::{fbm_2d, perlin_2d, perlin_3d};
 use ludospring_barracuda::tolerances;
+use std::path::Path;
 
 // ── Interaction Laws ───────────────────────────────────────────────
 // JSON: interaction_laws.py
@@ -806,4 +808,58 @@ fn parity_lsystem_turtle_square_dist() {
         dist < tolerances::STRICT_ANALYTICAL_TOL,
         "turtle square distance: Rust={dist:.2e}, should be near-zero"
     );
+}
+
+// ── DDA session (flow_engagement.py) ───────────────────────────────
+// JSON: flow_engagement.py.dda_session — sigmoid difficulty ramp + skill growth
+
+#[test]
+fn parity_dda_session_rounds() {
+    // flow_engagement.py: DDA session simulation (matches exp004)
+    let manifest = env!("CARGO_MANIFEST_DIR");
+    let path = Path::new(manifest).join("../baselines/python/combined_baselines.json");
+    let content =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    let root: serde_json::Value =
+        serde_json::from_str(&content).expect("parse combined_baselines.json");
+    let arr = root
+        .get("flow_engagement.py")
+        .and_then(|v| v.get("dda_session"))
+        .and_then(serde_json::Value::as_array)
+        .expect("flow_engagement.py.dda_session array");
+
+    let w = tolerances::FLOW_CHANNEL_WIDTH;
+    let mut skill = 0.3_f64;
+    #[allow(clippy::cast_precision_loss)]
+    for (round_num, entry) in arr.iter().enumerate().take(20) {
+        let progress = round_num as f64 / 19.0;
+        let x = progress.mul_add(8.0, -4.0);
+        let sigmoid = 1.0 / (1.0 + (-x).exp());
+        let difficulty = 0.7_f64.mul_add(sigmoid, 0.2);
+        let state = evaluate_flow(difficulty, skill, w);
+        let exp_diff = entry["difficulty"]
+            .as_f64()
+            .expect("dda_session[].difficulty");
+        let exp_skill = entry["skill"].as_f64().expect("dda_session[].skill");
+        let exp_flow = entry["flow"].as_str().expect("dda_session[].flow");
+
+        assert!(
+            (difficulty - exp_diff).abs() < tolerances::ANALYTICAL_TOL,
+            "round {} difficulty: Rust={difficulty}, JSON={exp_diff}",
+            round_num + 1,
+        );
+        assert!(
+            (skill - exp_skill).abs() < tolerances::ANALYTICAL_TOL,
+            "round {} skill: Rust={skill}, JSON={exp_skill}",
+            round_num + 1,
+        );
+        assert_eq!(
+            state.as_str(),
+            exp_flow.to_lowercase(),
+            "round {} flow state",
+            round_num + 1
+        );
+
+        skill = (skill + 0.02).min(0.95);
+    }
 }

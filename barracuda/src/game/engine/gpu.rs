@@ -329,7 +329,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "tile count conversion — precision loss acceptable for small values"
+    )]
     fn lighting_params_clamps_to_8() {
         let params = TileLightingParams {
             grid_w: 10,

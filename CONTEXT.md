@@ -161,7 +161,7 @@ composition patterns.
 
 ludoSpring ships a UniBin (`ludospring`) with `server`, `status`, `version`,
 and visualization subcommands for local IPC deployment. The ecoBin is now
-harvested to `infra/plasmidBin/` (v0.8.0, 3.1M PIE binary, sha256-verified).
+harvested to `infra/plasmidBin/` (v0.10.0, 3.1M PIE binary, sha256-verified).
 
 ### Three-layer validation chain
 

@@ -4,6 +4,10 @@
 //! These use proptest to check structural invariants across random inputs
 //! rather than specific known values. They complement the determinism and
 //! parity tests by catching edge cases no fixed test suite would cover.
+//!
+//! Proptest regression files are checked in under `proptest-regressions/` to
+//! ensure reproducibility. The `seed` parameter on BSP tests is a deterministic
+//! algorithm input (not a proptest RNG seed).
 
 use proptest::prelude::*;
 use proptest::test_runner::Config;
@@ -33,7 +37,7 @@ proptest! {
         let leaf_area: f64 = tree.leaves().iter().map(Rect::area).sum();
         let total = w * h;
         prop_assert!(
-            (leaf_area - total).abs() < 1e-6,
+            (leaf_area - total).abs() < tolerances::BSP_AREA_CONSERVATION_TOL,
             "BSP leaf area {leaf_area} != bounds area {total}"
         );
     }

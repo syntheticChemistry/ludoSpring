@@ -55,7 +55,7 @@ pub mod toadstool;
 pub use discovery::{
     DiscoveryResult, DiscoveryTier, PrimalEndpoint, PrimalRegistry, call_primal,
     discover_by_capability, discover_primal_tiered, discover_primals,
-    discover_primals_in_directories,
+    discover_primals_in_directories, probe_socket,
 };
 pub use envelope::{
     DispatchOutcome, IpcError, IpcErrorPhase, JsonRpcError, JsonRpcRequest, JsonRpcResponse,

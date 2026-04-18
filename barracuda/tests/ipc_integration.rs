@@ -22,7 +22,10 @@ use std::time::Duration;
 
 use ipc_test_util::IpcTestServer;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "test helper signature matches handler convention"
+)]
 fn send_rpc(stream: &mut UnixStream, method: &str, params: serde_json::Value) -> serde_json::Value {
     let req = serde_json::json!({
         "jsonrpc": "2.0",

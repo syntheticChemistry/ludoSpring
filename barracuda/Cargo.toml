@@ -49,12 +49,38 @@ name = "ludospring"
 path = "src/bin/ludospring.rs"
 required-features = ["ipc"]
 
+[[bin]]
+name = "validate_interaction"
+path = "src/bin/validate_interaction.rs"
+
+[[bin]]
+name = "validate_procedural"
+path = "src/bin/validate_procedural.rs"
+
+[[bin]]
+name = "validate_engagement"
+path = "src/bin/validate_engagement.rs"
+
+[[bin]]
+name = "validate_all"
+path = "src/bin/validate_all.rs"
+
+[[bin]]
+name = "validate_composition"
+path = "src/bin/validate_composition.rs"
+required-features = ["ipc"]
+
 [[example]]
 name = "generate_composition_targets"
 path = "../baselines/rust/generate_composition_targets.rs"
 
+[[example]]
+name = "check_composition_drift"
+path = "../baselines/rust/check_composition_drift.rs"
+
 [dev-dependencies]
 proptest = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true
