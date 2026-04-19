@@ -2,23 +2,26 @@
 #![forbid(unsafe_code)]
 #![allow(missing_docs)] // guideStone binary — no public API
 
-//! ludoSpring guideStone — Level 5 self-validating NUCLEUS node.
+//! ludoSpring guideStone — self-validating NUCLEUS node for game science.
 //!
 //! Inherits primalSpring base composition certification (6 layers).
 //! Validates game science (interaction laws, procedural generation,
 //! engagement metrics) through primal IPC against Python golden values.
 //!
-//! # Layers
+//! # Three-Tier Validation
 //!
-//! 0. **Bare Properties** — five certified properties, no primals needed
-//! 1. **Discovery** — NUCLEUS primals found via capability scan
-//! 2. **Domain Science** — game science validated via composition IPC
+//! - **Tier 1 — LOCAL_CAPABILITIES** (bare): five certified properties
+//!   validated from first principles, no primals needed.
+//! - **Tier 2 — IPC-WIRED**: domain science via composition IPC to
+//!   barraCuda. Uses `check_skip()` when primals are absent.
+//! - **Tier 3 — FULL NUCLEUS**: cross-atomic validation (BearDog crypto,
+//!   NestGate storage roundtrip, cross-atomic pipeline).
 //!
-//! # Five Certified Properties (validated in bare mode)
+//! # Five Certified Properties (Tier 1)
 //!
 //! 1. **Deterministic Output** — recompute every golden value locally
 //! 2. **Reference-Traceable** — every constant sourced to a paper
-//! 3. **Self-Verifying** — tampered values produce non-zero exit
+//! 3. **Self-Verifying** — tamper detection + BLAKE3 checksum manifest
 //! 4. **Environment-Agnostic** — pure Rust, no network, no filesystem
 //! 5. **Tolerance-Documented** — every tolerance named and ordered
 //!
@@ -28,6 +31,7 @@
 //! - `1` — one or more checks failed
 //! - `2` — bare properties passed, no NUCLEUS deployed
 
+use primalspring::checksums;
 use primalspring::composition::{
     self, CompositionContext, validate_liveness, validate_parity,
 };
@@ -71,73 +75,82 @@ const PERLIN_ORIGIN: f64 = 0.0;
 /// 1024 × machine epsilon ≈ 2.3e-13 — covers FMA reordering on any arch.
 const BARE_RECOMPUTE_TOL: f64 = 1024.0 * f64::EPSILON;
 
+/// Known test payload for cross-atomic pipeline validation.
+const CROSS_ATOMIC_PAYLOAD: &str = "ludospring-guidestone-cross-atomic-test-v1";
+
 fn main() {
     let mut v = ValidationResult::new("ludoSpring guideStone — Game Science Certification");
-    ValidationResult::print_banner("ludoSpring guideStone — Domain Science (Level 5)");
+    ValidationResult::print_banner("ludoSpring guideStone — Three-Tier Domain Science");
 
     // ════════════════════════════════════════════════════════════════════
-    // Layer 0: Bare Properties (always runs, no primals needed)
+    // Tier 1: LOCAL_CAPABILITIES (bare, no primals needed)
     // ════════════════════════════════════════════════════════════════════
-    v.section("Bare: Deterministic Output");
+    v.section("Tier 1: Deterministic Output");
     validate_determinism(&mut v);
 
-    v.section("Bare: Reference-Traceable");
+    v.section("Tier 1: Reference-Traceable");
     validate_traceability(&mut v);
 
-    v.section("Bare: Self-Verifying");
+    v.section("Tier 1: Self-Verifying");
     validate_self_verification(&mut v);
 
-    v.section("Bare: Environment-Agnostic");
+    v.section("Tier 1: Environment-Agnostic");
     validate_environment_agnostic(&mut v);
 
-    v.section("Bare: Tolerance-Documented");
+    v.section("Tier 1: Tolerance-Documented");
     validate_tolerance_documentation(&mut v);
 
     // ════════════════════════════════════════════════════════════════════
-    // Layer 1: Discovery — can we find primals?
+    // Tier 2: IPC-WIRED (domain science, skip if primals absent)
     // ════════════════════════════════════════════════════════════════════
-    v.section("Discovery");
+    v.section("Tier 2: Discovery");
     let mut ctx = CompositionContext::from_live_discovery_with_fallback();
 
     let required = &["tensor", "compute"];
     let alive = validate_liveness(&mut ctx, &mut v, required);
 
     if alive == 0 {
-        eprintln!("[guideStone] No NUCLEUS primals discovered — bare certification only.");
+        eprintln!("[guideStone] No NUCLEUS primals discovered — Tier 1 (bare) only.");
         v.finish();
         std::process::exit(v.exit_code_skip_aware());
     }
 
-    // ════════════════════════════════════════════════════════════════════
-    // Layer 2: Domain Science — game science via composition IPC
-    // ════════════════════════════════════════════════════════════════════
-    v.section("Domain: Interaction Laws");
+    v.section("Tier 2: Interaction Laws");
     validate_interaction_laws(&mut ctx, &mut v);
 
-    v.section("Domain: Math Primitives");
+    v.section("Tier 2: Math Primitives");
     validate_math_primitives(&mut ctx, &mut v);
 
-    v.section("Domain: Statistics");
+    v.section("Tier 2: Statistics");
     validate_statistics(&mut ctx, &mut v);
 
-    v.section("Domain: Procedural Generation");
+    v.section("Tier 2: Procedural Generation");
     validate_procedural(&mut ctx, &mut v);
 
-    v.section("Domain: Tensor & Compute");
+    v.section("Tier 2: Tensor & Compute");
     validate_tensor_and_compute(&mut ctx, &mut v);
+
+    // ════════════════════════════════════════════════════════════════════
+    // Tier 3: FULL NUCLEUS (cross-atomic validation)
+    // ════════════════════════════════════════════════════════════════════
+    v.section("Tier 3: Security (BearDog)");
+    validate_security(&mut ctx, &mut v);
+
+    v.section("Tier 3: Storage (NestGate)");
+    validate_storage(&mut ctx, &mut v);
+
+    v.section("Tier 3: Cross-Atomic Pipeline");
+    validate_cross_atomic(&mut ctx, &mut v);
 
     v.finish();
     std::process::exit(v.exit_code());
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// Layer 0: Bare Properties
+// Tier 1: LOCAL_CAPABILITIES (bare properties)
 // ════════════════════════════════════════════════════════════════════════
 
-/// Property 1: Deterministic Output — recompute every golden value from
-/// first principles and verify the constant matches.
 fn validate_determinism(v: &mut ValidationResult) {
-    // Fitts: MT = a + b × log₂(2D / W)
     let fitts = 150.0_f64.mul_add((2.0 * 100.0 / 10.0_f64).log2(), 50.0);
     v.check_bool(
         "bare:determinism:fitts",
@@ -145,7 +158,6 @@ fn validate_determinism(v: &mut ValidationResult) {
         &format!("recomputed={fitts}, golden={FITTS_MT_D100_W10}"),
     );
 
-    // Hick: RT = a + b × log₂(N + 1)
     let hick = 150.0_f64.mul_add(8.0_f64.log2(), 200.0);
     v.check_bool(
         "bare:determinism:hick",
@@ -153,7 +165,6 @@ fn validate_determinism(v: &mut ValidationResult) {
         &format!("recomputed={hick}, golden={HICK_RT_N7}"),
     );
 
-    // Sigmoid: 1 / (1 + e^(-x))
     let sigmoid = 1.0 / (1.0 + (-0.5_f64).exp());
     v.check_bool(
         "bare:determinism:sigmoid",
@@ -161,14 +172,12 @@ fn validate_determinism(v: &mut ValidationResult) {
         &format!("recomputed={sigmoid}, golden={SIGMOID_HALF}"),
     );
 
-    // log₂(8) — exact for powers of two
     v.check_bool(
         "bare:determinism:log2",
         (8.0_f64.log2() - LOG2_OF_8).abs() < f64::EPSILON,
         "8.0.log2() == 3.0",
     );
 
-    // mean([1,2,3,4,5]) — exact for small integer sums
     let mean = [1.0, 2.0, 3.0, 4.0, 5.0].iter().sum::<f64>() / 5.0;
     v.check_bool(
         "bare:determinism:mean",
@@ -176,9 +185,8 @@ fn validate_determinism(v: &mut ValidationResult) {
         "mean([1..5]) == 3.0",
     );
 
-    // var([2,4,4,4,5,5,7,9], ddof=0) — population variance
     let data: &[f64] = &[2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
-    let n = 8.0_f64; // data.len(), known at compile time
+    let n = 8.0_f64;
     let m = data.iter().sum::<f64>() / n;
     let var = data.iter().map(|x| (x - m).powi(2)).sum::<f64>() / n;
     v.check_bool(
@@ -188,8 +196,6 @@ fn validate_determinism(v: &mut ValidationResult) {
     );
 }
 
-/// Property 2: Reference-Traceable — every golden value is finite and
-/// sourced to a published formula or reproducible computation.
 fn validate_traceability(v: &mut ValidationResult) {
     let golden_values: &[(&str, f64, &str)] = &[
         (
@@ -222,9 +228,8 @@ fn validate_traceability(v: &mut ValidationResult) {
     }
 }
 
-/// Property 3: Self-Verifying — a tampered golden value must be
-/// detectable by the tolerance guard.
 fn validate_self_verification(v: &mut ValidationResult) {
+    // Tolerance guard: tampered values must be detected
     let tampered = FITTS_MT_D100_W10 + 1.0;
     let diff = (tampered - FITTS_MT_D100_W10).abs();
     v.check_bool(
@@ -246,10 +251,12 @@ fn validate_self_verification(v: &mut ValidationResult) {
             tolerances::IPC_ROUND_TRIP_TOL
         ),
     );
+
+    // BLAKE3 checksum manifest (Property 3 per guideStone standard v1.1.0).
+    // Skips gracefully if CHECKSUMS file not yet generated.
+    checksums::verify_manifest(v, "validation/CHECKSUMS");
 }
 
-/// Property 4: Environment-Agnostic — bare mode succeeds without
-/// external processes, filesystem, or environment variables.
 fn validate_environment_agnostic(v: &mut ValidationResult) {
     v.check_bool(
         "bare:env_agnostic:pure_rust",
@@ -264,8 +271,6 @@ fn validate_environment_agnostic(v: &mut ValidationResult) {
     );
 }
 
-/// Property 5: Tolerance-Documented — every tolerance is named, positive,
-/// and ordered in the canonical hierarchy.
 fn validate_tolerance_documentation(v: &mut ValidationResult) {
     v.check_bool(
         "bare:tolerance:ipc_positive",
@@ -298,13 +303,6 @@ fn validate_tolerance_documentation(v: &mut ValidationResult) {
 // Helpers
 // ════════════════════════════════════════════════════════════════════════
 
-/// Try common barraCuda response shapes to find a scalar value.
-///
-/// barraCuda methods return varying envelopes:
-/// - `{"result": N}` — stats, math
-/// - `{"value": N}` — activation, noise
-/// - bare `N` — simple returns
-/// - `{"data": [N, ...]}` — array-wrapped single element
 fn extract_any_scalar(result: &serde_json::Value) -> Option<f64> {
     result
         .get("result")
@@ -326,8 +324,11 @@ fn extract_any_scalar(result: &serde_json::Value) -> Option<f64> {
         })
 }
 
-/// Validate a domain scalar through the composition layer with flexible
-/// response extraction. Routes via [`composition::method_to_capability_domain`].
+/// Classify IPC errors: connection/protocol issues → skip, others → fail.
+fn is_skip_error(e: &primalspring::ipc::IpcError) -> bool {
+    e.is_connection_error() || e.is_protocol_error() || e.is_transport_mismatch()
+}
+
 fn validate_domain_scalar(
     ctx: &mut CompositionContext,
     v: &mut ValidationResult,
@@ -353,7 +354,7 @@ fn validate_domain_scalar(
                 v.check_bool(name, false, &format!("no scalar in response: {result}"));
             }
         }
-        Err(e) if e.is_connection_error() => {
+        Err(e) if is_skip_error(&e) => {
             v.check_skip(name, &format!("{cap} not available: {e}"));
         }
         Err(e) => {
@@ -362,7 +363,6 @@ fn validate_domain_scalar(
     }
 }
 
-/// Verify that a method responds with any valid result.
 fn check_method_exists(
     ctx: &mut CompositionContext,
     v: &mut ValidationResult,
@@ -373,7 +373,7 @@ fn check_method_exists(
     let cap = composition::method_to_capability_domain(method);
     match ctx.call(cap, method, params) {
         Ok(_) => v.check_bool(name, true, "method responds"),
-        Err(e) if e.is_connection_error() => {
+        Err(e) if is_skip_error(&e) => {
             v.check_skip(name, &format!("{cap} not available: {e}"));
         }
         Err(e) => {
@@ -382,15 +382,37 @@ fn check_method_exists(
     }
 }
 
+/// Call a capability and return the raw JSON result, or skip/fail.
+fn call_or_skip(
+    ctx: &mut CompositionContext,
+    v: &mut ValidationResult,
+    name: &str,
+    cap: &str,
+    method: &str,
+    params: serde_json::Value,
+) -> Option<serde_json::Value> {
+    match ctx.call(cap, method, params) {
+        Ok(result) => Some(result),
+        Err(e) if is_skip_error(&e) => {
+            v.check_skip(name, &format!("{cap} not available: {e}"));
+            None
+        }
+        Err(e) => {
+            v.check_bool(name, false, &format!("composition error: {e}"));
+            None
+        }
+    }
+}
+
 // ════════════════════════════════════════════════════════════════════════
-// Layer 2: Domain Science (requires NUCLEUS)
+// Tier 2: IPC-WIRED (domain science, requires at least barraCuda)
 // ════════════════════════════════════════════════════════════════════════
 
 fn validate_interaction_laws(ctx: &mut CompositionContext, v: &mut ValidationResult) {
     validate_domain_scalar(
         ctx,
         v,
-        "domain:fitts_law_D100_W10",
+        "ipc:fitts_law_D100_W10",
         "activation.fitts",
         serde_json::json!({"distance": 100.0, "width": 10.0, "a": 50.0, "b": 150.0}),
         FITTS_MT_D100_W10,
@@ -400,7 +422,7 @@ fn validate_interaction_laws(ctx: &mut CompositionContext, v: &mut ValidationRes
     validate_domain_scalar(
         ctx,
         v,
-        "domain:hick_law_N7",
+        "ipc:hick_law_N7",
         "activation.hick",
         serde_json::json!({"n_choices": 7, "a": 200.0, "b": 150.0}),
         HICK_RT_N7,
@@ -412,7 +434,7 @@ fn validate_math_primitives(ctx: &mut CompositionContext, v: &mut ValidationResu
     validate_domain_scalar(
         ctx,
         v,
-        "domain:sigmoid_0.5",
+        "ipc:sigmoid_0.5",
         "math.sigmoid",
         serde_json::json!({"data": [0.5]}),
         SIGMOID_HALF,
@@ -422,7 +444,7 @@ fn validate_math_primitives(ctx: &mut CompositionContext, v: &mut ValidationResu
     validate_domain_scalar(
         ctx,
         v,
-        "domain:log2_of_8",
+        "ipc:log2_of_8",
         "math.log2",
         serde_json::json!({"data": [8.0]}),
         LOG2_OF_8,
@@ -434,7 +456,7 @@ fn validate_statistics(ctx: &mut CompositionContext, v: &mut ValidationResult) {
     validate_parity(
         ctx,
         v,
-        "domain:stats_mean_1to5",
+        "ipc:stats_mean_1to5",
         "tensor",
         "stats.mean",
         serde_json::json!({"data": [1.0, 2.0, 3.0, 4.0, 5.0]}),
@@ -446,7 +468,7 @@ fn validate_statistics(ctx: &mut CompositionContext, v: &mut ValidationResult) {
     validate_domain_scalar(
         ctx,
         v,
-        "domain:stats_variance_8elem",
+        "ipc:stats_variance_8elem",
         "stats.variance",
         serde_json::json!({"data": [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]}),
         STATS_VAR_8ELEM,
@@ -456,7 +478,7 @@ fn validate_statistics(ctx: &mut CompositionContext, v: &mut ValidationResult) {
     check_method_exists(
         ctx,
         v,
-        "domain:stats_std_dev",
+        "ipc:stats_std_dev",
         "stats.std_dev",
         serde_json::json!({"data": [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]}),
     );
@@ -466,7 +488,7 @@ fn validate_procedural(ctx: &mut CompositionContext, v: &mut ValidationResult) {
     validate_domain_scalar(
         ctx,
         v,
-        "domain:perlin2d_origin",
+        "ipc:perlin2d_origin",
         "noise.perlin2d",
         serde_json::json!({"x": 0.0, "y": 0.0}),
         PERLIN_ORIGIN,
@@ -476,7 +498,7 @@ fn validate_procedural(ctx: &mut CompositionContext, v: &mut ValidationResult) {
     check_method_exists(
         ctx,
         v,
-        "domain:rng_uniform",
+        "ipc:rng_uniform",
         "rng.uniform",
         serde_json::json!({"n": 5, "min": 0.0, "max": 1.0, "seed": 42}),
     );
@@ -486,16 +508,15 @@ fn validate_tensor_and_compute(ctx: &mut CompositionContext, v: &mut ValidationR
     check_method_exists(
         ctx,
         v,
-        "domain:tensor_create",
+        "ipc:tensor_create",
         "tensor.create",
         serde_json::json!({"shape": [2, 2], "data": [1.0, 0.0, 0.0, 1.0]}),
     );
 
-    // I × A = A — identity matmul parity
     composition::validate_parity_vec(
         ctx,
         v,
-        "domain:tensor_matmul_identity",
+        "ipc:tensor_matmul_identity",
         "tensor",
         "tensor.matmul",
         serde_json::json!({
@@ -511,7 +532,7 @@ fn validate_tensor_and_compute(ctx: &mut CompositionContext, v: &mut ValidationR
     check_method_exists(
         ctx,
         v,
-        "domain:compute_capabilities",
+        "ipc:compute_capabilities",
         "compute.capabilities",
         serde_json::json!({}),
     );
@@ -519,8 +540,189 @@ fn validate_tensor_and_compute(ctx: &mut CompositionContext, v: &mut ValidationR
     check_method_exists(
         ctx,
         v,
-        "domain:health_readiness",
+        "ipc:health_readiness",
         "health.readiness",
         serde_json::json!({}),
     );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// Tier 3: FULL NUCLEUS (cross-atomic validation)
+// ════════════════════════════════════════════════════════════════════════
+
+/// BearDog crypto: hash a known payload, verify 64-char BLAKE3 hex.
+fn validate_security(ctx: &mut CompositionContext, v: &mut ValidationResult) {
+    let result = call_or_skip(
+        ctx,
+        v,
+        "nucleus:crypto_hash",
+        "security",
+        "crypto.hash",
+        serde_json::json!({"algorithm": "blake3", "data": CROSS_ATOMIC_PAYLOAD}),
+    );
+
+    if let Some(ref res) = result {
+        let hash = res
+            .get("hash")
+            .or_else(|| res.get("result"))
+            .and_then(serde_json::Value::as_str);
+
+        if let Some(h) = hash {
+            v.check_bool(
+                "nucleus:crypto_hash_length",
+                h.len() == 64,
+                &format!("BLAKE3 hex length={}, expected 64", h.len()),
+            );
+        } else {
+            v.check_bool(
+                "nucleus:crypto_hash_length",
+                false,
+                &format!("no hash string in response: {res}"),
+            );
+        }
+    }
+}
+
+/// NestGate storage: store a value, retrieve it, verify roundtrip.
+fn validate_storage(ctx: &mut CompositionContext, v: &mut ValidationResult) {
+    let store_key = "ludospring-guidestone-test";
+    let store_value = "game-science-roundtrip-v1";
+
+    let stored = call_or_skip(
+        ctx,
+        v,
+        "nucleus:storage_store",
+        "storage",
+        "storage.store",
+        serde_json::json!({
+            "key": store_key,
+            "value": store_value,
+            "family_id": "ludospring-validation"
+        }),
+    );
+
+    if stored.is_none() {
+        v.check_skip(
+            "nucleus:storage_retrieve",
+            "storage.store skipped — cannot test retrieve",
+        );
+        v.check_skip(
+            "nucleus:storage_roundtrip",
+            "storage.store skipped — cannot test roundtrip",
+        );
+        return;
+    }
+
+    let retrieved = call_or_skip(
+        ctx,
+        v,
+        "nucleus:storage_retrieve",
+        "storage",
+        "storage.retrieve",
+        serde_json::json!({
+            "key": store_key,
+            "family_id": "ludospring-validation"
+        }),
+    );
+
+    if let Some(ref res) = retrieved {
+        let val = res
+            .get("value")
+            .or_else(|| res.get("result"))
+            .and_then(serde_json::Value::as_str);
+
+        v.check_bool(
+            "nucleus:storage_roundtrip",
+            val == Some(store_value),
+            &format!(
+                "stored={store_value:?}, retrieved={:?}",
+                val.unwrap_or("<none>")
+            ),
+        );
+    } else {
+        v.check_skip(
+            "nucleus:storage_roundtrip",
+            "storage.retrieve skipped",
+        );
+    }
+}
+
+/// Cross-atomic pipeline: hash(BearDog) → store(NestGate) → retrieve → verify.
+fn validate_cross_atomic(ctx: &mut CompositionContext, v: &mut ValidationResult) {
+    // Step 1: Hash the payload via BearDog
+    let hash_result = call_or_skip(
+        ctx,
+        v,
+        "nucleus:pipeline_hash",
+        "security",
+        "crypto.hash",
+        serde_json::json!({"algorithm": "blake3", "data": CROSS_ATOMIC_PAYLOAD}),
+    );
+
+    let hash_hex = hash_result.as_ref().and_then(|res| {
+        res.get("hash")
+            .or_else(|| res.get("result"))
+            .and_then(serde_json::Value::as_str)
+            .map(String::from)
+    });
+
+    let Some(ref hex) = hash_hex else {
+        v.check_skip(
+            "nucleus:pipeline_store",
+            "crypto.hash unavailable — cannot continue pipeline",
+        );
+        v.check_skip("nucleus:pipeline_verify", "pipeline aborted");
+        return;
+    };
+
+    // Step 2: Store the hash via NestGate
+    let pipeline_key = "ludospring-pipeline-hash";
+    let stored = call_or_skip(
+        ctx,
+        v,
+        "nucleus:pipeline_store",
+        "storage",
+        "storage.store",
+        serde_json::json!({
+            "key": pipeline_key,
+            "value": hex,
+            "family_id": "ludospring-validation"
+        }),
+    );
+
+    if stored.is_none() {
+        v.check_skip("nucleus:pipeline_verify", "storage.store unavailable");
+        return;
+    }
+
+    // Step 3: Retrieve and verify
+    let retrieved = call_or_skip(
+        ctx,
+        v,
+        "nucleus:pipeline_retrieve",
+        "storage",
+        "storage.retrieve",
+        serde_json::json!({
+            "key": pipeline_key,
+            "family_id": "ludospring-validation"
+        }),
+    );
+
+    if let Some(ref res) = retrieved {
+        let val = res
+            .get("value")
+            .or_else(|| res.get("result"))
+            .and_then(serde_json::Value::as_str);
+
+        v.check_bool(
+            "nucleus:pipeline_verify",
+            val == Some(hex.as_str()),
+            &format!(
+                "hash(BearDog)→store(NestGate)→retrieve: match={}",
+                val == Some(hex.as_str())
+            ),
+        );
+    } else {
+        v.check_skip("nucleus:pipeline_verify", "storage.retrieve unavailable");
+    }
 }

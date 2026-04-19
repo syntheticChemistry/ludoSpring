@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 18, 2026 (V45 — five-layer validation: Python→Rust→IPC→primal proof→guideStone. `ludospring_guidestone` Level 5 guideStone via primalSpring composition API. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 20, 2026 (V46 — guideStone readiness 4: three-tier `ludospring_guidestone` — 20 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3, protocol tolerance. 790+ tests, plasmidBin v0.10.0)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
@@ -53,21 +53,21 @@ the coralReef client.
 ### GAP-02: barraCuda Direct Rust Import (Not IPC)
 
 **Primal:** barraCuda
-**Status:** PARTIAL → guideStone readiness 3 (V45, April 18 2026).
-`ludospring_guidestone` binary — bare mode validates 5 certified properties
-(15 checks) without live primals; NUCLEUS mode validates 15 domain IPC
-checks via primalSpring composition API (`CompositionContext`,
-`validate_parity`, `validate_liveness`, `validate_parity_vec`). Validates
-Fitts, Hick, sigmoid, log2, stats.mean, stats.variance, stats.std_dev,
-Perlin, rng, tensor.create, tensor.matmul, compute.capabilities,
-health.readiness via `method_to_capability_domain()` routing.
+**Status:** PARTIAL → guideStone readiness 4 (V46, April 20 2026).
+`ludospring_guidestone` binary — three-tier architecture:
+Tier 1 (bare, 20 checks): 5 certified properties incl. BLAKE3 checksums.
+Tier 2 (IPC, 15 checks): domain science via composition API with protocol
+tolerance (`is_protocol_error`, `is_transport_mismatch` → SKIP).
+Tier 3 (NUCLEUS, 8 checks): BearDog `crypto.hash`, NestGate
+`storage.store`/`storage.retrieve` roundtrip, cross-atomic pipeline
+(hash→store→retrieve→verify).
 `validate_primal_proof` (raw IPC) retained for comparison. Library path dep
 retained for Level 2 tests.
-**Proto-nucleate:** Required via IPC — 13 methods validated via guideStone,
-domain-level methods (`math.flow.evaluate`, `math.engagement.composite`)
+**Proto-nucleate:** Required via IPC — 19 methods in downstream manifest.
+Domain-level methods (`math.flow.evaluate`, `math.engagement.composite`)
 remain gaps.
-**Impact:** guideStone readiness 3 (bare passes); domain compositions need
-either upstream absorption or ludoSpring-side IPC dispatch.
+**Impact:** guideStone readiness 4 (NUCLEUS validated); full certification
+(Level 5) requires all Tier 2 + Tier 3 checks passing against live NUCLEUS.
 
 **Current usage (library dep — Level 2 validation):**
 - `barracuda::activations::sigmoid` in `interaction/flow.rs`

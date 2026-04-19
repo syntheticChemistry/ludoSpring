@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 18, 2026 — **V45 is current**
+**Last Updated:** April 20, 2026 — **V46 is current**
 
 ---
 
@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V45** | [LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md](handoffs/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md) | Apr 18 | **Current: V45** — guideStone readiness 3: bare mode (15 checks, 5 certified properties) + domain IPC (15 checks, 13 methods). Three layers: bare → discovery → domain science. |
+| **V46** | [LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V46** — guideStone readiness 4: three-tier (20 bare + 15 IPC + 8 NUCLEUS cross-atomic). BLAKE3 Property 3, protocol tolerance. |
 
 ## Cross-Spring Context
 
@@ -105,6 +105,7 @@ See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_CO
 | Version | File | Superseded by |
 |---------|------|---------------|
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
+| V45 | `handoffs/archive/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md` | V46 Three-Tier NUCLEUS |
 | V44 | `handoffs/archive/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md` | V45 guideStone |
 | V43 | `handoffs/archive/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md` | V44 Primal Proof |
 | V42 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md` | V43 Three-Layer Validation |

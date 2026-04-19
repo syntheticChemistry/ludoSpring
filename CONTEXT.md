@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 18, 2026 (V45 — guideStone readiness 3: `ludospring_guidestone` bare mode validates 5 certified properties (15 checks) without primals, NUCLEUS mode validates 15 domain IPC checks via primalSpring composition API. Three layers: bare → discovery → domain science. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 20, 2026 (V46 — guideStone readiness 4: `ludospring_guidestone` three-tier — Tier 1 LOCAL_CAPABILITIES (20 bare checks with BLAKE3 Property 3), Tier 2 IPC-WIRED (15 domain science), Tier 3 FULL NUCLEUS (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). Protocol tolerance. 790+ tests, plasmidBin v0.10.0)
 
 ## What is this?
 

@@ -9,7 +9,7 @@
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
 # Date: April 18, 2026
-# Version: V45 (100 experiments, 790+ #[test] functions, Level 5 guideStone)
+# Version: V46 (100 experiments, 790+ #[test] functions, guideStone readiness 4)
 
 niche:
   id: "ludospring-game"

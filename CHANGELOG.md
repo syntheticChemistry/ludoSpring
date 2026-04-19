@@ -3,7 +3,31 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V45).
+This project does not use SemVer — versions are session-sequential (V1–V46).
+
+## [V46] — 2026-04-20
+
+### guideStone readiness 4 — Three-Tier NUCLEUS Validation
+
+Evolved `ludospring_guidestone` from readiness 3 (bare works) to readiness 4
+(NUCLEUS validated) following primalSpring v0.9.16 three-tier pattern.
+
+- **Three-tier architecture:**
+  - **Tier 1 — LOCAL_CAPABILITIES** (20 bare checks): 5 certified properties
+    including BLAKE3 checksum manifest verification (Property 3, guideStone
+    standard v1.1.0 via `primalspring::checksums::verify_manifest`).
+  - **Tier 2 — IPC-WIRED** (15 checks): domain science via composition IPC
+    to barraCuda. Protocol tolerance: Songbird/petalTongue HTTP-on-UDS
+    classified as SKIP via `is_protocol_error() || is_transport_mismatch()`.
+  - **Tier 3 — FULL NUCLEUS** (8 checks): cross-atomic validation —
+    BearDog `crypto.hash` (BLAKE3 64-char hex), NestGate `storage.store` /
+    `storage.retrieve` roundtrip, cross-atomic pipeline
+    (hash → store → retrieve → verify).
+- **Protocol tolerance:** `is_skip_error()` helper classifies connection,
+  protocol, and transport mismatch errors as SKIP (not FAIL).
+- **BLAKE3 Property 3:** `checksums::verify_manifest(v, "validation/CHECKSUMS")`
+  per guideStone standard v1.1.0.
+- **Check naming:** `bare:*` (Tier 1), `ipc:*` (Tier 2), `nucleus:*` (Tier 3).
 
 ## [V45] — 2026-04-18
 
