@@ -10,7 +10,7 @@ An ecoPrimals Spring. Treats game design with the same rigor that wetSpring trea
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance). `deny.toml` enforces ecoBin v3.0 banned-crate list (openssl-sys, ring, aws-lc-sys, native-tls, zstd-sys, lz4-sys, libsqlite3-sys, cryptoki-sys). Harvested to `infra/plasmidBin/ludospring/` (v0.10.0, sha256-verified).
 **Niche Status:** Deployable — UniBin (7 subcommands), deploy graph, niche YAML, Neural API domain registration, 30 capabilities, MCP `tools.list`/`tools.call` (13 tool descriptors: 8 science + 5 delegation), optional `tarpc-ipc` feature, `config/capability_registry.toml` SSOT, `lifecycle.composition` handler for runtime proto-nucleate validation
-**Audit Status:** Complete — zero hardcoded primal names, zero hardcoded paths, zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + five-layer validation (Python→Rust→composition→primal proof→guideStone) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **791** workspace tests, **10** primal gaps documented (GAP-01–GAP-10 in `docs/PRIMAL_GAPS.md`). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). GAP-02 guideStone wired.
+**Audit Status:** Complete — zero hardcoded primal names, zero hardcoded paths, zero `#[allow()]` in application code, zero `unsafe`, zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + three-tier validation (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **791** workspace tests, **10** primal gaps documented (GAP-01–GAP-10 in `docs/PRIMAL_GAPS.md`). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). GAP-02 guideStone wired.
 
 ---
 
@@ -488,14 +488,14 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 605 barracuda lib + 102 barracuda `--tests` (incl. 23 ipc integration) + 26 forge = 733 total, 0 failures |
+| `cargo test --workspace` | 791 total (barracuda lib + barracuda `--tests` incl. 23 ipc integration + forge + 100 experiments), 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 100 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
 | Baseline drift check | 0 drift (automated via `check_drift.py`) |
 | `proptest` invariants | 19 property tests (BSP, WFC, noise, engagement, flow, Fitts, Hick, JSON-RPC, capability parsing, DispatchOutcome) |
 | `#![forbid(unsafe_code)]` | All crate roots + all binaries |
-| `#[allow()]` in application code | 0 — remaining lint suppressions use `#[expect(reason)]` with curated reasons (3 sites) |
+| `#[allow()]` in application code | 0 — all lint suppressions use `#[expect(reason)]` with curated reasons (60+ sites); `#[allow(unwrap_used)]` reserved for `#[cfg(test)]` modules only |
 | `llvm-cov` (library) | 91.27% line coverage (90% floor enforced in CI, binaries excluded) |
 | CI pipeline | `.github/workflows/ci.yml` — fmt, clippy, test (barracuda + forge), doc (workspace), cargo deny |
 | SPDX headers | All `.rs` + all `Cargo.toml` |

@@ -830,7 +830,7 @@ fn parity_dda_session_rounds() {
 
     let w = tolerances::FLOW_CHANNEL_WIDTH;
     let mut skill = 0.3_f64;
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss, reason = "round indices ≤ 19 fit in f64")]
     for (round_num, entry) in arr.iter().enumerate().take(20) {
         let progress = round_num as f64 / 19.0;
         let x = progress.mul_add(8.0, -4.0);

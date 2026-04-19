@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V46** | [LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V46** — guideStone readiness 4: three-tier (20 bare + 15 IPC + 8 NUCLEUS cross-atomic). BLAKE3 Property 3, protocol tolerance. |
+| **V46** | [LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V46** — guideStone readiness 4: three-tier (31 bare + 15 IPC + 8 NUCLEUS cross-atomic). BLAKE3 Property 3 via `validation/CHECKSUMS`, protocol tolerance. |
 
 ## Cross-Spring Context
 
@@ -98,7 +98,9 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **Score**: 95/141 (67.4%) + 6 composition parity tests (Layer 2.5) PASS + exp099 13/13 + exp100 27 checks (NUCLEUS parity). `lifecycle.composition` handler live (V42). Projected with all fixes: ~143/154 (92.9%).
 
-See [V42 central handoff](../../../infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md) for full details per team.
+**guideStone (V46):** 31 bare + 15 IPC + 8 NUCLEUS = 54 checks. BLAKE3 Property 3 via `validation/CHECKSUMS` (11 files). Protocol tolerance. Three-tier architecture (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS).
+
+See central handoffs: [V46 deep audit](../../../infra/wateringHole/handoffs/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md), [V46 evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_EVOLUTION_HANDOFF_APR20_2026.md).
 
 ## Archive
 

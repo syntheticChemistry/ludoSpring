@@ -28,6 +28,15 @@ Evolved `ludospring_guidestone` from readiness 3 (bare works) to readiness 4
 - **BLAKE3 Property 3:** `checksums::verify_manifest(v, "validation/CHECKSUMS")`
   per guideStone standard v1.1.0.
 - **Check naming:** `bare:*` (Tier 1), `ipc:*` (Tier 2), `nucleus:*` (Tier 3).
+- **`validation/CHECKSUMS`:** BLAKE3 manifest (11 files) for Property 3
+  self-verification — guideStone source, Python baselines, composition targets.
+  Tier 1 bare check count grows to 31 when manifest is present (20 structural +
+  11 file integrity via `p3:checksum:*`).
+- **exp054 fix:** Edition 2024 implicit-borrow pattern in `coordination.rs`.
+- **`#[expect]` migration:** `python_parity.rs` `#[allow(clippy::cast_precision_loss)]`
+  → `#[expect(..., reason = "...")]`.
+- **Tests:** 791 total (up from 790+).
+- **Quality table:** Updated to 791 tests, 60+ `#[expect]` sites documented.
 
 ## [V45] — 2026-04-18
 
