@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 20, 2026
-**Total:** 100 experiments, 790+ workspace tests (V46)
+**Total:** 100 experiments, 791 workspace tests (V46)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
 **Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
-**Live V45 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 3: 15 bare certified-property checks (5 properties, no primals needed) + 15 domain IPC checks via primalSpring composition API. Five-layer validation: Python→Rust→IPC→primal proof→guideStone. `validate_primal_proof` binary retained (raw IPC comparison). `lifecycle.composition` handler wired. Capability-first discovery. `nest_atomic` in fragments. Provenance unified to `19e402c0`. 6 composition_parity.rs tests PASS (Layer 2.5). validate_composition binary wired (Layer 3, exit 2 skip without server).
+**Live V46 results:** 95/141 (67.4%) composition checks passing against plasmidBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4: three-tier architecture — Tier 1 LOCAL_CAPABILITIES (20 bare checks), Tier 2 IPC-WIRED (15 domain IPC checks), Tier 3 FULL NUCLEUS (8 cross-atomic: BearDog crypto + NestGate storage + pipeline). BLAKE3 Property 3 via `validation/CHECKSUMS`. Protocol tolerance (HTTP-on-UDS → SKIP). `validate_primal_proof` binary retained (raw IPC comparison). `lifecycle.composition` handler wired. Capability-first discovery. `nest_atomic` in fragments. Provenance unified to `19e402c0`. 6 composition_parity.rs tests PASS (Layer 2.5). validate_composition binary wired (Layer 3, exit 2 skip without server).
 
 ---
 

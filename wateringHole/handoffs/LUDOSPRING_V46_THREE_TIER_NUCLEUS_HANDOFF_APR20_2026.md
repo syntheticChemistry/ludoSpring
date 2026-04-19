@@ -5,7 +5,7 @@
 **Date:** April 20, 2026
 **From:** ludoSpring
 **To:** barraCuda, toadStool, BearDog, NestGate, biomeOS, primalSpring, all springs
-**Version:** V46 (790+ tests, guideStone readiness 4, plasmidBin v0.10.0)
+**Version:** V46 (791 tests, guideStone readiness 4, plasmidBin v0.10.0)
 
 ## Executive Summary
 
@@ -116,7 +116,7 @@ Python baseline (L1) → Rust proof (L2) → bare guideStone (L3)
 
 | Metric | Value |
 |--------|-------|
-| Tests | 790+ |
+| Tests | 791 |
 | guideStone readiness | **4** (NUCLEUS validated) |
 | Tier 1 (bare) | 20 checks |
 | Tier 2 (IPC) | 15 checks |

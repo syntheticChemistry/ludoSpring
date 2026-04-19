@@ -159,7 +159,7 @@ pub fn execution_order(graph: &DeploymentGraphDef) -> Vec<String> {
     let mut queue: Vec<usize> = in_degree
         .iter()
         .enumerate()
-        .filter(|(_, &d)| d == 0)
+        .filter(|&(_, &d)| d == 0)
         .map(|(i, _)| i)
         .collect();
 

@@ -30,7 +30,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 790+ workspace tests, V45 five-layer validation + guideStone)
+ludoSpring (game science, 100 experiments, 791 workspace tests, V46 three-tier guideStone + BLAKE3 + protocol tolerance)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)

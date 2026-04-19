@@ -2,7 +2,7 @@
 
 **Date:** April 20, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V46 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 790+ workspace tests. guideStone readiness **4** (NUCLEUS validated): `ludospring_guidestone` three-tier — Tier 1 (20 bare checks, BLAKE3 Property 3), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). Five-layer validation: Python→Rust→IPC composition→primal proof→guideStone. Inherits primalSpring base certification (6 layers). `lifecycle.composition` handler wired. Capability-first discovery. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to `19e402c0`. ecoBin: plasmidBin v0.10.0. 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 guideStone wired).
+**Status:** V46 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 791 workspace tests. guideStone readiness **4** (NUCLEUS validated): `ludospring_guidestone` three-tier — Tier 1 (20 bare checks, BLAKE3 Property 3 via `validation/CHECKSUMS`), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). Three-tier validation: LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS. Inherits primalSpring base certification (6 layers). `lifecycle.composition` handler wired. Capability-first discovery. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to `19e402c0`. ecoBin: plasmidBin v0.10.0. 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 guideStone wired).
 
 ---
 
@@ -98,26 +98,26 @@ Key artifacts:
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
 
-### Five-Layer Validation — Python → Rust → IPC → Primal Proof → guideStone (V45)
+### Three-Tier Validation — LOCAL_CAPABILITIES → IPC-WIRED → FULL NUCLEUS (V46)
 
 The validation lifecycle now extends to the guideStone level: a
 self-validating NUCLEUS node that uses the primalSpring composition API
 for capability-routed IPC rather than raw socket calls:
 
-| Layer | Source | Target | Guard |
-|-------|--------|--------|-------|
-| 1 | Python baselines | Rust library | `python_parity.rs` + `check_drift.py` |
-| 2 | Rust library | Golden JSON (`composition_targets.json`) | `composition_parity.rs` (6 tests) |
-| 2.5 | Golden JSON | Library recomputation | `check_composition_drift` (CI) |
-| 3 | Golden JSON | IPC composition | `validate_composition` binary |
-| 5a | Python golden values | barraCuda raw IPC | `validate_primal_proof` binary |
-| 5b | Python golden values | Composition API IPC | `ludospring_guidestone` binary |
+| Tier | Source | Target | Guard |
+|------|--------|--------|-------|
+| 1 (LOCAL_CAPABILITIES) | Python baselines | Rust recomputation | 20 bare checks (5 certified properties) |
+| 2 (IPC-WIRED) | Golden values | Capability-routed IPC | 15 domain science checks |
+| 3 (FULL NUCLEUS) | Cross-atomic | BearDog + NestGate pipeline | 8 cross-atomic checks |
 
-**Level 5 guideStone (V45):** `ludospring_guidestone` uses `primalspring::composition`
+**Level 4 guideStone (V46):** `ludospring_guidestone` uses `primalspring::composition`
 to discover primals by capability and validate domain science. Routes via
 `method_to_capability_domain()`: `activation.fitts` → "tensor" → barraCuda.
-Validates: Fitts, Hick, sigmoid, log2, stats.mean, stats.std_dev, Perlin,
-rng.uniform, tensor.create. Inherits primalSpring base certification (6 layers).
+Tier 2 validates: Fitts, Hick, sigmoid, log2, stats.mean, stats.variance,
+stats.std_dev, Perlin, rng.uniform, tensor.create, tensor.matmul,
+compute.capabilities, health.readiness. Tier 3 validates: BearDog crypto.hash
+(BLAKE3), NestGate storage roundtrip, cross-atomic pipeline (hash→store→retrieve→verify).
+BLAKE3 Property 3 via `validation/CHECKSUMS`. Protocol tolerance (HTTP-on-UDS → SKIP).
 Five certified properties: deterministic, reference-traceable, self-verifying,
 environment-agnostic, tolerance-documented. Exit 0/1/2.
 
@@ -295,7 +295,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 790+ workspace tests (V45)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 791 workspace tests (V46)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

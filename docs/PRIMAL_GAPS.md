@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 20, 2026 (V46 — guideStone readiness 4: three-tier `ludospring_guidestone` — 20 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3, protocol tolerance. 790+ tests, plasmidBin v0.10.0)
+**Last updated:** April 20, 2026 (V46 — guideStone readiness 4: three-tier `ludospring_guidestone` — 20 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3 via `validation/CHECKSUMS`, protocol tolerance. 791 tests, plasmidBin v0.10.0)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`

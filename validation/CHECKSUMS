@@ -1,0 +1,16 @@
+# ludoSpring guideStone BLAKE3 checksum manifest
+# Property 3: Self-Verifying — tampered inputs detected, non-zero exit
+# Generated: 2026-04-20 (V46 three-tier architecture)
+# Regenerate: b3sum <files> > validation/CHECKSUMS
+
+32f4cfdf0f60b1d4bdbe0310743b850ea9109b2b5d566741ff1b26e0fbd23ff6  barracuda/src/bin/ludospring_guidestone.rs
+9afc93a1c21bd020fb39b85f47bc14a6b68d469f4478069c0d306e9d41baef6d  baselines/python/combined_baselines.json
+2fee6b7b9312d048664bff38ea5e875ec3e482d0bb20be217162e7037a76aa59  baselines/python/interaction_laws.py
+8a1626fe559e1f5ba282d96827dcf67eebba98ce62c00a1b9300cd926ff2326b  baselines/python/perlin_noise.py
+add36d122b350a6f28e528e2cb25d2bff15e844d0469744667b60cd456ec9d8d  baselines/python/flow_engagement.py
+895c4102442922525a72a71fcc552a06ba4c058419a9a2ea11fc0ffcf4c1346a  baselines/python/fun_keys_model.py
+e3e5ed3d9be7c91e84c94f7fe37b7b7db6a77fd86b9804f6f5527d23d42510a9  baselines/python/goms_model.py
+6bf6dfa13b6cc29eb82806d8f3b9aa6c368c3d6444fc288ff5b9004cec319773  baselines/python/bsp_partition.py
+5cac981a968ae508f24cfa9bd67c998d1ccacc78b723fe1c32b10c09731d14c7  baselines/python/lsystem_growth.py
+999513cbdc73925dc3299bbdbb31ff7614ade57d9da7badbba8e2225303ec959  baselines/python/tolerances.py
+7af7496ce5ae7f9c6e3858d67f2549d388f7f350b2c3e22eb21ba842a13aab7e  baselines/rust/composition_targets.json
