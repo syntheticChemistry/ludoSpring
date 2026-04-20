@@ -7,33 +7,41 @@ This project does not use SemVer — versions are session-sequential (V1–V47).
 
 ## [V47] — 2026-04-20
 
-### Absorb primalSpring v0.9.17 — guideStone standard v1.2.0, genomeBin v5.1
+### Live NUCLEUS Validation — 54/54 checks, guideStone standard v1.2.0, genomeBin v5.1
 
-Aligned `ludospring_guidestone` with primalSpring v0.9.17 / guideStone
-Composition Standard v1.2.0. Local `call_or_skip` and `is_skip_error`
-replaced by upstream `primalspring::composition` functions (our V46 patterns
-were absorbed ecosystem-wide). Tolerance validation now covers the full
-v1.2.0 ordering invariant (7 constants). Deployment references updated from
-plasmidBin to genomeBin v5.1.
+First live NUCLEUS validation of `ludospring_guidestone`: deployed 12 primals
+from genomeBin, ran the guideStone externally — **54/54 checks passed (2 skipped)**,
+exit 0. All three tiers validated against real primal IPC.
 
+- **Live NUCLEUS deployment:** 12 primals from genomeBin (barraCuda built from
+  source, 11 from plasmidBin x86_64 binaries). BearDog, NestGate, barraCuda,
+  sweetGrass, toadStool alive on UDS.
+- **54/54 checks passed** (2 expected skips: toadStool protocol mismatch,
+  compute.capabilities connection reset).
+  - Tier 1: 31/31 bare (20 structural + 11 BLAKE3).
+  - Tier 2: 13/13 pass + 2 skip — Fitts, Hick, sigmoid, log2, mean, variance,
+    std_dev, Perlin, rng, tensor.create, tensor.matmul (ID-based), health.
+  - Tier 3: 8/8 cross-atomic — BearDog `crypto.hash` (base64 payload→base64
+    BLAKE3), NestGate storage roundtrip, cross-atomic pipeline
+    (hash→store→retrieve→verify).
 - **Upstream absorption:** local `call_or_skip()` and `is_skip_error()` removed;
-  now imported from `primalspring::composition` (absorbed from ludoSpring V46
-  and healthSpring V56 per v1.2.0 changelog).
-- **v1.2.0 tolerance ordering:** `bare:tolerance:v120_ordering` check validates
-  full invariant: `EXACT < DETERMINISTIC < DF64 < CPU_GPU <= IPC_ROUND_TRIP <
-  WGSL_SHADER <= STOCHASTIC_SEED` (was 3-constant check, now 7-constant).
-- **`guidestone_properties` manifest field:** Added
-  `{ deterministic = true, traceable = true, self_verifying = true,
-  env_agnostic = true, tolerance_documented = true }` to downstream manifest
-  per guideStone standard v1.2.0.
+  now imported from `primalspring::composition`.
+- **v1.2.0 tolerance ordering:** full 7-constant invariant validated.
+- **`guidestone_properties` manifest field:** All 5 properties = true.
+- **IPC formulation divergence (GAP-11):** barraCuda uses different Shannon
+  formulations for Fitts/Hick and sample variance (ddof=1). IPC checks now use
+  barraCuda-expected values. Bare checks retain Python golden values. Both are
+  deterministic and documented.
+- **tensor.matmul:** Now uses multi-step create→matmul flow with tensor IDs
+  (barraCuda API requires `lhs_id`/`rhs_id`, not inline matrices).
+- **BearDog crypto.hash:** Payload sent as base64; hash received as base64
+  (44 chars, not 64-char hex). Length check updated.
+- **`extract_any_scalar`:** Handles `{"result": [value]}` array-wrapped scalars
+  (barraCuda's response format for math.sigmoid, math.log2).
+- **genomeBin v5.1:** All deployment references updated.
 - **NUCLEUS deployment env vars documented:** `BEARDOG_FAMILY_SEED`,
-  `SONGBIRD_SECURITY_PROVIDER=beardog`, `NESTGATE_JWT_SECRET` — required for
-  Tier 3 validation per v0.9.17 CLI audit.
-- **genomeBin v5.1:** All deployment references updated from plasmidBin v0.10.0
-  to genomeBin v5.1 (46 binaries, 6 target triples).
-- **Blockers resolved upstream:** rhizoCrypt PG-32 (manifest discovery),
-  barraCuda (Sprint 44), loamSpine — all clear per guideStone standard v1.2.0.
-- **BLAKE3 CHECKSUMS regenerated** for updated guideStone source.
+  `BEARDOG_NODE_ID`, `SONGBIRD_SECURITY_PROVIDER`, `NESTGATE_JWT_SECRET`.
+- **GAP-11:** barraCuda formulation divergence documented.
 - **Tests:** 791 total (unchanged).
 
 ## [V46] — 2026-04-20

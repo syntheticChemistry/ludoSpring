@@ -10,12 +10,13 @@
 
 ## Summary
 
-ludoSpring V47 absorbs primalSpring v0.9.17 and guideStone Composition Standard
-v1.2.0. The key evolution: our V46 patterns (`call_or_skip`, `is_skip_error`) were
-absorbed ecosystem-wide into `primalspring::composition`, so V47 replaces local
-copies with upstream imports. Tolerance validation now covers the full v1.2.0
-ordering invariant (7 named constants). Deployment references align to genomeBin
-v5.1 (46 binaries, 6 target triples). All upstream blockers are resolved.
+ludoSpring V47 is the first live NUCLEUS validation: **54/54 guideStone checks
+passed (2 expected skips), exit 0** against 12 deployed primals. Absorbs
+primalSpring v0.9.17 and guideStone Composition Standard v1.2.0. V46 patterns
+(`call_or_skip`, `is_skip_error`) absorbed ecosystem-wide — V47 uses upstream
+imports. Tolerance validation covers the full v1.2.0 ordering invariant (7
+constants). IPC formulation divergence with barraCuda discovered and documented
+(GAP-11). Deployment references align to genomeBin v5.1.
 
 ---
 

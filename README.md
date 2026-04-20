@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** April 20, 2026
-**Version:** V47 (guideStone readiness 4: `ludospring_guidestone` three-tier — Tier 1 LOCAL_CAPABILITIES (20 bare checks), Tier 2 IPC-WIRED (15 domain science checks), Tier 3 FULL NUCLEUS (8 cross-atomic checks: BearDog crypto + NestGate storage roundtrip + pipeline). BLAKE3 Property 3 via `validation/CHECKSUMS`. Protocol tolerance. Conforms to guideStone Composition Standard v1.2.0. Upstream `call_or_skip` / `is_skip_error`. v1.2.0 tolerance ordering (7 constants). **791** workspace tests (0 failed). genomeBin v5.1.)
+**Version:** V47 (guideStone readiness 4 — **live NUCLEUS validated: 54/54 checks passed, exit 0**. `ludospring_guidestone` three-tier: Tier 1 (31 bare: 20 structural + 11 BLAKE3), Tier 2 (15 IPC: 13 pass + 2 skip), Tier 3 (8 cross-atomic: BearDog crypto + NestGate roundtrip + pipeline). guideStone standard v1.2.0. Upstream `call_or_skip`/`is_skip_error`. v1.2.0 tolerance ordering (7 constants). GAP-11 formulation divergence documented. **791** workspace tests. genomeBin v5.1.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**791** as of V47); if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)

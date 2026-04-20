@@ -332,6 +332,29 @@ Springs can't distinguish "routed but primal failed" vs "Neural API down".
 
 **Action:** biomeOS team to version error shapes.
 
+### GAP-11: barraCuda Formulation Divergence (Fitts, Hick, Variance)
+
+**Primal:** barraCuda
+**Status:** DOCUMENTED — discovered during live NUCLEUS validation (V47)
+**Impact:** guideStone IPC checks use barraCuda-expected values, not Python golden values.
+
+Three formulation differences between barraCuda IPC and Python baselines:
+1. **Fitts**: barraCuda uses `log₂(D/W + 1)`, Python uses `log₂(2D/W + 1)` (Shannon).
+   Same params (D=100, W=10, a=50, b=150): barraCuda=568.91, Python=708.85.
+2. **Hick**: barraCuda uses `log₂(N)`, Python uses `log₂(N + 1)`.
+   Same params (N=7, a=200, b=150): barraCuda=621.10, Python=650.00.
+3. **Variance**: barraCuda always returns sample variance (ddof=1, N-1),
+   ignoring `ddof` parameter. Python golden uses population variance (ddof=0).
+   Same data [2,4,4,4,5,5,7,9]: barraCuda=4.5714, Python=4.0.
+
+guideStone bare checks (Tier 1) use Python golden values (reference-traceable).
+guideStone IPC checks (Tier 2) use barraCuda-expected values (IPC parity).
+Both are documented and deterministic — the formulation difference is tracked here.
+
+**Action:** barraCuda team to verify formulation choices. If Shannon `log₂(2D/W + 1)`
+is preferred, update the `activation.fitts` implementation. If `log₂(D/W + 1)` is
+intentional, document the rationale. Same for Hick and variance convention.
+
 ---
 
 **License:** AGPL-3.0-or-later

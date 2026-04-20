@@ -3,7 +3,7 @@
 # Generated: 2026-04-20 (V47 — absorb v0.9.17, upstream call_or_skip/is_skip_error, v1.2.0 tolerance ordering)
 # Regenerate: b3sum <files> > validation/CHECKSUMS
 
-3a3e53584ba68cb7f9feafbe985e24798aec7ee36e70ceb60dbd026902aca1fc  barracuda/src/bin/ludospring_guidestone.rs
+12aee19c4a5431b26a3a8fb1f591f820795a11a9e606d09c68e8ce0a3b6d7cd5  barracuda/src/bin/ludospring_guidestone.rs
 9afc93a1c21bd020fb39b85f47bc14a6b68d469f4478069c0d306e9d41baef6d  baselines/python/combined_baselines.json
 2fee6b7b9312d048664bff38ea5e875ec3e482d0bb20be217162e7037a76aa59  baselines/python/interaction_laws.py
 8a1626fe559e1f5ba282d96827dcf67eebba98ce62c00a1b9300cd926ff2326b  baselines/python/perlin_noise.py
