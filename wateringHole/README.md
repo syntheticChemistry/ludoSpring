@@ -25,8 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V47** | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V47** — absorb primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering. All blockers resolved. |
-| V46 | [LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md) | Apr 20 | Superseded by V47 — guideStone readiness 4: three-tier (31 bare + 15 IPC + 8 NUCLEUS cross-atomic). |
+| **V47** | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V47** — live NUCLEUS validated (54/54 checks, exit 0). primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering. GAP-11 documented. |
 
 ## Cross-Spring Context
 
@@ -99,15 +98,16 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **Score**: 95/141 (67.4%) + 6 composition parity tests (Layer 2.5) PASS + exp099 13/13 + exp100 27 checks (NUCLEUS parity). `lifecycle.composition` handler live (V42). Projected with all fixes: ~143/154 (92.9%).
 
-**guideStone (V46):** 31 bare + 15 IPC + 8 NUCLEUS = 54 checks. BLAKE3 Property 3 via `validation/CHECKSUMS` (11 files). Protocol tolerance. Three-tier architecture (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS).
+**guideStone (V47, live validated):** 31 bare + 15 IPC + 8 NUCLEUS = 54/54 checks passed (exit 0). BLAKE3 Property 3 via `validation/CHECKSUMS` (11 files). Protocol tolerance. Three-tier architecture (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering (7 constants). GAP-11 formulation divergence documented.
 
-See central handoffs: [V46 deep audit](../../../infra/wateringHole/handoffs/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md), [V46 evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_EVOLUTION_HANDOFF_APR20_2026.md).
+See central handoffs: [V47 evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md), [V46 deep audit](../../../infra/wateringHole/handoffs/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md).
 
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
+| V46 | `handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md` | V47 Live NUCLEUS Validated |
 | V45 | `handoffs/archive/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md` | V46 Three-Tier NUCLEUS |
 | V44 | `handoffs/archive/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md` | V45 guideStone |
 | V43 | `handoffs/archive/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md` | V44 Primal Proof |

@@ -107,7 +107,7 @@ is capability-first, and fragments declare the full atomic surface.
 
 ### Metrics
 
-- **Tests**: 781 → **790+** (composition parity, WFC, accessibility tests)
+- **Tests**: 781 → **791** (composition parity, WFC, accessibility tests)
 - **Clippy**: zero warnings (workspace-wide)
 - **Fragments**: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
 - **GAP-09**: updated to RESOLVED (nest_atomic declared, trio `required: false`)
@@ -202,7 +202,7 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 
 ### Primal gap matrix
 
-**10 primal gaps (GAP-01–GAP-10)** — canonical registry and remediation detail: [`docs/PRIMAL_GAPS.md`](docs/PRIMAL_GAPS.md) (**GAP-09:** nest_atomic stubs; **GAP-10:** `game.*` identity). The table below summarizes composition-experiment impact (live plasmidBin / exp084–098); IDs in the doc may order topics differently.
+**11 primal gaps (GAP-01–GAP-11)** — canonical registry and remediation detail: [`docs/PRIMAL_GAPS.md`](docs/PRIMAL_GAPS.md) (**GAP-09:** nest_atomic stubs; **GAP-10:** `game.*` identity; **GAP-11:** barraCuda formulation divergence). The table below summarizes composition-experiment impact (live genomeBin NUCLEUS / exp084–098 + guideStone); IDs in the doc may order topics differently.
 
 | Gap | Owner | Severity | Checks gained when fixed |
 |-----|-------|----------|--------------------------|
@@ -210,7 +210,7 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 | Startup panic (runtime nesting) | loamSpine | CRITICAL | +6 |
 | Fitts/Hick formula mismatch | barraCuda | HIGH | +4 |
 | No capability registration | biomeOS Neural API | HIGH | +14 |
-| No binary in plasmidBin | barraCuda | HIGH | deployment |
+| No x86_64 binary in genomeBin | barraCuda | HIGH | deployment |
 | Perlin3D lattice invariant | barraCuda | MEDIUM | +1 |
 | Inter-primal discovery | toadStool↔coralReef | MEDIUM | +1 |
 

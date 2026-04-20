@@ -84,7 +84,7 @@ Layer 4: Composition      (lifecycle.composition — runtime probe of all 11 nic
 - `NicheDependency` table — 11 typed proto-nucleate entries in `niche.rs`
 - `CompositionReport` — runtime probe of all dependencies, reports live/absent/degraded
 - Typed `inference.*` wire types — ready for neuralSpring WGSL ML evolution
-- `--port` CLI flag — plasmidBin/orchestrator binding
+- `--rpc-bind` CLI flag — genomeBin/orchestrator binding (was `--port`, coralReef iter84)
 
 These patterns make ludoSpring a **reference implementation** for how springs absorb
 and validate composition standards. Other springs can use ludoSpring as a template
@@ -93,31 +93,33 @@ for their own composition evolution.
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
 - **exp100** (`ludospring-exp100`) — 27-check NUCLEUS composition parity validator: niche integrity (7), health probes (2), capability discovery (4), science parity (8), golden chain (6)
-- **ecoBin v0.10.0** — Harvested to `infra/plasmidBin/ludospring/` (sha256-verified)
+- **ecoBin** — Harvested to `infra/plasmidBin/ludospring/` (sha256-verified); NUCLEUS primals from genomeBin v5.1
 - **Shared HUD fixtures** — `hud_fixtures.rs` extracted from dashboard binaries, eliminating duplication
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
 
-### Three-Tier Validation — LOCAL_CAPABILITIES → IPC-WIRED → FULL NUCLEUS (V46)
+### Three-Tier Validation — LOCAL_CAPABILITIES → IPC-WIRED → FULL NUCLEUS (V47)
 
-The validation lifecycle now extends to the guideStone level: a
-self-validating NUCLEUS node that uses the primalSpring composition API
-for capability-routed IPC rather than raw socket calls:
+The validation lifecycle extends to the guideStone level: a self-validating
+NUCLEUS node that uses the primalSpring composition API for capability-routed
+IPC. **V47 is the first live NUCLEUS validation: 54/54 checks passed, exit 0.**
 
 | Tier | Source | Target | Guard |
 |------|--------|--------|-------|
-| 1 (LOCAL_CAPABILITIES) | Python baselines | Rust recomputation | 20 bare checks (5 certified properties) |
-| 2 (IPC-WIRED) | Golden values | Capability-routed IPC | 15 domain science checks |
+| 1 (LOCAL_CAPABILITIES) | Python baselines | Rust recomputation | 31 bare checks (20 structural + 11 BLAKE3) |
+| 2 (IPC-WIRED) | Golden values | Capability-routed IPC | 15 domain science checks (13 pass + 2 skip) |
 | 3 (FULL NUCLEUS) | Cross-atomic | BearDog + NestGate pipeline | 8 cross-atomic checks |
 
-**Level 4 guideStone (V46):** `ludospring_guidestone` uses `primalspring::composition`
+**Level 4 guideStone (V47, live validated):** `ludospring_guidestone` uses
+`primalspring::composition` (upstream `call_or_skip`/`is_skip_error` from v1.2.0)
 to discover primals by capability and validate domain science. Routes via
 `method_to_capability_domain()`: `activation.fitts` → "tensor" → barraCuda.
 Tier 2 validates: Fitts, Hick, sigmoid, log2, stats.mean, stats.variance,
-stats.std_dev, Perlin, rng.uniform, tensor.create, tensor.matmul,
-compute.capabilities, health.readiness. Tier 3 validates: BearDog crypto.hash
-(BLAKE3), NestGate storage roundtrip, cross-atomic pipeline (hash→store→retrieve→verify).
-BLAKE3 Property 3 via `validation/CHECKSUMS`. Protocol tolerance (HTTP-on-UDS → SKIP).
+stats.std_dev, Perlin, rng.uniform, tensor.create, tensor.matmul (ID-based),
+health.readiness. Tier 3 validates: BearDog crypto.hash (base64 BLAKE3),
+NestGate storage roundtrip, cross-atomic pipeline (hash→store→retrieve→verify).
+BLAKE3 Property 3 via `validation/CHECKSUMS`. v1.2.0 tolerance ordering (7
+constants). GAP-11 formulation divergence documented. guideStone standard v1.2.0.
 Five certified properties: deterministic, reference-traceable, self-verifying,
 environment-agnostic, tolerance-documented. Exit 0/1/2.
 
@@ -295,7 +297,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 791 workspace tests (V46)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 791 workspace tests (V47)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

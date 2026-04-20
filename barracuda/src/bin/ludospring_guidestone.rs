@@ -277,7 +277,7 @@ fn validate_self_verification(v: &mut ValidationResult) {
         ),
     );
 
-    // BLAKE3 checksum manifest (Property 3 per guideStone standard v1.1.0).
+    // BLAKE3 checksum manifest (Property 3 per guideStone standard v1.2.0).
     // Skips gracefully if CHECKSUMS file not yet generated.
     checksums::verify_manifest(v, "validation/CHECKSUMS");
 }

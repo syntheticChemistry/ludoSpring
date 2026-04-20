@@ -356,8 +356,8 @@ proving that ludoSpring's science is replicable through composition alone.
 | Neural API capability registration | **biomeOS** | HIGH | Running primals not auto-registering `math`, `tensor`, `compute`, `dag`, `visualization`, `crypto` capabilities with Neural API | exp087, exp088 |
 | Sovereign GPU dispatch readback | **toadStool + coralReef** | MEDIUM | toadStool reports "coralReef not available" even though coralReef socket exists (inter-primal discovery gap) | exp085 |
 | Domain-level math methods | **barraCuda** | LOW | `math.flow.evaluate`, `math.engagement.composite` (composable from existing primitives) | exp084 |
-| No binary in plasmidBin | **barraCuda** | HIGH | Need published ecoBin for plasmidBin deployment | all science exps |
-| JWT secret generation in start_primal.sh | **plasmidBin** | LOW | Script generates 25-byte secret, NestGate requires 32+ | NestGate startup |
+| No x86_64 binary in genomeBin | **barraCuda** | HIGH | Need published ecoBin for genomeBin deployment (built from source for V47 validation) | all science exps |
+| JWT secret generation in start_primal.sh | **genomeBin launcher** | LOW | Script generates 25-byte secret, NestGate requires 32+; export `NESTGATE_JWT_SECRET` explicitly | NestGate startup |
 
 **Score**: 95/141 checks passing (67.4%). With rhizoCrypt UDS + loamSpine fix alone → estimated 115/141 (81.5%). With barraCuda formula fixes → estimated 125/141 (88.7%).
 

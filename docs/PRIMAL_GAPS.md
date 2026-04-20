@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 20, 2026 (V47 — guideStone readiness 4: three-tier `ludospring_guidestone` — 20 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3 via `validation/CHECKSUMS`, protocol tolerance. guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`. 791 tests, genomeBin v5.1)
+**Last updated:** April 20, 2026 (V47 — guideStone readiness 4, **live NUCLEUS validated: 54/54 checks exit 0**. Three-tier `ludospring_guidestone` — 31 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3, guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering. 791 tests, genomeBin v5.1. GAP-11 documented.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
@@ -18,7 +18,7 @@
 | `NicheDependency` table | `SPRING_COMPOSITION_PATTERNS` §11 | `niche.rs` |
 | Typed inference wire types | neuralSpring `inference.*` | `ipc/squirrel.rs` |
 | `CompositionReport` + live validation | `SPRING_COMPOSITION_PATTERNS` §5 | `ipc/composition.rs` |
-| `--port` CLI flag | plasmidBin startup contract | `bin/ludospring.rs` |
+| `--rpc-bind` CLI flag | genomeBin startup contract (was `--port`) | `bin/ludospring.rs` |
 | `is_retriable` / `is_recoverable` / `is_method_not_found` | primalSpring `PhasedIpcError` | `ipc/envelope.rs` |
 | `lifecycle.composition` handler | `SPRING_COMPOSITION_PATTERNS` §5 | `ipc/handlers/lifecycle.rs` |
 | Capability-first composition probing (`by_capability` → name fallback) | `SPRING_COMPOSITION_PATTERNS` §3 | `ipc/composition.rs` |
@@ -53,14 +53,14 @@ the coralReef client.
 ### GAP-02: barraCuda Direct Rust Import (Not IPC)
 
 **Primal:** barraCuda
-**Status:** PARTIAL → guideStone readiness 4 (V46, April 20 2026).
-`ludospring_guidestone` binary — three-tier architecture:
-Tier 1 (bare, 20 checks): 5 certified properties incl. BLAKE3 checksums.
-Tier 2 (IPC, 15 checks): domain science via composition API with protocol
-tolerance (`is_protocol_error`, `is_transport_mismatch` → SKIP).
-Tier 3 (NUCLEUS, 8 checks): BearDog `crypto.hash`, NestGate
+**Status:** PARTIAL → guideStone readiness 4, live NUCLEUS validated (V47, April 20 2026).
+`ludospring_guidestone` binary — three-tier architecture (54/54 checks, exit 0):
+Tier 1 (bare, 31 checks): 20 structural + 11 BLAKE3 integrity.
+Tier 2 (IPC, 15 checks): domain science via `primalspring::composition` with upstream
+`call_or_skip`/`is_skip_error` (guideStone standard v1.2.0). 13 pass + 2 skip.
+Tier 3 (NUCLEUS, 8 checks): BearDog `crypto.hash` (base64), NestGate
 `storage.store`/`storage.retrieve` roundtrip, cross-atomic pipeline
-(hash→store→retrieve→verify).
+(hash→store→retrieve→verify). See GAP-11 for formulation divergences.
 `validate_primal_proof` (raw IPC) retained for comparison. Library path dep
 retained for Level 2 tests.
 **Proto-nucleate:** Required via IPC — 19 methods in downstream manifest.
@@ -178,14 +178,14 @@ in UDS-only deployments.
 ### GAP-08: barraCuda Fitts/Hick Formula Mismatch
 
 **Primal:** barraCuda
-**Status:** OPEN (upstream) — ludoSpring still uses in-crate validated math;
-IPC parity not verified
-**Detail:** IPC-exposed Fitts/Hick formulas produce different values than
-ludoSpring's validated implementations
-**Impact:** 4 composition checks fail
-**Severity:** HIGH
+**Status:** SUPERSEDED by GAP-11 — live NUCLEUS validation (V47) confirmed and
+precisely measured the formulation divergences. guideStone Tier 2 now uses
+barraCuda-expected values with the divergence documented in GAP-11.
+**Detail:** See GAP-11 for exact formulations and numerical values.
+**Impact:** Resolved via dual-value approach (bare=Python, IPC=barraCuda)
+**Severity:** ~~HIGH~~ → DOCUMENTED
 **Owner:** barraCuda team
-**Tracking:** Documented in CONTEXT.md V37.1 gap matrix
+**Tracking:** GAP-11 in this file
 
 ---
 

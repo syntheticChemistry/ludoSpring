@@ -32,7 +32,7 @@ fn cmd_server(port: Option<u16>) -> Result<(), String> {
 
     info!("ludospring IPC listening on {}", socket_path.display());
     if let Some(p) = port {
-        info!("  Port (plasmidBin): {p}");
+        info!("  Port (genomeBin): {p}");
     }
     info!("  Family ID: {family_id}");
     info!("  Domain: {GAME_DOMAIN}");
@@ -119,7 +119,7 @@ struct Cli {
 enum Command {
     /// Start the IPC server (germination mode).
     Server {
-        /// TCP port for plasmidBin/orchestrator binding (informational — logged only).
+        /// TCP port for genomeBin/orchestrator binding (informational — logged only).
         #[arg(long)]
         port: Option<u16>,
     },
