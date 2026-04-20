@@ -8,6 +8,8 @@
 //! Validates game science (interaction laws, procedural generation,
 //! engagement metrics) through primal IPC against Python golden values.
 //!
+//! Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17).
+//!
 //! # Three-Tier Validation
 //!
 //! - **Tier 1 — LOCAL_CAPABILITIES** (bare): five certified properties
@@ -30,10 +32,17 @@
 //! - `0` — all checks passed (NUCLEUS certified)
 //! - `1` — one or more checks failed
 //! - `2` — bare properties passed, no NUCLEUS deployed
+//!
+//! # NUCLEUS Deployment Requirements (v0.9.17)
+//!
+//! Tier 3 validation requires these env vars when deploying primals:
+//! - `BEARDOG_FAMILY_SEED` — required for BearDog crypto operations
+//! - `SONGBIRD_SECURITY_PROVIDER=beardog` — Songbird federation
+//! - `NESTGATE_JWT_SECRET` — NestGate storage authentication
 
 use primalspring::checksums;
 use primalspring::composition::{
-    self, CompositionContext, validate_liveness, validate_parity,
+    self, call_or_skip, is_skip_error, CompositionContext, validate_liveness, validate_parity,
 };
 use primalspring::tolerances;
 use primalspring::validation::ValidationResult;
@@ -281,11 +290,17 @@ fn validate_tolerance_documentation(v: &mut ValidationResult) {
         ),
     );
 
+    // Full v1.2.0 ecosystem ordering invariant:
+    // EXACT < DETERMINISTIC < DF64 < CPU_GPU <= IPC_ROUND_TRIP < WGSL_SHADER <= STOCHASTIC_SEED
     v.check_bool(
-        "bare:tolerance:ordering",
-        tolerances::DETERMINISTIC_FLOAT_TOL < tolerances::IPC_ROUND_TRIP_TOL
-            && tolerances::IPC_ROUND_TRIP_TOL <= tolerances::WGSL_SHADER_TOL,
-        "DETERMINISTIC_FLOAT < IPC_ROUND_TRIP <= WGSL_SHADER",
+        "bare:tolerance:v120_ordering",
+        tolerances::EXACT_PARITY_TOL < tolerances::DETERMINISTIC_FLOAT_TOL
+            && tolerances::DETERMINISTIC_FLOAT_TOL < tolerances::DF64_PARITY_TOL
+            && tolerances::DF64_PARITY_TOL < tolerances::CPU_GPU_PARITY_TOL
+            && tolerances::CPU_GPU_PARITY_TOL <= tolerances::IPC_ROUND_TRIP_TOL
+            && tolerances::IPC_ROUND_TRIP_TOL < tolerances::WGSL_SHADER_TOL
+            && tolerances::WGSL_SHADER_TOL <= tolerances::STOCHASTIC_SEED_TOL,
+        "EXACT < DETERMINISTIC < DF64 < CPU_GPU <= IPC <= WGSL <= STOCHASTIC (v1.2.0)",
     );
 
     v.check_bool(
@@ -322,11 +337,6 @@ fn extract_any_scalar(result: &serde_json::Value) -> Option<f64> {
                 .and_then(|a| a.first())
                 .and_then(serde_json::Value::as_f64)
         })
-}
-
-/// Classify IPC errors: connection/protocol issues → skip, others → fail.
-fn is_skip_error(e: &primalspring::ipc::IpcError) -> bool {
-    e.is_connection_error() || e.is_protocol_error() || e.is_transport_mismatch()
 }
 
 fn validate_domain_scalar(
@@ -378,28 +388,6 @@ fn check_method_exists(
         }
         Err(e) => {
             v.check_bool(name, false, &format!("error: {e}"));
-        }
-    }
-}
-
-/// Call a capability and return the raw JSON result, or skip/fail.
-fn call_or_skip(
-    ctx: &mut CompositionContext,
-    v: &mut ValidationResult,
-    name: &str,
-    cap: &str,
-    method: &str,
-    params: serde_json::Value,
-) -> Option<serde_json::Value> {
-    match ctx.call(cap, method, params) {
-        Ok(result) => Some(result),
-        Err(e) if is_skip_error(&e) => {
-            v.check_skip(name, &format!("{cap} not available: {e}"));
-            None
-        }
-        Err(e) => {
-            v.check_bool(name, false, &format!("composition error: {e}"));
-            None
         }
     }
 }

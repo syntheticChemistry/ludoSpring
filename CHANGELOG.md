@@ -3,7 +3,38 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V46).
+This project does not use SemVer — versions are session-sequential (V1–V47).
+
+## [V47] — 2026-04-20
+
+### Absorb primalSpring v0.9.17 — guideStone standard v1.2.0, genomeBin v5.1
+
+Aligned `ludospring_guidestone` with primalSpring v0.9.17 / guideStone
+Composition Standard v1.2.0. Local `call_or_skip` and `is_skip_error`
+replaced by upstream `primalspring::composition` functions (our V46 patterns
+were absorbed ecosystem-wide). Tolerance validation now covers the full
+v1.2.0 ordering invariant (7 constants). Deployment references updated from
+plasmidBin to genomeBin v5.1.
+
+- **Upstream absorption:** local `call_or_skip()` and `is_skip_error()` removed;
+  now imported from `primalspring::composition` (absorbed from ludoSpring V46
+  and healthSpring V56 per v1.2.0 changelog).
+- **v1.2.0 tolerance ordering:** `bare:tolerance:v120_ordering` check validates
+  full invariant: `EXACT < DETERMINISTIC < DF64 < CPU_GPU <= IPC_ROUND_TRIP <
+  WGSL_SHADER <= STOCHASTIC_SEED` (was 3-constant check, now 7-constant).
+- **`guidestone_properties` manifest field:** Added
+  `{ deterministic = true, traceable = true, self_verifying = true,
+  env_agnostic = true, tolerance_documented = true }` to downstream manifest
+  per guideStone standard v1.2.0.
+- **NUCLEUS deployment env vars documented:** `BEARDOG_FAMILY_SEED`,
+  `SONGBIRD_SECURITY_PROVIDER=beardog`, `NESTGATE_JWT_SECRET` — required for
+  Tier 3 validation per v0.9.17 CLI audit.
+- **genomeBin v5.1:** All deployment references updated from plasmidBin v0.10.0
+  to genomeBin v5.1 (46 binaries, 6 target triples).
+- **Blockers resolved upstream:** rhizoCrypt PG-32 (manifest discovery),
+  barraCuda (Sprint 44), loamSpine — all clear per guideStone standard v1.2.0.
+- **BLAKE3 CHECKSUMS regenerated** for updated guideStone source.
+- **Tests:** 791 total (unchanged).
 
 ## [V46] — 2026-04-20
 

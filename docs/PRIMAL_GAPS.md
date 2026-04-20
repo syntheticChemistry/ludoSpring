@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 20, 2026 (V46 — guideStone readiness 4: three-tier `ludospring_guidestone` — 20 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3 via `validation/CHECKSUMS`, protocol tolerance. 791 tests, plasmidBin v0.10.0)
+**Last updated:** April 20, 2026 (V47 — guideStone readiness 4: three-tier `ludospring_guidestone` — 20 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3 via `validation/CHECKSUMS`, protocol tolerance. guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`. 791 tests, genomeBin v5.1)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
@@ -66,8 +66,10 @@ retained for Level 2 tests.
 **Proto-nucleate:** Required via IPC — 19 methods in downstream manifest.
 Domain-level methods (`math.flow.evaluate`, `math.engagement.composite`)
 remain gaps.
-**Impact:** guideStone readiness 4 (NUCLEUS validated); full certification
-(Level 5) requires all Tier 2 + Tier 3 checks passing against live NUCLEUS.
+**Impact:** guideStone readiness 4 (NUCLEUS validated). All upstream blockers
+resolved per guideStone standard v1.2.0 (rhizoCrypt PG-32, barraCuda Sprint 44,
+loamSpine). Full certification (Level 5) requires all Tier 2 + Tier 3 checks
+passing against live NUCLEUS with cross-substrate parity.
 
 **Current usage (library dep — Level 2 validation):**
 - `barracuda::activations::sigmoid` in `interaction/flow.rs`

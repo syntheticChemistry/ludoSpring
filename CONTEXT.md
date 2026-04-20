@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 20, 2026 (V46 — guideStone readiness 4: `ludospring_guidestone` three-tier — Tier 1 LOCAL_CAPABILITIES (20 bare checks with BLAKE3 Property 3 via `validation/CHECKSUMS`), Tier 2 IPC-WIRED (15 domain science), Tier 3 FULL NUCLEUS (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). Protocol tolerance. 791 tests, plasmidBin v0.10.0)
+**Last updated:** April 20, 2026 (V47 — guideStone readiness 4: `ludospring_guidestone` three-tier — Tier 1 LOCAL_CAPABILITIES (20 bare checks with BLAKE3 Property 3 via `validation/CHECKSUMS`), Tier 2 IPC-WIRED (15 domain science), Tier 3 FULL NUCLEUS (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). guideStone standard v1.2.0. Upstream `call_or_skip`/`is_skip_error`. v1.2.0 tolerance ordering (7 constants). Protocol tolerance. 791 tests, genomeBin v5.1)
 
 ## What is this?
 
@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 791 workspace `#[test]` functions (V46 — up from 790+ in V45)
+- **Tests**: 791 workspace `#[test]` functions (V47)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`

@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 20, 2026 — **V46 is current**
+**Last Updated:** April 20, 2026 — **V47 is current**
 
 ---
 
@@ -25,12 +25,13 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V46** | [LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V46** — guideStone readiness 4: three-tier (31 bare + 15 IPC + 8 NUCLEUS cross-atomic). BLAKE3 Property 3 via `validation/CHECKSUMS`, protocol tolerance. |
+| **V47** | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | **Current: V47** — absorb primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering. All blockers resolved. |
+| V46 | [LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md) | Apr 20 | Superseded by V47 — guideStone readiness 4: three-tier (31 bare + 15 IPC + 8 NUCLEUS cross-atomic). |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 791 workspace tests, V46 three-tier guideStone + BLAKE3 + protocol tolerance)
+ludoSpring (game science, 100 experiments, 791 workspace tests, V47 guideStone standard v1.2.0 + genomeBin v5.1)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
