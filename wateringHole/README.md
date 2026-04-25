@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 25, 2026 — **V49 is current**
+**Last Updated:** April 25, 2026 — **V52 is current**
 
 ---
 
@@ -25,13 +25,14 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V49** | [LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V49** — deep debt resolved. Capability-based discovery, MCP 15/15, typed IpcError in BTSP, base64 dep removed, handler tests extracted. 799 tests. |
+| **V52** | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V52** — Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. 817 tests. |
+| V49 | [LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | Deep debt resolved. Capability-based discovery, MCP 15/15, typed IpcError in BTSP, base64 dep removed, handler tests extracted. 799 tests. |
 | V47 | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | Live NUCLEUS validated (54/54 checks, exit 0). primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 799 workspace tests, V49 guideStone standard v1.2.0 + genomeBin v5.1)
+ludoSpring (game science, 100 experiments, 817 workspace tests, V52 guideStone standard v1.2.0 + genomeBin v5.1)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -107,6 +108,7 @@ See central handoffs: [V47 evolution](../../../infra/wateringHole/handoffs/LUDOS
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V49 | `handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md` | V52 Composition Loop |
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
 | V46 | `handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md` | V47 Live NUCLEUS Validated |
 | V45 | `handoffs/archive/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md` | V46 Three-Tier NUCLEUS |

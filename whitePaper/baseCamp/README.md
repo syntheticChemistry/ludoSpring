@@ -2,7 +2,7 @@
 
 **Date:** April 25, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V49 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 799 workspace tests. guideStone readiness **4** (NUCLEUS validated): `ludospring_guidestone` three-tier — Tier 1 (20 bare checks, BLAKE3 Property 3 via `validation/CHECKSUMS`), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). BTSP relay wired (typed `IpcError`). MCP surface complete (15/15 tools). Capability-based discovery (zero hardcoded primal names). `base64` dep removed (inline encoder). Handler tests extracted. Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 11 primal gaps tracked (GAP-01–GAP-11). All upstream blockers resolved.
+**Status:** V52 — 100 experiments, 30 JSON-RPC capabilities, **817** workspace tests. Game tick loop wired: `game.tick` composite handler (push→poll→record→metrics), `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` graceful degradation. `ipc::methods` constants replace all hardcoded method strings. `IpcError` typed errors throughout IPC layer. `ludospring_cell.toml` NUCLEUS cell graph (14 nodes, BTSP). guideStone readiness **4** (NUCLEUS validated): three-tier — Tier 1 (20 bare checks), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Capability-based discovery (zero hardcoded primal names). Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 11 primal gaps tracked (GAP-01–GAP-11). All upstream blockers resolved.
 
 ---
 

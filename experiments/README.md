@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 25, 2026
-**Total:** 100 experiments, 799 workspace tests (V49)
+**Total:** 100 experiments, **817** workspace tests (V52)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
 **Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
-**Live validation results:** 95/141 (67.4%) composition checks passing against genomeBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4, guideStone standard v1.2.0: three-tier architecture — Tier 1 LOCAL_CAPABILITIES (20 bare checks), Tier 2 IPC-WIRED (15 domain IPC checks), Tier 3 FULL NUCLEUS (8 cross-atomic: BearDog crypto + NestGate storage + pipeline). BTSP relay wired (typed `IpcError`). MCP surface complete (15/15 tools). Capability-based discovery (zero hardcoded names). `base64` dep removed (inline encoder). BLAKE3 Property 3 via `validation/CHECKSUMS`. Protocol tolerance (HTTP-on-UDS → SKIP). Handler tests extracted (mod.rs 818→169L). Provenance unified to `19e402c0`. 6 composition_parity.rs tests PASS (Layer 2.5). validate_composition binary wired (Layer 3, exit 2 skip without server).
+**Live validation results:** 95/141 (67.4%) composition checks passing against genomeBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4, guideStone standard v1.2.0: three-tier (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). V52: `game.tick` composite handler, `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation. `ipc::methods` constants replace all hardcoded method strings. `IpcError` typed errors throughout. `ludospring_cell.toml` NUCLEUS cell graph (14 nodes, BTSP). MCP 15/15 tools. 30 capabilities. Zero hardcoded primal names.
 
 ---
 

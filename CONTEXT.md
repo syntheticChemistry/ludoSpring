@@ -53,7 +53,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 799 workspace `#[test]` functions (V49)
+- **Tests**: 817 workspace `#[test]` functions (V52)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
