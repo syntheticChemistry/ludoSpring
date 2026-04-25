@@ -488,7 +488,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 791 total (barracuda lib + barracuda `--tests` incl. 23 ipc integration + forge + 100 experiments), 0 failures |
+| `cargo test --workspace` | 799 total (barracuda lib + barracuda `--tests` incl. 23 ipc integration + forge + 100 experiments), 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 100 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |
@@ -506,7 +506,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 | Hardcoded primal names | 0 — `discover_primals()` by capability, `viz_register()` parameterized, zero name literals |
 | Hardcoded paths | 0 — `LUDOSPRING_OUTPUT_DIR` env var + `temp_dir()` + XDG-compliant socket chain |
 | IPC integration tests | 23 tests (lifecycle, capability list, game methods, error handling, neural bridge, discovery, push client, 7 composition parity, 5 degradation) |
-| MCP support | `tools.list` + `tools.call` for AI integration (13 tool descriptors: 8 science + 5 delegation) |
+| MCP support | `tools.list` + `tools.call` for AI integration (15 tool descriptors: 8 science + 7 delegation) |
 | tarpc option | `tarpc-ipc` feature with `LudoSpringService` trait mirroring JSON-RPC surface |
 | GPU tolerances | Named constants in `tolerances::gpu` + `tolerances::validation` (single source of truth; raycaster tolerances re-exported from validation where shared) |
 | Validation infrastructure | `check_abs_or_rel`, `exit_skipped` (exit 2), `load_baseline_f64`, `OrExit<T>` |

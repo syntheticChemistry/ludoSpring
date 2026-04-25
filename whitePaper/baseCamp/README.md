@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** April 20, 2026
+**Date:** April 25, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V47 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 791 workspace tests. guideStone readiness **4** (NUCLEUS validated): `ludospring_guidestone` three-tier — Tier 1 (20 bare checks, BLAKE3 Property 3 via `validation/CHECKSUMS`), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). Three-tier validation: LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS. Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). Upstream `call_or_skip`/`is_skip_error`. v1.2.0 tolerance ordering (7 constants). Inherits primalSpring base certification (6 layers). `lifecycle.composition` handler wired. Capability-first discovery. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. Provenance unified to `19e402c0`. ecoBin: genomeBin v5.1. 10 primal gaps tracked (GAP-01–GAP-10, GAP-02 guideStone wired). All upstream blockers resolved.
+**Status:** V49 — 100 experiments, 30 JSON-RPC capabilities (27 game/health + 3 infrastructure), 799 workspace tests. guideStone readiness **4** (NUCLEUS validated): `ludospring_guidestone` three-tier — Tier 1 (20 bare checks, BLAKE3 Property 3 via `validation/CHECKSUMS`), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic: BearDog crypto, NestGate roundtrip, pipeline). BTSP relay wired (typed `IpcError`). MCP surface complete (15/15 tools). Capability-based discovery (zero hardcoded primal names). `base64` dep removed (inline encoder). Handler tests extracted. Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 11 primal gaps tracked (GAP-01–GAP-11). All upstream blockers resolved.
 
 ---
 
@@ -98,7 +98,7 @@ Key artifacts:
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
 
-### Three-Tier Validation — LOCAL_CAPABILITIES → IPC-WIRED → FULL NUCLEUS (V47)
+### Three-Tier Validation — LOCAL_CAPABILITIES → IPC-WIRED → FULL NUCLEUS (V49)
 
 The validation lifecycle extends to the guideStone level: a self-validating
 NUCLEUS node that uses the primalSpring composition API for capability-routed
@@ -297,7 +297,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 791 workspace tests (V47)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 799 workspace tests (V49)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

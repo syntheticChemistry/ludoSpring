@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 20, 2026 (V47 — guideStone readiness 4, **live NUCLEUS validated: 54/54 checks, exit 0**. Three-tier: 31 bare + 15 IPC (13 pass + 2 skip) + 8 cross-atomic. guideStone standard v1.2.0. Upstream `call_or_skip`/`is_skip_error`. v1.2.0 tolerance ordering. GAP-11 formulation divergence. 791 tests, genomeBin v5.1)
+**Last updated:** April 25, 2026 (V49 — deep debt resolved. guideStone readiness 4, live NUCLEUS validated: 54/54 checks, exit 0. BTSP relay wired (typed `IpcError`). MCP 15/15 tools. Capability-based discovery. Handler tests extracted. `base64` dep removed. 799 tests, zero clippy, genomeBin v5.1)
 
 ## What is this?
 
@@ -47,13 +47,13 @@ GPU (via toadStool delegation, CPU fallback): `game.gpu.fog_of_war`,
 Health/lifecycle: `health.check`, `health.liveness`, `health.readiness`,
 `lifecycle.status`, `capability.list`
 
-MCP: `tools.list` (13 tool descriptors: 8 science + 5 delegation), `tools.call` (dispatch to handlers)
+MCP: `tools.list` (15 tool descriptors: 8 science + 7 delegation), `tools.call` (dispatch to handlers)
 
 Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirroring JSON-RPC.
 
 ## Code quality
 
-- **Tests**: 791 workspace `#[test]` functions (V47)
+- **Tests**: 799 workspace `#[test]` functions (V49)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
