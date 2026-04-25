@@ -258,6 +258,36 @@ impl VisualizationPushClient {
         self.send_with_result(&request)
     }
 
+    /// Poll petalTongue for pending interaction events (player input).
+    ///
+    /// Returns a JSON array of events since the last poll. Each event
+    /// contains at minimum `type` (click, key, mouse, selection) and
+    /// `timestamp_ms`. Returns an empty array if no events are pending.
+    ///
+    /// This is the return path of the live interaction loop:
+    /// `game.push_scene → petalTongue → player sees scene`
+    /// `interaction.poll ← petalTongue ← player input`
+    /// `game.record_action → session state updated → next scene`
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
+    pub fn poll_interaction(
+        &self,
+        session_id: &str,
+    ) -> Result<serde_json::Value, crate::ipc::IpcError> {
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "interaction.poll",
+            "params": {
+                "session_id": session_id,
+                "domain": crate::niche::NICHE_DOMAIN,
+            },
+            "id": 1
+        });
+        self.send_with_result(&request)
+    }
+
     /// Run Tufte pre-flight validation on a game UI composition.
     ///
     /// # Errors
@@ -480,6 +510,14 @@ mod tests {
             socket: PathBuf::from("/nonexistent-subscribe.sock"),
         };
         assert!(client.subscribe_interaction("sess-1").is_err());
+    }
+
+    #[test]
+    fn poll_interaction_fails_without_connection() {
+        let client = VisualizationPushClient {
+            socket: PathBuf::from("/nonexistent-poll.sock"),
+        };
+        assert!(client.poll_interaction("sess-1").is_err());
     }
 
     #[test]

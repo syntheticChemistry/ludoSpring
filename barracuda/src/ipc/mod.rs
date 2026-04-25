@@ -34,6 +34,8 @@
 //! Unix domain socket, XDG-compliant path resolution (overridable via env).
 //! Protocol: newline-delimited JSON-RPC 2.0.
 
+pub mod btsp;
+
 mod envelope;
 mod handlers;
 mod neural_bridge;

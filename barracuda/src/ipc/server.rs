@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! Unix domain socket server for JSON-RPC 2.0.
+//! Unix domain socket server for JSON-RPC 2.0 with BTSP auto-detect.
 //!
 //! Blocking I/O with std — no async runtime dependency.
 //! Per wateringHole `UNIVERSAL_IPC_STANDARD_V3`: transport priority is
 //! native Unix socket → TCP fallback.
+//!
+//! BTSP relay: when `FAMILY_ID` is set, the server auto-detects BTSP
+//! ClientHello on first line and relays the 4-step handshake through
+//! BearDog before entering normal JSON-RPC dispatch.
 
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixListener;
@@ -11,10 +15,11 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
+use super::btsp;
 use super::envelope::JsonRpcRequest;
 use super::handlers::dispatch;
 
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 /// Resolve the socket path using XDG-compliant priority.
 ///
@@ -111,29 +116,54 @@ impl IpcServer {
     }
 
     fn handle_connection(stream: &std::os::unix::net::UnixStream) -> std::io::Result<()> {
-        let reader = BufReader::new(stream);
+        let mut reader = BufReader::new(stream);
         let mut writer = stream;
+
+        if btsp::btsp_required() {
+            match btsp::classify_first_line(&mut reader) {
+                Ok(btsp::FirstLineResult::BtspHello(hello_line)) => {
+                    debug!("BTSP ClientHello detected — relaying handshake");
+                    if let Err(e) =
+                        btsp::perform_handshake(&hello_line, &mut reader, &mut writer)
+                    {
+                        warn!(error = %e, "BTSP handshake failed");
+                        return Ok(());
+                    }
+                }
+                Ok(btsp::FirstLineResult::PlainJsonRpc(first_line)) => {
+                    debug!("plain JSON-RPC on BTSP-required socket");
+                    Self::dispatch_line(&first_line, &mut writer)?;
+                }
+                Err(e) => {
+                    warn!(error = %e, "BTSP first-line classification failed");
+                    return Ok(());
+                }
+            }
+        }
 
         for line in reader.lines() {
             let line = line?;
             if line.trim().is_empty() {
                 continue;
             }
-
-            let response = match serde_json::from_str::<JsonRpcRequest>(&line) {
-                Ok(req) => dispatch(&req),
-                Err(e) => serde_json::json!({
-                    "jsonrpc": "2.0",
-                    "error": {"code": -32700, "message": format!("parse error: {e}")},
-                    "id": null
-                })
-                .to_string(),
-            };
-
-            writer.write_all(response.as_bytes())?;
-            writer.write_all(b"\n")?;
-            writer.flush()?;
+            Self::dispatch_line(&line, &mut writer)?;
         }
+        Ok(())
+    }
+
+    fn dispatch_line<W: Write>(line: &str, writer: &mut W) -> std::io::Result<()> {
+        let response = match serde_json::from_str::<JsonRpcRequest>(line) {
+            Ok(req) => dispatch(&req),
+            Err(e) => serde_json::json!({
+                "jsonrpc": "2.0",
+                "error": {"code": -32700, "message": format!("parse error: {e}")},
+                "id": null
+            })
+            .to_string(),
+        };
+        writer.write_all(response.as_bytes())?;
+        writer.write_all(b"\n")?;
+        writer.flush()?;
         Ok(())
     }
 }

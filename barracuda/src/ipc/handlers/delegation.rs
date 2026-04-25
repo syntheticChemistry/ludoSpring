@@ -121,20 +121,28 @@ pub(super) fn handle_voice_check(req: &JsonRpcRequest) -> HandlerResult {
 pub(super) fn handle_push_scene(req: &JsonRpcRequest) -> HandlerResult {
     let p: PushSceneParams = parse_params(req)?;
 
+    let mut pushed = false;
+    let mut push_error: Option<String> = None;
+
     #[cfg(feature = "ipc")]
     {
         use crate::visualization::VisualizationPushClient;
-        if let Ok(client) = VisualizationPushClient::discover() {
-            let _ = client.push_scene(&p.session_id, &p.channel, &p.scene);
+        match VisualizationPushClient::discover() {
+            Ok(client) => match client.push_scene(&p.session_id, &p.channel, &p.scene) {
+                Ok(()) => pushed = true,
+                Err(e) => push_error = Some(e.to_string()),
+            },
+            Err(e) => push_error = Some(format!("visualization not discovered: {e}")),
         }
     }
 
     to_json(
         &req.id,
         serde_json::json!({
-            "pushed": true,
+            "pushed": pushed,
             "session_id": p.session_id,
             "channel": p.channel,
+            "error": push_error,
         }),
     )
 }

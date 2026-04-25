@@ -2,8 +2,9 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 20, 2026 (V47 — guideStone readiness 4, **live NUCLEUS validated: 54/54 checks exit 0**. Three-tier `ludospring_guidestone` — 31 bare + 15 IPC + 8 NUCLEUS cross-atomic checks. BLAKE3 Property 3, guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering. 791 tests, genomeBin v5.1. GAP-11 documented.)
+**Last updated:** April 25, 2026 (V48 — Phase 45c debt resolution. BTSP relay wired (`ipc/btsp.rs`). `interaction.poll` wired. Honest `push_scene` error reporting. Cell graph ready (`ludospring_cell.toml`). 798 tests, genomeBin v5.1. GAP-11 documented.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
+**Cell graph:** `primalSpring/graphs/cells/ludospring_cell.toml` (14 nodes, all `security_model = "btsp"`)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
 

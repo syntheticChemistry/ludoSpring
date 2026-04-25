@@ -92,7 +92,8 @@ fn dispatch_infrastructure(method: &str, req: &JsonRpcRequest) -> Option<Handler
         | "visualization.render.dashboard"
         | "visualization.export"
         | "visualization.validate"
-        | "interaction.subscribe" => neural::handle_visualization_delegation(req),
+        | "interaction.subscribe"
+        | "interaction.poll" => neural::handle_visualization_delegation(req),
         METHOD_TOOLS_LIST => mcp::handle_tools_list(req),
         METHOD_TOOLS_CALL => mcp::handle_tools_call(req),
         _ => return None,
@@ -677,7 +678,7 @@ mod tests {
     }
 
     #[test]
-    fn push_scene_always_reports_pushed() {
+    fn push_scene_reports_honest_status() {
         let req = make_request(
             METHOD_PUSH_SCENE,
             serde_json::json!({
@@ -687,9 +688,11 @@ mod tests {
             }),
         );
         let result = result_json(&dispatch(&req));
-        assert_eq!(result["pushed"], true);
         assert_eq!(result["session_id"], "pt-sess");
         assert_eq!(result["channel"], "DialogueTree");
+        // Without a live petalTongue, pushed is false and error is reported
+        assert_eq!(result["pushed"], false);
+        assert!(result["error"].is_string());
     }
 
     #[test]

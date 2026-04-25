@@ -5,6 +5,33 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V47).
 
+## [V48] — 2026-04-25
+
+### Phase 45c Debt Resolution — BTSP relay, interaction.poll, honest push_scene
+
+Absorbs primalSpring v0.9.17 Phase 45c downstream audit. Implements the three
+highest-priority debt items identified in the cell graph composition review.
+
+- **BTSP relay pattern:** Full 4-step BearDog handshake in `ipc/btsp.rs` per
+  `SOURDOUGH_BTSP_RELAY_PATTERN.md`. Auto-detects BTSP ClientHello vs. plain
+  JSON-RPC on first line. Gates on `FAMILY_ID` via `btsp_required()`. The
+  ludoSpring IPC server (`ludospring-barracuda`) now speaks BTSP when deployed
+  in a NUCLEUS cell graph with `security_model = "btsp"`.
+- **`interaction.poll` wired:** New `poll_interaction()` method on
+  `VisualizationPushClient` calls petalTongue's `interaction.poll` JSON-RPC.
+  Dispatched through infrastructure tier (`viz_management_dispatch`). Degraded
+  fallback returns empty events when no viz primal is discovered.
+  This is the missing return path for the live interaction loop:
+  `game.push_scene → petalTongue → player → interaction.poll → game.record_action`.
+- **Honest `push_scene`:** `handle_push_scene` now reports actual push status
+  (`pushed: true/false`) and propagates error details instead of silently
+  swallowing failures. Wire contract is honest telemetry.
+- **plasmidBin→genomeBin in ludospring.rs:** CLI help and log strings updated.
+- **Tests:** 791 → **798** (+7: BTSP relay, interaction.poll, honest push_scene).
+- **Clippy:** zero warnings (workspace-wide).
+- **Cell graph ready:** `primalSpring/graphs/cells/ludospring_cell.toml` declares
+  14 nodes, all `security_model = "btsp"`, `ludospring-barracuda` at order 12.
+
 ## [V47] — 2026-04-20
 
 ### Live NUCLEUS Validation — 54/54 checks, guideStone standard v1.2.0, genomeBin v5.1

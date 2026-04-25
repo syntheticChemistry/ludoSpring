@@ -15,7 +15,7 @@ categories = ["science", "game-engines", "command-line-utilities"]
 default = []
 gpu = ["barracuda/gpu", "dep:wgpu", "dep:tokio"]
 # JSON-RPC IPC server for biomeOS (ludospring-server binary).
-ipc = ["dep:clap", "dep:tracing", "dep:tracing-subscriber", "dep:signal-hook", "dep:tokio"]
+ipc = ["dep:clap", "dep:tracing", "dep:tracing-subscriber", "dep:signal-hook", "dep:tokio", "dep:base64"]
 # Typed tarpc surface alongside JSON-RPC (UNIVERSAL_IPC_STANDARD_V3).
 tarpc-ipc = ["dep:tarpc", "dep:tokio"]
 # Level 5 guideStone: self-validating NUCLEUS node via primalSpring composition API.
@@ -45,6 +45,7 @@ wgpu = { version = "28", default-features = false, features = [
 ], optional = true }
 tokio = { version = "1", features = ["rt", "net", "io-util", "sync"], optional = true }
 tarpc = { version = "0.37", features = ["full"], optional = true }
+base64 = { version = "0.22", optional = true }
 primalspring = { path = "../../primalSpring/ecoPrimal", optional = true }
 
 [[bin]]

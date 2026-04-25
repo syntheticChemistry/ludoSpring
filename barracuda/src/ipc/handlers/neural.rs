@@ -206,6 +206,17 @@ fn viz_delegation_without_ipc(
                 "domain": domain,
             }),
         ),
+        "interaction.poll" => to_json(
+            &req.id,
+            json!({
+                "delegated": false,
+                "degraded": true,
+                "events": [],
+                "detail": "interaction.poll is IPC-delegated; the ipc feature is disabled in this build.",
+                "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
+                "domain": domain,
+            }),
+        ),
         _ => viz_degraded_peer(
             req,
             "ipc feature disabled; visualization delegation unavailable",
@@ -253,6 +264,17 @@ fn viz_delegation_no_peer(
                 "subscribed": false,
                 "degraded": true,
                 "detail": "Subscription is acknowledged locally but not established: no visualization primal was discovered.",
+                "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
+                "domain": domain,
+            }),
+        ),
+        "interaction.poll" => to_json(
+            &req.id,
+            json!({
+                "delegated": false,
+                "degraded": true,
+                "events": [],
+                "detail": "No visualization primal discovered; interaction.poll requires a live petalTongue.",
                 "session_id": params.get("session_id").cloned().unwrap_or(json!(null)),
                 "domain": domain,
             }),
@@ -379,6 +401,22 @@ fn viz_management_dispatch(
                     "session_id": session_id,
                     "domain": domain,
                     "peer": peer,
+                }),
+            )
+        }
+        "interaction.poll" => {
+            let session_id = param_str(params, "session_id", "");
+            let events = client
+                .poll_interaction(session_id)
+                .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
+            to_json(
+                &req.id,
+                json!({
+                    "delegated": true,
+                    "degraded": false,
+                    "session_id": session_id,
+                    "domain": domain,
+                    "events": events,
                 }),
             )
         }
