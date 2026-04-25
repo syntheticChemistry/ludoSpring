@@ -21,6 +21,9 @@ pub const NICHE_DOMAIN: &str = "game";
 /// Not a dependency on biomeOS — just the conventional socket namespace.
 pub const ECOSYSTEM_SOCKET_DIR: &str = "biomeos";
 
+/// Default family ID when none is set in the environment.
+const DEFAULT_FAMILY_ID: &str = "default";
+
 /// All capabilities this primal exposes.
 ///
 /// Organized by domain:
@@ -280,7 +283,7 @@ pub fn cost_estimates() -> serde_json::Value {
 pub fn family_id() -> String {
     std::env::var("FAMILY_ID")
         .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
-        .unwrap_or_else(|_| "default".to_string())
+        .unwrap_or_else(|_| DEFAULT_FAMILY_ID.to_string())
 }
 
 /// Socket directories in XDG-compliant priority order.

@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 25, 2026 (V48 — Phase 45c debt resolution. BTSP relay wired (`ipc/btsp.rs`). `interaction.poll` wired. Honest `push_scene` error reporting. Cell graph ready (`ludospring_cell.toml`). 798 tests, genomeBin v5.1. GAP-11 documented.)
+**Last updated:** April 25, 2026 (V49 — Deep debt resolution. Handler tests extracted (mod.rs 818→169L). Capability-based discovery (validate_primal_proof, validate_composition). MCP surface complete (15/15 tools). base64 dep removed (inline encoder). Typed IpcError in btsp.rs. Named constants. 799 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `primalSpring/graphs/cells/ludospring_cell.toml` (14 nodes, all `security_model = "btsp"`)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

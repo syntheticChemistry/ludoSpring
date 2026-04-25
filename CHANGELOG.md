@@ -5,6 +5,34 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V47).
 
+## [V49] — 2026-04-25
+
+### Deep Debt Resolution — idiomatic Rust, capability-based, zero external deps
+
+Systematic audit and evolution of remaining deep debt across the codebase.
+
+- **Handler test extraction:** Extracted 650+ lines of inline tests from
+  `ipc/handlers/mod.rs` (818L → 169L) to `ipc/handlers/tests.rs`. Production
+  dispatch module is now concise and readable.
+- **Capability-based discovery:** `validate_primal_proof.rs` now discovers
+  barraCuda by `compute`/`tensor` capability from `niche::DEPENDENCIES` instead
+  of hardcoded socket names. `validate_composition.rs` derives fallback socket
+  names from `niche::NICHE_NAME`/`NICHE_DOMAIN` constants.
+- **MCP surface complete:** `tools.call` and `mcp_tools_descriptors` now expose
+  all 15 `game.*` methods (added `game.record_action`, `game.voice_check`).
+  Previously only 13 were wired.
+- **`base64` external dep removed:** Replaced with 20-line inline `base64_encode`
+  (standard alphabet, padding). One fewer transitive dependency. RFC 4648 test
+  vectors validate correctness.
+- **Typed errors in BTSP:** All `Result<_, String>` in `ipc/btsp.rs` evolved to
+  `Result<_, IpcError>` — `beardog_call`, `write_json_line`, `write_error_frame`,
+  `classify_first_line`, `perform_handshake` now use the typed error hierarchy
+  (`Connect`, `Io`, `Serialization`, `RpcError`, `NotFound`, `NoResult`).
+- **Named constants:** `ACCEPT_POLL_MS` replaces magic `50` in server accept
+  loop. `DEFAULT_FAMILY_ID` replaces inline `"default"` string in `niche.rs`.
+- **Tests:** 798 → **799** (+1: `base64_encode_known_vectors`).
+- **Clippy:** zero warnings (workspace-wide).
+
 ## [V48] — 2026-04-25
 
 ### Phase 45c Debt Resolution — BTSP relay, interaction.poll, honest push_scene

@@ -80,6 +80,13 @@ fn extract_scalar(resp: &serde_json::Value) -> Option<f64> {
         .and_then(serde_json::Value::as_f64)
 }
 
+/// Discover a socket providing the `compute` capability.
+///
+/// Priority:
+/// 1. `BARRACUDA_SOCK` env override (explicit)
+/// 2. Capability-based scan: any `.sock` file whose name contains `compute`
+///    or matches the known dependency for `compute` in `niche::DEPENDENCIES`
+/// 3. Pattern fallback: scan for any `.sock` in ecosystem dirs
 fn discover_barracuda_socket() -> Option<PathBuf> {
     if let Ok(explicit) = std::env::var("BARRACUDA_SOCK") {
         let p = PathBuf::from(&explicit);
@@ -87,21 +94,41 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
             return Some(p);
         }
     }
+
+    let dep = ludospring_barracuda::niche::DEPENDENCIES
+        .iter()
+        .find(|d| d.capability == "compute" || d.capability == "tensor");
+    let dep_name = dep.map(|d| d.name);
+    let capability = dep.map_or("compute", |d| d.capability);
+
     let dirs = ludospring_barracuda::niche::socket_dirs();
     for dir in &dirs {
-        for name in &["barracuda-core.sock", "barracuda.sock", "compute.sock"] {
-            let path = dir.join(name);
-            if path.exists() {
-                return Some(path);
+        let cap_sock = dir.join(format!("{capability}.sock"));
+        if cap_sock.exists() {
+            return Some(cap_sock);
+        }
+        if let Some(name) = dep_name {
+            let named = dir.join(format!("{name}.sock"));
+            if named.exists() {
+                return Some(named);
+            }
+            let named_core = dir.join(format!("{name}-core.sock"));
+            if named_core.exists() {
+                return Some(named_core);
             }
         }
+    }
+    for dir in &dirs {
         if let Ok(entries) = std::fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let p = entry.path();
                 if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                    if n.starts_with("barracuda")
-                        && p.extension()
-                            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+                    let is_sock = p
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"));
+                    if is_sock
+                        && (n.contains(capability)
+                            || dep_name.is_some_and(|dn| n.starts_with(dn)))
                     {
                         return Some(p);
                     }

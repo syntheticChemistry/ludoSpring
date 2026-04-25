@@ -1663,7 +1663,6 @@ name = "ludospring-barracuda"
 version = "0.1.0"
 dependencies = [
  "barracuda",
- "base64",
  "clap",
  "primalspring",
  "proptest",

@@ -8,8 +8,8 @@
 # Deploy graph: graphs/ludospring_deploy.toml
 # Gaming niche: graphs/ludospring_gaming_niche.toml
 #
-# Date: April 18, 2026
-# Version: V48 (100 experiments, 798 #[test] functions, guideStone readiness 4, BTSP relay, standard v1.2.0)
+# Date: April 25, 2026
+# Version: V49 (100 experiments, 799 #[test] functions, guideStone readiness 4, BTSP relay, MCP 15/15, standard v1.2.0)
 
 niche:
   id: "ludospring-game"

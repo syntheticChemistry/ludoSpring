@@ -18,6 +18,7 @@ use serde_json::{Value, json};
 use tracing::info;
 
 use crate::ipc::discovery;
+use crate::ipc::envelope::IpcError;
 
 const BTSP_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -45,14 +46,40 @@ fn is_btsp_client_hello(line: &str) -> bool {
     line.contains("\"protocol\"") && line.contains("\"btsp\"")
 }
 
+/// Standard base64 alphabet.
+const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/// Base64-encode a byte slice (standard alphabet, with padding).
+fn base64_encode(input: &[u8]) -> String {
+    let mut out = String::with_capacity(input.len().div_ceil(3) * 4);
+    for chunk in input.chunks(3) {
+        let b0 = chunk[0];
+        let b1 = chunk.get(1).copied().unwrap_or(0);
+        let b2 = chunk.get(2).copied().unwrap_or(0);
+        let triple = u32::from(b0) << 16 | u32::from(b1) << 8 | u32::from(b2);
+        out.push(B64[(triple >> 18 & 0x3F) as usize] as char);
+        out.push(B64[(triple >> 12 & 0x3F) as usize] as char);
+        if chunk.len() > 1 {
+            out.push(B64[(triple >> 6 & 0x3F) as usize] as char);
+        } else {
+            out.push('=');
+        }
+        if chunk.len() > 2 {
+            out.push(B64[(triple & 0x3F) as usize] as char);
+        } else {
+            out.push('=');
+        }
+    }
+    out
+}
+
 /// Resolve the family_seed for BearDog: base64-encode the raw env string bytes.
 fn resolve_family_seed() -> Option<String> {
-    use base64::Engine;
     let raw = std::env::var("FAMILY_SEED")
         .or_else(|_| std::env::var("BEARDOG_FAMILY_SEED"))
         .or_else(|_| std::env::var("BIOMEOS_FAMILY_SEED"))
         .ok()?;
-    Some(base64::engine::general_purpose::STANDARD.encode(raw.trim().as_bytes()))
+    Some(base64_encode(raw.trim().as_bytes()))
 }
 
 /// Find BearDog's socket via capability-based discovery.
@@ -64,58 +91,57 @@ fn discover_beardog() -> Option<PathBuf> {
 ///
 /// Uses line-delimited JSON (BearDog keeps sockets open, so we read
 /// one line rather than `read_to_end`).
-fn beardog_call(socket: &std::path::Path, request: &Value) -> Result<Value, String> {
-    let stream = UnixStream::connect(socket).map_err(|e| format!("BearDog connect: {e}"))?;
+fn beardog_call(socket: &std::path::Path, request: &Value) -> Result<Value, IpcError> {
+    let stream = UnixStream::connect(socket).map_err(IpcError::Connect)?;
     stream
         .set_read_timeout(Some(BTSP_TIMEOUT))
-        .map_err(|e| format!("BearDog timeout: {e}"))?;
+        .map_err(IpcError::Timeout)?;
     stream
         .set_write_timeout(Some(BTSP_TIMEOUT))
-        .map_err(|e| format!("BearDog timeout: {e}"))?;
+        .map_err(IpcError::Timeout)?;
 
-    let mut writer = stream.try_clone().map_err(|e| format!("BearDog clone: {e}"))?;
-    let mut msg =
-        serde_json::to_string(request).map_err(|e| format!("BearDog serialize: {e}"))?;
+    let mut writer = stream.try_clone().map_err(IpcError::Io)?;
+    let mut msg = serde_json::to_string(request)
+        .map_err(|e| IpcError::Serialization(e.to_string()))?;
     msg.push('\n');
-    writer
-        .write_all(msg.as_bytes())
-        .map_err(|e| format!("BearDog write: {e}"))?;
-    writer
-        .flush()
-        .map_err(|e| format!("BearDog flush: {e}"))?;
+    writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
+    writer.flush().map_err(IpcError::Io)?;
 
     let mut reader = BufReader::new(stream);
     let mut response = String::new();
-    reader
-        .read_line(&mut response)
-        .map_err(|e| format!("BearDog read: {e}"))?;
+    reader.read_line(&mut response).map_err(IpcError::Io)?;
 
-    let parsed: Value =
-        serde_json::from_str(&response).map_err(|e| format!("BearDog parse: {e}"))?;
+    let parsed: Value = serde_json::from_str(&response)
+        .map_err(|e| IpcError::Serialization(e.to_string()))?;
 
     if let Some(err) = parsed.get("error") {
-        return Err(format!("BearDog RPC error: {err}"));
+        let code = err
+            .get("code")
+            .and_then(Value::as_i64)
+            .unwrap_or(-32603);
+        let message = err
+            .get("message")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown")
+            .to_owned();
+        return Err(IpcError::RpcError { code, message });
     }
 
-    parsed
-        .get("result")
-        .cloned()
-        .ok_or_else(|| "BearDog: missing result field".to_owned())
+    parsed.get("result").cloned().ok_or(IpcError::NoResult)
 }
 
 /// Write a JSON line + newline to a writer.
-fn write_json_line<W: Write>(writer: &mut W, value: &Value) -> Result<(), String> {
-    let mut msg = serde_json::to_string(value).map_err(|e| format!("serialize: {e}"))?;
+fn write_json_line<W: Write>(writer: &mut W, value: &Value) -> Result<(), IpcError> {
+    let mut msg = serde_json::to_string(value)
+        .map_err(|e| IpcError::Serialization(e.to_string()))?;
     msg.push('\n');
-    writer
-        .write_all(msg.as_bytes())
-        .map_err(|e| format!("write: {e}"))?;
-    writer.flush().map_err(|e| format!("flush: {e}"))?;
+    writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
+    writer.flush().map_err(IpcError::Io)?;
     Ok(())
 }
 
 /// Write a JSON error frame to the client (never drop silently).
-fn write_error_frame<W: Write>(writer: &mut W, reason: &str) -> Result<(), String> {
+fn write_error_frame<W: Write>(writer: &mut W, reason: &str) -> Result<(), IpcError> {
     write_json_line(
         writer,
         &json!({
@@ -137,15 +163,14 @@ pub enum FirstLineResult {
 ///
 /// # Errors
 ///
-/// Returns an error if the first line cannot be read or is empty.
-pub fn classify_first_line<R: BufRead>(reader: &mut R) -> Result<FirstLineResult, String> {
+/// Returns `IpcError::Io` if the first line cannot be read, or
+/// `IpcError::NoResult` if the first line is empty.
+pub fn classify_first_line<R: BufRead>(reader: &mut R) -> Result<FirstLineResult, IpcError> {
     let mut first_line = String::new();
-    reader
-        .read_line(&mut first_line)
-        .map_err(|e| format!("read first line: {e}"))?;
+    reader.read_line(&mut first_line).map_err(IpcError::Io)?;
 
     if first_line.trim().is_empty() {
-        return Err("empty first line".to_owned());
+        return Err(IpcError::NoResult);
     }
 
     if is_btsp_client_hello(&first_line) {
@@ -162,15 +187,16 @@ pub fn classify_first_line<R: BufRead>(reader: &mut R) -> Result<FirstLineResult
 ///
 /// # Errors
 ///
-/// Returns an error if BearDog is not discoverable, the family seed is
-/// missing, or any step of the handshake fails.
+/// Returns `IpcError::NotFound` if BearDog is not discoverable or the
+/// family seed is missing, `IpcError::Serialization` for parse failures,
+/// or propagates errors from `beardog_call`.
 pub fn perform_handshake<R: BufRead, W: Write>(
     client_hello_line: &str,
     reader: &mut R,
     writer: &mut W,
-) -> Result<(), String> {
+) -> Result<(), IpcError> {
     let hello: Value = serde_json::from_str(client_hello_line)
-        .map_err(|e| format!("parse ClientHello: {e}"))?;
+        .map_err(|e| IpcError::Serialization(format!("parse ClientHello: {e}")))?;
 
     let client_ephemeral_pub = hello
         .get("client_ephemeral_pub")
@@ -178,20 +204,18 @@ pub fn perform_handshake<R: BufRead, W: Write>(
         .unwrap_or("")
         .to_owned();
 
-    let beardog_socket = discover_beardog().ok_or("BearDog not discovered")?;
+    let beardog_socket =
+        discover_beardog().ok_or_else(|| IpcError::NotFound("BearDog not discovered".into()))?;
 
-    let family_seed =
-        resolve_family_seed().ok_or("FAMILY_SEED / BEARDOG_FAMILY_SEED not set")?;
+    let family_seed = resolve_family_seed()
+        .ok_or_else(|| IpcError::NotFound("FAMILY_SEED / BEARDOG_FAMILY_SEED not set".into()))?;
 
-    // Step 2: btsp.session.create
     let create_result = beardog_call(
         &beardog_socket,
         &json!({
             "jsonrpc": "2.0",
             "method": "btsp.session.create",
-            "params": {
-                "family_seed": family_seed,
-            },
+            "params": { "family_seed": family_seed },
             "id": 1
         }),
     )
@@ -206,7 +230,6 @@ pub fn perform_handshake<R: BufRead, W: Write>(
         .cloned()
         .unwrap_or(Value::Null);
 
-    // Step 3: Send ServerHello to client
     let server_hello = json!({
         "version": 1,
         "server_ephemeral_pub": create_result.get("server_ephemeral_pub").unwrap_or(&Value::Null),
@@ -216,15 +239,11 @@ pub fn perform_handshake<R: BufRead, W: Write>(
     write_json_line(writer, &server_hello)?;
     info!("BTSP: ServerHello sent");
 
-    // Step 4: Read ChallengeResponse from client
     let mut response_line = String::new();
-    reader
-        .read_line(&mut response_line)
-        .map_err(|e| format!("read ChallengeResponse: {e}"))?;
+    reader.read_line(&mut response_line).map_err(IpcError::Io)?;
     let challenge_resp: Value = serde_json::from_str(&response_line)
-        .map_err(|e| format!("parse ChallengeResponse: {e}"))?;
+        .map_err(|e| IpcError::Serialization(format!("parse ChallengeResponse: {e}")))?;
 
-    // Step 5: btsp.session.verify
     let verify_result = beardog_call(
         &beardog_socket,
         &json!({
@@ -250,11 +269,13 @@ pub fn perform_handshake<R: BufRead, W: Write>(
         .unwrap_or(false);
 
     if !verified {
-        write_error_frame(writer, "BTSP verification failed")?;
-        return Err("BTSP verification failed".to_owned());
+        let _ = write_error_frame(writer, "BTSP verification failed");
+        return Err(IpcError::RpcError {
+            code: -32001,
+            message: "BTSP verification failed".into(),
+        });
     }
 
-    // Step 6: Send HandshakeComplete to client
     let complete = json!({
         "status": "ok",
         "session_id": verify_result.get("session_id").unwrap_or(&session_token),
@@ -306,6 +327,16 @@ mod tests {
         let mut reader = std::io::BufReader::new(input.as_bytes());
         let result = classify_first_line(&mut reader).unwrap();
         assert!(matches!(result, FirstLineResult::PlainJsonRpc(_)));
+    }
+
+    #[test]
+    fn base64_encode_known_vectors() {
+        assert_eq!(base64_encode(b""), "");
+        assert_eq!(base64_encode(b"f"), "Zg==");
+        assert_eq!(base64_encode(b"fo"), "Zm8=");
+        assert_eq!(base64_encode(b"foo"), "Zm9v");
+        assert_eq!(base64_encode(b"foobar"), "Zm9vYmFy");
+        assert_eq!(base64_encode(b"Hello, World!"), "SGVsbG8sIFdvcmxkIQ==");
     }
 
     #[test]

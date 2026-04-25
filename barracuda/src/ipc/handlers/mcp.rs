@@ -7,12 +7,12 @@ use crate::ipc::{
     METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
     METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
     METHOD_GENERATE_NOISE, METHOD_NARRATE_ACTION, METHOD_NPC_DIALOGUE, METHOD_PUSH_SCENE,
-    METHOD_WFC_STEP,
+    METHOD_RECORD_ACTION, METHOD_VOICE_CHECK, METHOD_WFC_STEP,
 };
 
 use super::delegation::{
     handle_begin_session, handle_complete_session, handle_narrate_action, handle_npc_dialogue,
-    handle_push_scene,
+    handle_push_scene, handle_record_action, handle_voice_check,
 };
 use super::science::{
     handle_accessibility, handle_analyze_ui, handle_difficulty_adjustment, handle_engagement,
@@ -48,6 +48,8 @@ pub(super) fn handle_tools_call(req: &JsonRpcRequest) -> HandlerResult {
         METHOD_NPC_DIALOGUE => handle_npc_dialogue(&inner),
         METHOD_NARRATE_ACTION => handle_narrate_action(&inner),
         METHOD_PUSH_SCENE => handle_push_scene(&inner),
+        METHOD_RECORD_ACTION => handle_record_action(&inner),
+        METHOD_VOICE_CHECK => handle_voice_check(&inner),
         _ => Err(JsonRpcError::method_not_found(&req.id, &p.name)),
     }
 }
@@ -271,6 +273,31 @@ pub(super) fn mcp_tools_descriptors() -> serde_json::Value {
                     "scene": { "description": "Scene payload (any JSON value)." }
                 },
                 "required": ["session_id", "channel", "scene"]
+            }
+        },
+        {
+            "name": METHOD_RECORD_ACTION,
+            "description": "Record a player action in the provenance DAG.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "session_id": { "type": "string", "description": "Session ID from game.begin_session." },
+                    "action": { "description": "Action payload (any JSON value with at least a 'type' field)." }
+                },
+                "required": ["session_id", "action"]
+            }
+        },
+        {
+            "name": METHOD_VOICE_CHECK,
+            "description": "AI voice personality check for narrative consistency.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "voice_name": { "type": "string", "description": "Name of the voice personality." },
+                    "voice_personality": { "type": "string", "description": "Personality description prompt." },
+                    "game_state": { "type": "string", "description": "Current game state context." }
+                },
+                "required": ["voice_name", "voice_personality", "game_state"]
             }
         }
     ])

@@ -21,6 +21,8 @@ use super::handlers::dispatch;
 
 use tracing::{debug, error, info, warn};
 
+const ACCEPT_POLL_MS: u64 = 50;
+
 /// Resolve the socket path using XDG-compliant priority.
 ///
 /// Delegates to [`crate::niche::resolve_server_socket`] for the full chain.
@@ -107,7 +109,7 @@ impl IpcServer {
                     }
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    std::thread::sleep(Duration::from_millis(50));
+                    std::thread::sleep(Duration::from_millis(ACCEPT_POLL_MS));
                 }
                 Err(e) => error!(error = %e, "IPC accept error"),
             }

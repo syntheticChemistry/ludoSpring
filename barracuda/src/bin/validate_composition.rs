@@ -124,8 +124,13 @@ fn discover_socket() -> Option<PathBuf> {
             return Some(c);
         }
     }
+    let fallback_names = [
+        format!("{}.sock", niche::NICHE_NAME),
+        format!("{}-server.sock", niche::NICHE_NAME),
+        format!("{}.sock", niche::NICHE_DOMAIN),
+    ];
     for dir in niche::socket_dirs() {
-        for name in &["ludospring.sock", "ludospring-server.sock", "game.sock"] {
+        for name in &fallback_names {
             let c = dir.join(name);
             if c.exists() {
                 return Some(c);
