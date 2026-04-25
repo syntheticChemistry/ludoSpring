@@ -653,3 +653,75 @@ fn gpu_fog_of_war_degrades_without_toadstool() {
         "compute dispatch unavailable — CPU fallback active"
     );
 }
+
+#[test]
+fn game_tick_returns_composite_state() {
+    let req = make_request(
+        "game.tick",
+        serde_json::json!({
+            "session_id": "tick-1",
+            "channel": "combat",
+            "scene": {"type": "grid", "entities": []},
+            "action": {"type": "move", "x": 5}
+        }),
+    );
+    let result = result_json(&dispatch(&req));
+    assert_eq!(result["session_id"], "tick-1");
+    assert!(result.get("scene_pushed").is_some());
+    assert!(result.get("scene_degraded").is_some());
+    assert!(result.get("interaction_events").is_some());
+    assert!(result.get("engagement").is_some());
+    assert!(result.get("frame_budget_ms").is_some());
+}
+
+#[test]
+fn game_tick_minimal_without_action() {
+    let req = make_request(
+        "game.tick",
+        serde_json::json!({
+            "session_id": "tick-2",
+            "scene": {"type": "dialogue"}
+        }),
+    );
+    let result = result_json(&dispatch(&req));
+    assert_eq!(result["session_id"], "tick-2");
+    assert_eq!(result["action_recorded"], false);
+}
+
+#[test]
+fn subscribe_interaction_degrades_without_peer() {
+    let req = make_request(
+        "game.subscribe_interaction",
+        serde_json::json!({"session_id": "s1"}),
+    );
+    let result = result_json(&dispatch(&req));
+    assert_eq!(result["session_id"], "s1");
+    assert!(result.get("subscribed").is_some());
+    assert!(result.get("degraded").is_some());
+}
+
+#[test]
+fn poll_interaction_degrades_without_peer() {
+    let req = make_request(
+        "game.poll_interaction",
+        serde_json::json!({"session_id": "s1"}),
+    );
+    let result = result_json(&dispatch(&req));
+    assert_eq!(result["session_id"], "s1");
+    assert!(result.get("events").is_some());
+    assert!(result.get("degraded").is_some());
+}
+
+#[test]
+fn push_scene_reports_degraded_field() {
+    let req = make_request(
+        "game.push_scene",
+        serde_json::json!({
+            "session_id": "s1",
+            "channel": "test",
+            "scene": {"type": "grid"}
+        }),
+    );
+    let result = result_json(&dispatch(&req));
+    assert!(result.get("degraded").is_some());
+}

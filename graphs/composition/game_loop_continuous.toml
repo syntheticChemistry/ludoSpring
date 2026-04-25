@@ -17,7 +17,7 @@
 # Reference: primalSpring graphs/science/gaming_mesh_chimera.toml,
 #            primalSpring graphs/gen4/gen4_storytelling_full.toml
 #
-# STATUS: Active (Mar 30, 2026) — V36 biomeOS v2.80 capability routing,
+# STATUS: Active (Apr 25, 2026) — V51 typed composition, interaction loop,
 #         barraCuda 30 methods on IPC, graph.execute E2E still evolving
 
 [graph]
@@ -66,18 +66,28 @@ required = false
 capabilities = ["visualization.render.scene"]
 
 [[graph.node]]
-name = "provenance_stamp"
+name = "poll_interaction"
 order = 4
-by_capability = "dag"
+by_capability = "visualization"
 health_method = "health.liveness"
 spawn = false
 depends_on = ["render_scene"]
+required = false
+capabilities = ["interaction.poll"]
+
+[[graph.node]]
+name = "provenance_stamp"
+order = 5
+by_capability = "dag"
+health_method = "health.liveness"
+spawn = false
+depends_on = ["poll_interaction"]
 required = false
 capabilities = ["dag.event.append"]
 
 [[graph.node]]
 name = "crypto_sign"
-order = 5
+order = 6
 by_capability = "security"
 health_method = "health.check"
 spawn = false

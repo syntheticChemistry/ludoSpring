@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 25, 2026 (V50 — IpcError debt resolved. All 43 IPC client functions evolved from `Result<_, String>` to `Result<_, IpcError>`. `classify_io_error` and query methods absorbed from primalSpring v0.9.17. Zero `Result<_, String>` in entire IPC layer. 760 tests, zero clippy.)
+**Last updated:** April 25, 2026 (V52 — Game tick loop: `game.tick` composite handler, `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation; 30 capabilities; `ludospring_cell.toml` NUCLEUS cell graph. 817 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `primalSpring/graphs/cells/ludospring_cell.toml` (14 nodes, all `security_model = "btsp"`)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -28,6 +28,10 @@
 | `ipc::methods` constants (viz, interaction, health, lifecycle, capability) | primalSpring v0.9.17 `ecoPrimal/src/ipc/methods.rs` | `ipc/methods.rs` (V51) |
 | `is_skip_error` graceful degradation pattern | primalSpring v0.9.17 `ecoPrimal/src/composition/mod.rs` | `ipc/envelope.rs` (V51) |
 | Constant-based dispatch routing (zero hardcoded method strings) | primalSpring v0.9.17 composition patterns | `handlers/mod.rs`, `handlers/neural.rs`, `push_client.rs` (V51) |
+| `game.tick` composite handler (push→poll→record→metrics) | primalSpring `CompositionContext` loop pattern | `handlers/delegation.rs` (V52) |
+| `game.subscribe_interaction` / `game.poll_interaction` | petalTongue interaction domain | `handlers/delegation.rs` (V52) |
+| `handle_push_scene` semantic `is_skip_error` degradation | primalSpring `call_or_skip` pattern | `handlers/delegation.rs` (V52) |
+| `ludospring_cell.toml` NUCLEUS cell graph (14 nodes) | primalSpring cell deployment pattern | `graphs/ludospring_cell.toml` (V52) |
 
 ---
 

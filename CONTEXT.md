@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 25, 2026 (V51 — Typed composition patterns from primalSpring v0.9.17: `ipc::methods` module (19 constants) replaces ~30 hardcoded method strings; `IpcError::is_skip_error()` for graceful degradation; handler dispatch and `VisualizationPushClient` evolved to constant-based routing. 810 tests, zero clippy, genomeBin v5.1)
+**Last updated:** April 25, 2026 (V52 — Game tick loop: `game.tick` composite handler (push→poll→record→metrics), `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation; `handle_push_scene` semantic errors; 30 capabilities; `ludospring_cell.toml` NUCLEUS cell graph; 817 tests, zero clippy, genomeBin v5.1)
 
 ## What is this?
 

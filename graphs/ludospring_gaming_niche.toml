@@ -20,7 +20,7 @@
 #   Once biomeOS supports Continuous coordination mode, this graph evolves
 #   from Sequential deploy to Continuous tick execution.
 #
-# STATUS: Active (Mar 16, 2026) — cross-ecosystem deep debt V23
+# STATUS: Active (Apr 25, 2026) — V51 typed composition, interaction loop
 #
 # Usage:
 #   biomeos deploy graphs/ludospring_gaming_niche.toml
@@ -141,6 +141,13 @@ timeout_ms = 15000
 "game.record_action" = "game.record_action"
 "game.complete_session" = "game.complete_session"
 "game.poll_telemetry" = "game.poll_telemetry"
+"game.tick" = "game.tick"
+"game.subscribe_interaction" = "game.subscribe_interaction"
+"game.poll_interaction" = "game.poll_interaction"
+"game.push_scene" = "game.push_scene"
+"game.npc_dialogue" = "game.npc_dialogue"
+"game.storage_put" = "game.storage_put"
+"game.storage_get" = "game.storage_get"
 
 [[nodes]]
 id = "germinate_petaltongue"
@@ -173,6 +180,10 @@ timeout_ms = 20000
 "ui.render" = "ui.render"
 "ui.display_status" = "ui.display_status"
 "interaction.subscribe" = "interaction.subscribe"
+"interaction.poll" = "interaction.poll"
+"visualization.render.scene" = "visualization.render.scene"
+"visualization.render.stream" = "visualization.render.stream"
+"visualization.render.dashboard" = "visualization.render.dashboard"
 
 # =============================================================================
 # Phase 3: Optional accelerators

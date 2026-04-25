@@ -56,8 +56,11 @@ pub const CAPABILITIES: &[&str] = &[
     "game.npc_dialogue",
     "game.narrate_action",
     "game.voice_check",
-    // ── Visualization (petalTongue) ─────────────────────────────────────────
+    // ── Visualization & interaction (petalTongue) ──────────────────────────
     "game.push_scene",
+    "game.tick",
+    "game.subscribe_interaction",
+    "game.poll_interaction",
     // ── DAG queries (rhizoCrypt) ────────────────────────────────────────────
     "game.query_vertices",
     // ── Certificates (loamSpine) ────────────────────────────────────────────
@@ -98,6 +101,9 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
     ("narrate_action", "game.narrate_action"),
     ("voice_check", "game.voice_check"),
     ("push_scene", "game.push_scene"),
+    ("game_tick", "game.tick"),
+    ("subscribe_interaction", "game.subscribe_interaction"),
+    ("poll_interaction", "game.poll_interaction"),
     ("query_vertices", "game.query_vertices"),
     ("mint_certificate", "game.mint_certificate"),
     ("storage_put", "game.storage_put"),
@@ -225,6 +231,9 @@ pub fn operation_dependencies() -> serde_json::Value {
         "game.narrate_action": { "requires": ["action", "context"], "external": ["ai.suggest"] },
         "game.voice_check": { "requires": ["voice_name", "voice_personality", "game_state"], "external": ["ai.analyze"] },
         "game.push_scene": { "requires": ["session_id", "channel", "scene"], "external": ["visualization.render.scene"] },
+        "game.tick": { "requires": ["session_id", "scene"], "external": ["visualization.render.scene", "interaction.poll"] },
+        "game.subscribe_interaction": { "requires": ["session_id"], "external": ["interaction.subscribe"] },
+        "game.poll_interaction": { "requires": ["session_id"], "external": ["interaction.poll"] },
         "game.query_vertices": { "requires": ["session_id"], "external": ["dag.vertex.query"] },
         "game.mint_certificate": { "requires": ["cert_type", "owner", "payload"], "external": ["certificate.mint"] },
         "game.storage_put": { "requires": ["key", "data"], "external": ["storage.store"] },
@@ -262,6 +271,9 @@ pub fn cost_estimates() -> serde_json::Value {
         "game.narrate_action": { "typical_latency_us": 300_000, "cpu_intensity": "external", "memory_bytes": 2048 },
         "game.voice_check": { "typical_latency_us": 200_000, "cpu_intensity": "external", "memory_bytes": 2048 },
         "game.push_scene": { "typical_latency_us": 1000, "cpu_intensity": "low", "memory_bytes": 8192 },
+        "game.tick": { "typical_latency_us": 5000, "cpu_intensity": "medium", "memory_bytes": 32768 },
+        "game.subscribe_interaction": { "typical_latency_us": 1000, "cpu_intensity": "low", "memory_bytes": 4096 },
+        "game.poll_interaction": { "typical_latency_us": 500, "cpu_intensity": "low", "memory_bytes": 8192 },
         "game.query_vertices": { "typical_latency_us": 5000, "cpu_intensity": "external", "memory_bytes": 16384 },
         "game.mint_certificate": { "typical_latency_us": 10_000, "cpu_intensity": "external", "memory_bytes": 4096 },
         "game.storage_put": { "typical_latency_us": 5000, "cpu_intensity": "external", "memory_bytes": 65536 },
@@ -376,8 +388,8 @@ mod tests {
 
     #[test]
     fn capabilities_consistent() {
-        assert_eq!(CAPABILITIES.len(), 27);
-        assert_eq!(SEMANTIC_MAPPINGS.len(), 27);
+        assert_eq!(CAPABILITIES.len(), 30);
+        assert_eq!(SEMANTIC_MAPPINGS.len(), 30);
 
         for (short, full) in SEMANTIC_MAPPINGS {
             assert!(

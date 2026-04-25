@@ -3,7 +3,40 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V51).
+This project does not use SemVer — versions are session-sequential (V1–V52).
+
+## [V52] — 2026-04-25
+
+### Game tick loop and interaction-driven desktop gameplay
+
+Wires the full desktop game loop: push scene → poll interactions → record
+action → compute metrics → respond. Three new handlers complete the
+composition pattern for live desktop-style gameplay through petalTongue.
+
+- **`game.tick` composite handler:** One RPC call performs a full game loop
+  tick — pushes scene to petalTongue, polls interaction events, records
+  player action in the provenance DAG, computes engagement metrics, and
+  returns combined game state. Uses `is_skip_error` for graceful degradation
+  when petalTongue is absent.
+- **`game.subscribe_interaction` handler:** Subscribes to petalTongue input
+  events with `is_skip_error` degradation.
+- **`game.poll_interaction` handler:** Polls petalTongue for pending input
+  events with `is_skip_error` degradation.
+- **`handle_push_scene` evolved:** Now classifies errors semantically via
+  `is_skip_error()` — reports `degraded: true` when petalTongue is absent
+  instead of opaque error strings.
+- **30 capabilities (was 27):** New methods registered in niche, capability
+  domains, operation dependencies, and cost estimates.
+- **`ludospring_cell.toml`:** New cell graph defines the full NUCLEUS
+  deployment for desktop gameplay — 14 nodes (Tower, Node, Nest, Springs,
+  AI, Store) with all interaction loop methods.
+- **Deploy graphs updated:** `ludospring_gaming_niche.toml` and
+  `game_loop_continuous.toml` now include `interaction.poll` node and all
+  new capability mappings.
+- **9 new tests:** `GameTickParams`, `SubscribeInteractionParams`,
+  `PollInteractionParams` deserialization, handler dispatch for all new
+  methods, push_scene degraded field.
+- **817 tests, zero clippy warnings.**
 
 ## [V51] — 2026-04-25
 

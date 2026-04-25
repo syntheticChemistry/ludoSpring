@@ -117,6 +117,21 @@ pub const DOMAINS: &[Domain] = &[
                 external: true,
             },
             Method {
+                name: "game_tick",
+                fqn: "game.tick",
+                external: true,
+            },
+            Method {
+                name: "subscribe_interaction",
+                fqn: "game.subscribe_interaction",
+                external: true,
+            },
+            Method {
+                name: "poll_interaction",
+                fqn: "game.poll_interaction",
+                external: true,
+            },
+            Method {
                 name: "query_vertices",
                 fqn: "game.query_vertices",
                 external: true,
@@ -293,6 +308,6 @@ mod tests {
         let resp = capability_list_response();
         assert_eq!(resp["primal"], "ludospring");
         assert_eq!(resp["domain"], "game");
-        assert_eq!(resp["total_capabilities"], 27);
+        assert_eq!(resp["total_capabilities"], 30);
     }
 }

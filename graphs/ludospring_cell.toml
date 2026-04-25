@@ -1,0 +1,339 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# ludoSpring Cell Graph — full interactive desktop experience
+#
+# Defines the complete NUCLEUS cell for ludoSpring desktop gameplay.
+# This is the composition that esotericWebb activates: a live game loop
+# where petalTongue renders, the player interacts, and ludoSpring
+# orchestrates science (flow, engagement, DDA) with provenance.
+#
+# Game tick loop (60 Hz target):
+#   1. game.begin_session → session_id
+#   2. game.tick (push scene → poll interaction → record action → metrics)
+#   3. repeat step 2 until session ends
+#   4. game.complete_session → loamSpine certificate
+#
+# Primals (14 nodes):
+#   Tower:  BearDog (BTSP), Songbird (discovery)
+#   Node:   barraCuda (tensor), coralReef (shader), ToadStool (compute)
+#   Nest:   rhizoCrypt (DAG), loamSpine (ledger), sweetGrass (attribution)
+#   Spring: ludoSpring (game science), petalTongue (live GUI)
+#   AI:     Squirrel (NPC dialogue, narration)
+#   Store:  NestGate (game state persistence)
+#   Infra:  biomeOS (Neural API routing)
+#
+# STATUS: Active (Apr 25, 2026) — V51 typed composition, interaction loop
+
+[graph]
+id = "ludospring_cell"
+description = "ludoSpring desktop game cell — full NUCLEUS with interaction loop"
+coordination = "Sequential"
+
+[graph.metadata]
+resolve = true
+fragments = ["tower_atomic", "node_atomic", "nest_atomic", "meta_tier"]
+composition_model = "pure"
+owner = "ludoSpring"
+domain = "game_science"
+transport = "uds_only"
+btsp_enforced = true
+tick_hz = 60
+
+# ── Tower Atomic ─────────────────────────────────────────────────────
+
+[[nodes]]
+id = "beardog"
+output = "beardog_genesis"
+capabilities = ["security", "crypto"]
+
+[nodes.primal]
+by_capability = "security"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[[nodes]]
+id = "songbird"
+depends_on = ["beardog"]
+output = "songbird_genesis"
+capabilities = ["discovery", "network"]
+
+[nodes.primal]
+by_capability = "discovery"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+# ── Node Atomic ──────────────────────────────────────────────────────
+
+[[nodes]]
+id = "barracuda"
+depends_on = ["beardog", "songbird"]
+output = "barracuda_genesis"
+capabilities = ["tensor", "math"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "tensor"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[[nodes]]
+id = "coralreef"
+depends_on = ["beardog", "songbird"]
+output = "coralreef_genesis"
+capabilities = ["shader"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "shader"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[[nodes]]
+id = "toadstool"
+depends_on = ["beardog", "songbird"]
+output = "toadstool_genesis"
+capabilities = ["compute"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "compute"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 45000
+
+# ── Nest Atomic ──────────────────────────────────────────────────────
+
+[[nodes]]
+id = "rhizocrypt"
+depends_on = ["beardog", "songbird"]
+output = "rhizocrypt_genesis"
+capabilities = ["dag", "provenance"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "dag"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[[nodes]]
+id = "loamspine"
+depends_on = ["beardog", "songbird"]
+output = "loamspine_genesis"
+capabilities = ["ledger", "spine"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "ledger"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[[nodes]]
+id = "sweetgrass"
+depends_on = ["beardog", "songbird"]
+output = "sweetgrass_genesis"
+capabilities = ["commit", "attribution"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "commit"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[[nodes]]
+id = "nestgate"
+depends_on = ["beardog", "songbird"]
+output = "nestgate_genesis"
+capabilities = ["storage"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "storage"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+# ── AI ───────────────────────────────────────────────────────────────
+
+[[nodes]]
+id = "squirrel"
+depends_on = ["beardog", "songbird"]
+output = "squirrel_genesis"
+capabilities = ["ai", "inference"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "ai"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+# ── Springs ──────────────────────────────────────────────────────────
+
+[[nodes]]
+id = "petaltongue"
+depends_on = ["beardog", "songbird"]
+output = "petaltongue_genesis"
+capabilities = ["visualization", "interaction"]
+
+[nodes.primal]
+by_capability = "visualization"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 20000
+
+[nodes.capabilities_provided]
+"visualization.render" = "visualization.render"
+"visualization.render.scene" = "visualization.render.scene"
+"visualization.render.stream" = "visualization.render.stream"
+"visualization.render.dashboard" = "visualization.render.dashboard"
+"visualization.export" = "visualization.export"
+"visualization.validate" = "visualization.validate"
+"interaction.subscribe" = "interaction.subscribe"
+"interaction.poll" = "interaction.poll"
+
+[[nodes]]
+id = "ludospring"
+depends_on = ["beardog", "songbird", "petaltongue"]
+output = "ludospring_genesis"
+capabilities = ["game", "ludology"]
+
+[nodes.primal]
+by_capability = "game"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 15000
+
+[nodes.capabilities_provided]
+"game.evaluate_flow" = "game.evaluate_flow"
+"game.fitts_cost" = "game.fitts_cost"
+"game.engagement" = "game.engagement"
+"game.generate_noise" = "game.generate_noise"
+"game.wfc_step" = "game.wfc_step"
+"game.analyze_ui" = "game.analyze_ui"
+"game.accessibility" = "game.accessibility"
+"game.difficulty_adjustment" = "game.difficulty_adjustment"
+"game.begin_session" = "game.begin_session"
+"game.record_action" = "game.record_action"
+"game.complete_session" = "game.complete_session"
+"game.poll_telemetry" = "game.poll_telemetry"
+"game.tick" = "game.tick"
+"game.subscribe_interaction" = "game.subscribe_interaction"
+"game.poll_interaction" = "game.poll_interaction"
+"game.push_scene" = "game.push_scene"
+"game.npc_dialogue" = "game.npc_dialogue"
+"game.narrate_action" = "game.narrate_action"
+"game.voice_check" = "game.voice_check"
+"game.mint_certificate" = "game.mint_certificate"
+"game.storage_put" = "game.storage_put"
+"game.storage_get" = "game.storage_get"
+
+# ── Validation ───────────────────────────────────────────────────────
+
+[[nodes]]
+id = "validate_cell"
+depends_on = ["beardog", "songbird", "ludospring", "petaltongue"]
+output = "cell_validated"
+
+[nodes.operation]
+name = "health_check"
+
+[nodes.operation.params]
+check_beardog = true
+check_songbird = true
+check_ludospring = true
+check_petaltongue = true
+timeout_seconds = 20
+
+[nodes.constraints]
+timeout_ms = 30000

@@ -241,6 +241,44 @@ pub struct MintCertificateParams {
     pub payload: serde_json::Value,
 }
 
+/// Parameters for `game.tick` — composite game loop step.
+///
+/// One RPC call performs the full tick cycle: push scene to petalTongue,
+/// poll interaction events, record the action in the provenance DAG,
+/// and compute engagement/DDA metrics. This is the unlock for live
+/// desktop-style gameplay through primal composition.
+#[derive(Debug, Deserialize)]
+pub struct GameTickParams {
+    /// Session ID from `game.begin_session`.
+    pub session_id: String,
+    /// Channel name for petalTongue scene routing.
+    #[serde(default = "default_channel")]
+    pub channel: String,
+    /// Scene payload to push to petalTongue.
+    pub scene: serde_json::Value,
+    /// Optional player action to record (from previous poll).
+    #[serde(default)]
+    pub action: Option<serde_json::Value>,
+}
+
+fn default_channel() -> String {
+    "default".to_owned()
+}
+
+/// Parameters for `game.subscribe_interaction` (petalTongue).
+#[derive(Debug, Deserialize)]
+pub struct SubscribeInteractionParams {
+    /// Session ID for petalTongue routing.
+    pub session_id: String,
+}
+
+/// Parameters for `game.poll_interaction` (petalTongue).
+#[derive(Debug, Deserialize)]
+pub struct PollInteractionParams {
+    /// Session ID for petalTongue routing.
+    pub session_id: String,
+}
+
 /// Parameters for `game.storage_put` (NestGate).
 #[derive(Debug, Deserialize)]
 pub struct StoragePutParams {
@@ -627,6 +665,41 @@ mod tests {
         }))
         .expect("valid");
         assert_eq!(p2.metadata["version"], 2);
+    }
+
+    #[test]
+    fn game_tick_params_deserialize() {
+        let full: GameTickParams = serde_json::from_value(serde_json::json!({
+            "session_id": "s1",
+            "channel": "combat",
+            "scene": {"type": "grid"},
+            "action": {"type": "move", "x": 3}
+        }))
+        .expect("valid");
+        assert_eq!(full.session_id, "s1");
+        assert_eq!(full.channel, "combat");
+        assert!(full.action.is_some());
+
+        let minimal: GameTickParams = serde_json::from_value(serde_json::json!({
+            "session_id": "s2",
+            "scene": {"type": "dialogue"}
+        }))
+        .expect("valid");
+        assert_eq!(minimal.channel, "default");
+        assert!(minimal.action.is_none());
+    }
+
+    #[test]
+    fn subscribe_and_poll_interaction_params_deserialize() {
+        let _: SubscribeInteractionParams = serde_json::from_value(serde_json::json!({
+            "session_id": "s1"
+        }))
+        .expect("valid");
+
+        let _: PollInteractionParams = serde_json::from_value(serde_json::json!({
+            "session_id": "s1"
+        }))
+        .expect("valid");
     }
 
     #[test]

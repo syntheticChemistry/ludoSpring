@@ -110,6 +110,12 @@ pub const METHOD_MINT_CERTIFICATE: &str = "game.mint_certificate";
 pub const METHOD_STORAGE_PUT: &str = "game.storage_put";
 /// Retrieve game data from NestGate.
 pub const METHOD_STORAGE_GET: &str = "game.storage_get";
+/// Composite game tick (push → poll → record → tick → respond).
+pub const METHOD_GAME_TICK: &str = "game.tick";
+/// Subscribe to petalTongue interaction events.
+pub const METHOD_SUBSCRIBE_INTERACTION: &str = "game.subscribe_interaction";
+/// Poll petalTongue for pending interaction events.
+pub const METHOD_POLL_INTERACTION: &str = "game.poll_interaction";
 
 /// MCP tools/list — enumerate AI-callable game analysis tools.
 pub const METHOD_TOOLS_LIST: &str = "tools.list";

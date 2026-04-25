@@ -19,10 +19,11 @@ use super::methods;
 use super::{
     METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
     METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
-    METHOD_GENERATE_NOISE, METHOD_MINT_CERTIFICATE, METHOD_NARRATE_ACTION, METHOD_NPC_DIALOGUE,
-    METHOD_POLL_TELEMETRY, METHOD_PUSH_SCENE, METHOD_QUERY_VERTICES, METHOD_RECORD_ACTION,
-    METHOD_STORAGE_GET, METHOD_STORAGE_PUT, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST,
-    METHOD_VOICE_CHECK, METHOD_WFC_STEP,
+    METHOD_GAME_TICK, METHOD_GENERATE_NOISE, METHOD_MINT_CERTIFICATE, METHOD_NARRATE_ACTION,
+    METHOD_NPC_DIALOGUE, METHOD_POLL_INTERACTION, METHOD_POLL_TELEMETRY, METHOD_PUSH_SCENE,
+    METHOD_QUERY_VERTICES, METHOD_RECORD_ACTION, METHOD_STORAGE_GET, METHOD_STORAGE_PUT,
+    METHOD_SUBSCRIBE_INTERACTION, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, METHOD_VOICE_CHECK,
+    METHOD_WFC_STEP,
 };
 
 pub(super) type HandlerResult = Result<serde_json::Value, JsonRpcError>;
@@ -126,6 +127,9 @@ fn dispatch_science(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult>
         METHOD_MINT_CERTIFICATE => delegation::handle_mint_certificate(req),
         METHOD_STORAGE_PUT => delegation::handle_storage_put(req),
         METHOD_STORAGE_GET => delegation::handle_storage_get(req),
+        METHOD_GAME_TICK => delegation::handle_game_tick(req),
+        METHOD_SUBSCRIBE_INTERACTION => delegation::handle_subscribe_interaction(req),
+        METHOD_POLL_INTERACTION => delegation::handle_poll_interaction(req),
         "game.gpu.fog_of_war" => gpu::handle_gpu_fog_of_war(req),
         "game.gpu.tile_lighting" => gpu::handle_gpu_tile_lighting(req),
         "game.gpu.pathfind" => gpu::handle_gpu_pathfind(req),
