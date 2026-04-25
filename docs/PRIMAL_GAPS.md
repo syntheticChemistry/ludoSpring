@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 25, 2026 (V49 — Deep debt resolution. Handler tests extracted (mod.rs 818→169L). Capability-based discovery (validate_primal_proof, validate_composition). MCP surface complete (15/15 tools). base64 dep removed (inline encoder). Typed IpcError in btsp.rs. Named constants. 799 tests, zero clippy.)
+**Last updated:** April 25, 2026 (V50 — IpcError debt resolved. All 43 IPC client functions evolved from `Result<_, String>` to `Result<_, IpcError>`. `classify_io_error` and query methods absorbed from primalSpring v0.9.17. Zero `Result<_, String>` in entire IPC layer. 760 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `primalSpring/graphs/cells/ludospring_cell.toml` (14 nodes, all `security_model = "btsp"`)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -13,6 +13,7 @@
 | Pattern | Source | Location |
 |---|---|---|
 | `IpcErrorPhase` + `PhasedIpcError` | primalSpring `ecoPrimal/src/ipc/error.rs` | `ipc/envelope.rs` |
+| `classify_io_error` + upstream query methods | primalSpring v0.9.17 `ecoPrimal/src/ipc/error.rs` | `ipc/envelope.rs` (V50) |
 | Method normalization (`normalize_method`) | `SPRING_COMPOSITION_PATTERNS` §1 | `ipc/envelope.rs` + `ipc/handlers/mod.rs` |
 | Two-tier dispatch (lifecycle / infra / science) | `SPRING_COMPOSITION_PATTERNS` §4 | `ipc/handlers/mod.rs` |
 | Tiered discovery (`DiscoveryTier`, `DiscoveryResult`) | `SPRING_COMPOSITION_PATTERNS` §3 | `ipc/discovery/mod.rs` |

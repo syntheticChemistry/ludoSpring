@@ -12,6 +12,7 @@
 //! Graceful degradation: returns `SquirrelResult { available: false, .. }` when
 //! Squirrel is not reachable through the Neural API.
 
+use super::envelope::IpcError;
 use super::neural_bridge::NeuralBridge;
 
 // ── Typed inference wire types (neuralSpring ↔ Squirrel) ────────────
@@ -95,13 +96,13 @@ pub struct SquirrelResult {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn npc_dialogue(
     npc_name: &str,
     personality_prompt: &str,
     player_input: &str,
     context_history: &[serde_json::Value],
-) -> Result<SquirrelResult, String> {
+) -> Result<SquirrelResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — AI narration unavailable"));
     };
@@ -159,8 +160,8 @@ fn ai_query_result_to_squirrel(result: serde_json::Value) -> SquirrelResult {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn narrate_action(action_description: &str, context: &str) -> Result<SquirrelResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn narrate_action(action_description: &str, context: &str) -> Result<SquirrelResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — narration unavailable"));
     };
@@ -196,12 +197,12 @@ fn narrate_action_args(action_description: &str, context: &str) -> serde_json::V
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn voice_check(
     voice_name: &str,
     voice_personality: &str,
     game_state_summary: &str,
-) -> Result<SquirrelResult, String> {
+) -> Result<SquirrelResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — voice check unavailable"));
     };
@@ -240,8 +241,8 @@ fn voice_check_args(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn context_create(name: &str, max_tokens: u32) -> Result<SquirrelResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn context_create(name: &str, max_tokens: u32) -> Result<SquirrelResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — context unavailable"));
     };
@@ -280,8 +281,8 @@ fn context_create_result_to_squirrel(result: serde_json::Value) -> SquirrelResul
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn context_update(context_id: &str, content: &str) -> Result<SquirrelResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn context_update(context_id: &str, content: &str) -> Result<SquirrelResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — context unavailable"));
     };
@@ -313,8 +314,8 @@ fn context_update_args(context_id: &str, content: &str) -> serde_json::Value {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn context_summarize(context_id: &str) -> Result<SquirrelResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn context_summarize(context_id: &str) -> Result<SquirrelResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — context unavailable"));
     };
@@ -555,7 +556,7 @@ mod tests {
 
     #[test]
     fn unavailable_messages_are_distinct_per_entrypoint() {
-        type UnavailableCaseFn = fn() -> Result<SquirrelResult, String>;
+        type UnavailableCaseFn = fn() -> Result<SquirrelResult, IpcError>;
         let cases: Vec<(&str, UnavailableCaseFn)> = vec![
             ("AI narration", || npc_dialogue("n", "p", "i", &[])),
             ("narration", || narrate_action("a", "c")),

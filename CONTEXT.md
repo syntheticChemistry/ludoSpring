@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 25, 2026 (V49 — deep debt resolved. guideStone readiness 4, live NUCLEUS validated: 54/54 checks, exit 0. BTSP relay wired (typed `IpcError`). MCP 15/15 tools. Capability-based discovery. Handler tests extracted. `base64` dep removed. 799 tests, zero clippy, genomeBin v5.1)
+**Last updated:** April 25, 2026 (V50 — IpcError debt resolved. All 43 IPC client functions return typed `IpcError` (zero `Result<_, String>` in IPC layer). `classify_io_error` absorbed from primalSpring v0.9.17. Query methods aligned with upstream. 760 tests, zero clippy, genomeBin v5.1)
 
 ## What is this?
 

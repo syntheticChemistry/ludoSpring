@@ -10,6 +10,7 @@
 //! - `dag.event.append_batch` — high-frequency combat actions
 //! - `dag.session.list` — campaign continuity
 
+use crate::ipc::envelope::IpcError;
 use crate::ipc::neural_bridge::NeuralBridge;
 
 use super::ProvenanceResult;
@@ -129,13 +130,13 @@ pub(crate) const fn provenance_result_list(result: serde_json::Value) -> Provena
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn query_vertices(
     session_id: &str,
     event_type: Option<&str>,
     agent: Option<&str>,
     limit: Option<u32>,
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -154,8 +155,8 @@ pub fn query_vertices(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn vertex_children(session_id: &str, vertex_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn vertex_children(session_id: &str, vertex_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -174,8 +175,8 @@ pub fn vertex_children(session_id: &str, vertex_id: &str) -> Result<ProvenanceRe
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn get_frontier(session_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn get_frontier(session_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -194,8 +195,8 @@ pub fn get_frontier(session_id: &str) -> Result<ProvenanceResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn merkle_root(session_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn merkle_root(session_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -214,8 +215,8 @@ pub fn merkle_root(session_id: &str) -> Result<ProvenanceResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn merkle_proof(session_id: &str, vertex_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn merkle_proof(session_id: &str, vertex_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -234,11 +235,11 @@ pub fn merkle_proof(session_id: &str, vertex_id: &str) -> Result<ProvenanceResul
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn append_batch(
     session_id: &str,
     events: &[serde_json::Value],
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -257,8 +258,8 @@ pub fn append_batch(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn list_sessions() -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn list_sessions() -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };

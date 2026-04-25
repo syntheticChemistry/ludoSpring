@@ -119,11 +119,11 @@ fn probe_dependency(dep: &NicheDependency) -> DependencyStatus {
 ///
 /// # Errors
 ///
-/// Returns a serialization error string on failure (should never happen
-/// for this struct).
-pub fn composition_json() -> Result<serde_json::Value, String> {
+/// Returns an [`super::envelope::IpcError::Serialization`] on failure (should
+/// never happen for this struct).
+pub fn composition_json() -> Result<serde_json::Value, super::envelope::IpcError> {
     let report = validate_composition();
-    serde_json::to_value(report).map_err(|e| e.to_string())
+    serde_json::to_value(report).map_err(|e| super::envelope::IpcError::Serialization(e.to_string()))
 }
 
 #[cfg(test)]

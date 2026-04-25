@@ -76,7 +76,7 @@ pub enum IpcError {
 }
 
 impl IpcError {
-    /// Whether this error is retriable (transient transport failure).
+    /// Whether a retry is likely to succeed (transient transport failure).
     #[must_use]
     pub const fn is_retriable(&self) -> bool {
         matches!(self, Self::Connect(_) | Self::Timeout(_))
@@ -91,16 +91,50 @@ impl IpcError {
         )
     }
 
+    /// Whether the failure is a connection-level problem (socket missing, refused).
+    #[must_use]
+    pub const fn is_connection_error(&self) -> bool {
+        matches!(self, Self::Connect(_) | Self::NotFound(_))
+    }
+
+    /// Whether the failure looks like a timeout.
+    #[must_use]
+    pub const fn is_timeout_likely(&self) -> bool {
+        matches!(self, Self::Timeout(_))
+    }
+
     /// Whether the remote explicitly reported "method not found".
     #[must_use]
     pub const fn is_method_not_found(&self) -> bool {
         matches!(self, Self::RpcError { code: -32601, .. })
     }
 
+    /// Whether this is a wire-level protocol violation.
+    #[must_use]
+    pub const fn is_protocol_error(&self) -> bool {
+        matches!(self, Self::NoResult | Self::Serialization(_))
+    }
+
     /// Wrap this error with a phase annotation.
     #[must_use]
     pub const fn in_phase(self, phase: IpcErrorPhase) -> PhasedIpcError {
         PhasedIpcError { phase, inner: self }
+    }
+}
+
+/// Classify a raw [`std::io::Error`] into a semantic [`IpcError`] variant.
+///
+/// Mirrors `primalspring::ipc::error::classify_io_error` — connection-refused
+/// and not-found map to [`IpcError::Connect`], timeouts to [`IpcError::Timeout`],
+/// everything else to [`IpcError::Io`].
+#[must_use]
+pub fn classify_io_error(err: std::io::Error) -> IpcError {
+    match err.kind() {
+        std::io::ErrorKind::ConnectionRefused | std::io::ErrorKind::NotFound => {
+            IpcError::Connect(err)
+        }
+        std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => IpcError::Timeout(err),
+        _ => IpcError::Io(err),
     }
 }
 
@@ -334,7 +368,7 @@ impl JsonRpcError {
 
     /// Internal error (-32603). Clones `id` from the request.
     #[must_use]
-    pub fn internal(id: &serde_json::Value, detail: &str) -> Self {
+    pub fn internal(id: &serde_json::Value, detail: &(impl std::fmt::Display + ?Sized)) -> Self {
         Self {
             jsonrpc: "2.0",
             error: RpcErrorBody {
@@ -491,6 +525,76 @@ mod tests {
             .is_method_not_found()
         );
         assert!(!IpcError::NoResult.is_method_not_found());
+    }
+
+    #[test]
+    fn ipc_error_is_connection_error() {
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        assert!(IpcError::Connect(io).is_connection_error());
+        assert!(IpcError::NotFound("x".into()).is_connection_error());
+        assert!(!IpcError::NoResult.is_connection_error());
+        assert!(!IpcError::Serialization("bad".into()).is_connection_error());
+    }
+
+    #[test]
+    fn ipc_error_is_timeout_likely() {
+        let io = std::io::Error::new(std::io::ErrorKind::TimedOut, "timeout");
+        assert!(IpcError::Timeout(io).is_timeout_likely());
+        assert!(!IpcError::NoResult.is_timeout_likely());
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        assert!(!IpcError::Connect(io).is_timeout_likely());
+    }
+
+    #[test]
+    fn ipc_error_is_protocol_error() {
+        assert!(IpcError::NoResult.is_protocol_error());
+        assert!(IpcError::Serialization("bad".into()).is_protocol_error());
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        assert!(!IpcError::Connect(io).is_protocol_error());
+    }
+
+    #[test]
+    fn classify_io_error_connection_refused() {
+        let io = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
+        let err = classify_io_error(io);
+        assert!(matches!(err, IpcError::Connect(_)));
+        assert!(err.is_connection_error());
+    }
+
+    #[test]
+    fn classify_io_error_not_found() {
+        let io = std::io::Error::new(std::io::ErrorKind::NotFound, "not found");
+        let err = classify_io_error(io);
+        assert!(matches!(err, IpcError::Connect(_)));
+    }
+
+    #[test]
+    fn classify_io_error_timed_out() {
+        let io = std::io::Error::new(std::io::ErrorKind::TimedOut, "timed out");
+        let err = classify_io_error(io);
+        assert!(matches!(err, IpcError::Timeout(_)));
+        assert!(err.is_timeout_likely());
+    }
+
+    #[test]
+    fn classify_io_error_would_block() {
+        let io = std::io::Error::new(std::io::ErrorKind::WouldBlock, "would block");
+        let err = classify_io_error(io);
+        assert!(matches!(err, IpcError::Timeout(_)));
+    }
+
+    #[test]
+    fn classify_io_error_other_becomes_io() {
+        let io = std::io::Error::new(std::io::ErrorKind::BrokenPipe, "pipe");
+        let err = classify_io_error(io);
+        assert!(matches!(err, IpcError::Io(_)));
+    }
+
+    #[test]
+    fn internal_accepts_ipc_error_display() {
+        let ipc_err = IpcError::NotFound("beardog".into());
+        let rpc_err = JsonRpcError::internal(&serde_json::json!(1), &ipc_err);
+        assert!(rpc_err.error.message.contains("beardog"));
     }
 
     #[test]

@@ -9,6 +9,7 @@
 //! - `certificate.loan` — share NPCs between campaigns
 //! - `spine.create` / `entry.append` — persistent progression spines
 
+use crate::ipc::envelope::IpcError;
 use crate::ipc::neural_bridge::NeuralBridge;
 
 use super::ProvenanceResult;
@@ -160,12 +161,12 @@ pub(crate) fn loan_certificate_params(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn mint_certificate(
     cert_type: &str,
     owner: &str,
     payload: &serde_json::Value,
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -184,8 +185,8 @@ pub fn mint_certificate(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn get_certificate(cert_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn get_certificate(cert_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -204,8 +205,8 @@ pub fn get_certificate(cert_id: &str) -> Result<ProvenanceResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn verify_certificate(cert_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn verify_certificate(cert_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -224,8 +225,8 @@ pub fn verify_certificate(cert_id: &str) -> Result<ProvenanceResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn certificate_lifecycle(cert_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn certificate_lifecycle(cert_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -244,8 +245,8 @@ pub fn certificate_lifecycle(cert_id: &str) -> Result<ProvenanceResult, String> 
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn create_spine(owner: &str, metadata: &serde_json::Value) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn create_spine(owner: &str, metadata: &serde_json::Value) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -264,12 +265,12 @@ pub fn create_spine(owner: &str, metadata: &serde_json::Value) -> Result<Provena
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn append_spine_entry(
     spine_id: &str,
     entry_type: &str,
     payload: &serde_json::Value,
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -288,12 +289,12 @@ pub fn append_spine_entry(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn loan_certificate(
     cert_id: &str,
     borrower: &str,
     terms: &serde_json::Value,
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };

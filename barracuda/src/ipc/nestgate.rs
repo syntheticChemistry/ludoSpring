@@ -11,6 +11,7 @@
 //! Graceful degradation: returns `StorageResult { available: false, .. }` when
 //! NestGate is not reachable through the Neural API.
 
+use super::envelope::IpcError;
 use super::neural_bridge::NeuralBridge;
 
 /// Result of a NestGate storage operation.
@@ -26,12 +27,12 @@ pub struct StorageResult {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn put(
     key: &str,
     value: &serde_json::Value,
     metadata: &serde_json::Value,
-) -> Result<StorageResult, String> {
+) -> Result<StorageResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };
@@ -66,8 +67,8 @@ const fn storage_success(data: serde_json::Value) -> StorageResult {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn get(key: &str) -> Result<StorageResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn get(key: &str) -> Result<StorageResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };
@@ -83,8 +84,8 @@ pub fn get(key: &str) -> Result<StorageResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn exists(key: &str) -> Result<bool, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn exists(key: &str) -> Result<bool, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(false);
     };
@@ -111,8 +112,8 @@ fn parse_exists_flag(result: &serde_json::Value) -> bool {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn list(prefix: Option<&str>) -> Result<StorageResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn list(prefix: Option<&str>) -> Result<StorageResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };
@@ -135,8 +136,8 @@ fn list_args(prefix: Option<&str>) -> serde_json::Value {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn metadata(key: &str) -> Result<StorageResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn metadata(key: &str) -> Result<StorageResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };
@@ -152,8 +153,8 @@ pub fn metadata(key: &str) -> Result<StorageResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn delete(key: &str) -> Result<StorageResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn delete(key: &str) -> Result<StorageResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };

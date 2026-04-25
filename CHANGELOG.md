@@ -3,7 +3,31 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V49).
+This project does not use SemVer — versions are session-sequential (V1–V50).
+
+## [V50] — 2026-04-25
+
+### IpcError debt resolution — absorb primalSpring v0.9.17 pattern
+
+Absorbed the upstream `IpcError` pattern from primalSpring v0.9.17 (commit
+`0844c5c`). The last `Result<_, String>` debt in ludoSpring's IPC layer is gone.
+
+- **IPC client modules:** All 43 public functions across `loamspine`, `sweetgrass`,
+  `rhizocrypt`, `provenance/mod`, `nestgate`, `squirrel`, `toadstool`, `coralreef`,
+  and `composition` now return `Result<_, IpcError>` instead of `Result<_, String>`.
+- **`classify_io_error`:** New helper mirrors upstream — classifies `io::Error` into
+  semantic `IpcError` variants (`Connect`, `Timeout`, `Io`).
+- **Query methods aligned with upstream:** Added `is_connection_error()`,
+  `is_timeout_likely()`, `is_protocol_error()` to local `IpcError`, matching
+  primalSpring's query API.
+- **`JsonRpcError::internal()`:** Widened from `&str` to `impl Display`, enabling
+  callers to pass `IpcError` directly without `.to_string()`.
+- **`cmd_server`:** Evolved from `Result<(), String>` to `Result<(), IpcError>`,
+  using `classify_io_error` for I/O paths.
+- **Zero `Result<_, String>` in IPC layer:** The entire `barracuda/src/ipc/`
+  directory has zero `Result<_, String>` function signatures remaining.
+- **9 new tests** covering `classify_io_error`, query methods, and `internal()`
+  with `IpcError` display.
 
 ## [V49] — 2026-04-25
 

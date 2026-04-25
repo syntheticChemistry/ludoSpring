@@ -8,6 +8,7 @@
 //! - `provenance.graph` — derivation history (NPC design evolution)
 //! - `attribution.chain` — contribution shares for collaborative campaigns
 
+use crate::ipc::envelope::IpcError;
 use crate::ipc::neural_bridge::NeuralBridge;
 
 use super::ProvenanceResult;
@@ -114,13 +115,13 @@ pub(crate) fn provenance_result_braid_id(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn record_dehydration(
     session_id: &str,
     merkle_root: &str,
     agents: &[serde_json::Value],
     operations: &[serde_json::Value],
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -139,11 +140,11 @@ pub fn record_dehydration(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn query_braids(
     activity_type: Option<&str>,
     agent: Option<&str>,
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -162,8 +163,8 @@ pub fn query_braids(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn commit_braid(braid_id: &str, spine_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn commit_braid(braid_id: &str, spine_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -182,8 +183,8 @@ pub fn commit_braid(braid_id: &str, spine_id: &str) -> Result<ProvenanceResult, 
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn provenance_lineage(braid_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn provenance_lineage(braid_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };
@@ -202,8 +203,8 @@ pub fn provenance_lineage(braid_id: &str) -> Result<ProvenanceResult, String> {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn provenance_attribution(braid_id: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn provenance_attribution(braid_id: &str) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };

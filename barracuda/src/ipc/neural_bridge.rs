@@ -8,7 +8,7 @@
 //! # Usage
 //!
 //! ```rust,no_run
-//! # fn main() -> Result<(), String> {
+//! # fn main() -> Result<(), ludospring_barracuda::ipc::IpcError> {
 //! use ludospring_barracuda::ipc::NeuralBridge;
 //!
 //! let bridge = NeuralBridge::discover()?;

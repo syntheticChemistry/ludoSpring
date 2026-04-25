@@ -61,7 +61,7 @@ pub use discovery::{
 };
 pub use envelope::{
     DispatchOutcome, IpcError, IpcErrorPhase, JsonRpcError, JsonRpcRequest, JsonRpcResponse,
-    PhasedIpcError, RpcErrorBody, extract_rpc_result, normalize_method,
+    PhasedIpcError, RpcErrorBody, classify_io_error, extract_rpc_result, normalize_method,
 };
 pub use handlers::dispatch;
 pub use neural_bridge::NeuralBridge;

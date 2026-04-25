@@ -10,6 +10,7 @@
 //! coralReef is not reachable through the Neural API. In that case, the engine
 //! falls back to embedded WGSL dispatched through toadStool or in-process wgpu.
 
+use super::envelope::IpcError;
 use super::neural_bridge::NeuralBridge;
 
 /// Capability domain for coralReef shader operations.
@@ -28,8 +29,8 @@ pub struct ShaderResult {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn compile_wgsl(source: &str, entry_point: &str, label: &str) -> Result<ShaderResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn compile_wgsl(source: &str, entry_point: &str, label: &str) -> Result<ShaderResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };
@@ -50,8 +51,8 @@ pub fn compile_wgsl(source: &str, entry_point: &str, label: &str) -> Result<Shad
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn list_shaders() -> Result<ShaderResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn list_shaders() -> Result<ShaderResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };

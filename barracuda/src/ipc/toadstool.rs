@@ -11,6 +11,7 @@
 //! toadStool is not reachable through the Neural API.  CPU fallback is the
 //! caller's responsibility — this module only handles the IPC contract.
 
+use super::envelope::IpcError;
 use super::neural_bridge::NeuralBridge;
 
 /// Result of a toadStool compute operation.
@@ -49,14 +50,14 @@ pub struct SubstrateCapabilities {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn submit_workload(
     shader_source: &str,
     entry_point: &str,
     workgroup_size: [u32; 3],
     dispatch_size: [u32; 3],
     buffers: &serde_json::Value,
-) -> Result<ComputeResult, String> {
+) -> Result<ComputeResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — GPU compute unavailable"));
     };
@@ -98,8 +99,8 @@ fn submit_workload_args(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn workload_status(workload_id: &str) -> Result<ComputeResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn workload_status(workload_id: &str) -> Result<ComputeResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — GPU compute unavailable"));
     };
@@ -125,8 +126,8 @@ fn workload_status_args(workload_id: &str) -> serde_json::Value {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn query_capabilities() -> Result<SubstrateCapabilities, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn query_capabilities() -> Result<SubstrateCapabilities, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(SubstrateCapabilities::default());
     };
@@ -177,14 +178,14 @@ fn substrate_capabilities_from_response(result: serde_json::Value) -> SubstrateC
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
+/// Returns an [`IpcError`] only on non-recoverable failures.
 pub fn dispatch_submit(
     shader_source: &str,
     entry_point: &str,
     workgroup_size: [u32; 3],
     dispatch_size: [u32; 3],
     buffers: &serde_json::Value,
-) -> Result<ComputeResult, String> {
+) -> Result<ComputeResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — GPU dispatch unavailable"));
     };
@@ -226,8 +227,8 @@ fn dispatch_submit_args(
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn dispatch_result(workload_id: &str) -> Result<ComputeResult, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn dispatch_result(workload_id: &str) -> Result<ComputeResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable("No Neural API — GPU dispatch unavailable"));
     };
@@ -253,8 +254,8 @@ fn dispatch_result_args(workload_id: &str) -> serde_json::Value {
 ///
 /// # Errors
 ///
-/// Returns an error only on non-recoverable failures.
-pub fn dispatch_capabilities() -> Result<SubstrateCapabilities, String> {
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn dispatch_capabilities() -> Result<SubstrateCapabilities, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(SubstrateCapabilities::default());
     };

@@ -351,8 +351,8 @@ pub(crate) fn complete_session_success_json(
 ///
 /// # Errors
 ///
-/// Returns an error string only on non-recoverable failures.
-pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String> {
+/// Returns an [`super::envelope::IpcError`] only on non-recoverable failures.
+pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, super::envelope::IpcError> {
     let args = begin_game_session_args(session_name);
 
     let Some(result) =
@@ -371,11 +371,11 @@ pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, String
 ///
 /// # Errors
 ///
-/// Returns an error string only on non-recoverable failures.
+/// Returns an [`super::envelope::IpcError`] only on non-recoverable failures.
 pub fn record_game_action(
     session_id: &str,
     action: &serde_json::Value,
-) -> Result<ProvenanceResult, String> {
+) -> Result<ProvenanceResult, super::envelope::IpcError> {
     let args = record_game_action_args(session_id, action);
 
     let Some(result) =
@@ -396,9 +396,9 @@ pub fn record_game_action(
 ///
 /// # Errors
 ///
-/// Returns an error string only on non-recoverable failures. Partial
-/// completion returns `Ok` with a `stage` field describing progress.
-pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, String> {
+/// Returns an [`super::envelope::IpcError`] only on non-recoverable failures.
+/// Partial completion returns `Ok` with a `stage` field describing progress.
+pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, super::envelope::IpcError> {
     // Step 1: Dehydrate the DAG — compute Merkle root and frontier
     let dehydrate_args = dehydration_trigger_args(session_id);
     let Some(dehydration_raw) = resilient_trio_call(|bridge| {

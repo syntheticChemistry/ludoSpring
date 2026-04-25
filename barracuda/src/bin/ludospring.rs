@@ -19,13 +19,14 @@ use ludospring_barracuda::ipc::IpcServer;
 use ludospring_barracuda::niche;
 use tracing::info;
 
-fn cmd_server(port: Option<u16>) -> Result<(), String> {
+fn cmd_server(port: Option<u16>) -> Result<(), ludospring_barracuda::ipc::IpcError> {
+    use ludospring_barracuda::ipc::classify_io_error;
+
     let family_id = niche::family_id();
     let socket_path = niche::resolve_server_socket();
 
     if let Some(parent) = socket_path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create socket dir {}: {e}", parent.display()))?;
+        std::fs::create_dir_all(parent).map_err(classify_io_error)?;
     }
 
     let server = IpcServer::with_path(&socket_path);
@@ -46,11 +47,9 @@ fn cmd_server(port: Option<u16>) -> Result<(), String> {
 
     let shutdown = Arc::new(AtomicBool::new(false));
     signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&shutdown))
-        .map_err(|e| format!("Failed to install SIGTERM handler: {e}"))?;
+        .map_err(classify_io_error)?;
 
-    server
-        .run_until(shutdown.as_ref())
-        .map_err(|e| format!("Server error: {e}"))?;
+    server.run_until(shutdown.as_ref()).map_err(classify_io_error)?;
 
     ludospring_barracuda::biomeos::deregister_domain();
     info!("Shutdown complete");
@@ -145,8 +144,8 @@ fn main() {
         .init();
 
     let cli = Cli::parse();
-    let result = match cli.command {
-        Command::Server { port } => cmd_server(port),
+    let result: Result<(), String> = match cli.command {
+        Command::Server { port } => cmd_server(port).map_err(|e| e.to_string()),
         Command::Status => {
             cmd_status();
             Ok(())
