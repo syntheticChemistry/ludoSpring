@@ -2,25 +2,27 @@
 # Gaming Niche Deploy Graph
 # =============================================================================
 #
-# Deploys the full gaming niche: security + discovery + game science +
+# Deploys the full gaming niche: security + discovery + math/science +
 # visualization + optional compute accelerator + provenance.
 #
 # Topology:
 #   Phase 1: Tower Atomic (BearDog + Songbird)
-#   Phase 2: Springs (ludoSpring + petalTongue, parallel)
+#   Phase 2: Science + Viz (barraCuda + petalTongue, parallel)
 #   Phase 3: Optional accelerators (ToadStool)
 #   Phase 4: Validation
 #   Phase 5: Provenance Trio (optional, fallback = "skip")
 #
-# This graph composes two springs (ludoSpring, petalTongue) with core primals
-# into a fully usable interactive system following the Spring-as-Niche standard.
+# No spring binaries deploy. Game science is served by composing primals:
+# barraCuda (math/activation/stats/noise), petalTongue (visualization/
+# interaction), Squirrel (AI), and the provenance trio (rhizoCrypt,
+# loamSpine, sweetGrass).
 #
 # Continuous coordination readiness:
 #   The game engine niche targets 60 Hz tick-based coordination.
 #   Once biomeOS supports Continuous coordination mode, this graph evolves
 #   from Sequential deploy to Continuous tick execution.
 #
-# STATUS: Active (Apr 25, 2026) — V51 typed composition, interaction loop
+# STATUS: Active (Apr 25, 2026) — V53 pure composition, no spring binary
 #
 # Usage:
 #   biomeos deploy graphs/ludospring_gaming_niche.toml
@@ -101,17 +103,20 @@ timeout_ms = 30000
 "discovery.query" = "discover_by_capability"
 
 # =============================================================================
-# Phase 2: Springs (game science + visualization, parallel)
+# Phase 2: Science + Visualization (parallel)
 # =============================================================================
+# Game science is served by barraCuda (math, activation, stats, noise).
+# No ludoSpring binary deploys — the spring validates in Rust (tier 2).
 
 [[nodes]]
-id = "germinate_ludospring"
+id = "germinate_barracuda"
 depends_on = ["germinate_beardog", "germinate_songbird"]
-output = "ludospring_genesis"
-capabilities = ["game", "ludology", "interaction_design", "procedural_generation", "accessibility_scoring", "engagement_metrics"]
+output = "barracuda_genesis"
+capabilities = ["tensor", "math", "activation", "stats", "noise", "rng"]
+fallback = "skip"
 
 [nodes.primal]
-by_capability = "game"
+by_capability = "tensor"
 
 [nodes.operation]
 name = "start"
@@ -123,31 +128,22 @@ family_id = "${FAMILY_ID}"
 [nodes.operation.environment]
 BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
 FAMILY_ID = "${FAMILY_ID}"
-SONGBIRD_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/songbird-${FAMILY_ID}.sock"
 
 [nodes.constraints]
-timeout_ms = 15000
+timeout_ms = 30000
 
 [nodes.capabilities_provided]
-"game.analyze_ui" = "game.analyze_ui"
-"game.evaluate_flow" = "game.evaluate_flow"
-"game.fitts_cost" = "game.fitts_cost"
-"game.engagement" = "game.engagement"
-"game.generate_noise" = "game.generate_noise"
-"game.wfc_step" = "game.wfc_step"
-"game.accessibility" = "game.accessibility"
-"game.difficulty_adjustment" = "game.difficulty_adjustment"
-"game.begin_session" = "game.begin_session"
-"game.record_action" = "game.record_action"
-"game.complete_session" = "game.complete_session"
-"game.poll_telemetry" = "game.poll_telemetry"
-"game.tick" = "game.tick"
-"game.subscribe_interaction" = "game.subscribe_interaction"
-"game.poll_interaction" = "game.poll_interaction"
-"game.push_scene" = "game.push_scene"
-"game.npc_dialogue" = "game.npc_dialogue"
-"game.storage_put" = "game.storage_put"
-"game.storage_get" = "game.storage_get"
+"math.sigmoid" = "math.sigmoid"
+"math.log2" = "math.log2"
+"activation.fitts" = "activation.fitts"
+"activation.hick" = "activation.hick"
+"stats.mean" = "stats.mean"
+"stats.std_dev" = "stats.std_dev"
+"stats.variance" = "stats.variance"
+"noise.perlin2d" = "noise.perlin2d"
+"rng.uniform" = "rng.uniform"
+"tensor.create" = "tensor.create"
+"tensor.matmul" = "tensor.matmul"
 
 [[nodes]]
 id = "germinate_petaltongue"
@@ -225,7 +221,7 @@ timeout_ms = 45000
 
 [[nodes]]
 id = "validate_gaming_niche"
-depends_on = ["germinate_beardog", "germinate_songbird", "germinate_ludospring", "germinate_petaltongue"]
+depends_on = ["germinate_beardog", "germinate_songbird", "germinate_barracuda", "germinate_petaltongue"]
 output = "gaming_niche_validated"
 
 [nodes.operation]
@@ -234,7 +230,7 @@ name = "health_check"
 [nodes.operation.params]
 check_beardog = true
 check_songbird = true
-check_ludospring = true
+check_barracuda = true
 check_petaltongue = true
 timeout_seconds = 20
 

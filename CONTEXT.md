@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 25, 2026 (V52 — Game tick loop: `game.tick` composite handler (push→poll→record→metrics), `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation; `handle_push_scene` semantic errors; 30 capabilities; `ludospring_cell.toml` NUCLEUS cell graph; 817 tests, zero clippy, genomeBin v5.1)
+**Last updated:** April 25, 2026 (V53 — Binary to composition evolution: ludospring binary removed from plasmidBin; game science served by composing primals via NUCLEUS cell graph; `ludospring_cell.toml` evolved to 12-node pure composition; GAP-10 resolved; 817 tests, zero clippy)
 
 ## What is this?
 
@@ -13,20 +13,24 @@ experiments, and GPU-accelerated computation where it matters.
 
 ## Ecosystem position
 
-- **Primal type**: Spring (domain science)
+- **Type**: Spring (domain science) — NOT a primal
 - **Domain**: `game` — ludology, procedural generation, HCI, engagement metrics
+- **Deployment**: Pure composition via NUCLEUS cell graph (`ludospring_cell.toml`)
+- **Validation**: Rust binary is tier 2 validation target (Python → Rust → Composition)
 - **Parent**: ecoPrimals / ecoSprings
 - **License**: AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 
 ## Architecture
 
-- **Main crate**: `ludospring-barracuda` (library + IPC binaries)
+- **Main crate**: `ludospring-barracuda` (library + IPC binaries for validation)
 - **GPU math**: `barraCuda` (path dependency, `default-features = false`)
 - **IPC**: JSON-RPC 2.0 over Unix domain sockets (newline-delimited)
 - **Transport**: XDG-compliant socket path resolution, capability-based discovery
 - **No cross-primal Rust imports**: all coordination via runtime IPC
+- **No deployed binary**: game science is served by composing primals (barraCuda,
+  petalTongue, Squirrel, provenance trio) via the cell graph
 
-## Capabilities (30 total: 27 in `niche.rs` + 3 infrastructure — `health.check`, `lifecycle.status`, `capability.list`; MCP tools)
+## Capabilities (30 total in `niche.rs`: 27 game + 3 infrastructure — `health.check`, `lifecycle.status`, `capability.list`; MCP tools)
 
 Game science: `game.evaluate_flow`, `game.fitts_cost`, `game.engagement`,
 `game.generate_noise`, `game.wfc_step`, `game.analyze_ui`,
@@ -53,7 +57,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 817 workspace `#[test]` functions (V52)
+- **Tests**: 817 workspace `#[test]` functions (V53)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
@@ -235,4 +239,5 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 
 ### Handoff
 
-[V42 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V42_COMPOSITION_EVOLUTION_HANDOFF_APR11_2026.md)
+[V53 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md)
+[V49 deep debt handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V49_DEEP_DEBT_COMPOSITION_PATTERNS_APR25_2026.md)

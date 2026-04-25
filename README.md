@@ -3,13 +3,13 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** April 25, 2026
-**Version:** V52 (Game tick loop and interaction-driven desktop gameplay — `game.tick` composite handler wires push→poll→record→metrics in one RPC call; `game.subscribe_interaction` and `game.poll_interaction` handlers with `is_skip_error` degradation; `handle_push_scene` evolved to semantic error classification; 30 capabilities (was 27); `ludospring_cell.toml` cell graph (14 NUCLEUS nodes); deploy graphs updated with interaction loop. **817** workspace tests. genomeBin v5.1.)
-**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**817** as of V52); if they diverge, treat this README and `cargo test --workspace` as canonical.
+**Version:** V53 (Binary to composition evolution — ludospring binary removed from plasmidBin (springs are NOT primals); game science served by composing existing primals via NUCLEUS cell graph; `ludospring_cell.toml` evolved to 12-node pure composition (no spring binary node); GAP-10 resolved; manifest.lock updated to `[compositions.ludospring_game]`. Spring binary remains as Rust validation target (tier 2). **817** workspace tests.)
+**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**817** as of V53); if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance). `deny.toml` enforces ecoBin v3.0 banned-crate list (openssl-sys, ring, aws-lc-sys, native-tls, zstd-sys, lz4-sys, libsqlite3-sys, cryptoki-sys). Harvested to genomeBin v5.1 (46 binaries, 6 target triples).
-**Niche Status:** Deployable — UniBin (7 subcommands), deploy graph, niche YAML, Neural API domain registration, 30 capabilities (V52: +`game.tick`, +`game.subscribe_interaction`, +`game.poll_interaction`), MCP `tools.list`/`tools.call` (15 tool descriptors: 8 science + 7 delegation), optional `tarpc-ipc` feature, `config/capability_registry.toml` SSOT, `lifecycle.composition` handler for runtime proto-nucleate validation
+**Deployment model:** Pure composition — no spring binary in plasmidBin. Game science is served by composing primals via `ludospring_cell.toml` (12 NUCLEUS nodes: barraCuda for math/science, petalTongue for viz/interaction, Squirrel for AI, provenance trio, Tower Atomic). The ludospring binary is the Rust validation target (tier 2); it validates science locally but does not deploy as a primal. 30 capabilities across 11 composed primals. `lifecycle.composition` handler for runtime proto-nucleate validation.
 **Audit Status:** Complete — zero hardcoded primal names (capability-based discovery), zero hardcoded paths, **zero hardcoded method strings in dispatch/push paths** (V51: `ipc::methods` constants for viz/interaction/lifecycle/capability), zero `#[allow()]` in application code, zero `unsafe`, **zero `Result<_, String>` in entire IPC layer** (V50: all 43 functions evolved to `IpcError`, `classify_io_error` absorbed from primalSpring v0.9.17), zero external deps removable (base64 inlined), zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations, v1.2.0 ordering invariant: 7 constants), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + three-tier validation (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **817** workspace tests, **11** primal gaps documented (GAP-01–GAP-11 in `docs/PRIMAL_GAPS.md`). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). GAP-02 guideStone wired. BTSP relay wired (`ipc/btsp.rs`, typed `IpcError`). `interaction.poll` wired. `is_skip_error` graceful degradation. Honest `push_scene` error reporting. `game.tick` composite handler (V52). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0. Cell graph ready (`ludospring_cell.toml`). All upstream blockers resolved.
 
 ---
@@ -394,12 +394,12 @@ cargo run --features ipc --bin ludospring -- version
 | Artifact | Path | Purpose |
 |----------|------|---------|
 | UniBin binary | `barracuda/src/bin/ludospring.rs` | `server`, `status`, `version`, `dashboard`, `live-session`, `tufte-dashboard` subcommands |
-| Deploy graph | `deploy/ludospring.toml` | primalSpring deploy fragment: 27 (+ 3 infrastructure), optional trio + viz deps |
+| Deploy graph | `deploy/ludospring.toml` | primalSpring deploy fragment: 30 capabilities (27 game + 3 infrastructure), optional trio + viz deps |
 | Gaming niche graph | `graphs/ludospring_gaming_niche.toml` | Composes ludoSpring + petalTongue into gaming niche |
 | Niche YAML | `niches/ludospring-game.yaml` | BYOB definition with organisms and customization |
 | Self-knowledge | `barracuda/src/niche.rs` | Identity, capabilities, semantic mappings, cost estimates, socket resolution |
 | Neural bridge | `barracuda/src/ipc/neural_bridge.rs` | Typed IPC client for biomeOS Neural API |
-| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 27 (+ 3 infrastructure) (game + health), local/external classification |
+| Capability domains | `barracuda/src/capability_domains.rs` | Structured registry: 30 (27 game + 3 infrastructure), local/external classification |
 | Domain registration | `barracuda/src/biomeos/mod.rs` | `game` domain registration via NeuralBridge |
 
 **Compliance with Spring-as-Niche Deployment Standard:**
@@ -461,7 +461,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (605 barracuda lib + 102 barracuda --tests targets incl. ipc integration + 26 forge = 733)
+# All tests (817 workspace total: barracuda lib + barracuda --tests incl. ipc integration + forge + 100 experiments)
 cargo test --workspace
 
 # Run a specific experiment
@@ -488,7 +488,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 799 total (barracuda lib + barracuda `--tests` incl. 23 ipc integration + forge + 100 experiments), 0 failures |
+| `cargo test --workspace` | 817 total (barracuda lib + barracuda `--tests` incl. 23 ipc integration + forge + 100 experiments), 0 failures |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 100 validation binaries | All checks pass, 0 failures (exp032 22/23 pre-existing) |
 | 7 Python baselines | All pass (with embedded provenance: commit, date, Python version) |

@@ -3,7 +3,42 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V52).
+This project does not use SemVer — versions are session-sequential (V1–V53).
+
+## [V53] — 2026-04-25
+
+### Binary to composition evolution
+
+Springs are NOT primals — they produce primals and define compositions.
+The `ludospring` binary in `plasmidBin` was an oversight from the Rust
+validation round. V53 corrects this: game science capabilities are now
+served by composing existing primals via the NUCLEUS cell graph, not by
+deploying a spring binary.
+
+- **plasmidBin entry transformed:** Removed `ludospring` binary from
+  `plasmidBin/ludospring/`. Metadata transformed from binary primal
+  description to composition manifest with `[composition]` section,
+  capability routing table, and primal dependency list.
+- **Cell graph evolved:** `ludospring_cell.toml` no longer has a
+  `ludospring` node. Game science capabilities route to barraCuda
+  (`math.*`, `activation.*`, `stats.*`, `noise.*`), petalTongue
+  (`visualization.*`, `interaction.*`), Squirrel (`ai.*`), and the
+  provenance trio. 12 primal nodes (was 14 — removed ludospring node
+  and biomeOS infra node).
+- **Gaming niche graph evolved:** `ludospring_gaming_niche.toml`
+  replaces `germinate_ludospring` with `germinate_barracuda` for
+  game math. Validation checks barraCuda health instead of ludospring.
+- **manifest.lock updated:** ludospring moved from `[springs.*]` to
+  `[compositions.ludospring_game]` — a composition entry with cell
+  graph reference and 11-primal dependency list.
+- **GAP-10 resolved:** The `game.*` primal identity gap is resolved by
+  the pure composition model. Game science methods map to barraCuda
+  capabilities (`activation.fitts`, `math.sigmoid`, etc.) — no
+  standalone `game` domain primal needed.
+- **Spring binary unchanged:** The `ludospring` binary in the source
+  tree (`target/release/ludospring`) continues as the Rust validation
+  target (tier 2 of the 3-tier ladder: Python → Rust → Composition).
+  817 workspace tests continue to validate the Rust tier.
 
 ## [V52] — 2026-04-25
 

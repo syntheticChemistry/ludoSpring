@@ -1,32 +1,40 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# ludoSpring Cell Graph — full interactive desktop experience
+# ludoSpring Cell Graph — game science via pure primal composition
 #
 # Defines the complete NUCLEUS cell for ludoSpring desktop gameplay.
 # This is the composition that esotericWebb activates: a live game loop
-# where petalTongue renders, the player interacts, and ludoSpring
-# orchestrates science (flow, engagement, DDA) with provenance.
+# where petalTongue renders, the player interacts, barraCuda computes
+# science (flow, engagement, DDA), and the provenance trio records.
+#
+# Architecture: No ludoSpring binary. Game science capabilities are served
+# by composing existing primals. The spring validates in Rust (tier 2);
+# the composition IS the deployment (tier 3).
 #
 # Game tick loop (60 Hz target):
-#   1. game.begin_session → session_id
-#   2. game.tick (push scene → poll interaction → record action → metrics)
-#   3. repeat step 2 until session ends
-#   4. game.complete_session → loamSpine certificate
+#   1. dag.session.create → session_id (rhizoCrypt)
+#   2. Per tick:
+#      a. math.sigmoid / activation.fitts (barraCuda) → flow + DDA
+#      b. ai.query (Squirrel) → narration
+#      c. visualization.render.scene (petalTongue) → render
+#      d. interaction.poll (petalTongue) → player input
+#      e. dag.event.append (rhizoCrypt) → provenance stamp
+#   3. certificate.mint (loamSpine) → session certificate
 #
-# Primals (14 nodes):
+# Primals (12 nodes):
 #   Tower:  BearDog (BTSP), Songbird (discovery)
-#   Node:   barraCuda (tensor), coralReef (shader), ToadStool (compute)
+#   Node:   barraCuda (tensor/math/game science), coralReef (shader),
+#           ToadStool (compute)
 #   Nest:   rhizoCrypt (DAG), loamSpine (ledger), sweetGrass (attribution)
-#   Spring: ludoSpring (game science), petalTongue (live GUI)
+#   Viz:    petalTongue (live GUI + interaction)
 #   AI:     Squirrel (NPC dialogue, narration)
 #   Store:  NestGate (game state persistence)
-#   Infra:  biomeOS (Neural API routing)
 #
-# STATUS: Active (Apr 25, 2026) — V51 typed composition, interaction loop
+# STATUS: Active (Apr 25, 2026) — V53 pure composition, no spring binary
 
 [graph]
 id = "ludospring_cell"
-description = "ludoSpring desktop game cell — full NUCLEUS with interaction loop"
+description = "ludoSpring game cell — pure primal composition, no spring binary"
 coordination = "Sequential"
 
 [graph.metadata]
@@ -84,7 +92,7 @@ timeout_ms = 30000
 id = "barracuda"
 depends_on = ["beardog", "songbird"]
 output = "barracuda_genesis"
-capabilities = ["tensor", "math"]
+capabilities = ["tensor", "math", "activation", "stats", "noise", "rng"]
 fallback = "skip"
 
 [nodes.primal]
@@ -99,6 +107,19 @@ family_id = "${FAMILY_ID}"
 
 [nodes.constraints]
 timeout_ms = 30000
+
+[nodes.capabilities_provided]
+"math.sigmoid" = "math.sigmoid"
+"math.log2" = "math.log2"
+"activation.fitts" = "activation.fitts"
+"activation.hick" = "activation.hick"
+"stats.mean" = "stats.mean"
+"stats.std_dev" = "stats.std_dev"
+"stats.variance" = "stats.variance"
+"noise.perlin2d" = "noise.perlin2d"
+"rng.uniform" = "rng.uniform"
+"tensor.create" = "tensor.create"
+"tensor.matmul" = "tensor.matmul"
 
 [[nodes]]
 id = "coralreef"
@@ -244,7 +265,7 @@ family_id = "${FAMILY_ID}"
 [nodes.constraints]
 timeout_ms = 30000
 
-# ── Springs ──────────────────────────────────────────────────────────
+# ── Visualization + Interaction ───────────────────────────────────────
 
 [[nodes]]
 id = "petaltongue"
@@ -275,54 +296,16 @@ timeout_ms = 20000
 "interaction.subscribe" = "interaction.subscribe"
 "interaction.poll" = "interaction.poll"
 
-[[nodes]]
-id = "ludospring"
-depends_on = ["beardog", "songbird", "petaltongue"]
-output = "ludospring_genesis"
-capabilities = ["game", "ludology"]
-
-[nodes.primal]
-by_capability = "game"
-
-[nodes.operation]
-name = "start"
-
-[nodes.operation.params]
-mode = "server"
-family_id = "${FAMILY_ID}"
-
-[nodes.constraints]
-timeout_ms = 15000
-
-[nodes.capabilities_provided]
-"game.evaluate_flow" = "game.evaluate_flow"
-"game.fitts_cost" = "game.fitts_cost"
-"game.engagement" = "game.engagement"
-"game.generate_noise" = "game.generate_noise"
-"game.wfc_step" = "game.wfc_step"
-"game.analyze_ui" = "game.analyze_ui"
-"game.accessibility" = "game.accessibility"
-"game.difficulty_adjustment" = "game.difficulty_adjustment"
-"game.begin_session" = "game.begin_session"
-"game.record_action" = "game.record_action"
-"game.complete_session" = "game.complete_session"
-"game.poll_telemetry" = "game.poll_telemetry"
-"game.tick" = "game.tick"
-"game.subscribe_interaction" = "game.subscribe_interaction"
-"game.poll_interaction" = "game.poll_interaction"
-"game.push_scene" = "game.push_scene"
-"game.npc_dialogue" = "game.npc_dialogue"
-"game.narrate_action" = "game.narrate_action"
-"game.voice_check" = "game.voice_check"
-"game.mint_certificate" = "game.mint_certificate"
-"game.storage_put" = "game.storage_put"
-"game.storage_get" = "game.storage_get"
-
 # ── Validation ───────────────────────────────────────────────────────
+# No ludospring node — game science is served by the composition of
+# barraCuda (math/activation/stats/noise), Squirrel (AI), petalTongue
+# (visualization/interaction), and the provenance trio. The ludoSpring
+# spring validates this composition in Rust (tier 2 of the validation
+# ladder); it does not deploy as a primal.
 
 [[nodes]]
 id = "validate_cell"
-depends_on = ["beardog", "songbird", "ludospring", "petaltongue"]
+depends_on = ["beardog", "songbird", "barracuda", "petaltongue"]
 output = "cell_validated"
 
 [nodes.operation]
@@ -331,7 +314,7 @@ name = "health_check"
 [nodes.operation.params]
 check_beardog = true
 check_songbird = true
-check_ludospring = true
+check_barracuda = true
 check_petaltongue = true
 timeout_seconds = 20
 

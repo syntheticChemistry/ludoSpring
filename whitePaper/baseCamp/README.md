@@ -2,7 +2,7 @@
 
 **Date:** April 25, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V52 — 100 experiments, 30 JSON-RPC capabilities, **817** workspace tests. Game tick loop wired: `game.tick` composite handler (push→poll→record→metrics), `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` graceful degradation. `ipc::methods` constants replace all hardcoded method strings. `IpcError` typed errors throughout IPC layer. `ludospring_cell.toml` NUCLEUS cell graph (14 nodes, BTSP). guideStone readiness **4** (NUCLEUS validated): three-tier — Tier 1 (20 bare checks), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Capability-based discovery (zero hardcoded primal names). Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 11 primal gaps tracked (GAP-01–GAP-11). All upstream blockers resolved.
+**Status:** V53 — 100 experiments, 30 JSON-RPC capabilities, **817** workspace tests. Binary to composition evolution: springs are NOT primals — game science served by composing primals (barraCuda, petalTongue, Squirrel, provenance trio) via NUCLEUS cell graph. `ludospring_cell.toml` evolved to 12-node pure composition. GAP-10 resolved. Game tick loop: `game.tick` composite handler (push→poll→record→metrics), `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` graceful degradation. `ipc::methods` constants. `IpcError` typed errors. guideStone readiness **4** (NUCLEUS validated): three-tier — Tier 1 (20 bare checks), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Capability-based discovery. Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (spring binary) → Primal composition (NUCLEUS graph). 10 primal gaps remaining (GAP-01–GAP-09, GAP-11; GAP-10 resolved).
 
 ---
 
@@ -15,8 +15,8 @@ validates 13 foundational models from HCI research — Fitts's law (1954), Hick'
 (1952), Steering law (1997), GOMS (1983), Flow theory (1990), Dynamic Difficulty
 Adjustment (2005), Four Keys to Fun (2004), Engagement metrics (2018), Perlin noise
 (1985), Wave Function Collapse (2016), L-systems (1968), BSP trees (1980), and
-Tufte data-ink analysis (1983) — through the ecoPrimals Python→Rust→GPU evolution
-pipeline.
+Tufte data-ink analysis (1983) — through the ecoPrimals 3-tier validation ladder:
+Python baselines → Rust port (spring binary) → Primal composition (NUCLEUS graph).
 
 ### Key Finding
 
@@ -93,7 +93,7 @@ for their own composition evolution.
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
 - **exp100** (`ludospring-exp100`) — 27-check NUCLEUS composition parity validator: niche integrity (7), health probes (2), capability discovery (4), science parity (8), golden chain (6)
-- **ecoBin** — Harvested to `infra/plasmidBin/ludospring/` (sha256-verified); NUCLEUS primals from genomeBin v5.1
+- **ecoBin** — `infra/plasmidBin/ludospring/` is now a composition manifest (V53: spring binary removed; game science via primal composition); NUCLEUS primals from genomeBin v5.1
 - **Shared HUD fixtures** — `hud_fixtures.rs` extracted from dashboard binaries, eliminating duplication
 - **Centralized dialogue constants** — `D6_SUCCESS_THRESHOLD`, `DIALOGUE_EMA_ALPHA` in `tolerances::game`
 - **CI coverage** — `cargo-llvm-cov` at 90% floor enforced in `.github/workflows/ci.yml`
@@ -297,7 +297,7 @@ The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 ```bash
 cd ludoSpring
 python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 799 workspace tests (V49)
+cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 817 workspace tests (V53)
 cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
 cargo run --bin exp024_doom_terminal                 # playable Doom walker
 cargo run --bin exp025_roguelike_explorer            # playable roguelike

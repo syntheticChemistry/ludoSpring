@@ -2,9 +2,9 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 25, 2026 (V52 — Game tick loop: `game.tick` composite handler, `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation; 30 capabilities; `ludospring_cell.toml` NUCLEUS cell graph. 817 tests, zero clippy.)
+**Last updated:** April 25, 2026 (V53 — Binary to composition evolution: ludospring removed from plasmidBin; game science via primal composition; GAP-10 resolved. 817 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
-**Cell graph:** `primalSpring/graphs/cells/ludospring_cell.toml` (14 nodes, all `security_model = "btsp"`)
+**Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
 **Fragments declared:** `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`
 
@@ -31,7 +31,9 @@
 | `game.tick` composite handler (push→poll→record→metrics) | primalSpring `CompositionContext` loop pattern | `handlers/delegation.rs` (V52) |
 | `game.subscribe_interaction` / `game.poll_interaction` | petalTongue interaction domain | `handlers/delegation.rs` (V52) |
 | `handle_push_scene` semantic `is_skip_error` degradation | primalSpring `call_or_skip` pattern | `handlers/delegation.rs` (V52) |
-| `ludospring_cell.toml` NUCLEUS cell graph (14 nodes) | primalSpring cell deployment pattern | `graphs/ludospring_cell.toml` (V52) |
+| `ludospring_cell.toml` NUCLEUS cell graph (12 nodes, pure composition) | primalSpring cell deployment pattern | `graphs/ludospring_cell.toml` (V53) |
+| Pure composition model (no spring binary in plasmidBin) | primalSpring 3-tier validation ladder | `plasmidBin/ludospring/metadata.toml`, `ludospring_cell.toml` (V53) |
+| Capability routing table (game science → primal providers) | primalSpring `capability_to_primal` | `plasmidBin/ludospring/metadata.toml` (V53) |
 
 ---
 
@@ -225,24 +227,24 @@ startup panic (GAP-07), trio `required` flags can be reconsidered.
 
 ### GAP-10: `game.*` Primal Identity — ludoSpring Not a Graph Node
 
-**Primal / domain:** `game` capability namespace (ludoSpring IPC surface)
-**Status:** OPEN — architecture gap
-**Proto-nucleate:** Declares `barracuda` with `by_capability = "tensor"` and
-`tensor.*` methods for game math; NestGate covers `storage.*`. There is **no**
-graph node whose registration advertises the **`game`** domain for methods such
-as `game.evaluate_flow`, `game.fitts_cost`, `game.engagement`, `game.wfc_step`,
-etc. Those methods are implemented by the ludoSpring barracuda IPC server
-(exposed via sockets such as `ludospring.sock` in composition experiments).
-**Impact:** After biomeOS deploys the proto-nucleate graph, discovery can resolve
-tensor and storage primals, but **`game.*`** routing to ludoSpring as the
-capability provider is not described by the graph. ludoSpring must be
-addressable as the **`game.*`** provider for pure-composition game science.
-**Reconciliation:** Add a node (or deployment manifest) that registers
-ludoSpring with `by_capability` / capability list for `game.*`, **or** document
-the biomeOS rule that maps the deployed graph to the ludoSpring process for
-`game.*` dispatch.
-**Owner:** biomeOS + primalSpring (+ ludoSpring for method contracts)
-**Tracking:** This file; consider `primalSpring/docs/PRIMAL_GAPS.md`
+**Primal / domain:** `game` capability namespace
+**Status:** RESOLVED (V53) — pure composition model
+**Resolution:** Springs are not primals. The `game.*` methods were implemented
+by the ludoSpring IPC server as a Rust validation target (tier 2). In the
+composition model (tier 3), these capabilities are served by composed primals:
+- `game.evaluate_flow`, `game.fitts_cost`, `game.engagement`, etc. map to
+  barraCuda (`activation.fitts`, `math.sigmoid`, `stats.mean`, etc.)
+- `game.push_scene`, `game.poll_interaction` map to petalTongue
+- `game.npc_dialogue`, `game.narrate_action` map to Squirrel
+- `game.begin_session`, `game.complete_session` map to rhizoCrypt/loamSpine
+- `game.storage_put/get` map to NestGate
+
+The `ludospring_cell.toml` cell graph defines the pure composition (12 primal
+nodes, no spring binary node). The `plasmidBin/ludospring/metadata.toml`
+entry is now a composition manifest with capability routing table.
+
+There is no `game` domain primal because game science IS the composition of
+math, visualization, AI, storage, and provenance primals.
 
 ---
 
@@ -251,7 +253,7 @@ the biomeOS rule that maps the deployed graph to the ludoSpring process for
 - **GAP-03** (fragment metadata) → `primalSpring/docs/PRIMAL_GAPS.md`
 - **GAP-05** (trio not in proto-nucleate) → `primalSpring/docs/PRIMAL_GAPS.md`
 - **GAP-09** (`nest_atomic` vs. stubs) → `primalSpring/docs/PRIMAL_GAPS.md`
-- **GAP-10** (`game.*` graph identity) → `primalSpring/docs/PRIMAL_GAPS.md`
+- **GAP-10** (`game.*` graph identity) → RESOLVED V53 (pure composition model)
 
 ## Gaps Handed to Primal Teams
 

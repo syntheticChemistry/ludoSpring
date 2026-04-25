@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 25, 2026
-**Total:** 100 experiments, **817** workspace tests (V52)
+**Total:** 100 experiments, **817** workspace tests (V53)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
 **Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
-**Live validation results:** 95/141 (67.4%) composition checks passing against genomeBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4, guideStone standard v1.2.0: three-tier (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). V52: `game.tick` composite handler, `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation. `ipc::methods` constants replace all hardcoded method strings. `IpcError` typed errors throughout. `ludospring_cell.toml` NUCLEUS cell graph (14 nodes, BTSP). MCP 15/15 tools. 30 capabilities. Zero hardcoded primal names.
+**Live validation results:** 95/141 (67.4%) composition checks passing against genomeBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4, guideStone standard v1.2.0: three-tier (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). V53: pure primal composition (no spring binary in plasmidBin). `game.tick` composite handler, `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` degradation. `ipc::methods` constants replace all hardcoded method strings. `IpcError` typed errors throughout. `ludospring_cell.toml` NUCLEUS cell graph (12 nodes, pure composition, BTSP). MCP 15/15 tools. 30 capabilities. Zero hardcoded primal names.
 
 ---
 

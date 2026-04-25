@@ -5,55 +5,45 @@
 # Per Spring-as-Niche Deployment Standard: defines organisms, interactions,
 # and customization options for biomeOS niche composition.
 #
-# Deploy graph: graphs/ludospring_deploy.toml
+# No spring binary deploys. Game science is served by composing primals:
+# barraCuda (math/activation/stats/noise), petalTongue (viz/interaction),
+# Squirrel (AI), and the provenance trio. The ludoSpring spring validates
+# the composition in Rust (tier 2 of the 3-tier ladder).
+#
+# Cell graph: graphs/ludospring_cell.toml
 # Gaming niche: graphs/ludospring_gaming_niche.toml
+# Continuous loop: graphs/composition/game_loop_continuous.toml
 #
 # Date: April 25, 2026
-# Version: V52 (100 experiments, 817 #[test] functions, guideStone readiness 4, BTSP relay, MCP 15/15, standard v1.2.0, game tick loop, 30 capabilities)
+# Version: V53 (pure composition — no spring binary; 817 tests, guideStone readiness 4, 11 composed primals)
 
 niche:
   id: "ludospring-game"
   name: "ludoSpring Game Science Niche"
-  version: "1.0.0"
-  description: "Game science, interaction design, procedural generation, and play mechanics"
+  version: "2.0.0"
+  description: "Game science via pure primal composition — math, visualization, AI, and provenance primals composed at 60 Hz"
   category: "game"
   difficulty: "beginner"
   author: "ecoPrimals/ludoSpring"
-  deploy_graph: "graphs/ludospring_deploy.toml"
+  cell_graph: "graphs/ludospring_cell.toml"
+  deploy_graph: "graphs/ludospring_gaming_niche.toml"
+  continuous_graph: "graphs/composition/game_loop_continuous.toml"
 
   features:
-    - "Flow state evaluation (Csikszentmihalyi)"
-    - "Input cost modeling (Fitts/Hick laws)"
-    - "Engagement metrics (action density, exploration, persistence)"
-    - "UI analysis (Tufte data-ink, information density)"
+    - "Flow state evaluation (Csikszentmihalyi) via barraCuda math.sigmoid"
+    - "Input cost modeling (Fitts/Hick laws) via barraCuda activation.*"
+    - "Engagement metrics (action density, exploration, persistence) via barraCuda stats.*"
+    - "UI analysis (Tufte data-ink, information density) via barraCuda math.*"
     - "Accessibility scoring (visual, auditory, motor, cognitive)"
-    - "Procedural generation (Perlin noise, wave function collapse)"
-    - "Dynamic difficulty adjustment"
-    - "Provenance trio integration (game session lifecycle)"
+    - "Procedural generation (Perlin noise, WFC) via barraCuda noise.*"
+    - "Dynamic difficulty adjustment via barraCuda activation.*"
+    - "Live visualization + interaction via petalTongue"
+    - "NPC dialogue + narration via Squirrel AI"
+    - "Provenance trio integration (session lifecycle via rhizoCrypt/loamSpine/sweetGrass)"
+    - "Game state persistence via NestGate"
 
 organisms:
   primals:
-    ludospring:
-      type: "ludospring"
-      required: true
-      role: "science"
-      capabilities:
-        - "game.evaluate_flow"
-        - "game.fitts_cost"
-        - "game.engagement"
-        - "game.analyze_ui"
-        - "game.accessibility"
-        - "game.wfc_step"
-        - "game.difficulty_adjustment"
-        - "game.generate_noise"
-        - "game.begin_session"
-        - "game.record_action"
-        - "game.complete_session"
-        - "game.poll_telemetry"
-      config:
-        mode: "server"
-        domain: "game"
-
     beardog:
       type: "beardog"
       required: true
@@ -62,6 +52,7 @@ organisms:
         - "crypto.sign"
         - "crypto.encrypt"
         - "crypto.hash"
+        - "crypto.verify"
 
     songbird:
       type: "songbird"
@@ -71,37 +62,138 @@ organisms:
         - "discovery.query"
         - "discovery.announce"
 
+    barracuda:
+      type: "barracuda"
+      required: false
+      role: "science"
+      fallback: "skip"
+      capabilities:
+        - "math.sigmoid"
+        - "math.log2"
+        - "activation.fitts"
+        - "activation.hick"
+        - "stats.mean"
+        - "stats.std_dev"
+        - "stats.variance"
+        - "noise.perlin2d"
+        - "rng.uniform"
+        - "tensor.create"
+        - "tensor.matmul"
+      config:
+        domain: "tensor"
+
+    petaltongue:
+      type: "petaltongue"
+      required: true
+      role: "visualization"
+      capabilities:
+        - "visualization.render.scene"
+        - "visualization.render.stream"
+        - "visualization.render.dashboard"
+        - "visualization.export"
+        - "interaction.subscribe"
+        - "interaction.poll"
+
+    squirrel:
+      type: "squirrel"
+      required: false
+      role: "ai"
+      fallback: "skip"
+      capabilities:
+        - "ai.inference"
+        - "ai.query"
+
     toadstool:
       type: "toadstool"
       required: false
       role: "compute"
+      fallback: "skip"
       capabilities:
-        - "compute.execute"
+        - "compute.dispatch"
         - "compute.capabilities"
+
+    coralreef:
+      type: "coralreef"
+      required: false
+      role: "shader"
+      fallback: "skip"
+      capabilities:
+        - "shader.compile"
+        - "shader.execute"
+
+    nestgate:
+      type: "nestgate"
+      required: false
+      role: "storage"
+      fallback: "skip"
+      capabilities:
+        - "storage.store"
+        - "storage.retrieve"
+
+    rhizocrypt:
+      type: "rhizocrypt"
+      required: false
+      role: "dag"
+      fallback: "skip"
+      capabilities:
+        - "dag.session.create"
+        - "dag.event.append"
+
+    loamspine:
+      type: "loamspine"
+      required: false
+      role: "ledger"
+      fallback: "skip"
+      capabilities:
+        - "certificate.mint"
+
+    sweetgrass:
+      type: "sweetgrass"
+      required: false
+      role: "attribution"
+      fallback: "skip"
+      capabilities:
+        - "attribution.record"
 
   chimeras: {}
 
 interactions:
-  - from: "ludospring"
+  - from: "barracuda"
     to: "beardog"
     type: "capability_call"
     config:
-      capabilities: ["crypto.sign", "crypto.hash"]
-      description: "Session signing and data integrity"
+      capabilities: ["crypto.hash"]
+      description: "Data integrity for computed results"
 
-  - from: "ludospring"
-    to: "songbird"
+  - from: "petaltongue"
+    to: "barracuda"
     type: "capability_call"
     config:
-      capabilities: ["discovery.query"]
-      description: "Peer primal discovery by capability"
+      capabilities: ["math.sigmoid", "activation.fitts"]
+      description: "Visualization requests game science computations"
 
-  - from: "ludospring"
+  - from: "petaltongue"
+    to: "squirrel"
+    type: "capability_call"
+    config:
+      capabilities: ["ai.query"]
+      description: "Visualization triggers AI narration"
+      optional: true
+
+  - from: "barracuda"
     to: "toadstool"
     type: "capability_call"
     config:
-      capabilities: ["compute.execute"]
+      capabilities: ["compute.dispatch"]
       description: "GPU-accelerated noise generation and raycasting"
+      optional: true
+
+  - from: "rhizocrypt"
+    to: "beardog"
+    type: "capability_call"
+    config:
+      capabilities: ["crypto.sign"]
+      description: "Provenance event signing"
       optional: true
 
 customization:
@@ -110,21 +202,27 @@ customization:
       type: boolean
       default: false
       description: "Enable GPU-accelerated noise and raycasting via ToadStool"
-      affects: ["toadstool"]
+      affects: ["toadstool", "coralreef"]
 
     provenance_enabled:
       type: boolean
       default: true
       description: "Enable Provenance Trio for game session lifecycle tracking"
+      affects: ["rhizocrypt", "loamspine", "sweetgrass"]
 
     continuous_mode:
       type: boolean
       default: false
       description: "Enable continuous (60 Hz) coordination for game engine niche"
-      affects: ["ludospring"]
 
     genre:
       type: string
       default: "sandbox"
       description: "Game genre template (sandbox, first_person_spatial, top_down_command)"
       enum: ["sandbox", "first_person_spatial", "top_down_command"]
+
+validation:
+  spring: "springs/ludoSpring"
+  validation_tier: "rust"
+  test_count: 817
+  guidestone_readiness: 4

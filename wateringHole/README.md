@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 25, 2026 — **V52 is current**
+**Last Updated:** April 25, 2026 — **V53 is current**
 
 ---
 
@@ -25,14 +25,15 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V52** | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V52** — Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. 817 tests. |
+| **V53** | [LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V53** — Binary to composition evolution. Spring binary removed from plasmidBin. Game science via pure primal composition. GAP-10 resolved. 817 tests. |
+| V52 | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. 817 tests. |
 | V49 | [LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | Deep debt resolved. Capability-based discovery, MCP 15/15, typed IpcError in BTSP, base64 dep removed, handler tests extracted. 799 tests. |
 | V47 | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | Live NUCLEUS validated (54/54 checks, exit 0). primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science, 100 experiments, 817 workspace tests, V52 guideStone standard v1.2.0 + genomeBin v5.1)
+ludoSpring (game science composition, 100 experiments, 817 workspace tests, V53 pure composition + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -49,7 +50,7 @@ ludoSpring (game science, 100 experiments, 817 workspace tests, V52 guideStone s
 
 ## petalTongue Integration
 
-ludoSpring pushes live game science data to petalTongue through the unified `ludospring` binary: **UniBin subcommands** (`dashboard`, `live-session`, `tufte-dashboard`) replace the legacy separate per-feature binaries.
+In the composition model, petalTongue is composed as a primal node in the cell graph. The spring binary's UniBin subcommands (`dashboard`, `live-session`, `tufte-dashboard`) remain as development/validation tools — they are NOT deployed.
 
 | Subcommand | Feature | Scenarios |
 |------------|---------|-----------|
@@ -102,12 +103,13 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **guideStone (V47, live validated):** 31 bare + 15 IPC + 8 NUCLEUS = 54/54 checks passed (exit 0). BLAKE3 Property 3 via `validation/CHECKSUMS` (11 files). Protocol tolerance. Three-tier architecture (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering (7 constants). GAP-11 formulation divergence documented.
 
-See central handoffs: [V47 evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md), [V46 deep audit](../../../infra/wateringHole/handoffs/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md).
+See central handoffs: [V53 composition evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md), [V47 evolution (archived)](../../../infra/wateringHole/handoffs/archive/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md), [V46 deep audit (archived)](../../../infra/wateringHole/handoffs/archive/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md).
 
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V52 | `handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md` | V53 Composition Evolution |
 | V49 | `handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md` | V52 Composition Loop |
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
 | V46 | `handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md` | V47 Live NUCLEUS Validated |
