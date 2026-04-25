@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 25, 2026 (V50 — IpcError debt resolved. All 43 IPC client functions return typed `IpcError` (zero `Result<_, String>` in IPC layer). `classify_io_error` absorbed from primalSpring v0.9.17. Query methods aligned with upstream. 760 tests, zero clippy, genomeBin v5.1)
+**Last updated:** April 25, 2026 (V51 — Typed composition patterns from primalSpring v0.9.17: `ipc::methods` module (19 constants) replaces ~30 hardcoded method strings; `IpcError::is_skip_error()` for graceful degradation; handler dispatch and `VisualizationPushClient` evolved to constant-based routing. 810 tests, zero clippy, genomeBin v5.1)
 
 ## What is this?
 

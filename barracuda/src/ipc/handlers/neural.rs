@@ -12,6 +12,7 @@
 use serde_json::json;
 
 use crate::ipc::envelope::{JsonRpcError, JsonRpcRequest, RpcErrorBody};
+use crate::ipc::methods;
 
 use super::{HandlerResult, dispatch, parse_params, to_json};
 
@@ -75,7 +76,7 @@ pub(super) fn handle_capability_call(req: &JsonRpcRequest) -> HandlerResult {
         format!("{capability}.{operation}")
     };
 
-    if method == "capability.call" {
+    if method == methods::capability::CALL {
         return Err(JsonRpcError::invalid_params(
             &req.id,
             "recursive capability.call",
@@ -171,7 +172,7 @@ fn viz_delegation_without_ipc(
     domain: &str,
 ) -> HandlerResult {
     match method {
-        "visualization.export" => to_json(
+        methods::visualization::EXPORT => to_json(
             &req.id,
             json!({
                 "ipc_delegated": false,
@@ -182,7 +183,7 @@ fn viz_delegation_without_ipc(
                 "domain": domain,
             }),
         ),
-        "visualization.validate" => to_json(
+        methods::visualization::VALIDATE => to_json(
             &req.id,
             json!({
                 "degraded": true,
@@ -195,7 +196,7 @@ fn viz_delegation_without_ipc(
                 },
             }),
         ),
-        "interaction.subscribe" => to_json(
+        methods::interaction::SUBSCRIBE => to_json(
             &req.id,
             json!({
                 "acknowledged": true,
@@ -206,7 +207,7 @@ fn viz_delegation_without_ipc(
                 "domain": domain,
             }),
         ),
-        "interaction.poll" => to_json(
+        methods::interaction::POLL => to_json(
             &req.id,
             json!({
                 "delegated": false,
@@ -233,7 +234,7 @@ fn viz_delegation_no_peer(
     domain: &str,
 ) -> HandlerResult {
     match method {
-        "visualization.export" => to_json(
+        methods::visualization::EXPORT => to_json(
             &req.id,
             json!({
                 "ipc_delegated": false,
@@ -244,7 +245,7 @@ fn viz_delegation_no_peer(
                 "domain": domain,
             }),
         ),
-        "visualization.validate" => to_json(
+        methods::visualization::VALIDATE => to_json(
             &req.id,
             json!({
                 "degraded": true,
@@ -257,7 +258,7 @@ fn viz_delegation_no_peer(
                 },
             }),
         ),
-        "interaction.subscribe" => to_json(
+        methods::interaction::SUBSCRIBE => to_json(
             &req.id,
             json!({
                 "acknowledged": true,
@@ -268,7 +269,7 @@ fn viz_delegation_no_peer(
                 "domain": domain,
             }),
         ),
-        "interaction.poll" => to_json(
+        methods::interaction::POLL => to_json(
             &req.id,
             json!({
                 "delegated": false,
@@ -301,7 +302,7 @@ fn viz_render_dispatch(
 ) -> HandlerResult {
     let session_id = param_str(params, "session_id", "");
     match method {
-        "visualization.render" => {
+        methods::visualization::RENDER => {
             let title = param_str(params, "title", "Untitled");
             let data = params.get("data").cloned().unwrap_or_else(|| json!({}));
             client
@@ -309,7 +310,7 @@ fn viz_render_dispatch(
                 .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
             viz_delegated_ok(req)
         }
-        "visualization.render.stream" => {
+        methods::visualization::RENDER_STREAM => {
             let action = param_str(params, "action", "append");
             let data = params.get("data").cloned().unwrap_or_else(|| json!({}));
             client
@@ -317,7 +318,7 @@ fn viz_render_dispatch(
                 .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
             viz_delegated_ok(req)
         }
-        "visualization.render.scene" => {
+        methods::visualization::RENDER_SCENE => {
             let channel = param_str(params, "channel", "default");
             let scene = params.get("scene").cloned().unwrap_or_else(|| json!({}));
             client
@@ -325,7 +326,7 @@ fn viz_render_dispatch(
                 .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
             viz_delegated_ok(req)
         }
-        "visualization.render.dashboard" => {
+        methods::visualization::RENDER_DASHBOARD => {
             let panels: Vec<serde_json::Value> = params
                 .get("panels")
                 .and_then(serde_json::Value::as_array)
@@ -350,7 +351,7 @@ fn viz_management_dispatch(
     domain: &str,
 ) -> HandlerResult {
     match method {
-        "visualization.export" => {
+        methods::visualization::EXPORT => {
             let session_id = param_str(params, "session_id", "");
             let modality = param_str(params, "modality", "svg");
             let peer_result = client
@@ -370,7 +371,7 @@ fn viz_management_dispatch(
                 }),
             )
         }
-        "visualization.validate" => {
+        methods::visualization::VALIDATE => {
             let bindings = params.get("bindings").cloned().unwrap_or_else(|| json!({}));
             let peer_validation = client
                 .validate(&bindings)
@@ -386,7 +387,7 @@ fn viz_management_dispatch(
                 }),
             )
         }
-        "interaction.subscribe" => {
+        methods::interaction::SUBSCRIBE => {
             let session_id = param_str(params, "session_id", "");
             let peer = client
                 .subscribe_interaction(session_id)
@@ -404,7 +405,7 @@ fn viz_management_dispatch(
                 }),
             )
         }
-        "interaction.poll" => {
+        methods::interaction::POLL => {
             let session_id = param_str(params, "session_id", "");
             let events = client
                 .poll_interaction(session_id)
@@ -437,10 +438,12 @@ fn viz_delegation_with_peer(
     domain: &str,
 ) -> HandlerResult {
     match method {
-        "visualization.render"
-        | "visualization.render.stream"
-        | "visualization.render.scene"
-        | "visualization.render.dashboard" => viz_render_dispatch(client, req, method, params),
+        methods::visualization::RENDER
+        | methods::visualization::RENDER_STREAM
+        | methods::visualization::RENDER_SCENE
+        | methods::visualization::RENDER_DASHBOARD => {
+            viz_render_dispatch(client, req, method, params)
+        }
         _ => viz_management_dispatch(client, req, method, params, domain),
     }
 }

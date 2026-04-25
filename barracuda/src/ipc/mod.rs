@@ -35,6 +35,7 @@
 //! Protocol: newline-delimited JSON-RPC 2.0.
 
 pub mod btsp;
+pub mod methods;
 
 mod envelope;
 mod handlers;

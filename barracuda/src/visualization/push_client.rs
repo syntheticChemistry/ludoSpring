@@ -17,7 +17,7 @@ use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::time::Duration;
 
-const VISUALIZATION_CAPABILITY: &str = "visualization.render";
+const VISUALIZATION_CAPABILITY: &str = crate::ipc::methods::visualization::RENDER;
 
 /// Client for pushing visualization data to any viz-capable primal.
 #[derive(Debug, Clone)]
@@ -114,7 +114,7 @@ impl VisualizationPushClient {
     ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "visualization.render.stream",
+            "method": crate::ipc::methods::visualization::RENDER_STREAM,
             "params": {
                 "session_id": session_id,
                 "action": action,
@@ -180,7 +180,7 @@ impl VisualizationPushClient {
     ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "visualization.render.scene",
+            "method": crate::ipc::methods::visualization::RENDER_SCENE,
             "params": {
                 "session_id": session_id,
                 "channel": channel,
@@ -204,7 +204,7 @@ impl VisualizationPushClient {
     ) -> Result<(), crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "visualization.render.dashboard",
+            "method": crate::ipc::methods::visualization::RENDER_DASHBOARD,
             "params": {
                 "session_id": session_id,
                 "domain": crate::niche::NICHE_DOMAIN,
@@ -227,7 +227,7 @@ impl VisualizationPushClient {
     ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "visualization.export",
+            "method": crate::ipc::methods::visualization::EXPORT,
             "params": {
                 "session_id": session_id,
                 "modality": modality,
@@ -248,7 +248,7 @@ impl VisualizationPushClient {
     ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "interaction.subscribe",
+            "method": crate::ipc::methods::interaction::SUBSCRIBE,
             "params": {
                 "session_id": session_id,
                 "domain": crate::niche::NICHE_DOMAIN,
@@ -278,7 +278,7 @@ impl VisualizationPushClient {
     ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "interaction.poll",
+            "method": crate::ipc::methods::interaction::POLL,
             "params": {
                 "session_id": session_id,
                 "domain": crate::niche::NICHE_DOMAIN,
@@ -299,7 +299,7 @@ impl VisualizationPushClient {
     ) -> Result<serde_json::Value, crate::ipc::IpcError> {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "visualization.validate",
+            "method": crate::ipc::methods::visualization::VALIDATE,
             "params": {
                 "domain": crate::niche::NICHE_DOMAIN,
                 "bindings": bindings,
@@ -379,7 +379,7 @@ impl VisualizationPushClient {
 
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "lifecycle.status",
+            "method": crate::ipc::methods::lifecycle::STATUS,
             "params": {},
             "id": 1
         });

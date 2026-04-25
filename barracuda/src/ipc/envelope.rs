@@ -115,6 +115,17 @@ impl IpcError {
         matches!(self, Self::NoResult | Self::Serialization(_))
     }
 
+    /// Whether this error should be treated as a graceful skip.
+    ///
+    /// Mirrors `primalspring::composition::is_skip_error`. Covers absent
+    /// primals (connection refused, not found) and protocol mismatches
+    /// (non-JSON-RPC response). A skip means "the capability is expected
+    /// absent" and does not count as a test failure.
+    #[must_use]
+    pub const fn is_skip_error(&self) -> bool {
+        self.is_connection_error() || self.is_protocol_error()
+    }
+
     /// Wrap this error with a phase annotation.
     #[must_use]
     pub const fn in_phase(self, phase: IpcErrorPhase) -> PhasedIpcError {
@@ -588,6 +599,27 @@ mod tests {
         let io = std::io::Error::new(std::io::ErrorKind::BrokenPipe, "pipe");
         let err = classify_io_error(io);
         assert!(matches!(err, IpcError::Io(_)));
+    }
+
+    #[test]
+    fn is_skip_error_for_connection_and_protocol() {
+        assert!(IpcError::NotFound("gone".into()).is_skip_error());
+        assert!(
+            IpcError::Connect(std::io::Error::new(
+                std::io::ErrorKind::ConnectionRefused,
+                "refused"
+            ))
+            .is_skip_error()
+        );
+        assert!(IpcError::NoResult.is_skip_error());
+        assert!(IpcError::Serialization("bad json".into()).is_skip_error());
+        assert!(!IpcError::Io(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "pipe"))
+            .is_skip_error());
+        assert!(!IpcError::RpcError {
+            code: -32000,
+            message: "app error".into()
+        }
+        .is_skip_error());
     }
 
     #[test]

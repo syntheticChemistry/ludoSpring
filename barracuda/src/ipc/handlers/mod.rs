@@ -15,6 +15,7 @@ mod science;
 use tracing::info;
 
 use super::envelope::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
+use super::methods;
 use super::{
     METHOD_ACCESSIBILITY, METHOD_ANALYZE_UI, METHOD_BEGIN_SESSION, METHOD_COMPLETE_SESSION,
     METHOD_DIFFICULTY_ADJUSTMENT, METHOD_ENGAGEMENT, METHOD_EVALUATE_FLOW, METHOD_FITTS_COST,
@@ -69,15 +70,17 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
 /// Tier 1: lifecycle and health probes.
 fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
     Some(match method {
-        "health.check" | "lifecycle.health" | "health" => lifecycle::handle_health(req),
-        "health.liveness" => lifecycle::handle_liveness(req),
+        methods::health::CHECK | methods::lifecycle::HEALTH | "health" => {
+            lifecycle::handle_health(req)
+        }
+        methods::health::LIVENESS => lifecycle::handle_liveness(req),
         "health.readiness" => lifecycle::handle_readiness(req),
-        "lifecycle.status" => lifecycle::handle_lifecycle_status(req),
-        "lifecycle.composition" => lifecycle::handle_composition(req),
-        "lifecycle.register" => neural::handle_lifecycle_register(req),
-        "capability.list" => lifecycle::handle_capability_list(req),
-        "capability.deregister" => neural::handle_capability_deregister(req),
-        "capability.discover" => neural::handle_capability_discover(req),
+        methods::lifecycle::STATUS => lifecycle::handle_lifecycle_status(req),
+        methods::lifecycle::COMPOSITION => lifecycle::handle_composition(req),
+        methods::lifecycle::REGISTER => neural::handle_lifecycle_register(req),
+        methods::capability::LIST => lifecycle::handle_capability_list(req),
+        methods::capability::DEREGISTER => neural::handle_capability_deregister(req),
+        methods::capability::DISCOVER => neural::handle_capability_discover(req),
         _ => return None,
     })
 }
@@ -85,15 +88,15 @@ fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResul
 /// Tier 2: infrastructure — MCP, Neural API delegation, capability routing.
 fn dispatch_infrastructure(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
     Some(match method {
-        "capability.call" => neural::handle_capability_call(req),
-        "visualization.render"
-        | "visualization.render.stream"
-        | "visualization.render.scene"
-        | "visualization.render.dashboard"
-        | "visualization.export"
-        | "visualization.validate"
-        | "interaction.subscribe"
-        | "interaction.poll" => neural::handle_visualization_delegation(req),
+        methods::capability::CALL => neural::handle_capability_call(req),
+        methods::visualization::RENDER
+        | methods::visualization::RENDER_STREAM
+        | methods::visualization::RENDER_SCENE
+        | methods::visualization::RENDER_DASHBOARD
+        | methods::visualization::EXPORT
+        | methods::visualization::VALIDATE
+        | methods::interaction::SUBSCRIBE
+        | methods::interaction::POLL => neural::handle_visualization_delegation(req),
         METHOD_TOOLS_LIST => mcp::handle_tools_list(req),
         METHOD_TOOLS_CALL => mcp::handle_tools_call(req),
         _ => return None,

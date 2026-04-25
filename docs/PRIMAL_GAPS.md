@@ -25,6 +25,9 @@
 | `lifecycle.composition` handler | `SPRING_COMPOSITION_PATTERNS` §5 | `ipc/handlers/lifecycle.rs` |
 | Capability-first composition probing (`by_capability` → name fallback) | `SPRING_COMPOSITION_PATTERNS` §3 | `ipc/composition.rs` |
 | `nest_atomic` in declared fragments | NUCLEUS alignment | `ipc/composition.rs` + `config/capability_registry.toml` |
+| `ipc::methods` constants (viz, interaction, health, lifecycle, capability) | primalSpring v0.9.17 `ecoPrimal/src/ipc/methods.rs` | `ipc/methods.rs` (V51) |
+| `is_skip_error` graceful degradation pattern | primalSpring v0.9.17 `ecoPrimal/src/composition/mod.rs` | `ipc/envelope.rs` (V51) |
+| Constant-based dispatch routing (zero hardcoded method strings) | primalSpring v0.9.17 composition patterns | `handlers/mod.rs`, `handlers/neural.rs`, `push_client.rs` (V51) |
 
 ---
 

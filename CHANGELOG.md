@@ -3,7 +3,38 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V50).
+This project does not use SemVer — versions are session-sequential (V1–V51).
+
+## [V51] — 2026-04-25
+
+### Absorb typed composition patterns for live desktop UI
+
+Absorbed upstream primalSpring v0.9.17 composition patterns (commits
+`0844c5c`, `49c0eab`) — method constants, skip-error semantics, and
+visualization method routing.
+
+- **`ipc::methods` module:** New module mirrors `primalspring::ipc::methods`
+  for the visualization, interaction, health, lifecycle, and capability
+  domains. All constants are `&str` compile-time constants usable in match
+  arms. Replaces ~30 hardcoded string literals across dispatch and push
+  paths — eliminates the class of typo-induced silent routing failures.
+- **Handler dispatch evolved:** `dispatch_lifecycle` and
+  `dispatch_infrastructure` in `handlers/mod.rs` now match on
+  `methods::visualization::*`, `methods::interaction::*`, etc. instead of
+  string literals. All six `neural.rs` dispatch functions (render, management,
+  degraded, no-peer) similarly evolved.
+- **`VisualizationPushClient` evolved:** All 8 RPC method strings in
+  `push_client.rs` (`push_render`, `push_stream`, `push_scene`,
+  `push_dashboard`, `export`, `subscribe_interaction`, `poll_interaction`,
+  `validate`, `probe_with_capability`) replaced with `ipc::methods` constants.
+- **`IpcError::is_skip_error()`:** New query method mirrors upstream
+  `primalspring::composition::is_skip_error`. Returns `true` for connection
+  errors and protocol errors — enables the `call_or_skip` graceful
+  degradation pattern when petalTongue is absent.
+- **2 new tests:** `methods::tests::all_constants_are_dotted` validates all
+  19 method constants, `is_skip_error_for_connection_and_protocol` validates
+  the skip-error classification.
+- **810 tests, zero clippy warnings.**
 
 ## [V50] — 2026-04-25
 
