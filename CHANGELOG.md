@@ -7,6 +7,24 @@ This project does not use SemVer — versions are session-sequential (V1–V53).
 
 ## [V53] — 2026-04-25
 
+### Upstream absorption (cell_launcher, PG-38, GAP-07/11 resolved)
+
+- **Cell graph v2.0:** Synced from primalSpring v0.9.17 (commit 8bb90fb).
+  biomeOS-compatible `[[nodes]]` format with `by_capability` routing.
+- **cell_launcher.sh:** Portable cell deployment from plasmidBin — starts all
+  12 primals in dependency order, auto-generates BTSP seed, health checks.
+- **nucleus_launcher.sh:** Fixed BearDog `NODE_ID`, Songbird `--beardog-socket`,
+  petalTongue `server` mode (no `--socket` flag).
+- **GAP-07 RESOLVED:** loamSpine startup panic fixed upstream (PG-33, d34100f).
+- **GAP-11 RESOLVED:** barraCuda Fitts/Hick convention is intentional (PG-38).
+  Default is Shannon/log₂(n); pass `variant: "fitts"` or `include_no_choice: true`
+  for textbook formulas.
+- **Live composition verified:** 18/20 capabilities through NUCLEUS, 5 primals
+  with sockets via nucleus_launcher, game.tick loop in 0.6ms (200x headroom).
+- **downstream_manifest.toml:** ludospring entry now `guidestone_validation =
+  "composition"`, `composition_model = "pure"`, with `visualization.render.scene`
+  + `interaction.poll` in validation capabilities.
+
 ### Binary to composition evolution
 
 Springs are NOT primals — they produce primals and define compositions.

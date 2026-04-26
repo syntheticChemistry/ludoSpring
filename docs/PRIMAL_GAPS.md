@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 25, 2026 (V53 — Binary to composition evolution: ludospring removed from plasmidBin; game science via primal composition; GAP-10 resolved. 817 tests, zero clippy.)
+**Last updated:** April 25, 2026 (V53 — Upstream absorbed: cell graph v2.0, cell_launcher.sh, PG-38 Fitts/Hick variant params, GAP-07 resolved (loamSpine PG-33), GAP-10 resolved, GAP-11 resolved (PG-38). 817 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -177,12 +177,12 @@ in UDS-only deployments.
 ### GAP-07: loamSpine Startup Panic
 
 **Primal:** loamSpine
-**Status:** OPEN (upstream) — treat as unresolved pending loamSpine release
-**Detail:** Runtime nesting panic on startup
-**Impact:** 6 composition checks fail
-**Severity:** CRITICAL
+**Status:** RESOLVED (upstream) — loamSpine d34100f: `std::thread::spawn` + `oneshot` replaces `spawn_blocking` (PG-33). Verified by primalSpring Phase 45 audit.
+**Detail:** Runtime nesting panic on startup (was: `block_on` inside async runtime)
+**Impact:** 6 composition checks previously failed; should now pass with updated binary
+**Severity:** ~~CRITICAL~~ → RESOLVED
 **Owner:** loamSpine team
-**Tracking:** Documented in CONTEXT.md V37.1 gap matrix
+**Tracking:** PG-33 in primalSpring docs/PRIMAL_GAPS.md. plasmidBin binary may need rebuild.
 
 ---
 
@@ -346,25 +346,29 @@ Springs can't distinguish "routed but primal failed" vs "Neural API down".
 ### GAP-11: barraCuda Formulation Divergence (Fitts, Hick, Variance)
 
 **Primal:** barraCuda
-**Status:** DOCUMENTED — discovered during live NUCLEUS validation (V47)
-**Impact:** guideStone IPC checks use barraCuda-expected values, not Python golden values.
+**Status:** RESOLVED (PG-38) — barraCuda conventions are intentional, with explicit
+variant params for callers who need textbook formulas.
+**Impact:** No divergence bug — callers use explicit params.
 
-Three formulation differences between barraCuda IPC and Python baselines:
-1. **Fitts**: barraCuda uses `log₂(D/W + 1)`, Python uses `log₂(2D/W + 1)` (Shannon).
-   Same params (D=100, W=10, a=50, b=150): barraCuda=568.91, Python=708.85.
-2. **Hick**: barraCuda uses `log₂(N)`, Python uses `log₂(N + 1)`.
-   Same params (N=7, a=200, b=150): barraCuda=621.10, Python=650.00.
-3. **Variance**: barraCuda always returns sample variance (ddof=1, N-1),
-   ignoring `ddof` parameter. Python golden uses population variance (ddof=0).
-   Same data [2,4,4,4,5,5,7,9]: barraCuda=4.5714, Python=4.0.
+Three formulation conventions, now **documented and parameterized** (PG-38, April 25):
+
+1. **Fitts**: Default is Shannon (`log₂(D/W + 1)`). Pass `variant: "fitts"` for
+   classic Fitts (`log₂(2D/W)`). Verified live: `activation.fitts(200, 40)` returns
+   Shannon ID=3.32; `variant: "fitts"` returns classic ID=3.32, MT=0.515.
+2. **Hick**: Default is `log₂(n)`. Pass `include_no_choice: true` for textbook
+   `log₂(n + 1)`. Verified live: `activation.hick(8)` returns 3.0 bits;
+   `include_no_choice: true` returns 3.17 bits.
+3. **Variance**: Always sample variance (N-1). Convention metadata included in
+   response (`"convention": "sample", "denominator": "N-1"`). PG-36 resolved.
 
 guideStone bare checks (Tier 1) use Python golden values (reference-traceable).
-guideStone IPC checks (Tier 2) use barraCuda-expected values (IPC parity).
-Both are documented and deterministic — the formulation difference is tracked here.
+guideStone IPC checks (Tier 2) should now pass explicit variant params to match
+the Python baselines:
+- `activation.fitts(D, W, variant: "fitts")` → classic Fitts (Python baseline)
+- `activation.hick(n, include_no_choice: true)` → textbook Hick (Python baseline)
 
-**Action:** barraCuda team to verify formulation choices. If Shannon `log₂(2D/W + 1)`
-is preferred, update the `activation.fitts` implementation. If `log₂(D/W + 1)` is
-intentional, document the rationale. Same for Hick and variance convention.
+**Action:** Update guideStone Tier 2 checks to pass explicit variant params. This
+unifies the dual-value approach into a single-value approach with explicit conventions.
 
 ---
 
