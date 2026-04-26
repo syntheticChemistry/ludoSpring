@@ -2,8 +2,8 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** April 25, 2026
-**Version:** V53 (Binary to composition evolution — ludospring binary removed from plasmidBin (springs are NOT primals); game science served by composing existing primals via NUCLEUS cell graph; `ludospring_cell.toml` evolved to 12-node pure composition (no spring binary node); GAP-10 resolved; manifest.lock updated to `[compositions.ludospring_game]`. Spring binary remains as Rust validation target (tier 2). **817** workspace tests.)
+**Date:** April 26, 2026
+**Version:** V53 (Binary to composition evolution + upstream absorption — ludospring binary removed from plasmidBin (springs are NOT primals); game science served by composing existing primals via NUCLEUS cell graph; `ludospring_cell.toml` v2.0 (12-node pure composition, synced from primalSpring 8bb90fb); `cell_launcher.sh` portable deployment; GAP-07 RESOLVED (loamSpine PG-33), GAP-10 RESOLVED, GAP-11 RESOLVED (PG-38: Fitts/Hick variant params); manifest.lock updated to `[compositions.ludospring_game]`. Live composition verified: 18/20 capabilities, game.tick in 0.6ms. **817** workspace tests.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**817** as of V53); if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)

@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 25, 2026 (V53 — Binary to composition evolution: ludospring binary removed from plasmidBin; game science served by composing primals via NUCLEUS cell graph; `ludospring_cell.toml` evolved to 12-node pure composition; GAP-10 resolved; 817 tests, zero clippy)
+**Last updated:** April 26, 2026 (V53 — Binary to composition evolution + upstream absorption: ludospring removed from plasmidBin; cell graph v2.0 synced from primalSpring 8bb90fb; `cell_launcher.sh` portable deployment; GAP-07 RESOLVED (loamSpine PG-33), GAP-10 RESOLVED, GAP-11 RESOLVED (PG-38 Fitts/Hick variant params); live composition verified 18/20 capabilities in 0.6ms; 817 tests, zero clippy)
 
 ## What is this?
 

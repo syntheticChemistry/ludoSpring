@@ -217,9 +217,10 @@ to accurately reflect that it wires the full Nest surface. Trio primals
 gracefully degrade when absent and will activate when the Nest overlay graph
 is composed by biomeOS. The `CompositionReport` (now exposed via
 `lifecycle.composition`) tracks trio primals as "absent" until deployed.
-When rhizoCrypt ships UDS transport (GAP-06) and loamSpine resolves its
-startup panic (GAP-07), trio `required` flags can be reconsidered.
-**Related:** GAP-03, GAP-05, GAP-06, GAP-07
+loamSpine startup panic (GAP-07) is now RESOLVED upstream (PG-33). When
+rhizoCrypt ships UDS transport (GAP-06), trio `required` flags can be
+reconsidered.
+**Related:** GAP-03, GAP-05, GAP-06
 **Owner:** primalSpring graph maintainers / ludoSpring
 **Tracking:** This file + `ipc/composition.rs` runtime validation
 
@@ -257,9 +258,9 @@ math, visualization, AI, storage, and provenance primals.
 
 ## Gaps Handed to Primal Teams
 
-- **GAP-06** (rhizoCrypt TCP-only) → rhizoCrypt team
-- **GAP-07** (loamSpine panic) → loamSpine team
-- **GAP-08** (barraCuda formula mismatch) → barraCuda team
+- **GAP-06** (rhizoCrypt TCP-only) → rhizoCrypt team — **OPEN**, only remaining critical gap
+- **GAP-07** (loamSpine panic) → loamSpine team — **RESOLVED** (PG-33, d34100f)
+- **GAP-08** (barraCuda formula mismatch) → barraCuda team — **SUPERSEDED** by GAP-11 → **RESOLVED** (PG-38)
 
 ---
 

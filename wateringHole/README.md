@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 25, 2026 — **V53 is current**
+**Last Updated:** April 26, 2026 — **V53 is current** (post-absorption)
 
 ---
 
@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V53** | [LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V53** — Binary to composition evolution. Spring binary removed from plasmidBin. Game science via pure primal composition. GAP-10 resolved. 817 tests. |
+| **V53** | [LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V53** — Binary to composition evolution + upstream absorption. Cell graph v2.0, `cell_launcher.sh`. GAP-07/10/11 resolved (PG-33, PG-38). Live: 18/20 capabilities, game.tick 0.6ms. 817 tests. |
 | V52 | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. 817 tests. |
 | V49 | [LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | Deep debt resolved. Capability-based discovery, MCP 15/15, typed IpcError in BTSP, base64 dep removed, handler tests extracted. 799 tests. |
 | V47 | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | Live NUCLEUS validated (54/54 checks, exit 0). primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1. |
@@ -86,22 +86,22 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## V42 Composition Gap Matrix (10 gaps; GAP-09 RESOLVED)
+## Composition Gap Status (V53, updated April 26)
 
-| GAP | Owner | Severity | Impact |
-|-----|-------|----------|--------|
-| GAP-06: No UDS transport | **rhizoCrypt** | CRITICAL | Blocks 4 experiments |
-| GAP-07: Startup panic (runtime nesting) | **loamSpine** | CRITICAL | Blocks 1 experiment |
-| GAP-08: Fitts/Hick formula mismatch | **barraCuda** | HIGH | -4 composition checks |
-| Neural API capability registration | **biomeOS** | HIGH | -14 checks (exp087, 088) |
-| GAP-01: coralReef IPC client not exercised | **coralReef** | MEDIUM | Shader pipeline |
-| GAP-05: Trio not in proto-nucleate | **primalSpring** | MEDIUM | Graph completeness |
-| Inter-primal discovery gap | **toadStool** | MEDIUM | -1 check |
-| Perlin3D lattice invariant | **barraCuda** | MEDIUM | -1 check |
+| GAP | Owner | Status | Notes |
+|-----|-------|--------|-------|
+| GAP-06: No UDS transport | **rhizoCrypt** | **OPEN** | Only remaining critical gap — blocks 4 experiments |
+| GAP-07: Startup panic | **loamSpine** | **RESOLVED** | PG-33 (d34100f): `std::thread::spawn` + `oneshot` |
+| GAP-08: Fitts/Hick formula mismatch | **barraCuda** | **RESOLVED** | Superseded by GAP-11 → PG-38 |
+| GAP-11: Formulation divergence | **barraCuda** | **RESOLVED** | PG-38: variant params (`variant: "fitts"`, `include_no_choice: true`) |
+| GAP-10: game.* graph identity | **ludoSpring** | **RESOLVED** | V53: pure composition model |
+| GAP-01: coralReef IPC client | **coralReef** | OPEN | Shader pipeline not exercised |
+| GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |
+| Neural API registration | **biomeOS** | OPEN | -14 checks (exp087, 088) |
 
-**Score**: 95/141 (67.4%) + 6 composition parity tests (Layer 2.5) PASS + exp099 13/13 + exp100 27 checks (NUCLEUS parity). `lifecycle.composition` handler live (V42). Projected with all fixes: ~143/154 (92.9%).
+**Score**: 95/141 (67.4%) composition checks + exp099 13/13 + exp100 27 checks. Projected with GAP-06 fix: ~143/154 (92.9%).
 
-**guideStone (V47, live validated):** 31 bare + 15 IPC + 8 NUCLEUS = 54/54 checks passed (exit 0). BLAKE3 Property 3 via `validation/CHECKSUMS` (11 files). Protocol tolerance. Three-tier architecture (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). guideStone standard v1.2.0, upstream `call_or_skip`/`is_skip_error`, v1.2.0 tolerance ordering (7 constants). GAP-11 formulation divergence documented.
+**guideStone (V47→V53):** 54/54 checks passed. guideStone standard v1.2.0. GAP-11 formulation divergence now resolved via PG-38 variant params — guideStone Tier 2 checks should pass explicit `variant`/`include_no_choice` params.
 
 See central handoffs: [V53 composition evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md), [V47 evolution (archived)](../../../infra/wateringHole/handoffs/archive/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md), [V46 deep audit (archived)](../../../infra/wateringHole/handoffs/archive/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md).
 
