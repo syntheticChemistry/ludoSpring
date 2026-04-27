@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 26, 2026 — **V53 is current** (post-absorption)
+**Last Updated:** April 27, 2026 — **V54 is current** (composition library absorption)
 
 ---
 

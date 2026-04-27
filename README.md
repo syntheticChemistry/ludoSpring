@@ -2,9 +2,9 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** April 26, 2026
-**Version:** V53 (Binary to composition evolution + upstream absorption — ludospring binary removed from plasmidBin (springs are NOT primals); game science served by composing existing primals via NUCLEUS cell graph; `ludospring_cell.toml` v2.0 (12-node pure composition, synced from primalSpring 8bb90fb); `cell_launcher.sh` portable deployment; GAP-07 RESOLVED (loamSpine PG-33), GAP-10 RESOLVED, GAP-11 RESOLVED (PG-38: Fitts/Hick variant params); manifest.lock updated to `[compositions.ludospring_game]`. Live composition verified: 18/20 capabilities, game.tick in 0.6ms. **817** workspace tests.)
-**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**817** as of V53); if they diverge, treat this README and `cargo test --workspace` as canonical.
+**Date:** April 27, 2026
+**Version:** V54 (Composition library absorption — `nucleus_composition_lib.sh` + `composition_nucleus.sh` from primalSpring TTT reference; `ludo_composition.sh` domain-specific interactive game science composition (Fitts pointing, reaction/Hick, DAG sandbox); exploration lane: interaction fidelity, real-time feedback, multi-input routing. Pure primal composition via 12-node cell graph. **817** workspace tests.)
+**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**817** as of V54); if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)

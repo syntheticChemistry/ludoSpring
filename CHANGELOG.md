@@ -5,6 +5,33 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V53).
 
+## [V54] — 2026-04-27
+
+### Composition library absorption — interaction fidelity lane
+
+- **Upstream composition tooling absorbed:** `nucleus_composition_lib.sh` (reusable
+  NUCLEUS wiring: discovery, DAG, ledger, braids, petalTongue, sensor stream),
+  `composition_nucleus.sh` (parameterized launcher replacing ad-hoc startup).
+  Sourced from primalSpring's TTT reference implementation.
+- **`ludo_composition.sh`:** Domain-specific interactive game science composition.
+  Three modes: Fitts law pointing task (randomized targets, barraCuda ID computation),
+  reaction time / Hick's law (go/no-go with variable delay), free explore DAG sandbox
+  (undo, branches, merkle). All modes wire DAG → ledger → braid provenance.
+- **Exploration lane:** Interaction fidelity and real-time feedback — multi-player
+  input routing, continuous vs event-driven rendering, DAG branching for game state
+  time-travel, braid replay integrity, petalTongue stress testing.
+- **New PGs noted:** PG-45 (rhizoCrypt UDS no JSON-RPC response), PG-46 (toadStool
+  slow on short timeouts), PG-47 (barraCuda missing stats.entropy), PG-48
+  (petalTongue plasmidBin musl + winit threading), PG-39 (graph schema mismatch).
+- **Live composition tested (FAMILY_ID=nucleus01):** 5/7 capabilities discovered
+  (visualization, security, compute, tensor, attribution). DAG and ledger offline
+  (PG-45, GAP-07). Fitts ID sweep (W=20..100, Shannon variant confirmed), Hick
+  bits sweep (n=2..16, log₂(n) confirmed). sweetGrass braids with full JSON-LD
+  provenance. Scene push/dismiss, interaction subscribe/poll verified.
+- **Findings:** petalTongue v1.6.6 missing `proprioception.get`, `motor.continuous`;
+  `capability.list` doesn't enumerate viz/interaction methods. `uds_rpc.py` created
+  as socat fallback (python3 UDS transport).
+
 ## [V53] — 2026-04-25
 
 ### Upstream absorption (cell_launcher, PG-38, GAP-07/11 resolved)

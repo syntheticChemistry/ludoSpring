@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 25, 2026 (V53 — Upstream absorbed: cell graph v2.0, cell_launcher.sh, PG-38 Fitts/Hick variant params, GAP-07 resolved (loamSpine PG-33), GAP-10 resolved, GAP-11 resolved (PG-38). 817 tests, zero clippy.)
+**Last updated:** April 27, 2026 (V54 — Composition library absorbed from primalSpring TTT reference. New PGs noted from downstream explorer guide: PG-39 graph schema mismatch, PG-45 rhizoCrypt UDS no JSON-RPC, PG-46 toadStool slow, PG-47 barraCuda missing stats.entropy, PG-48 petalTongue musl+winit. 817 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -261,6 +261,39 @@ math, visualization, AI, storage, and provenance primals.
 - **GAP-06** (rhizoCrypt TCP-only) → rhizoCrypt team — **OPEN**, only remaining critical gap
 - **GAP-07** (loamSpine panic) → loamSpine team — **RESOLVED** (PG-33, d34100f)
 - **GAP-08** (barraCuda formula mismatch) → barraCuda team — **SUPERSEDED** by GAP-11 → **RESOLVED** (PG-38)
+
+## Upstream PGs Noted from Composition Explorer Guide (V54)
+
+These are known issues documented by primalSpring for downstream composition explorers:
+
+| PG | Primal | Issue | Workaround |
+|----|--------|-------|-----------|
+| PG-39 | biomeOS/primalSpring | Graph schema mismatch (`[[graph.nodes]]` vs `[[nodes]]`) | Use shell compositions; alignment upstream |
+| PG-45 | rhizoCrypt | UDS accepts connections but returns no JSON-RPC response | DAG features gracefully degrade |
+| PG-46 | toadStool | Slow on short timeouts | Use >=10s socat timeout (lib defaults 5s) |
+| PG-47 | barraCuda | Missing `stats.entropy` method | Skip or compute locally |
+| PG-48 | petalTongue | plasmidBin musl + winit threading issue | Use local build for live mode |
+
+## ludoSpring Composition Findings (V54)
+
+Discovered during `ludo_composition.sh` testing against live nucleus01 primals:
+
+| Finding | Primal | Details | Impact |
+|---------|--------|---------|--------|
+| `proprioception.get` missing | petalTongue v1.6.6 | Method not found — lib's `check_proprioception` silently degrades | No FPS/activity monitoring; composition still works |
+| `motor.continuous` missing | petalTongue v1.6.6 | Method not found — 60Hz rendering control unavailable | Rendering works via `visualization.render.scene` push |
+| `motor.set_panel` requires motor channel | petalTongue v1.6.6 | Returns "Motor channel not connected" in server mode | Panel control only available in live (GUI) mode |
+| `capability.list` incomplete | petalTongue v1.6.6 | Only lists health/topology — not visualization, interaction, motor | Working methods aren't discoverable; cap discovery relies on socket probing |
+| `socat` not available | System | Not installed, no sudo — lib transport blocked | Created `uds_rpc.py` python3 fallback; patched local lib copy |
+
+**Working through composition (5/7 capabilities):**
+- visualization (petalTongue): scene push/dismiss, interaction subscribe/poll, sensor stream ✓
+- security (BearDog): signing ✓
+- compute (toadStool): socket present ✓
+- tensor (barraCuda): Fitts ID sweep (W=20..100), Hick bits sweep (n=2..16) ✓
+- attribution (sweetGrass): braid create + query with full JSON-LD provenance ✓
+- dag (rhizoCrypt): OFFLINE (PG-45)
+- ledger (loamSpine): OFFLINE (binary needs rebuild, GAP-07 resolved upstream)
 
 ---
 

@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 26, 2026 (V53 — Binary to composition evolution + upstream absorption: ludospring removed from plasmidBin; cell graph v2.0 synced from primalSpring 8bb90fb; `cell_launcher.sh` portable deployment; GAP-07 RESOLVED (loamSpine PG-33), GAP-10 RESOLVED, GAP-11 RESOLVED (PG-38 Fitts/Hick variant params); live composition verified 18/20 capabilities in 0.6ms; 817 tests, zero clippy)
+**Last updated:** April 27, 2026 (V54 — Composition library absorption: `nucleus_composition_lib.sh` + `composition_nucleus.sh` from primalSpring; `ludo_composition.sh` interactive game science composition (Fitts, reaction/Hick, DAG sandbox); exploration lane: interaction fidelity and real-time feedback; 817 tests, zero clippy)
 
 ## What is this?
 
