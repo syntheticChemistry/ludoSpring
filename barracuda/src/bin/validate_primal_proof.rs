@@ -15,11 +15,11 @@
 //!
 //! Exit codes: 0 = pass, 1 = fail, 2 = skip (barraCuda socket absent).
 
-use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
+use ludospring_barracuda::ipc::{IpcError, RpcClient};
 use ludospring_barracuda::tolerances;
 use ludospring_barracuda::validation::{BaselineProvenance, EXIT_SKIPPED, ValidationHarness};
 
@@ -38,34 +38,16 @@ const STATS_MEAN_1_5: f64 = 3.0;
 const LOG2_OF_8: f64 = 3.0;
 
 fn rpc_call(
-    socket: &Path,
+    client: &RpcClient,
     method: &str,
     params: &serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    let request = serde_json::json!({
+) -> Result<serde_json::Value, IpcError> {
+    client.send_raw(&serde_json::json!({
         "jsonrpc": "2.0",
         "method": method,
         "params": params,
         "id": 1
-    });
-    let stream =
-        UnixStream::connect(socket).map_err(|e| format!("connect {}: {e}", socket.display()))?;
-    stream
-        .set_read_timeout(Some(Duration::from_secs(5)))
-        .map_err(|e| format!("timeout: {e}"))?;
-    let mut writer = stream.try_clone().map_err(|e| format!("clone: {e}"))?;
-    let mut payload = serde_json::to_string(&request).map_err(|e| format!("ser: {e}"))?;
-    payload.push('\n');
-    writer
-        .write_all(payload.as_bytes())
-        .map_err(|e| format!("write: {e}"))?;
-    writer.flush().map_err(|e| format!("flush: {e}"))?;
-    let mut reader = BufReader::new(stream);
-    let mut buf = String::new();
-    reader
-        .read_line(&mut buf)
-        .map_err(|e| format!("read: {e}"))?;
-    serde_json::from_str(&buf).map_err(|e| format!("parse: {e}"))
+    }))
 }
 
 fn has_result(resp: &serde_json::Value) -> bool {
@@ -98,7 +80,7 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
     let dep = ludospring_barracuda::niche::DEPENDENCIES
         .iter()
         .find(|d| d.capability == "compute" || d.capability == "tensor");
-    let dep_name = dep.map(|d| d.name);
+    let dep_name = dep.and_then(|d| d.hint_name);
     let capability = dep.map_or("compute", |d| d.capability);
 
     let dirs = ludospring_barracuda::niche::socket_dirs();
@@ -127,8 +109,7 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
                         .extension()
                         .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"));
                     if is_sock
-                        && (n.contains(capability)
-                            || dep_name.is_some_and(|dn| n.starts_with(dn)))
+                        && (n.contains(capability) || dep_name.is_some_and(|dn| n.starts_with(dn)))
                     {
                         return Some(p);
                     }
@@ -141,14 +122,14 @@ fn discover_barracuda_socket() -> Option<PathBuf> {
 
 fn check_ipc_scalar(
     h: &mut ValidationHarness,
-    sock: &Path,
+    client: &RpcClient,
     method: &str,
     params: &serde_json::Value,
     label: &str,
     expected: f64,
     tol: f64,
 ) {
-    match rpc_call(sock, method, params) {
+    match rpc_call(client, method, params) {
         Ok(resp) if has_result(&resp) => {
             if let Some(val) = extract_scalar(&resp) {
                 h.check_abs(label, val, expected, tol);
@@ -176,20 +157,31 @@ fn check_ipc_scalar(
     }
 }
 
-fn check_ipc_exists(h: &mut ValidationHarness, sock: &Path, method: &str, label: &str) {
-    let resp = rpc_call(sock, method, &serde_json::json!({}));
+fn check_ipc_exists(h: &mut ValidationHarness, client: &RpcClient, method: &str, label: &str) {
+    let resp = rpc_call(client, method, &serde_json::json!({}));
     h.check_bool(label, resp.as_ref().is_ok_and(has_result));
 }
 
-fn phase_health(h: &mut ValidationHarness, sock: &Path) {
-    check_ipc_exists(h, sock, "health.liveness", "barracuda_health_liveness");
-    check_ipc_exists(h, sock, "capabilities.list", "barracuda_capabilities_list");
+fn phase_health(h: &mut ValidationHarness, client: &RpcClient) {
+    use ludospring_barracuda::ipc::methods;
+    check_ipc_exists(
+        h,
+        client,
+        methods::health::LIVENESS,
+        "barracuda_health_liveness",
+    );
+    check_ipc_exists(
+        h,
+        client,
+        methods::capability::LIST_ALT,
+        "barracuda_capabilities_list",
+    );
 }
 
-fn phase_interaction(h: &mut ValidationHarness, sock: &Path) {
+fn phase_interaction(h: &mut ValidationHarness, client: &RpcClient) {
     check_ipc_scalar(
         h,
-        sock,
+        client,
         "activation.fitts",
         &serde_json::json!({"distance": 100.0, "width": 10.0, "a": 50.0, "b": 150.0}),
         "primal_fitts_mt_D100_W10",
@@ -199,7 +191,7 @@ fn phase_interaction(h: &mut ValidationHarness, sock: &Path) {
 
     check_ipc_scalar(
         h,
-        sock,
+        client,
         "activation.hick",
         &serde_json::json!({"n_choices": 7, "a": 200.0, "b": 150.0}),
         "primal_hick_rt_N7",
@@ -208,10 +200,10 @@ fn phase_interaction(h: &mut ValidationHarness, sock: &Path) {
     );
 }
 
-fn phase_math(h: &mut ValidationHarness, sock: &Path) {
+fn phase_math(h: &mut ValidationHarness, client: &RpcClient) {
     check_ipc_scalar(
         h,
-        sock,
+        client,
         "math.sigmoid",
         &serde_json::json!({"data": [0.5]}),
         "primal_sigmoid_half",
@@ -221,7 +213,7 @@ fn phase_math(h: &mut ValidationHarness, sock: &Path) {
 
     check_ipc_scalar(
         h,
-        sock,
+        client,
         "math.log2",
         &serde_json::json!({"data": [8.0]}),
         "primal_log2_of_8",
@@ -231,7 +223,7 @@ fn phase_math(h: &mut ValidationHarness, sock: &Path) {
 
     check_ipc_scalar(
         h,
-        sock,
+        client,
         "stats.mean",
         &serde_json::json!({"data": [1.0, 2.0, 3.0, 4.0, 5.0]}),
         "primal_stats_mean",
@@ -240,10 +232,10 @@ fn phase_math(h: &mut ValidationHarness, sock: &Path) {
     );
 }
 
-fn phase_procedural(h: &mut ValidationHarness, sock: &Path) {
+fn phase_procedural(h: &mut ValidationHarness, client: &RpcClient) {
     check_ipc_scalar(
         h,
-        sock,
+        client,
         "noise.perlin2d",
         &serde_json::json!({"x": 0.0, "y": 0.0}),
         "primal_perlin_origin",
@@ -252,7 +244,7 @@ fn phase_procedural(h: &mut ValidationHarness, sock: &Path) {
     );
 
     let std_dev = rpc_call(
-        sock,
+        client,
         "stats.std_dev",
         &serde_json::json!({"data": [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]}),
     );
@@ -262,16 +254,16 @@ fn phase_procedural(h: &mut ValidationHarness, sock: &Path) {
     );
 
     let rng = rpc_call(
-        sock,
+        client,
         "rng.uniform",
         &serde_json::json!({"n": 5, "min": 0.0, "max": 1.0, "seed": 42}),
     );
     h.check_bool("primal_rng_uniform", rng.as_ref().is_ok_and(has_result));
 }
 
-fn phase_tensor(h: &mut ValidationHarness, sock: &Path) {
+fn phase_tensor(h: &mut ValidationHarness, client: &RpcClient) {
     let tensor = rpc_call(
-        sock,
+        client,
         "tensor.create",
         &serde_json::json!({"shape": [2, 2], "data": [1.0, 0.0, 0.0, 1.0]}),
     );
@@ -286,9 +278,7 @@ fn main() {
     h.print_provenance(&[&PROVENANCE]);
 
     let Some(sock) = discover_barracuda_socket() else {
-        eprintln!(
-            "SKIP: barraCuda socket not found (set BARRACUDA_SOCK or start barracuda-core)"
-        );
+        eprintln!("SKIP: barraCuda socket not found (set BARRACUDA_SOCK or start barracuda-core)");
         std::process::exit(EXIT_SKIPPED);
     };
 
@@ -302,11 +292,12 @@ fn main() {
 
     eprintln!("  barraCuda socket: {}", sock.display());
 
-    phase_health(&mut h, &sock);
-    phase_interaction(&mut h, &sock);
-    phase_math(&mut h, &sock);
-    phase_procedural(&mut h, &sock);
-    phase_tensor(&mut h, &sock);
+    let client = RpcClient::new(&sock, Duration::from_secs(5));
+    phase_health(&mut h, &client);
+    phase_interaction(&mut h, &client);
+    phase_math(&mut h, &client);
+    phase_procedural(&mut h, &client);
+    phase_tensor(&mut h, &client);
 
     h.finish();
 }

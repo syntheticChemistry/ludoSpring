@@ -141,7 +141,8 @@ fn discover_socket() -> Option<PathBuf> {
 }
 
 fn validate_health(h: &mut ValidationHarness, ep: &PrimalEndpoint) {
-    match call_primal(ep, "health.liveness", &serde_json::json!({})) {
+    use ludospring_barracuda::ipc::methods;
+    match call_primal(ep, methods::health::LIVENESS, &serde_json::json!({})) {
         Ok(v) => {
             let ok = v.get("status").and_then(serde_json::Value::as_str) == Some("alive");
             h.check_bool("health.liveness status=alive", ok);
@@ -151,7 +152,7 @@ fn validate_health(h: &mut ValidationHarness, ep: &PrimalEndpoint) {
             h.check_bool("health.liveness status=alive", false);
         }
     }
-    match call_primal(ep, "health.readiness", &serde_json::json!({})) {
+    match call_primal(ep, methods::health::READINESS, &serde_json::json!({})) {
         Ok(v) => {
             let ready = v.get("ready").and_then(serde_json::Value::as_bool) == Some(true);
             h.check_bool("health.readiness ready=true", ready);
@@ -164,7 +165,8 @@ fn validate_health(h: &mut ValidationHarness, ep: &PrimalEndpoint) {
 }
 
 fn validate_lifecycle_composition(h: &mut ValidationHarness, ep: &PrimalEndpoint) {
-    match call_primal(ep, "lifecycle.composition", &serde_json::json!({})) {
+    use ludospring_barracuda::ipc::methods;
+    match call_primal(ep, methods::lifecycle::COMPOSITION, &serde_json::json!({})) {
         Ok(report) => {
             h.check_bool(
                 "lifecycle.composition composition_model=pure",
@@ -246,7 +248,15 @@ fn compare_case(
         "game.fitts_cost" => cmp_fitts(h, lp, expected, result, tol.analytical),
         "game.engagement" => cmp_engagement(h, lp, expected, result, tol.game_state),
         "game.generate_noise" => {
-            cmp_f64(h, &format!("{lp} value"), result, "value", expected, "value", tol.noise_mean);
+            cmp_f64(
+                h,
+                &format!("{lp} value"),
+                result,
+                "value",
+                expected,
+                "value",
+                tol.noise_mean,
+            );
         }
         "game.difficulty_adjustment" => cmp_dda(h, lp, expected, result, tol.analytical),
         "game.accessibility" => cmp_accessibility(h, lp, expected, result, tol.game_state),
@@ -261,9 +271,31 @@ fn cmp_flow(
     result: &serde_json::Value,
     tol: f64,
 ) {
-    cmp_str(h, &format!("{lp} state"), result, "state", expected, "state");
-    cmp_bool(h, &format!("{lp} in_flow"), result, "in_flow", expected, "in_flow");
-    cmp_f64(h, &format!("{lp} flow_score"), result, "flow_score", expected, "flow_score", tol);
+    cmp_str(
+        h,
+        &format!("{lp} state"),
+        result,
+        "state",
+        expected,
+        "state",
+    );
+    cmp_bool(
+        h,
+        &format!("{lp} in_flow"),
+        result,
+        "in_flow",
+        expected,
+        "in_flow",
+    );
+    cmp_f64(
+        h,
+        &format!("{lp} flow_score"),
+        result,
+        "flow_score",
+        expected,
+        "flow_score",
+        tol,
+    );
 }
 
 fn cmp_fitts(
@@ -273,7 +305,12 @@ fn cmp_fitts(
     result: &serde_json::Value,
     tol: f64,
 ) {
-    for key in ["movement_time_ms", "index_of_difficulty", "reaction_time_ms", "steering_time_ms"] {
+    for key in [
+        "movement_time_ms",
+        "index_of_difficulty",
+        "reaction_time_ms",
+        "steering_time_ms",
+    ] {
         if expected.get(key).is_some() {
             cmp_f64(h, &format!("{lp} {key}"), result, key, expected, key, tol);
         }
@@ -287,13 +324,21 @@ fn cmp_engagement(
     result: &serde_json::Value,
     tol: f64,
 ) {
-    for key in ["actions_per_minute", "challenge_appetite", "composite", "deliberation", "persistence"] {
+    for key in [
+        "actions_per_minute",
+        "challenge_appetite",
+        "composite",
+        "deliberation",
+        "persistence",
+    ] {
         if expected.get(key).is_some() {
             cmp_f64(h, &format!("{lp} {key}"), result, key, expected, key, tol);
         }
     }
     if expected.get("exploration_rate").is_some() {
-        let exp_v = expected.get("exploration_rate").and_then(serde_json::Value::as_f64);
+        let exp_v = expected
+            .get("exploration_rate")
+            .and_then(serde_json::Value::as_f64);
         let obs = result
             .get("exploration_rate")
             .or_else(|| result.get("exploration_ratio"))
@@ -324,15 +369,29 @@ fn cmp_accessibility(
     result: &serde_json::Value,
     tol: f64,
 ) {
-    cmp_f64(h, &format!("{lp} score"), result, "score", expected, "score", tol);
-    if let Some(exp_issues) = expected.get("issues_count").and_then(serde_json::Value::as_u64) {
+    cmp_f64(
+        h,
+        &format!("{lp} score"),
+        result,
+        "score",
+        expected,
+        "score",
+        tol,
+    );
+    if let Some(exp_issues) = expected
+        .get("issues_count")
+        .and_then(serde_json::Value::as_u64)
+    {
         let got = result
             .get("issues")
             .and_then(serde_json::Value::as_array)
             .map_or(u64::MAX, |a| a.len() as u64);
         h.check_bool(&format!("{lp} issues_count"), got == exp_issues);
     }
-    if let Some(exp_s) = expected.get("strengths_count").and_then(serde_json::Value::as_u64) {
+    if let Some(exp_s) = expected
+        .get("strengths_count")
+        .and_then(serde_json::Value::as_u64)
+    {
         let got = result
             .get("strengths")
             .and_then(serde_json::Value::as_array)

@@ -16,6 +16,29 @@ use crate::procedural::noise::{fbm_2d, perlin_2d};
 use crate::procedural::wfc::{AdjacencyRules, WfcCell, WfcGrid};
 use crate::tolerances;
 
+/// Error from comparing composition target snapshots.
+#[derive(Debug, thiserror::Error)]
+#[error("{path}: {kind}")]
+pub struct ComparisonError {
+    /// JSON path where the mismatch was found.
+    pub path: String,
+    /// Description of the mismatch.
+    pub kind: String,
+}
+
+impl ComparisonError {
+    fn at(path: &str, kind: impl Into<String>) -> Self {
+        Self {
+            path: if path.is_empty() {
+                "<root>".into()
+            } else {
+                path.into()
+            },
+            kind: kind.into(),
+        }
+    }
+}
+
 /// Build the full `composition_targets.json` object (including `_provenance`).
 #[must_use]
 pub fn snapshot() -> Value {
@@ -77,7 +100,7 @@ pub fn snapshot() -> Value {
 /// Returns `Err` when structure or values differ beyond tolerance, including
 /// missing keys, extra keys, type mismatches, or float deltas larger than
 /// [`tolerances::ANALYTICAL_TOL`].
-pub fn compare_stored_to_generated(stored: &Value) -> Result<(), String> {
+pub fn compare_stored_to_generated(stored: &Value) -> Result<(), ComparisonError> {
     let fresh = snapshot();
     compare_values(
         &strip_provenance(stored),
@@ -115,44 +138,41 @@ fn join_json_path(path: &str, segment: &str) -> String {
     }
 }
 
-fn compare_values(a: &Value, b: &Value, tol: f64, path: &str) -> Result<(), String> {
-    let path_label = if path.is_empty() {
-        "<root>".to_owned()
-    } else {
-        path.to_owned()
-    };
+fn compare_values(a: &Value, b: &Value, tol: f64, path: &str) -> Result<(), ComparisonError> {
     match (a, b) {
         (Value::Null, Value::Null) => {}
         (Value::Number(na), Value::Number(nb)) => {
             let fa = na
                 .as_f64()
-                .ok_or_else(|| format!("{path_label}: invalid number (lhs)"))?;
+                .ok_or_else(|| ComparisonError::at(path, "invalid number (lhs)"))?;
             let fb = nb
                 .as_f64()
-                .ok_or_else(|| format!("{path_label}: invalid number (rhs)"))?;
+                .ok_or_else(|| ComparisonError::at(path, "invalid number (rhs)"))?;
             if (fa - fb).abs() > tol {
-                return Err(format!(
-                    "{path_label}: expected {fb:.17e}, got {fa:.17e} (Δ={:.2e})",
-                    (fa - fb).abs()
+                return Err(ComparisonError::at(
+                    path,
+                    format!(
+                        "expected {fb:.17e}, got {fa:.17e} (Δ={:.2e})",
+                        (fa - fb).abs()
+                    ),
                 ));
             }
         }
         (Value::Bool(x), Value::Bool(y)) => {
             if x != y {
-                return Err(format!("{path_label}: bool {x} vs {y}"));
+                return Err(ComparisonError::at(path, format!("bool {x} vs {y}")));
             }
         }
         (Value::String(x), Value::String(y)) => {
             if x != y {
-                return Err(format!("{path_label}: string mismatch"));
+                return Err(ComparisonError::at(path, "string mismatch"));
             }
         }
         (Value::Array(aa), Value::Array(bb)) => {
             if aa.len() != bb.len() {
-                return Err(format!(
-                    "{path_label}: array len {} vs {}",
-                    aa.len(),
-                    bb.len()
+                return Err(ComparisonError::at(
+                    path,
+                    format!("array len {} vs {}", aa.len(), bb.len()),
                 ));
             }
             for (i, (va, vb)) in aa.iter().zip(bb.iter()).enumerate() {
@@ -168,25 +188,34 @@ fn compare_values(a: &Value, b: &Value, tol: f64, path: &str) -> Result<(), Stri
             for k in oa.keys() {
                 let sub = join_json_path(path, k);
                 let Some(va) = oa.get(k) else {
-                    return Err(format!("{sub}: internal compare bug (missing key)"));
+                    return Err(ComparisonError::at(
+                        &sub,
+                        "internal compare bug (missing key)",
+                    ));
                 };
                 let Some(vb) = ob.get(k) else {
-                    return Err(format!("{sub}: missing key in generated snapshot"));
+                    return Err(ComparisonError::at(
+                        &sub,
+                        "missing key in generated snapshot",
+                    ));
                 };
                 compare_values(va, vb, tol, &sub)?;
             }
             for k in ob.keys() {
                 if !oa.contains_key(k) {
                     let sub = join_json_path(path, k);
-                    return Err(format!("{sub}: extra key in generated snapshot"));
+                    return Err(ComparisonError::at(&sub, "extra key in generated snapshot"));
                 }
             }
         }
         _ => {
-            return Err(format!(
-                "{path_label}: type mismatch ({} vs {})",
-                json_type_name(a),
-                json_type_name(b)
+            return Err(ComparisonError::at(
+                path,
+                format!(
+                    "type mismatch ({} vs {})",
+                    json_type_name(a),
+                    json_type_name(b)
+                ),
             ));
         }
     }

@@ -12,7 +12,7 @@ use ludospring_barracuda::visualization::PetalTonguePushClient;
 
 use serde_json::{Value, json};
 
-pub fn cmd_live_session() -> Result<(), String> {
+pub fn cmd_live_session() -> Result<(), super::CliError> {
     eprintln!("╔═══════════════════════════════════════════════════════════╗");
     eprintln!("║  ludoSpring Live Game Session                            ║");
     eprintln!("║  Streaming game science to petalTongue tick-by-tick      ║");
@@ -142,11 +142,11 @@ fn write_session_json(
     engagement_trace: &[Value],
     difficulty_trace: &[Value],
     flow_phase_charts: &[Value],
-) -> Result<(), String> {
+) -> Result<(), super::CliError> {
     let base = std::env::var("LUDOSPRING_OUTPUT_DIR").unwrap_or_else(|_| "sandbox".into());
     let out_dir = Path::new(&base).join("sessions");
     fs::create_dir_all(&out_dir)
-        .map_err(|e| format!("cannot create {}: {e}", out_dir.display()))?;
+        .map_err(|e| super::CliError::io(format_args!("cannot create {}", out_dir.display()), e))?;
 
     let session = json!({
         "session_id": "live-game-session-demo",
@@ -157,22 +157,11 @@ fn write_session_json(
     });
 
     let path = out_dir.join("live_session.json");
-    match serde_json::to_string_pretty(&session) {
-        Ok(json_str) => match fs::write(&path, &json_str) {
-            Ok(()) => {
-                eprintln!("Session saved to {}", path.display());
-                Ok(())
-            }
-            Err(e) => {
-                eprintln!("ERROR: write {}: {e}", path.display());
-                Err(format!("write {}: {e}", path.display()))
-            }
-        },
-        Err(e) => {
-            eprintln!("ERROR: serialize session: {e}");
-            Err(format!("serialize session: {e}"))
-        }
-    }
+    let json_str = serde_json::to_string_pretty(&session)?;
+    fs::write(&path, &json_str)
+        .map_err(|e| super::CliError::io(format_args!("write {}", path.display()), e))?;
+    eprintln!("Session saved to {}", path.display());
+    Ok(())
 }
 
 fn build_phase_flow_chart(tick: u32, difficulty: f64, skill: f64) -> Value {

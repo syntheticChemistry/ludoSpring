@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** April 26, 2026
+**Date:** April 27, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V53 — 100 experiments, 30 JSON-RPC capabilities, **817** workspace tests. Binary to composition evolution: springs are NOT primals — game science served by composing primals (barraCuda, petalTongue, Squirrel, provenance trio) via NUCLEUS cell graph. `ludospring_cell.toml` evolved to 12-node pure composition. GAP-10 resolved. Game tick loop: `game.tick` composite handler (push→poll→record→metrics), `game.subscribe_interaction`, `game.poll_interaction` with `is_skip_error` graceful degradation. `ipc::methods` constants. `IpcError` typed errors. guideStone readiness **4** (NUCLEUS validated): three-tier — Tier 1 (20 bare checks), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Capability-based discovery. Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (spring binary) → Primal composition (NUCLEUS graph). Upstream absorbed: cell graph v2.0, `cell_launcher.sh`, PG-38 (Fitts/Hick variant params). 7 primal gaps remaining (GAP-01–GAP-06, GAP-09; GAP-07/08/10/11 resolved).
+**Status:** V55 — 100 experiments, 30 JSON-RPC capabilities, **820** workspace tests. Deep debt resolution: zero `Result<_, String>` in entire codebase, shared `RpcClient` for all UDS transport, capability-first `NicheDependency`, `ipc/methods.rs` expanded to 10 domain modules, guidestone modularized. Binary to composition evolution: springs are NOT primals — game science served by composing primals (barraCuda, petalTongue, Squirrel, provenance trio) via NUCLEUS cell graph. `ludospring_cell.toml` evolved to 12-node pure composition. guideStone readiness **4** (NUCLEUS validated): three-tier — Tier 1 (20 bare checks), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (spring binary) → Primal composition (NUCLEUS graph). 7 primal gaps remaining (GAP-01–GAP-06, GAP-09; GAP-07/08/10/11 resolved).
 
 ---
 
@@ -89,6 +89,35 @@ Layer 4: Composition      (lifecycle.composition — runtime probe of all 11 nic
 These patterns make ludoSpring a **reference implementation** for how springs absorb
 and validate composition standards. Other springs can use ludoSpring as a template
 for their own composition evolution.
+
+### Deep Debt Resolution — Rust Craftsmanship Tier (V55)
+
+V55 adds a fifth tier to the validation ladder: **code maturation**. The codebase
+went from "working and tested" to "idiomatic, typed, deduplicated, and modular."
+
+```
+Layer 5: Craftsmanship  (V55: deep debt — typed errors, shared transport, capability-first, modular)
+Layer 4: Composition    (lifecycle.composition — runtime probe of all 11 niche dependencies)
+Layer 3: NUCLEUS        (exp100: 27 checks — niche, health, capability, science, golden chain)
+Layer 2: Rust ↔ IPC     (exp099: 13/13, analytical tolerance 1e-10)
+Layer 1: Python ↔ Rust  (python_parity.rs — parity vs Python baselines)
+```
+
+**What "deep debt resolution" means for validated science:**
+
+| Before (V54) | After (V55) | Why it matters |
+|---|---|---|
+| `Result<_, String>` in library modules | `VoxelError`, `BaselineError`, `ComparisonError` (thiserror) | Error semantics preserved through composition; `matches!()` in tests instead of string comparison |
+| `Result<_, String>` in all binaries | `CliError`, `RunnerError`, `IpcError` (thiserror) | Structured error handling end-to-end; `#[source]` chaining for debuggability |
+| Duplicated UDS connect-send-read-parse in 4 files | Shared `RpcClient` struct | Single point of correctness for IPC transport; ~120 lines removed |
+| `NicheDependency.name` (hardcoded primal names) | `NicheDependency.capability` primary, `hint_name` optional | Discovery resolves by capability first — architecturally aligned with NUCLEUS |
+| Raw method string literals in dispatch paths | `ipc::methods` expanded to 10 domain modules | Compile-time consistency test verifies constants match `niche::CAPABILITIES` |
+| `envelope.rs` at 824 lines | Split: 409 lines production + `envelope_tests.rs` | Under threshold, tests isolated for maintenance |
+| `ludospring_guidestone.rs` at 812 lines | `guidestone/` module: `main.rs`, `constants.rs`, `tier1.rs`, `tier2.rs`, `tier3.rs` | Each file under 220 lines; tier logic separated |
+
+**Test delta:** 817 → 820 (new: `RpcClient` connect error classification,
+method constants consistency with `niche::CAPABILITIES`, `BaselineError`
+variant matching).
 
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference

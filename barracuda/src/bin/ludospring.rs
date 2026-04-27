@@ -49,7 +49,9 @@ fn cmd_server(port: Option<u16>) -> Result<(), ludospring_barracuda::ipc::IpcErr
     signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&shutdown))
         .map_err(classify_io_error)?;
 
-    server.run_until(shutdown.as_ref()).map_err(classify_io_error)?;
+    server
+        .run_until(shutdown.as_ref())
+        .map_err(classify_io_error)?;
 
     ludospring_barracuda::biomeos::deregister_domain();
     info!("Shutdown complete");
@@ -57,6 +59,8 @@ fn cmd_server(port: Option<u16>) -> Result<(), ludospring_barracuda::ipc::IpcErr
 }
 
 fn cmd_status() {
+    use ludospring_barracuda::ipc::methods;
+
     let family_id = niche::family_id();
     let socket_path = niche::resolve_server_socket();
 
@@ -77,10 +81,13 @@ fn cmd_status() {
     };
 
     let params = serde_json::json!({});
-    match ludospring_barracuda::ipc::call_primal(&endpoint, "health.liveness", &params)
-        .or_else(|_| ludospring_barracuda::ipc::call_primal(&endpoint, "lifecycle.status", &params))
-        .or_else(|_| ludospring_barracuda::ipc::call_primal(&endpoint, "health.check", &params))
-    {
+    match ludospring_barracuda::ipc::call_primal(&endpoint, methods::health::LIVENESS, &params)
+        .or_else(|_| {
+            ludospring_barracuda::ipc::call_primal(&endpoint, methods::lifecycle::STATUS, &params)
+        })
+        .or_else(|_| {
+            ludospring_barracuda::ipc::call_primal(&endpoint, methods::health::CHECK, &params)
+        }) {
         Ok(resp) => {
             println!(
                 "{}",
@@ -144,8 +151,8 @@ fn main() {
         .init();
 
     let cli = Cli::parse();
-    let result: Result<(), String> = match cli.command {
-        Command::Server { port } => cmd_server(port).map_err(|e| e.to_string()),
+    let result: Result<(), commands::CliError> = match cli.command {
+        Command::Server { port } => cmd_server(port).map_err(Into::into),
         Command::Status => {
             cmd_status();
             Ok(())

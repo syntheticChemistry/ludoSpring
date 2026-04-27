@@ -24,10 +24,10 @@
 //! # }
 //! ```
 
-use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::time::Duration;
+
+use super::rpc_client::RpcClient;
 
 /// Default RPC timeout in seconds (overridable via `BIOMEOS_RPC_TIMEOUT_SECS`).
 const DEFAULT_TIMEOUT_SECS: u64 = 5;
@@ -37,10 +37,11 @@ const DEFAULT_TIMEOUT_SECS: u64 = 5;
 /// All cross-primal communication flows through `capability.call` on the
 /// Neural API socket. This primal never connects to peers directly — biomeOS
 /// handles routing.
-#[derive(Debug, Clone)]
+///
+/// Delegates transport to [`RpcClient`].
+#[derive(Debug)]
 pub struct NeuralBridge {
-    socket: PathBuf,
-    timeout: Duration,
+    client: RpcClient,
 }
 
 impl NeuralBridge {
@@ -62,30 +63,31 @@ impl NeuralBridge {
             .unwrap_or(DEFAULT_TIMEOUT_SECS);
 
         Ok(Self {
-            socket,
-            timeout: Duration::from_secs(timeout_secs),
+            client: RpcClient::new(socket, Duration::from_secs(timeout_secs)),
         })
     }
 
     /// Create a bridge pointing at a specific socket (useful for testing).
     #[must_use]
-    pub const fn with_socket(socket: PathBuf) -> Self {
+    pub fn with_socket(socket: PathBuf) -> Self {
         Self {
-            socket,
-            timeout: Duration::from_secs(DEFAULT_TIMEOUT_SECS),
+            client: RpcClient::new(socket, Duration::from_secs(DEFAULT_TIMEOUT_SECS)),
         }
     }
 
     /// Bridge with explicit socket and RPC timeout (integration tests, tooling).
     #[must_use]
-    pub const fn with_socket_and_timeout(socket: PathBuf, timeout: Duration) -> Self {
-        Self { socket, timeout }
+    pub fn with_socket_and_timeout(socket: PathBuf, timeout: Duration) -> Self {
+        Self {
+            client: RpcClient::new(socket, timeout),
+        }
     }
 
     /// Whether the Neural API is reachable (connect + health check).
     #[must_use]
     pub fn is_available(&self) -> bool {
-        self.rpc_send("health.check", &serde_json::json!({}))
+        self.client
+            .call(super::methods::health::CHECK, &serde_json::json!({}))
             .is_ok()
     }
 
@@ -109,7 +111,7 @@ impl NeuralBridge {
             "operation": operation,
             "args": args,
         });
-        self.rpc_send("capability.call", &params)
+        self.client.call(super::methods::capability::CALL, &params)
     }
 
     /// Discover which primals serve a given capability.
@@ -124,7 +126,8 @@ impl NeuralBridge {
         let params = serde_json::json!({
             "capability": capability,
         });
-        self.rpc_send("capability.discover", &params)
+        self.client
+            .call(super::methods::capability::DISCOVER, &params)
     }
 
     /// Register this primal's capabilities with the Neural API.
@@ -163,7 +166,8 @@ impl NeuralBridge {
             "cost_estimates": crate::niche::cost_estimates(),
         });
 
-        self.rpc_send("lifecycle.register", &params)
+        self.client
+            .call(super::methods::lifecycle::REGISTER, &params)
     }
 
     /// Deregister this primal from the Neural API.
@@ -176,52 +180,14 @@ impl NeuralBridge {
             "domain": crate::niche::NICHE_DOMAIN,
             "provider": crate::niche::NICHE_NAME,
         });
-        self.rpc_send("capability.deregister", &params)
+        self.client
+            .call(super::methods::capability::DEREGISTER, &params)
     }
 
     /// The resolved socket path for this bridge.
     #[must_use]
     pub fn socket_path(&self) -> &std::path::Path {
-        &self.socket
-    }
-
-    fn rpc_send(
-        &self,
-        method: &str,
-        params: &serde_json::Value,
-    ) -> Result<serde_json::Value, super::envelope::IpcError> {
-        use super::envelope::IpcError;
-
-        let stream = UnixStream::connect(&self.socket).map_err(IpcError::Connect)?;
-        stream
-            .set_read_timeout(Some(self.timeout))
-            .map_err(IpcError::Timeout)?;
-        stream
-            .set_write_timeout(Some(self.timeout))
-            .map_err(IpcError::Timeout)?;
-
-        let request = serde_json::json!({
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": params,
-            "id": 1
-        });
-
-        let mut writer = stream.try_clone().map_err(IpcError::Io)?;
-        let mut msg =
-            serde_json::to_string(&request).map_err(|e| IpcError::Serialization(e.to_string()))?;
-        msg.push('\n');
-        writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
-        writer.flush().map_err(IpcError::Io)?;
-
-        let mut reader = BufReader::new(stream);
-        let mut response = String::new();
-        reader.read_line(&mut response).map_err(IpcError::Io)?;
-
-        let parsed: serde_json::Value =
-            serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
-
-        super::envelope::extract_rpc_result(&parsed)
+        self.client.socket_path()
     }
 }
 
@@ -253,7 +219,7 @@ mod tests {
             std::process::id()
         ));
         let bridge = NeuralBridge::with_socket(socket_path);
-        assert_eq!(bridge.timeout, Duration::from_secs(5));
+        assert_eq!(bridge.client.timeout(), Duration::from_secs(5));
     }
 
     #[test]

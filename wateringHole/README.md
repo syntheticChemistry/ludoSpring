@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 27, 2026 — **V54 is current** (composition library absorption)
+**Last Updated:** April 27, 2026 — **V55 is current** (deep debt resolution)
 
 ---
 
@@ -25,15 +25,14 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V53** | [LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | **Current: V53** — Binary to composition evolution + upstream absorption. Cell graph v2.0, `cell_launcher.sh`. GAP-07/10/11 resolved (PG-33, PG-38). Live: 18/20 capabilities, game.tick 0.6ms. 817 tests. |
-| V52 | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. 817 tests. |
-| V49 | [LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | Deep debt resolved. Capability-based discovery, MCP 15/15, typed IpcError in BTSP, base64 dep removed, handler tests extracted. 799 tests. |
-| V47 | [LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md](handoffs/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md) | Apr 20 | Live NUCLEUS validated (54/54 checks, exit 0). primalSpring v0.9.17, guideStone standard v1.2.0, genomeBin v5.1. |
+| **V55** | [LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md) | Apr 27 | **Current: V55** — Deep debt resolution: `RpcClient` extraction, capability-first niche, typed errors everywhere (`CliError`/`VoxelError`/`BaselineError`/`ComparisonError`), `ipc/methods.rs` expanded to 10 domain modules, guidestone modularized. Zero `Result<_, String>` in entire codebase. 820 tests. |
+| V53 | [LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | Binary to composition evolution + upstream absorption. Cell graph v2.0, `cell_launcher.sh`. GAP-07/10/11 resolved. Live: 18/20 capabilities, game.tick 0.6ms. |
+| V52 | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 100 experiments, 817 workspace tests, V53 pure composition + guideStone standard v1.2.0)
+ludoSpring (game science composition, 100 experiments, 820 workspace tests, V55 pure composition + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -109,10 +108,10 @@ See central handoffs: [V53 composition evolution](../../../infra/wateringHole/ha
 
 | Version | File | Superseded by |
 |---------|------|---------------|
-| V52 | `handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md` | V53 Composition Evolution |
-| V49 | `handoffs/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md` | V52 Composition Loop |
+| V49 | `handoffs/archive/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
+| V47 | `handoffs/archive/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md` | V55 Deep Debt Resolution |
+| V46 | `handoffs/archive/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md` | V55 Deep Debt Resolution |
 | V39 | Central: `infra/wateringHole/handoffs/LUDOSPRING_V39_NUCLEUS_COMPOSITION_PARITY_HANDOFF_APR10_2026.md` | V42 Composition Evolution |
-| V46 | `handoffs/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md` | V47 Live NUCLEUS Validated |
 | V45 | `handoffs/archive/LUDOSPRING_V45_GUIDESTONE_HANDOFF_APR18_2026.md` | V46 Three-Tier NUCLEUS |
 | V44 | `handoffs/archive/LUDOSPRING_V44_PRIMAL_PROOF_HANDOFF_APR17_2026.md` | V45 guideStone |
 | V43 | `handoffs/archive/LUDOSPRING_V43_THREE_LAYER_VALIDATION_HANDOFF_APR17_2026.md` | V44 Primal Proof |

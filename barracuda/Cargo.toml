@@ -80,7 +80,7 @@ required-features = ["ipc"]
 
 [[bin]]
 name = "ludospring_guidestone"
-path = "src/bin/ludospring_guidestone.rs"
+path = "src/bin/guidestone/main.rs"
 required-features = ["guidestone"]
 
 [[example]]

@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** April 27, 2026 (V54 — Composition library absorbed from primalSpring TTT reference. New PGs noted from downstream explorer guide: PG-39 graph schema mismatch, PG-45 rhizoCrypt UDS no JSON-RPC, PG-46 toadStool slow, PG-47 barraCuda missing stats.entropy, PG-48 petalTongue musl+winit. 817 tests, zero clippy.)
+**Last updated:** April 27, 2026 (V55 — Deep debt resolution complete. `RpcClient` deduplicates IPC transport (fewer places for primal interaction bugs). `IpcError` now has source chaining via `From<serde_json::Error>` and `From<io::Error>` (improved debuggability for all primal interactions). Capability-first `NicheDependency` aligns discovery with the composition model. No new gaps. 820 tests, zero clippy.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

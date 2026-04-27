@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 27, 2026 (V54 — Composition library absorption: `nucleus_composition_lib.sh` + `composition_nucleus.sh` from primalSpring; `ludo_composition.sh` interactive game science composition (Fitts, reaction/Hick, DAG sandbox); exploration lane: interaction fidelity and real-time feedback; 817 tests, zero clippy)
+**Last updated:** April 27, 2026 (V55 — Deep debt resolution: shared `RpcClient` for IPC transport, capability-first `NicheDependency`, typed errors everywhere (`CliError`/`VoxelError`/`BaselineError`/`ComparisonError`), `ipc/methods.rs` expanded to 10 domain modules, guidestone modularized, `envelope.rs` test extraction; 820 tests, zero clippy)
 
 ## What is this?
 
@@ -25,7 +25,7 @@ experiments, and GPU-accelerated computation where it matters.
 - **Main crate**: `ludospring-barracuda` (library + IPC binaries for validation)
 - **GPU math**: `barraCuda` (path dependency, `default-features = false`)
 - **IPC**: JSON-RPC 2.0 over Unix domain sockets (newline-delimited)
-- **Transport**: XDG-compliant socket path resolution, capability-based discovery
+- **Transport**: XDG-compliant socket path resolution, capability-based discovery, shared `RpcClient` for all UDS JSON-RPC operations
 - **No cross-primal Rust imports**: all coordination via runtime IPC
 - **No deployed binary**: game science is served by composing primals (barraCuda,
   petalTongue, Squirrel, provenance trio) via the cell graph
@@ -57,7 +57,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 817 workspace `#[test]` functions (V53)
+- **Tests**: 820 workspace `#[test]` functions (V55)
 - **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`

@@ -1,10 +1,10 @@
 # ludoSpring Experiments
 
 **Date:** April 27, 2026
-**Total:** 100 experiments, **817** workspace tests (V54)
+**Total:** 100 experiments, **820** workspace tests (V55)
 **Pattern:** hotSpring validation + baseCamp expeditions + primal composition gap discovery + science-via-composition + NUCLEUS game engine composition + composition validation + NUCLEUS parity
 **Lints:** All 100 experiment Cargo.toml files inherit `[lints] workspace = true`
-**Live validation results:** 95/141 (67.4%) composition checks passing against genomeBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4, guideStone standard v1.2.0: three-tier (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). V53: pure primal composition (no spring binary in plasmidBin). Upstream absorbed: cell graph v2.0, `cell_launcher.sh` portable deployment, PG-38 (Fitts/Hick variant params), GAP-07/11 resolved. `game.tick` composite handler with `is_skip_error` degradation. `ipc::methods` constants. `IpcError` typed errors. `ludospring_cell.toml` (12 nodes, pure composition, BTSP). MCP 15/15 tools. 30 capabilities. Zero hardcoded primal names. Live composition: 18/20 capabilities verified, game.tick in 0.6ms.
+**Live validation results:** 95/141 (67.4%) composition checks passing against genomeBin primals. exp099: 13/13 (Rust == IPC parity). exp100: 27-check NUCLEUS composition parity. `ludospring_guidestone` binary — guideStone readiness 4, guideStone standard v1.2.0: three-tier (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS). V55: deep debt resolution — shared `RpcClient` for IPC transport, capability-first `NicheDependency`, typed errors everywhere, `ipc/methods.rs` expanded to 10 domain modules. Pure primal composition (no spring binary in plasmidBin). `ludospring_cell.toml` (12 nodes, pure composition, BTSP). MCP 15/15 tools. 30 capabilities. Zero hardcoded primal names. Zero `Result<_, String>` in codebase. Live composition: 18/20 capabilities verified, game.tick in 0.6ms.
 
 ---
 

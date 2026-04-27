@@ -6,17 +6,31 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+#[derive(Debug, thiserror::Error)]
+enum RunnerError {
+    #[error("current_exe: {0}")]
+    CurrentExe(#[source] std::io::Error),
+    #[error("current_exe has no parent")]
+    NoParent,
+    #[error("spawn {path}: {source}")]
+    Spawn {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
+}
+
 struct Validator {
     name: &'static str,
     /// When true, exit code 2 is treated as skip (not failure), per ecosystem convention.
     skip_on_exit_2: bool,
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), RunnerError> {
     let exe_dir = std::env::current_exe()
-        .map_err(|e| format!("current_exe: {e}"))?
+        .map_err(RunnerError::CurrentExe)?
         .parent()
-        .ok_or_else(|| "current_exe has no parent".to_string())?
+        .ok_or(RunnerError::NoParent)?
         .to_path_buf();
 
     let validators = [
@@ -70,7 +84,10 @@ fn main() -> Result<(), String> {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
-            .map_err(|e| format!("spawn {}: {e}", path.display()))?;
+            .map_err(|e| RunnerError::Spawn {
+                path: path.display().to_string(),
+                source: e,
+            })?;
         let code = out.status.code().unwrap_or(-1);
         if code == 0 {
             eprintln!("  ✓ {name} (exit 0)");

@@ -5,6 +5,11 @@
 //! molecule, field sample, or game element. Chunks are the unit of
 //! generation, storage, and rendering.
 //!
+//! # Errors
+//!
+//! Uses [`VoxelError`] for all fallible operations (palette overflow,
+//! out-of-bounds access).
+//!
 //! # Design
 //!
 //! Unlike Minecraft's fixed 16x16x256 chunks, ludoSpring uses configurable
@@ -12,6 +17,17 @@
 //! - Atomic scale: 8x8x8 chunks, each block = 1 Angstrom
 //! - Molecular scale: 16x16x16 chunks, each block = 1 nm
 //! - Cellular scale: 32x32x32 chunks, each block = 1 μm
+
+/// Errors from voxel operations.
+#[derive(Debug, thiserror::Error)]
+pub enum VoxelError {
+    /// Block palette overflow (more than `u16::MAX` entries).
+    #[error("palette overflow: {count} exceeds u16::MAX")]
+    PaletteOverflow {
+        /// Number of entries that caused the overflow.
+        count: usize,
+    },
+}
 
 /// A block type in the voxel world.
 ///
@@ -71,10 +87,11 @@ impl BlockPalette {
     ///
     /// # Errors
     ///
-    /// Returns an error if more than `u16::MAX` block types are registered.
-    pub fn register(&mut self, entry: BlockEntry) -> Result<BlockId, String> {
-        let id = u16::try_from(self.entries.len())
-            .map_err(|_| format!("palette overflow: {} exceeds u16::MAX", self.entries.len()))?;
+    /// Returns [`VoxelError::PaletteOverflow`] if more than `u16::MAX` block types are registered.
+    pub fn register(&mut self, entry: BlockEntry) -> Result<BlockId, VoxelError> {
+        let id = u16::try_from(self.entries.len()).map_err(|_| VoxelError::PaletteOverflow {
+            count: self.entries.len(),
+        })?;
         self.entries.push(entry);
         Ok(BlockId(id))
     }
@@ -194,8 +211,8 @@ impl Chunk {
 /// [`crate::tolerances`] for color constants and citations.
 /// # Errors
 ///
-/// Returns an error if more than `u16::MAX` block types are registered.
-pub fn chemistry_palette() -> Result<BlockPalette, String> {
+/// Returns [`VoxelError::PaletteOverflow`] if more than `u16::MAX` block types are registered.
+pub fn chemistry_palette() -> Result<BlockPalette, VoxelError> {
     use crate::tolerances::{
         CPK_CALCIUM, CPK_CARBON, CPK_CHLORINE, CPK_HYDROGEN, CPK_IRON, CPK_NITROGEN, CPK_OXYGEN,
         CPK_PHOSPHORUS, CPK_SODIUM, CPK_SULFUR,

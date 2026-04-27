@@ -125,9 +125,7 @@ impl IpcServer {
             match btsp::classify_first_line(&mut reader) {
                 Ok(btsp::FirstLineResult::BtspHello(hello_line)) => {
                     debug!("BTSP ClientHello detected — relaying handshake");
-                    if let Err(e) =
-                        btsp::perform_handshake(&hello_line, &mut reader, &mut writer)
-                    {
+                    if let Err(e) = btsp::perform_handshake(&hello_line, &mut reader, &mut writer) {
                         warn!(error = %e, "BTSP handshake failed");
                         return Ok(());
                     }

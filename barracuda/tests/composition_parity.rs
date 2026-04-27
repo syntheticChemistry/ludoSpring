@@ -355,13 +355,23 @@ fn composition_parity_accessibility() {
         let dim = score_visual_accessibility(&features);
         let prefix = format!("game.accessibility.{case_name}");
         assert_close(&prefix, "score", dim.score, expected_f64(exp, "score"));
-        let expected_strengths =
-            usize::try_from(exp.get("strengths_count").and_then(Value::as_u64).expect("strengths_count"))
-                .expect("strengths_count fits usize");
-        assert_eq!(dim.strengths.len(), expected_strengths, "{prefix} strengths_count");
-        let expected_issues =
-            usize::try_from(exp.get("issues_count").and_then(Value::as_u64).expect("issues_count"))
-                .expect("issues_count fits usize");
+        let expected_strengths = usize::try_from(
+            exp.get("strengths_count")
+                .and_then(Value::as_u64)
+                .expect("strengths_count"),
+        )
+        .expect("strengths_count fits usize");
+        assert_eq!(
+            dim.strengths.len(),
+            expected_strengths,
+            "{prefix} strengths_count"
+        );
+        let expected_issues = usize::try_from(
+            exp.get("issues_count")
+                .and_then(Value::as_u64)
+                .expect("issues_count"),
+        )
+        .expect("issues_count fits usize");
         assert_eq!(dim.issues.len(), expected_issues, "{prefix} issues_count");
     }
 }

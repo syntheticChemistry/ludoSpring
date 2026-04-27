@@ -260,9 +260,7 @@ pub(super) fn handle_game_tick(req: &JsonRpcRequest) -> HandlerResult {
     let snapshot = accumulator.to_engagement_snapshot();
     let engagement = crate::metrics::engagement::compute_engagement(&snapshot);
 
-    let event_count = interaction_events
-        .as_array()
-        .map_or(0, Vec::len);
+    let event_count = interaction_events.as_array().map_or(0, Vec::len);
 
     to_json(
         &req.id,

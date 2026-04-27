@@ -30,7 +30,11 @@ pub struct ShaderResult {
 /// # Errors
 ///
 /// Returns an [`IpcError`] only on non-recoverable failures.
-pub fn compile_wgsl(source: &str, entry_point: &str, label: &str) -> Result<ShaderResult, IpcError> {
+pub fn compile_wgsl(
+    source: &str,
+    entry_point: &str,
+    label: &str,
+) -> Result<ShaderResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable());
     };

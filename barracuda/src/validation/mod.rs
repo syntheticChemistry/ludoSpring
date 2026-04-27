@@ -387,6 +387,39 @@ pub fn exit_skipped(reason: &str) -> ! {
 
 // ── Baseline JSON loader ────────────────────────────────────────────
 
+/// Errors from baseline loading and validation I/O.
+#[derive(Debug, thiserror::Error)]
+pub enum BaselineError {
+    /// Failed to read the baseline file.
+    #[error("read {path}: {source}")]
+    Read {
+        /// File path that failed.
+        path: String,
+        /// Underlying I/O error.
+        #[source]
+        source: std::io::Error,
+    },
+    /// Failed to parse the baseline file as JSON.
+    #[error("parse JSON: {0}")]
+    Parse(#[from] serde_json::Error),
+    /// A segment of the dotted key path was not found.
+    #[error("key not found: {segment} in path {key_path}")]
+    KeyNotFound {
+        /// The missing segment.
+        segment: String,
+        /// The full dotted key path.
+        key_path: String,
+    },
+    /// The resolved value is not a number.
+    #[error("value at {key_path} is not numeric: {value}")]
+    NotNumeric {
+        /// The dotted key path.
+        key_path: String,
+        /// String representation of the non-numeric value.
+        value: String,
+    },
+}
+
 /// Load a value from `combined_baselines.json` at a dot-separated JSON path.
 ///
 /// Enables experiments to read Python baseline values at runtime instead of
@@ -395,23 +428,31 @@ pub fn exit_skipped(reason: &str) -> ! {
 ///
 /// # Errors
 ///
-/// Returns an error if the file cannot be read, parsed, or the path does
-/// not resolve to a numeric value.
-pub fn load_baseline_f64(json_path: &std::path::Path, key_path: &str) -> Result<f64, String> {
-    let content = std::fs::read_to_string(json_path)
-        .map_err(|e| format!("read {}: {e}", json_path.display()))?;
-    let root: serde_json::Value =
-        serde_json::from_str(&content).map_err(|e| format!("parse JSON: {e}"))?;
+/// Returns a [`BaselineError`] if the file cannot be read, parsed, or the
+/// path does not resolve to a numeric value.
+pub fn load_baseline_f64(
+    json_path: &std::path::Path,
+    key_path: &str,
+) -> Result<f64, BaselineError> {
+    let content = std::fs::read_to_string(json_path).map_err(|e| BaselineError::Read {
+        path: json_path.display().to_string(),
+        source: e,
+    })?;
+    let root: serde_json::Value = serde_json::from_str(&content)?;
 
     let mut current = &root;
     for segment in key_path.split('.') {
         current = current
             .get(segment)
-            .ok_or_else(|| format!("key not found: {segment} in path {key_path}"))?;
+            .ok_or_else(|| BaselineError::KeyNotFound {
+                segment: segment.to_owned(),
+                key_path: key_path.to_owned(),
+            })?;
     }
-    current
-        .as_f64()
-        .ok_or_else(|| format!("value at {key_path} is not numeric: {current}"))
+    current.as_f64().ok_or_else(|| BaselineError::NotNumeric {
+        key_path: key_path.to_owned(),
+        value: current.to_string(),
+    })
 }
 
 // ── Legacy API (backward-compatible) ────────────────────────────────
@@ -639,7 +680,7 @@ mod tests {
     fn load_baseline_f64_rejects_missing_path() {
         let path = std::env::temp_dir().join("ludospring_load_baseline_missing_xyz.json");
         let err = load_baseline_f64(&path, "a.b").unwrap_err();
-        assert!(err.contains("read") || err.contains("No such file"));
+        assert!(matches!(err, BaselineError::Read { .. }));
     }
 
     #[test]
@@ -650,7 +691,7 @@ mod tests {
         ));
         std::fs::write(&path, r#"{"only":1}"#).unwrap();
         let err = load_baseline_f64(&path, "missing.leaf").unwrap_err();
-        assert!(err.contains("key not found"));
+        assert!(matches!(err, BaselineError::KeyNotFound { .. }));
         let _ = std::fs::remove_file(&path);
     }
 
@@ -662,7 +703,7 @@ mod tests {
         ));
         std::fs::write(&path, r#"{"x":{"y":"not-a-number"}}"#).unwrap();
         let err = load_baseline_f64(&path, "x.y").unwrap_err();
-        assert!(err.contains("not numeric"));
+        assert!(matches!(err, BaselineError::NotNumeric { .. }));
         let _ = std::fs::remove_file(&path);
     }
 

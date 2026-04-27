@@ -5,6 +5,38 @@ All notable changes to ludoSpring are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project does not use SemVer — versions are session-sequential (V1–V53).
 
+## [V55] — 2026-04-27
+
+### Deep debt resolution — barracuda crate modernization
+
+- **Method constants centralized:** Expanded `ipc/methods.rs` with `activation`,
+  `math`, `noise`, `compute`, `storage`, `dag`, `braid`, `ai`, `spine`, `tensor`
+  modules. All raw string literals in production IPC code replaced with constants.
+  Compile-time consistency test verifies key capabilities match `niche::CAPABILITIES`.
+- **IpcError source chaining:** Added `From<serde_json::Error>` and
+  `From<std::io::Error>` for `IpcError`, eliminating `.to_string()` error
+  conversion across IPC modules.
+- **RpcClient extracted:** New `ipc/rpc_client.rs` provides a shared
+  `RpcClient` struct for Unix socket JSON-RPC 2.0 operations. Refactored
+  `neural_bridge.rs`, `push_client.rs`, `discovery/mod.rs`, and `btsp.rs`
+  to delegate transport to `RpcClient`, removing ~120 lines of duplication.
+- **Capability-first niche:** `NicheDependency` struct evolved: `name` replaced
+  by `hint_name: Option<&'static str>`, `capability` reordered as primary key.
+  Discovery resolves by capability first, falling back to `hint_name` for socket
+  filename matching.
+- **Typed library errors:** `VoxelError`, `BaselineError`, `ComparisonError`
+  (`thiserror` enums) replace `Result<_, String>` in `game/voxel.rs`,
+  `validation/mod.rs`, `composition_targets.rs`.
+- **Typed binary errors:** `CliError` (`thiserror`) replaces `Result<_, String>`
+  across `ludospring` commands, `validate_all` (`RunnerError`), and
+  `validate_primal_proof` (now uses `IpcError` via `RpcClient`).
+- **File refactors:** `envelope.rs` inline tests extracted to `envelope_tests.rs`
+  (824 → 409 lines). `ludospring_guidestone.rs` (812 lines) split into
+  `guidestone/` module directory: `main.rs`, `constants.rs`, `tier1.rs`,
+  `tier2.rs`, `tier3.rs` (all under 220 lines).
+- **Zero regressions:** 656/656 non-environment-dependent tests pass.
+  Clippy clean with `-D warnings` across all features.
+
 ## [V54] — 2026-04-27
 
 ### Composition library absorption — interaction fidelity lane

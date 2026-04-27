@@ -12,7 +12,6 @@
 //! This follows the "primal code only has self-knowledge" principle —
 //! we never hardcode peer primal names.
 
-use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -126,31 +125,9 @@ impl VisualizationPushClient {
     }
 
     fn send(&self, request: &serde_json::Value) -> Result<(), crate::ipc::IpcError> {
-        use crate::ipc::IpcError;
-
         let timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
-        let stream = UnixStream::connect(&self.socket).map_err(IpcError::Connect)?;
-        stream
-            .set_read_timeout(Some(timeout))
-            .map_err(IpcError::Timeout)?;
-        stream
-            .set_write_timeout(Some(timeout))
-            .map_err(IpcError::Timeout)?;
-
-        let mut writer = stream.try_clone().map_err(IpcError::Io)?;
-        let mut msg =
-            serde_json::to_string(request).map_err(|e| IpcError::Serialization(e.to_string()))?;
-        msg.push('\n');
-        writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
-        writer.flush().map_err(IpcError::Io)?;
-
-        let mut reader = BufReader::new(stream);
-        let mut response = String::new();
-        reader.read_line(&mut response).map_err(IpcError::Io)?;
-
-        let parsed: serde_json::Value =
-            serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
-
+        let client = crate::ipc::RpcClient::new(&self.socket, timeout);
+        let parsed = client.send_raw(request)?;
         crate::ipc::extract_rpc_result(&parsed).map(|_| ())
     }
 
@@ -313,31 +290,9 @@ impl VisualizationPushClient {
         &self,
         request: &serde_json::Value,
     ) -> Result<serde_json::Value, crate::ipc::IpcError> {
-        use crate::ipc::IpcError;
-
         let timeout = Duration::from_secs(crate::tolerances::RPC_TIMEOUT_SECS);
-        let stream = UnixStream::connect(&self.socket).map_err(IpcError::Connect)?;
-        stream
-            .set_read_timeout(Some(timeout))
-            .map_err(IpcError::Timeout)?;
-        stream
-            .set_write_timeout(Some(timeout))
-            .map_err(IpcError::Timeout)?;
-
-        let mut writer = stream.try_clone().map_err(IpcError::Io)?;
-        let mut msg =
-            serde_json::to_string(request).map_err(|e| IpcError::Serialization(e.to_string()))?;
-        msg.push('\n');
-        writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
-        writer.flush().map_err(IpcError::Io)?;
-
-        let mut reader = BufReader::new(stream);
-        let mut response = String::new();
-        reader.read_line(&mut response).map_err(IpcError::Io)?;
-
-        let parsed: serde_json::Value =
-            serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
-
+        let client = crate::ipc::RpcClient::new(&self.socket, timeout);
+        let parsed = client.send_raw(request)?;
         crate::ipc::extract_rpc_result(&parsed)
     }
 
@@ -357,51 +312,15 @@ impl VisualizationPushClient {
 
     /// Probe a socket and verify it advertises `visualization.render`.
     fn probe_with_capability(path: &std::path::Path) -> bool {
-        let Ok(stream) = UnixStream::connect(path) else {
-            return false;
-        };
-        if stream
-            .set_read_timeout(Some(Duration::from_millis(
-                crate::tolerances::PROBE_TIMEOUT_MS,
-            )))
-            .is_err()
-        {
-            return false;
-        }
-        if stream
-            .set_write_timeout(Some(Duration::from_millis(
-                crate::tolerances::PROBE_TIMEOUT_MS,
-            )))
-            .is_err()
-        {
-            return false;
-        }
-
+        let timeout = Duration::from_millis(crate::tolerances::PROBE_TIMEOUT_MS);
+        let client = crate::ipc::RpcClient::new(path, timeout);
         let request = serde_json::json!({
             "jsonrpc": "2.0",
             "method": crate::ipc::methods::lifecycle::STATUS,
             "params": {},
             "id": 1
         });
-        let Ok(mut msg) = serde_json::to_string(&request) else {
-            return false;
-        };
-        msg.push('\n');
-
-        let Ok(mut writer) = stream.try_clone() else {
-            return false;
-        };
-        if writer.write_all(msg.as_bytes()).is_err() || writer.flush().is_err() {
-            return false;
-        }
-
-        let mut reader = BufReader::new(stream);
-        let mut response = String::new();
-        if reader.read_line(&mut response).is_err() {
-            return false;
-        }
-
-        let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&response) else {
+        let Ok(parsed) = client.send_raw(&request) else {
             return false;
         };
 

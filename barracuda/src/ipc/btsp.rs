@@ -9,8 +9,7 @@
 //!
 //! See: `wateringHole/SOURDOUGH_BTSP_RELAY_PATTERN.md`
 
-use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
+use std::io::{BufRead, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -89,36 +88,14 @@ fn discover_beardog() -> Option<PathBuf> {
 
 /// Send a JSON-RPC request to BearDog and read the response.
 ///
-/// Uses line-delimited JSON (BearDog keeps sockets open, so we read
-/// one line rather than `read_to_end`).
+/// Delegates transport to [`super::rpc_client::RpcClient`], then extracts
+/// the `result` field with manual error handling (BearDog-specific).
 fn beardog_call(socket: &std::path::Path, request: &Value) -> Result<Value, IpcError> {
-    let stream = UnixStream::connect(socket).map_err(IpcError::Connect)?;
-    stream
-        .set_read_timeout(Some(BTSP_TIMEOUT))
-        .map_err(IpcError::Timeout)?;
-    stream
-        .set_write_timeout(Some(BTSP_TIMEOUT))
-        .map_err(IpcError::Timeout)?;
-
-    let mut writer = stream.try_clone().map_err(IpcError::Io)?;
-    let mut msg = serde_json::to_string(request)
-        .map_err(|e| IpcError::Serialization(e.to_string()))?;
-    msg.push('\n');
-    writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
-    writer.flush().map_err(IpcError::Io)?;
-
-    let mut reader = BufReader::new(stream);
-    let mut response = String::new();
-    reader.read_line(&mut response).map_err(IpcError::Io)?;
-
-    let parsed: Value = serde_json::from_str(&response)
-        .map_err(|e| IpcError::Serialization(e.to_string()))?;
+    let client = super::rpc_client::RpcClient::new(socket, BTSP_TIMEOUT);
+    let parsed = client.send_raw(request)?;
 
     if let Some(err) = parsed.get("error") {
-        let code = err
-            .get("code")
-            .and_then(Value::as_i64)
-            .unwrap_or(-32603);
+        let code = err.get("code").and_then(Value::as_i64).unwrap_or(-32603);
         let message = err
             .get("message")
             .and_then(Value::as_str)
@@ -132,8 +109,7 @@ fn beardog_call(socket: &std::path::Path, request: &Value) -> Result<Value, IpcE
 
 /// Write a JSON line + newline to a writer.
 fn write_json_line<W: Write>(writer: &mut W, value: &Value) -> Result<(), IpcError> {
-    let mut msg = serde_json::to_string(value)
-        .map_err(|e| IpcError::Serialization(e.to_string()))?;
+    let mut msg = serde_json::to_string(value)?;
     msg.push('\n');
     writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
     writer.flush().map_err(IpcError::Io)?;
@@ -220,7 +196,10 @@ pub fn perform_handshake<R: BufRead, W: Write>(
         }),
     )
     .map_err(|e| {
-        let _ = write_error_frame(writer, &format!("BearDog relay: session create failed: {e}"));
+        let _ = write_error_frame(
+            writer,
+            &format!("BearDog relay: session create failed: {e}"),
+        );
         e
     })?;
 
@@ -259,7 +238,10 @@ pub fn perform_handshake<R: BufRead, W: Write>(
         }),
     )
     .map_err(|e| {
-        let _ = write_error_frame(writer, &format!("BearDog relay: session verify failed: {e}"));
+        let _ = write_error_frame(
+            writer,
+            &format!("BearDog relay: session verify failed: {e}"),
+        );
         e
     })?;
 

@@ -36,6 +36,7 @@
 
 pub mod btsp;
 pub mod methods;
+pub mod rpc_client;
 
 mod envelope;
 mod handlers;
@@ -68,6 +69,7 @@ pub use handlers::dispatch;
 pub use neural_bridge::NeuralBridge;
 pub use params::*;
 pub use results::*;
+pub use rpc_client::RpcClient;
 pub use server::IpcServer;
 
 /// JSON-RPC method names — capability identifiers for routing.

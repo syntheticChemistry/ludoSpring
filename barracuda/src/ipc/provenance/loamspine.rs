@@ -246,7 +246,10 @@ pub fn certificate_lifecycle(cert_id: &str) -> Result<ProvenanceResult, IpcError
 /// # Errors
 ///
 /// Returns an [`IpcError`] only on non-recoverable failures.
-pub fn create_spine(owner: &str, metadata: &serde_json::Value) -> Result<ProvenanceResult, IpcError> {
+pub fn create_spine(
+    owner: &str,
+    metadata: &serde_json::Value,
+) -> Result<ProvenanceResult, IpcError> {
     let Ok(bridge) = NeuralBridge::discover() else {
         return Ok(unavailable_result());
     };

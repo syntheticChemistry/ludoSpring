@@ -18,8 +18,6 @@
 pub mod capabilities;
 
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -165,28 +163,14 @@ pub fn discovery_dirs() -> Vec<PathBuf> {
 
 /// Send a single JSON-RPC request on a fresh connection and return the parsed response.
 fn rpc_probe(path: &Path, method: &str) -> Option<serde_json::Value> {
-    let stream = UnixStream::connect(path).ok()?;
-    let probe = Duration::from_millis(crate::tolerances::probe_timeout_ms());
-    stream.set_read_timeout(Some(probe)).ok()?;
-    stream.set_write_timeout(Some(probe)).ok()?;
-
+    let timeout = Duration::from_millis(crate::tolerances::probe_timeout_ms());
+    let client = super::rpc_client::RpcClient::new(path, timeout);
     let request = serde_json::json!({
         "jsonrpc": "2.0",
         "method": method,
         "id": 1
     });
-
-    let mut writer = stream.try_clone().ok()?;
-    let mut msg = serde_json::to_string(&request).ok()?;
-    msg.push('\n');
-    writer.write_all(msg.as_bytes()).ok()?;
-    writer.flush().ok()?;
-
-    let mut reader = BufReader::new(stream);
-    let mut response = String::new();
-    reader.read_line(&mut response).ok()?;
-
-    serde_json::from_str(&response).ok()
+    client.send_raw(&request).ok()
 }
 
 /// Probe a Unix socket to check if it hosts a JSON-RPC primal.
@@ -202,7 +186,7 @@ pub fn probe_socket(path: &Path) -> Option<PrimalEndpoint> {
 
 /// Try `lifecycle.status` — the biomeOS-standard probe.
 fn probe_lifecycle_status(path: &Path) -> Option<PrimalEndpoint> {
-    let parsed = rpc_probe(path, "lifecycle.status")?;
+    let parsed = rpc_probe(path, crate::ipc::methods::lifecycle::STATUS)?;
     let result = parsed.get("result")?;
 
     let name = result
@@ -223,7 +207,7 @@ fn probe_lifecycle_status(path: &Path) -> Option<PrimalEndpoint> {
 
 /// Fallback probe: `health.check` for primal name, `capability.list` (or `capabilities.list`) for capabilities.
 fn probe_health_then_capabilities(path: &Path) -> Option<PrimalEndpoint> {
-    let health = rpc_probe(path, "health.check")?;
+    let health = rpc_probe(path, crate::ipc::methods::health::CHECK)?;
     let health_result = health.get("result")?;
 
     let name = health_result
@@ -235,8 +219,8 @@ fn probe_health_then_capabilities(path: &Path) -> Option<PrimalEndpoint> {
 
     let mut caps = Vec::new();
 
-    if let Some(caps_resp) =
-        rpc_probe(path, "capability.list").or_else(|| rpc_probe(path, "capabilities.list"))
+    if let Some(caps_resp) = rpc_probe(path, crate::ipc::methods::capability::LIST)
+        .or_else(|| rpc_probe(path, crate::ipc::methods::capability::LIST_ALT))
     {
         if let Some(result) = caps_resp.get("result") {
             caps = capabilities::extract_from_any(result);
@@ -379,39 +363,9 @@ pub fn call_primal(
     method: &str,
     params: &serde_json::Value,
 ) -> Result<serde_json::Value, super::envelope::IpcError> {
-    use super::envelope::IpcError;
-
-    let stream = UnixStream::connect(&endpoint.socket).map_err(IpcError::Connect)?;
-    let rpc_timeout = Duration::from_secs(crate::tolerances::rpc_timeout_secs());
-    stream
-        .set_read_timeout(Some(rpc_timeout))
-        .map_err(IpcError::Timeout)?;
-    stream
-        .set_write_timeout(Some(rpc_timeout))
-        .map_err(IpcError::Timeout)?;
-
-    let request = serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": method,
-        "params": params,
-        "id": 1
-    });
-
-    let mut writer = stream.try_clone().map_err(IpcError::Io)?;
-    let mut msg =
-        serde_json::to_string(&request).map_err(|e| IpcError::Serialization(e.to_string()))?;
-    msg.push('\n');
-    writer.write_all(msg.as_bytes()).map_err(IpcError::Io)?;
-    writer.flush().map_err(IpcError::Io)?;
-
-    let mut reader = BufReader::new(stream);
-    let mut response = String::new();
-    reader.read_line(&mut response).map_err(IpcError::Io)?;
-
-    let parsed: serde_json::Value =
-        serde_json::from_str(&response).map_err(|e| IpcError::Serialization(e.to_string()))?;
-
-    super::envelope::extract_rpc_result(&parsed)
+    let timeout = Duration::from_secs(crate::tolerances::rpc_timeout_secs());
+    let client = super::rpc_client::RpcClient::new(&endpoint.socket, timeout);
+    client.call(method, params)
 }
 
 #[cfg(test)]

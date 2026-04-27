@@ -71,11 +71,11 @@ pub fn dispatch(req: &JsonRpcRequest) -> String {
 /// Tier 1: lifecycle and health probes.
 fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
     Some(match method {
-        methods::health::CHECK | methods::lifecycle::HEALTH | "health" => {
+        methods::health::CHECK | methods::lifecycle::HEALTH | methods::health::SHORT => {
             lifecycle::handle_health(req)
         }
         methods::health::LIVENESS => lifecycle::handle_liveness(req),
-        "health.readiness" => lifecycle::handle_readiness(req),
+        methods::health::READINESS => lifecycle::handle_readiness(req),
         methods::lifecycle::STATUS => lifecycle::handle_lifecycle_status(req),
         methods::lifecycle::COMPOSITION => lifecycle::handle_composition(req),
         methods::lifecycle::REGISTER => neural::handle_lifecycle_register(req),

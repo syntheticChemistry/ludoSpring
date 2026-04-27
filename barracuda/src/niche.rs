@@ -121,89 +121,96 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
 
 /// A primal dependency declared at the niche level.
 ///
-/// Aligns with the proto-nucleate graph's node list and makes
-/// capability-based discovery self-documenting. Per
-/// `SPRING_COMPOSITION_PATTERNS` §11, every spring MUST declare its
-/// dependencies as a typed table.
+/// Capability-first: `capability` is the primary key for runtime discovery.
+/// `hint_name` is an optional socket filename fallback for environments where
+/// capability-addressed sockets aren't yet available.
+///
+/// Per `SPRING_COMPOSITION_PATTERNS` §11, every spring MUST declare its
+/// dependencies as a typed table. Per the TRUE PRIMAL pattern, a primal
+/// discovers collaborators by *capability*, never by hardcoded name.
 #[derive(Debug, Clone, Copy)]
 pub struct NicheDependency {
-    /// Primal name (e.g. `"toadstool"`).
-    pub name: &'static str,
-    /// Primal's role in this composition (e.g. `"compute"`).
+    /// Primary capability domain for discovery (e.g. `"compute"`, `"visualization"`).
+    pub capability: &'static str,
+    /// This dependency's role in the composition (e.g. `"compute"`, `"security"`).
     pub role: &'static str,
     /// Whether the primal is required for core operation.
     pub required: bool,
-    /// Primary capability domain for discovery.
-    pub capability: &'static str,
+    /// Optional primal name hint — used only as a socket filename fallback
+    /// when capability-addressed sockets aren't available. NOT identity.
+    pub hint_name: Option<&'static str>,
 }
 
 /// Primal dependencies for this niche — mirrors proto-nucleate graph nodes.
+///
+/// Ordered by capability (the primary key for runtime discovery).
+/// `hint_name` is only used as a socket filename fallback.
 pub const DEPENDENCIES: &[NicheDependency] = &[
     NicheDependency {
-        name: "beardog",
+        capability: "crypto",
         role: "security",
         required: true,
-        capability: "crypto",
+        hint_name: Some("beardog"),
     },
     NicheDependency {
-        name: "songbird",
+        capability: "discovery",
         role: "discovery",
         required: true,
-        capability: "discovery",
+        hint_name: Some("songbird"),
     },
     NicheDependency {
-        name: "toadstool",
+        capability: "compute",
         role: "compute",
         required: true,
-        capability: "compute",
+        hint_name: Some("toadstool"),
     },
     NicheDependency {
-        name: "coralreef",
+        capability: "shader",
         role: "shader",
         required: true,
-        capability: "shader",
+        hint_name: Some("coralreef"),
     },
     NicheDependency {
-        name: "barracuda",
+        capability: "tensor",
         role: "tensor",
         required: true,
-        capability: "tensor",
+        hint_name: Some("barracuda"),
     },
     NicheDependency {
-        name: "squirrel",
+        capability: "ai",
         role: "ai",
         required: true,
-        capability: "ai",
+        hint_name: Some("squirrel"),
     },
     NicheDependency {
-        name: "petaltongue",
+        capability: "visualization",
         role: "visualization",
         required: false,
-        capability: "visualization",
+        hint_name: Some("petaltongue"),
     },
     NicheDependency {
-        name: "nestgate",
+        capability: "storage",
         role: "storage",
         required: true,
-        capability: "storage",
+        hint_name: Some("nestgate"),
     },
     NicheDependency {
-        name: "rhizocrypt",
+        capability: "dag",
         role: "provenance_dag",
         required: false,
-        capability: "dag",
+        hint_name: Some("rhizocrypt"),
     },
     NicheDependency {
-        name: "loamspine",
+        capability: "certificate",
         role: "permanence",
         required: false,
-        capability: "certificate",
+        hint_name: Some("loamspine"),
     },
     NicheDependency {
-        name: "sweetgrass",
+        capability: "braid",
         role: "attribution",
         required: false,
-        capability: "braid",
+        hint_name: Some("sweetgrass"),
     },
 ];
 
@@ -432,7 +439,23 @@ mod tests {
     #[test]
     fn dependencies_table_complete() {
         assert_eq!(DEPENDENCIES.len(), 11, "11 proto-nucleate primals");
-        let names: Vec<&str> = DEPENDENCIES.iter().map(|d| d.name).collect();
+        let caps: Vec<&str> = DEPENDENCIES.iter().map(|d| d.capability).collect();
+        for expected in [
+            "crypto",
+            "discovery",
+            "compute",
+            "shader",
+            "tensor",
+            "ai",
+            "visualization",
+            "storage",
+            "dag",
+            "certificate",
+            "braid",
+        ] {
+            assert!(caps.contains(&expected), "missing capability: {expected}");
+        }
+        let hints: Vec<Option<&str>> = DEPENDENCIES.iter().map(|d| d.hint_name).collect();
         for expected in [
             "beardog",
             "songbird",
@@ -446,15 +469,22 @@ mod tests {
             "loamspine",
             "sweetgrass",
         ] {
-            assert!(names.contains(&expected), "missing dependency: {expected}");
+            assert!(
+                hints.contains(&Some(expected)),
+                "missing hint_name: {expected}"
+            );
         }
     }
 
     #[test]
     fn dependencies_have_capabilities() {
         for dep in DEPENDENCIES {
-            assert!(!dep.capability.is_empty(), "{} needs capability", dep.name);
-            assert!(!dep.role.is_empty(), "{} needs role", dep.name);
+            assert!(
+                !dep.capability.is_empty(),
+                "{:?} needs capability",
+                dep.hint_name
+            );
+            assert!(!dep.role.is_empty(), "{:?} needs role", dep.hint_name);
         }
     }
 

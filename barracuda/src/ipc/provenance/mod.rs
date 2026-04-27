@@ -352,7 +352,9 @@ pub(crate) fn complete_session_success_json(
 /// # Errors
 ///
 /// Returns an [`super::envelope::IpcError`] only on non-recoverable failures.
-pub fn begin_game_session(session_name: &str) -> Result<ProvenanceResult, super::envelope::IpcError> {
+pub fn begin_game_session(
+    session_name: &str,
+) -> Result<ProvenanceResult, super::envelope::IpcError> {
     let args = begin_game_session_args(session_name);
 
     let Some(result) =
@@ -398,7 +400,9 @@ pub fn record_game_action(
 ///
 /// Returns an [`super::envelope::IpcError`] only on non-recoverable failures.
 /// Partial completion returns `Ok` with a `stage` field describing progress.
-pub fn complete_game_session(session_id: &str) -> Result<serde_json::Value, super::envelope::IpcError> {
+pub fn complete_game_session(
+    session_id: &str,
+) -> Result<serde_json::Value, super::envelope::IpcError> {
     // Step 1: Dehydrate the DAG — compute Merkle root and frontier
     let dehydrate_args = dehydration_trigger_args(session_id);
     let Some(dehydration_raw) = resilient_trio_call(|bridge| {

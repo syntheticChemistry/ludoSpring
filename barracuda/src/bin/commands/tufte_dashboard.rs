@@ -16,7 +16,7 @@ use serde_json::{Value, json};
 
 type Scenario = (&'static str, Value);
 
-pub fn cmd_tufte_dashboard() -> Result<(), String> {
+pub fn cmd_tufte_dashboard() -> Result<(), super::CliError> {
     eprintln!("╔═══════════════════════════════════════════════════════════╗");
     eprintln!("║  ludoSpring Tufte Validation Dashboard                   ║");
     eprintln!("║  What does good game UI look like? (Tufte 1983)          ║");
@@ -34,7 +34,7 @@ pub fn cmd_tufte_dashboard() -> Result<(), String> {
     let base = std::env::var("LUDOSPRING_OUTPUT_DIR").unwrap_or_else(|_| "sandbox".into());
     let out_dir = Path::new(&base).join("tufte");
     fs::create_dir_all(&out_dir)
-        .map_err(|e| format!("cannot create {}: {e}", out_dir.display()))?;
+        .map_err(|e| super::CliError::io(format_args!("cannot create {}", out_dir.display()), e))?;
 
     let mut written = 0u32;
     for (name, payload) in &scenarios {

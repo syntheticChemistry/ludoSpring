@@ -135,10 +135,10 @@ pub fn generate_semantic_aliases(caps: &mut Vec<String>) {
 pub fn inject_base_capabilities(caps: &mut Vec<String>) {
     for base in [
         "system.ping",
-        "health.check",
-        "health.liveness",
-        "health.readiness",
-        "capability.list",
+        crate::ipc::methods::health::CHECK,
+        crate::ipc::methods::health::LIVENESS,
+        crate::ipc::methods::health::READINESS,
+        crate::ipc::methods::capability::LIST,
     ] {
         if !caps.iter().any(|c| c == base) {
             caps.push(base.to_owned());

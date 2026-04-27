@@ -86,9 +86,11 @@ pub fn validate_composition() -> CompositionReport {
 /// the operational fallback for primals that may not yet advertise
 /// capabilities in their `lifecycle.status` response.
 fn probe_dependency(dep: &NicheDependency) -> DependencyStatus {
+    let display_name = dep.hint_name.unwrap_or(dep.capability);
+
     if let Some(ep) = discover_by_capability(dep.capability) {
         return DependencyStatus {
-            name: dep.name,
+            name: display_name,
             role: dep.role,
             required: dep.required,
             status: "live",
@@ -96,22 +98,28 @@ fn probe_dependency(dep: &NicheDependency) -> DependencyStatus {
         };
     }
 
-    let result = discover_primal_tiered(dep.name);
-    match result {
-        DiscoveryResult::Found { tier, .. } => DependencyStatus {
-            name: dep.name,
-            role: dep.role,
-            required: dep.required,
-            status: "live",
-            detail: format!("by_name via {tier}"),
-        },
-        DiscoveryResult::NotFound { searched, .. } => DependencyStatus {
-            name: dep.name,
-            role: dep.role,
-            required: dep.required,
-            status: "absent",
-            detail: format!("searched {} paths", searched.len()),
-        },
+    if let Some(hint) = dep.hint_name {
+        let result = discover_primal_tiered(hint);
+        match result {
+            DiscoveryResult::Found { tier, .. } => {
+                return DependencyStatus {
+                    name: display_name,
+                    role: dep.role,
+                    required: dep.required,
+                    status: "live",
+                    detail: format!("by_hint_name via {tier}"),
+                };
+            }
+            DiscoveryResult::NotFound { .. } => {}
+        }
+    }
+
+    DependencyStatus {
+        name: display_name,
+        role: dep.role,
+        required: dep.required,
+        status: "absent",
+        detail: format!("no provider for capability '{}'", dep.capability),
     }
 }
 
@@ -123,7 +131,7 @@ fn probe_dependency(dep: &NicheDependency) -> DependencyStatus {
 /// never happen for this struct).
 pub fn composition_json() -> Result<serde_json::Value, super::envelope::IpcError> {
     let report = validate_composition();
-    serde_json::to_value(report).map_err(|e| super::envelope::IpcError::Serialization(e.to_string()))
+    Ok(serde_json::to_value(report)?)
 }
 
 #[cfg(test)]
