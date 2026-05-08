@@ -2,9 +2,9 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** April 27, 2026
-**Version:** V55 (Deep debt resolution — `RpcClient` extraction deduplicates IPC transport, capability-first `NicheDependency`, typed errors everywhere (`CliError`/`RunnerError`/`VoxelError`/`BaselineError`/`ComparisonError`), `ipc/methods.rs` expanded to 10 domain modules, guidestone binary modularized into 5-file module directory, `envelope.rs` test extraction. Pure primal composition via 12-node cell graph. **820** workspace tests.)
-**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**820** as of V55); if they diverge, treat this README and `cargo test --workspace` as canonical.
+**Date:** May 8, 2026
+**Version:** V56 (Phase 60 parity audit — circuit breaker extracted to reusable module (`ipc/circuit_breaker.rs`), registry cross-sync tests (local TOML ↔ niche.rs ↔ primalSpring canonical), GPU protocol tags centralized, Python CPU benchmark for performance parity, paper queue + dataset plan documented, gaming niche graph gains Squirrel AI node, `game.wfc_step` added to composition validation, toadStool capability naming aligned. **820+** workspace tests.)
+**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**820+** as of V56); if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)

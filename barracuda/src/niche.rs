@@ -499,4 +499,82 @@ mod tests {
         let fid = family_id();
         assert!(!fid.is_empty());
     }
+
+    #[test]
+    fn capabilities_match_local_registry_toml() {
+        let toml_str = include_str!("../config/capability_registry.toml");
+        let parsed: toml::Value = toml::from_str(toml_str).expect("parse registry TOML");
+
+        let caps_table = parsed
+            .get("capabilities")
+            .expect("[capabilities] section")
+            .as_table()
+            .expect("capabilities is a table");
+
+        let mut toml_methods: Vec<&str> = Vec::new();
+        for (_group, methods) in caps_table {
+            if let Some(arr) = methods.as_array() {
+                for m in arr {
+                    if let Some(s) = m.as_str() {
+                        toml_methods.push(s);
+                    }
+                }
+            }
+        }
+
+        for code_cap in CAPABILITIES {
+            assert!(
+                toml_methods.contains(code_cap),
+                "capability '{code_cap}' in niche.rs CAPABILITIES but missing from \
+                 config/capability_registry.toml"
+            );
+        }
+        for toml_cap in &toml_methods {
+            assert!(
+                CAPABILITIES.contains(toml_cap),
+                "method '{toml_cap}' in capability_registry.toml but missing from \
+                 niche.rs CAPABILITIES"
+            );
+        }
+    }
+
+    #[test]
+    fn capabilities_subset_of_primalspring_canonical() {
+        let canonical_str =
+            include_str!("../../../../primalSpring/config/capability_registry.toml");
+        let parsed: toml::Value =
+            toml::from_str(canonical_str).expect("parse primalSpring registry");
+
+        let mut canonical_methods: Vec<&str> = Vec::new();
+        for (_section, value) in parsed.as_table().expect("root is table") {
+            if let Some(tbl) = value.as_table() {
+                if let Some(methods) = tbl.get("methods").and_then(|m| m.as_array()) {
+                    for m in methods {
+                        if let Some(s) = m.as_str() {
+                            canonical_methods.push(s);
+                        }
+                    }
+                }
+            }
+        }
+
+        let game_methods: Vec<&&str> = CAPABILITIES
+            .iter()
+            .filter(|c| c.starts_with("game."))
+            .collect();
+
+        let canonical_game: Vec<&&str> = canonical_methods
+            .iter()
+            .filter(|c| c.starts_with("game."))
+            .collect();
+
+        for upstream_method in &canonical_game {
+            assert!(
+                game_methods.contains(upstream_method),
+                "primalSpring canonical has '{upstream_method}' in [game] domain but \
+                 ludoSpring niche.rs does not serve it — add to CAPABILITIES or \
+                 hand back as gap"
+            );
+        }
+    }
 }

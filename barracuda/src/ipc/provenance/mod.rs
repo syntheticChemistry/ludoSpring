@@ -18,6 +18,7 @@
 //! - [`loamspine`] — certificate operations (mint, verify, lifecycle, spines)
 //! - [`sweetgrass`] — attribution (braids, lineage, dehydration records)
 
+use super::circuit_breaker::{circuit_allows, reset_circuit, resilient_call, trip_circuit};
 use super::neural_bridge::NeuralBridge;
 use serde::{Deserialize, Serialize};
 
@@ -46,116 +47,12 @@ pub use loamspine::*;
 pub use rhizocrypt::*;
 pub use sweetgrass::*;
 
-// ── Resilient IPC (healthSpring V32 circuit breaker pattern) ─────────
-
-use std::sync::atomic::{AtomicU64, Ordering};
-
-/// Default cooldown period after a circuit opens (5 seconds, per healthSpring V32).
-const DEFAULT_CIRCUIT_COOLDOWN_MS: u64 = 5_000;
-
-/// Default maximum retry count with exponential backoff.
-const DEFAULT_MAX_RETRIES: u32 = 2;
-
-/// Default base delay between retries (doubles each attempt).
-const DEFAULT_BASE_RETRY_DELAY_MS: u64 = 50;
-
-fn circuit_cooldown_ms() -> u64 {
-    std::env::var("LUDOSPRING_CIRCUIT_COOLDOWN_MS")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_CIRCUIT_COOLDOWN_MS)
-}
-
-fn max_retries() -> u32 {
-    std::env::var("LUDOSPRING_CIRCUIT_MAX_RETRIES")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_MAX_RETRIES)
-}
-
-fn base_retry_delay_ms() -> u64 {
-    std::env::var("LUDOSPRING_CIRCUIT_RETRY_DELAY_MS")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_BASE_RETRY_DELAY_MS)
-}
-
-/// Timestamp (epoch ms) when the circuit last opened. 0 = circuit closed.
-static CIRCUIT_OPEN_SINCE: AtomicU64 = AtomicU64::new(0);
-
-/// Check whether the circuit breaker allows a call.
-fn circuit_allows() -> bool {
-    let opened = CIRCUIT_OPEN_SINCE.load(Ordering::Relaxed);
-    if opened == 0 {
-        return true;
-    }
-    let now = epoch_ms();
-    if now.saturating_sub(opened) >= circuit_cooldown_ms() {
-        CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
-        return true;
-    }
-    false
-}
-
-/// Trip the circuit breaker open.
-fn trip_circuit() {
-    CIRCUIT_OPEN_SINCE.store(epoch_ms(), Ordering::Relaxed);
-}
-
-/// Reset the circuit breaker (call succeeded).
-fn reset_circuit() {
-    CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
-}
-
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "milliseconds since epoch fits in u64 for thousands of years"
-)]
-fn epoch_ms() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0)
-}
-
-/// Execute a provenance trio call with circuit breaker and exponential backoff.
-///
-/// If the circuit is open, returns `None` immediately (graceful degradation).
-/// On failure, retries up to `MAX_RETRIES` times with exponential backoff,
-/// then trips the circuit.
+/// Alias for the extracted circuit breaker — provenance API uses this name.
 fn resilient_trio_call<F>(f: F) -> Option<serde_json::Value>
 where
     F: Fn(&NeuralBridge) -> Result<serde_json::Value, super::envelope::IpcError>,
 {
-    if !circuit_allows() {
-        return None;
-    }
-
-    let Ok(bridge) = NeuralBridge::discover() else {
-        trip_circuit();
-        return None;
-    };
-
-    let retries = max_retries();
-    let delay_base = base_retry_delay_ms();
-    for attempt in 0..=retries {
-        match f(&bridge) {
-            Ok(value) => {
-                reset_circuit();
-                return Some(value);
-            }
-            Err(_) if attempt < retries => {
-                let delay = delay_base * (1 << attempt);
-                std::thread::sleep(std::time::Duration::from_millis(delay));
-            }
-            Err(_) => {
-                trip_circuit();
-                return None;
-            }
-        }
-    }
-
-    None
+    resilient_call(f)
 }
 
 /// Result of a provenance operation; includes availability status.

@@ -22,7 +22,7 @@
 #   Once biomeOS supports Continuous coordination mode, this graph evolves
 #   from Sequential deploy to Continuous tick execution.
 #
-# STATUS: Active (Apr 25, 2026) — V53 pure composition, no spring binary
+# STATUS: Active (May 8, 2026) — V56 pure composition, Squirrel AI node added
 #
 # Usage:
 #   biomeos deploy graphs/ludospring_gaming_niche.toml
@@ -182,6 +182,44 @@ timeout_ms = 20000
 "visualization.render.dashboard" = "visualization.render.dashboard"
 
 # =============================================================================
+# Phase 2b: AI inference (Squirrel — NPC dialogue, narration, voice checks)
+# =============================================================================
+
+[[nodes]]
+id = "germinate_squirrel"
+depends_on = ["germinate_beardog", "germinate_songbird"]
+output = "squirrel_genesis"
+capabilities = ["ai", "inference", "context"]
+fallback = "skip"
+
+[nodes.primal]
+by_capability = "ai"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+
+[nodes.operation.environment]
+BIOMEOS_SOCKET_DIR = "${XDG_RUNTIME_DIR}/biomeos"
+FAMILY_ID = "${FAMILY_ID}"
+
+[nodes.constraints]
+timeout_ms = 30000
+
+[nodes.capabilities_provided]
+"ai.query" = "ai.query"
+"ai.suggest" = "ai.suggest"
+"ai.analyze" = "ai.analyze"
+"ai.complete" = "ai.complete"
+"ai.embed" = "ai.embed"
+"inference.complete" = "inference.complete"
+"inference.embed" = "inference.embed"
+"context.create" = "context.create"
+
+# =============================================================================
 # Phase 3: Optional accelerators
 # =============================================================================
 
@@ -209,11 +247,12 @@ SONGBIRD_SOCKET = "${XDG_RUNTIME_DIR}/biomeos/songbird-${FAMILY_ID}.sock"
 [nodes.constraints]
 timeout_ms = 45000
 
-# NOTE: These use toadstool.* naming; wire protocol uses compute.* — alignment tracked in PRIMAL_GAPS.md
 [nodes.capabilities_provided]
-"compute.health" = "toadstool.health"
-"compute.execute" = "toadstool.execute"
-"compute.capabilities" = "toadstool.query_capabilities"
+"compute.submit" = "compute.submit"
+"compute.status" = "compute.status"
+"compute.capabilities" = "compute.capabilities"
+"compute.dispatch.submit" = "compute.dispatch.submit"
+"compute.dispatch.result" = "compute.dispatch.result"
 
 # =============================================================================
 # Phase 4: Validate gaming niche
@@ -221,7 +260,7 @@ timeout_ms = 45000
 
 [[nodes]]
 id = "validate_gaming_niche"
-depends_on = ["germinate_beardog", "germinate_songbird", "germinate_barracuda", "germinate_petaltongue"]
+depends_on = ["germinate_beardog", "germinate_songbird", "germinate_barracuda", "germinate_petaltongue", "germinate_squirrel"]
 output = "gaming_niche_validated"
 
 [nodes.operation]
@@ -232,6 +271,7 @@ check_beardog = true
 check_songbird = true
 check_barracuda = true
 check_petaltongue = true
+check_squirrel = true
 timeout_seconds = 20
 
 [nodes.constraints]

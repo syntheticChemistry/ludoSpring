@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** April 27, 2026 — **V55 is current** (deep debt resolution)
+**Last Updated:** May 8, 2026 — **V56 is current** (Phase 60 cross-spring parity)
 
 ---
 
@@ -25,14 +25,13 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V55** | [LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md) | Apr 27 | **Current: V55** — Deep debt resolution: `RpcClient` extraction, capability-first niche, typed errors everywhere (`CliError`/`VoxelError`/`BaselineError`/`ComparisonError`), `ipc/methods.rs` expanded to 10 domain modules, guidestone modularized. Zero `Result<_, String>` in entire codebase. 820 tests. |
-| V53 | [LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md) | Apr 25 | Binary to composition evolution + upstream absorption. Cell graph v2.0, `cell_launcher.sh`. GAP-07/10/11 resolved. Live: 18/20 capabilities, game.tick 0.6ms. |
-| V52 | [LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md](handoffs/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md) | Apr 25 | Game tick loop, `is_skip_error` degradation, `ipc::methods` constants, typed `IpcError` everywhere, NUCLEUS cell graph. |
+| **V56** | [LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md) | May 8 | **Current: V56** — Phase 60 cross-spring parity audit response. Registry cross-sync tests, circuit breaker extraction, GPU centralization, Squirrel in gaming niche graph, Python CPU benchmark, paper queue, 4 new gaps documented. |
+| V55 | [LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md) | Apr 27 | Deep debt resolution: `RpcClient` extraction, capability-first niche, typed errors, guidestone modularized. 820 tests. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 100 experiments, 820 workspace tests, V55 pure composition + guideStone standard v1.2.0)
+ludoSpring (game science composition, 100 experiments, 820+ workspace tests, V56 pure composition + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -85,29 +84,37 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## Composition Gap Status (V53, updated April 26)
+## Composition Gap Status (V56, updated May 8, 2026)
 
 | GAP | Owner | Status | Notes |
 |-----|-------|--------|-------|
-| GAP-06: No UDS transport | **rhizoCrypt** | **OPEN** | Only remaining critical gap — blocks 4 experiments |
-| GAP-07: Startup panic | **loamSpine** | **RESOLVED** | PG-33 (d34100f): `std::thread::spawn` + `oneshot` |
-| GAP-08: Fitts/Hick formula mismatch | **barraCuda** | **RESOLVED** | Superseded by GAP-11 → PG-38 |
-| GAP-11: Formulation divergence | **barraCuda** | **RESOLVED** | PG-38: variant params (`variant: "fitts"`, `include_no_choice: true`) |
-| GAP-10: game.* graph identity | **ludoSpring** | **RESOLVED** | V53: pure composition model |
 | GAP-01: coralReef IPC client | **coralReef** | OPEN | Shader pipeline not exercised |
+| GAP-02: NestGate game state | **NestGate** | OPEN | storage.store/retrieve wired but not validated E2E |
+| GAP-03: biomeOS game_logic orchestration | **biomeOS** | OPEN | Cell graph exists, no live biomeOS deploy tested |
+| GAP-04: provenance commit chain | **rhizoCrypt** | OPEN | Commit exists but deterministic replay not validated |
 | GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |
-| Neural API registration | **biomeOS** | OPEN | -14 checks (exp087, 088) |
+| GAP-06: No UDS transport | **rhizoCrypt** | **OPEN** | Critical — blocks 4 experiments |
+| GAP-09: Neural API registration | **biomeOS** | OPEN | -14 checks (exp087, 088) |
+| GAP-12: Registry cross-sync | **primalSpring** | OPEN | 15 ludoSpring methods unregistered in canonical |
+| GAP-13: barraCuda build regression | **barraCuda** | **OPEN** | 0.3.13 breaks non-GPU consumers |
+| GAP-14: Provenance commit hash | **ludoSpring** | OPEN | Multiple commit hashes across validators |
+| GAP-15: Squirrel in graph | **ludoSpring** | **RESOLVED** | V56: node added |
+| GAP-07: loamSpine startup panic | **loamSpine** | **RESOLVED** | PG-33 |
+| GAP-08/11: Fitts/Hick formulation | **barraCuda** | **RESOLVED** | PG-38 |
+| GAP-10: game.* graph identity | **ludoSpring** | **RESOLVED** | V53: pure composition |
 
-**Score**: 95/141 (67.4%) composition checks + exp099 13/13 + exp100 27 checks. Projected with GAP-06 fix: ~143/154 (92.9%).
+**Score**: 95/141 (67.4%) composition checks + exp099 13/13 + exp100 27. Projected with GAP-06+GAP-13 fix: ~143/154 (92.9%).
 
-**guideStone (V47→V53):** 54/54 checks passed. guideStone standard v1.2.0. GAP-11 formulation divergence now resolved via PG-38 variant params — guideStone Tier 2 checks should pass explicit `variant`/`include_no_choice` params.
+**guideStone:** 54/54 checks passed (L4 NUCLEUS validated). Standard v1.2.0.
 
-See central handoffs: [V53 composition evolution](../../../infra/wateringHole/handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md), [V47 evolution (archived)](../../../infra/wateringHole/handoffs/archive/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md), [V46 deep audit (archived)](../../../infra/wateringHole/handoffs/archive/LUDOSPRING_V46_DEEP_AUDIT_COMPOSITION_HANDOFF_APR20_2026.md).
+See: [V56 Phase 60 handoff](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md), [V55 deep debt (previous)](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md).
 
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V53 | `handoffs/archive/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
+| V52 | `handoffs/archive/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
 | V49 | `handoffs/archive/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
 | V47 | `handoffs/archive/LUDOSPRING_V47_V0917_GUIDESTONE_V120_HANDOFF_APR20_2026.md` | V55 Deep Debt Resolution |
 | V46 | `handoffs/archive/LUDOSPRING_V46_THREE_TIER_NUCLEUS_HANDOFF_APR20_2026.md` | V55 Deep Debt Resolution |

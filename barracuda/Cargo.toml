@@ -94,6 +94,7 @@ path = "../baselines/rust/check_composition_drift.rs"
 [dev-dependencies]
 proptest = { workspace = true }
 serde_json = { workspace = true }
+toml = "0.8"
 
 [lints]
 workspace = true

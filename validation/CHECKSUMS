@@ -1,10 +1,13 @@
 # ludoSpring guideStone BLAKE3 checksum manifest
 # Property 3: Self-Verifying — tampered inputs detected, non-zero exit
-# Generated: 2026-04-20 (V47 — absorb v0.9.17, upstream call_or_skip/is_skip_error, v1.2.0 tolerance ordering)
+# Generated: 2026-05-08 (V56 — Phase 60 parity audit, primalSpring v0.9.25)
 # Regenerate: b3sum <files> > validation/CHECKSUMS
 
-1ba7488025866c0a87bf09758415624678d480a49fb11d4e060bdc8458cd8cfe  barracuda/src/bin/ludospring_guidestone.rs
-9afc93a1c21bd020fb39b85f47bc14a6b68d469f4478069c0d306e9d41baef6d  baselines/python/combined_baselines.json
+8dab0a4a0af6f58f95ca571c2d95d7dd4147a3822ec75c2e5537169654f50aa0  barracuda/src/bin/guidestone/main.rs
+a89f7fdb7f86789090798b3d6a0aad7b2794200acddb0ec423eaee507693d6a9  barracuda/src/bin/guidestone/constants.rs
+2facb9f3b0486a7a86cd8921b5207f3ec77ed1f85c879446f2e2d59f11b9b5ca  barracuda/src/bin/guidestone/tier1.rs
+8de2a154d50bd3083fe1feecafbff7e8053fd0a3fd9aa43a03560315c0f3594e  barracuda/src/bin/guidestone/tier2.rs
+e1f06d94c1547b7a7a21acbc4acfea643e353eba46830c9c589e65c239cd8b56  barracuda/src/bin/guidestone/tier3.rs
 2fee6b7b9312d048664bff38ea5e875ec3e482d0bb20be217162e7037a76aa59  baselines/python/interaction_laws.py
 8a1626fe559e1f5ba282d96827dcf67eebba98ce62c00a1b9300cd926ff2326b  baselines/python/perlin_noise.py
 add36d122b350a6f28e528e2cb25d2bff15e844d0469744667b60cd456ec9d8d  baselines/python/flow_engagement.py
@@ -13,4 +16,4 @@ e3e5ed3d9be7c91e84c94f7fe37b7b7db6a77fd86b9804f6f5527d23d42510a9  baselines/pyth
 6bf6dfa13b6cc29eb82806d8f3b9aa6c368c3d6444fc288ff5b9004cec319773  baselines/python/bsp_partition.py
 5cac981a968ae508f24cfa9bd67c998d1ccacc78b723fe1c32b10c09731d14c7  baselines/python/lsystem_growth.py
 999513cbdc73925dc3299bbdbb31ff7614ade57d9da7badbba8e2225303ec959  baselines/python/tolerances.py
-7af7496ce5ae7f9c6e3858d67f2549d388f7f350b2c3e22eb21ba842a13aab7e  baselines/rust/composition_targets.json
+10577c0395d93446ce42942a915b2d8a04271d6d966e1ad53597fe40ae4cdbb0  baselines/rust/composition_targets.json

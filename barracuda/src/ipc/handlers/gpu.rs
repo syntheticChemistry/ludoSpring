@@ -14,6 +14,9 @@ use crate::procedural::noise::perlin_perm_table_u32;
 
 use super::{HandlerResult, parse_params, to_json};
 
+/// Protocol version tag for our GPU buffer layouts in toadStool dispatch.
+const GPU_PROTOCOL_TAG: &str = "ludospring_gpu_v1";
+
 const DEGRADE_REASON: &str = "compute dispatch unavailable — CPU fallback active";
 
 fn degradation_value() -> serde_json::Value {
@@ -129,7 +132,7 @@ pub(super) fn handle_gpu_fog_of_war(req: &JsonRpcRequest) -> HandlerResult {
     let op = GpuOp::FogOfWar;
 
     let buffers = json!({
-        "ludospring_gpu_v1": true,
+        (GPU_PROTOCOL_TAG): true,
         "op": op.shader_name(),
         "uniform_f32": uniform,
         "storage": {
@@ -183,7 +186,7 @@ pub(super) fn handle_gpu_tile_lighting(req: &JsonRpcRequest) -> HandlerResult {
     });
 
     let buffers = json!({
-        "ludospring_gpu_v1": true,
+        (GPU_PROTOCOL_TAG): true,
         "op": GpuOp::TileLighting.shader_name(),
         "uniform": uniform,
         "storage": {
@@ -226,7 +229,7 @@ pub(super) fn handle_gpu_pathfind(req: &JsonRpcRequest) -> HandlerResult {
     };
 
     let buffers = json!({
-        "ludospring_gpu_v1": true,
+        (GPU_PROTOCOL_TAG): true,
         "op": GpuOp::PathfindStep.shader_name(),
         "uniform": {
             "grid_w": p.grid_w,
@@ -264,7 +267,7 @@ pub(super) fn handle_gpu_perlin_terrain(req: &JsonRpcRequest) -> HandlerResult {
     let output = vec![0.0f32; n];
 
     let buffers = json!({
-        "ludospring_gpu_v1": true,
+        (GPU_PROTOCOL_TAG): true,
         "op": GpuOp::PerlinTerrain.shader_name(),
         "storage": {
             "perm_u32": perm,
@@ -312,7 +315,7 @@ pub(super) fn handle_gpu_batch_raycast(req: &JsonRpcRequest) -> HandlerResult {
     let output = vec![0.0f32; ray_count];
 
     let buffers = serde_json::json!({
-        "ludospring_gpu_v1": true,
+        (GPU_PROTOCOL_TAG): true,
         "op": GpuOp::BatchRaycast.shader_name(),
         "uniform": {
             "grid_w": p.grid_w,

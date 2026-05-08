@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** April 27, 2026
+**Date:** May 8, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V55 — 100 experiments, 30 JSON-RPC capabilities, **820** workspace tests. Deep debt resolution: zero `Result<_, String>` in entire codebase, shared `RpcClient` for all UDS transport, capability-first `NicheDependency`, `ipc/methods.rs` expanded to 10 domain modules, guidestone modularized. Binary to composition evolution: springs are NOT primals — game science served by composing primals (barraCuda, petalTongue, Squirrel, provenance trio) via NUCLEUS cell graph. `ludospring_cell.toml` evolved to 12-node pure composition. guideStone readiness **4** (NUCLEUS validated): three-tier — Tier 1 (20 bare checks), Tier 2 (15 IPC checks), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.17). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (spring binary) → Primal composition (NUCLEUS graph). 7 primal gaps remaining (GAP-01–GAP-06, GAP-09; GAP-07/08/10/11 resolved).
+**Status:** V56 — Phase 60 parity audit. 100 experiments, 30 JSON-RPC capabilities, **820+** workspace tests. Registry cross-sync tests (local TOML ↔ niche.rs ↔ primalSpring canonical 389-method registry). Circuit breaker extracted to reusable module. GPU protocol tags centralized. Python CPU performance benchmark added for Rust speedup ratio. Paper queue + dataset plan documented. Gaming niche graph gains Squirrel AI node, toadStool capability naming aligned to `compute.*` wire protocol. `game.wfc_step` added to composition validation. guideStone readiness **4** (NUCLEUS validated): Tier 1 (20 bare), Tier 2 (15 IPC), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0 (primalSpring v0.9.25). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port → Primal composition (NUCLEUS graph). 11 primal gaps tracked (GAP-01–GAP-06, GAP-09, GAP-12–GAP-15; GAP-07/08/10/11 resolved).
 
 ---
 

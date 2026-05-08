@@ -2,6 +2,8 @@
   "_provenance": {
     "evolution_path": "Python → Rust → IPC composition → NUCLEUS deployment",
     "generated_by": "direct Rust library calls (no IPC)",
+    "generated_date": "2026-04-18T00:00:00Z",
+    "generated_date_note": "ISO 8601 UTC timestamp when composition_targets.json was last regenerated",
     "generated_note": "Record git commit (git rev-parse HEAD) and date when regenerating composition_targets.json",
     "generator": "baselines/rust/generate_composition_targets.rs",
     "git_commit": "fb18537",

@@ -49,6 +49,7 @@ const GAME_METHODS: &[&str] = &[
     "game.generate_noise",
     "game.difficulty_adjustment",
     "game.accessibility",
+    "game.wfc_step",
 ];
 
 struct TolSet {

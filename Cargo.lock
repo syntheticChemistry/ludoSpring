@@ -138,7 +138,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "barracuda"
-version = "0.3.12"
+version = "0.3.13"
 dependencies = [
  "barracuda-naga-exec",
  "blake3",
@@ -159,7 +159,7 @@ dependencies = [
 
 [[package]]
 name = "barracuda-naga-exec"
-version = "0.3.12"
+version = "0.3.13"
 dependencies = [
  "naga",
  "thiserror",
@@ -1622,16 +1622,21 @@ dependencies = [
  "base64",
  "blake3",
  "bytes",
+ "chacha20poly1305",
+ "getrandom 0.4.2",
  "hickory-resolver",
+ "hkdf",
  "redb",
  "rmp-serde",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "thiserror",
  "tokio",
  "tracing",
  "url",
  "uuid",
+ "zeroize",
 ]
 
 [[package]]
@@ -1672,6 +1677,7 @@ dependencies = [
  "tarpc",
  "thiserror",
  "tokio",
+ "toml",
  "tracing",
  "tracing-subscriber",
  "uuid",
@@ -2957,7 +2963,7 @@ dependencies = [
 
 [[package]]
 name = "primalspring"
-version = "0.9.17"
+version = "0.9.25"
 dependencies = [
  "base64",
  "blake3",
@@ -3614,7 +3620,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "sweet-grass-core"
-version = "0.7.27"
+version = "0.7.32"
 dependencies = [
  "base64",
  "indexmap",
