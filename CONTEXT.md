@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** April 27, 2026 (V55 — Deep debt resolution: shared `RpcClient` for IPC transport, capability-first `NicheDependency`, typed errors everywhere (`CliError`/`VoxelError`/`BaselineError`/`ComparisonError`), `ipc/methods.rs` expanded to 10 domain modules, guidestone modularized, `envelope.rs` test extraction; 820 tests, zero clippy)
+**Last updated:** May 9, 2026 (V58 — Eukaryotic UniBin evolution: single binary with certify/validate/serve/status/version, certification organelle, scenario registry, 100 experiments fossilized to `fossilRecord/`, IPC default feature, zero clippy warnings, method constant consolidation, FMA accuracy, primalSpring v0.9.25 pinned; 665+ workspace tests)
 
 ## What is this?
 
@@ -57,8 +57,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 820 workspace `#[test]` functions (V55)
-- **Experiments**: 100 total (83 science + 5 composition gap discovery + 5 science-via-composition + 5 NUCLEUS game engine composition + 2 composition validation)
+- **Tests**: 665+ workspace `#[test]` functions (V58, post-fossilization)
+- **Experiments**: 100 total (fossilized to `fossilRecord/`; 5 representative scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural, gpu}.rs` — three-tier dispatch (lifecycle → infrastructure → science)
@@ -107,7 +107,7 @@ is capability-first, and fragments declare the full atomic surface.
 | Provenance unified to single commit `19e402c0` (88 files) | all experiments, `validation.rs` |
 | ecoBin banned-crate enforcement (8 C deps) | `deny.toml` |
 | fog_of_war.wgsl README reconciled with shader body | `barracuda/shaders/game/README.md` |
-| exp045 doc link fixed (rustdoc warning eliminated) | `experiments/exp045` |
+| exp045 doc link fixed (rustdoc warning eliminated) | `fossilRecord/experiments_prokaryotic_may2026/exp045` |
 
 ### Metrics
 

@@ -3,14 +3,14 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** May 9, 2026
-**Version:** V57 (Interstadial eukaryotic evolution — UniBin with `certify`/`validate`/`serve`/`status`/`version` subcommands. Certification organelle (`certification/`) absorbs guidestone three-tier validation. Validation scenarios (`validation/scenarios/`) with `ScenarioMeta` registry (5 absorbed experiments). 100 prokaryotic experiment crates fossilized to `fossilRecord/`. `ipc` is now default feature. All `#[allow()]` replaced with `#[expect(, reason)]`. primalSpring v0.9.25 pinned. barraCuda GAP-13 fixed upstream. Zero errors, zero warnings on `cargo check + fmt + test`.)
+**Version:** V58 (Deep debt resolution — zero clippy warnings. Method constant consolidation: certification tiers rewired to `ipc::methods` constants (stats, rng, security, storage domains added). `unreachable!()` in neural dispatch → proper JSON-RPC error. FMA (`mul_add`) for numerical accuracy. Redundant clones removed. `ScenarioRegistry` methods promoted to `const fn`. All `#[allow()]` → `#[allow(..., reason)]` or `#[expect(..., reason)]`. V57: UniBin with `certify`/`validate`/`serve`/`status`/`version` subcommands, certification organelle, scenario registry (5 absorbed experiments), 100 experiments fossilized to `fossilRecord/`, `ipc` default feature, primalSpring v0.9.25 pinned, barraCuda GAP-13 fixed upstream.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance). `deny.toml` enforces ecoBin v3.0 banned-crate list (openssl-sys, ring, aws-lc-sys, native-tls, zstd-sys, lz4-sys, libsqlite3-sys, cryptoki-sys). Harvested to genomeBin v5.1 (46 binaries, 6 target triples).
 **Deployment model:** Pure composition — no spring binary in plasmidBin. Game science is served by composing primals via `ludospring_cell.toml` (12 NUCLEUS nodes: barraCuda for math/science, petalTongue for viz/interaction, Squirrel for AI, provenance trio, Tower Atomic). The ludospring binary is the Rust validation target (tier 2); it validates science locally but does not deploy as a primal. 30 capabilities across 11 composed primals. `lifecycle.composition` handler for runtime proto-nucleate validation.
-**Audit Status:** Complete — zero hardcoded primal names (V55: capability-first `NicheDependency` with `hint_name` fallback), zero hardcoded paths, **zero hardcoded method strings** (V55: `ipc::methods` expanded to 10 domain modules with compile-time consistency test), zero `#[allow()]` in application code, zero `unsafe`, **zero `Result<_, String>` in entire codebase** (V55: library modules use `VoxelError`/`BaselineError`/`ComparisonError`; binaries use `CliError`/`RunnerError`/`IpcError`), zero external deps removable (base64 inlined), zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations, v1.2.0 ordering invariant: 7 constants), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + three-tier validation (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **820** workspace tests, **11** primal gaps documented (GAP-01–GAP-11 in `docs/PRIMAL_GAPS.md`). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). Shared `RpcClient` for all UDS JSON-RPC transport (V55: deduplicated from 4 files). `IpcError` source chaining (`From<serde_json::Error>`, `From<io::Error>`). `is_skip_error` graceful degradation. `game.tick` composite handler (V52). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0. Cell graph ready (`ludospring_cell.toml`). All upstream blockers resolved.
+**Audit Status:** Complete — zero hardcoded primal names (V55: capability-first `NicheDependency` with `hint_name` fallback), zero hardcoded paths, **zero hardcoded method strings** (V55: `ipc::methods` expanded to 10 domain modules with compile-time consistency test), zero `#[allow()]` in application code, zero `unsafe`, **zero `Result<_, String>` in entire codebase** (V55: library modules use `VoxelError`/`BaselineError`/`ComparisonError`; binaries use `CliError`/`RunnerError`/`IpcError`), zero external deps removable (base64 inlined), zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations, v1.2.0 ordering invariant: 7 constants), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + three-tier validation (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **665+** workspace tests (post-fossilization), **14** primal gaps documented (GAP-01–GAP-15 in `docs/PRIMAL_GAPS.md`; 4 resolved). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). Shared `RpcClient` for all UDS JSON-RPC transport (V55: deduplicated from 4 files). `IpcError` source chaining (`From<serde_json::Error>`, `From<io::Error>`). `is_skip_error` graceful degradation. `game.tick` composite handler (V52). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0. Cell graph ready (`ludospring_cell.toml`). All upstream blockers resolved.
 
 ---
 
@@ -420,21 +420,22 @@ cargo run --features ipc --bin ludospring -- version
 
 ```
 ludoSpring/
-├── barracuda/             # Core library + 4 binaries
+├── barracuda/             # Core library + UniBin binary + validation binaries
 │   ├── src/
 │   │   ├── game/          # Mechanics, raycaster, voxel, genre, state
 │   │   ├── interaction/   # Fitts, Hick, Steering, GOMS, Flow, DDA
 │   │   ├── procedural/    # Noise, WFC, L-systems, BSP
 │   │   ├── metrics/       # Tufte, engagement, Four Keys to Fun
 │   │   ├── tolerances/    # 6 submodules (game, interaction, ipc, metrics, procedural, validation)
-│   │   ├── validation/    # ValidationHarness<S: ValidationSink> + BaselineProvenance
+│   │   ├── validation/    # ValidationHarness + scenarios/ (ScenarioMeta registry)
+│   │   ├── certification/ # Absorbed guidestone three-tier validation (organelle)
 │   │   ├── telemetry/     # Portable event protocol + analysis pipeline
 │   │   ├── visualization/ # Data channels + VisualizationPushClient (capability-based)
-│   │   ├── ipc/           # JSON-RPC 2.0 server + handlers/{lifecycle,science,delegation,mcp,neural} + typed clients + discovery/{mod,capabilities}
+│   │   ├── ipc/           # JSON-RPC 2.0 server + handlers + typed clients + discovery + methods constants
 │   │   ├── biomeos/       # Niche deployment: domain, registration, Neural API
-│   │   └── bin/           # ludospring UniBin (7 subcommands) + commands/ modules
+│   │   └── bin/           # ludospring UniBin (certify/validate/serve/status/version) + validation binaries
 │   └── tests/             # python_parity, validation, determinism, proptest_invariants, ipc_integration
-├── experiments/           # 100 experiments
+├── fossilRecord/          # Archived prokaryotic experiment crates (100 experiments, May 2026)
 ├── baselines/python/      # 7 Python reference implementations
 ├── benchmarks/            # Criterion benchmarks (noise, raycaster, ECS)
 ├── metalForge/forge/      # Capability-based routing (26 tests, 4 domain modules, GPU>NPU>CPU)
@@ -442,8 +443,8 @@ ludoSpring/
 ├── niches/                # Niche YAML (ludospring-game.yaml)
 ├── deploy/                # primalSpring deploy graph fragment
 ├── specs/                 # 14 domain specifications
-├── whitePaper/            # Local paper staging
-└── wateringHole/          # Handoff documentation
+├── whitePaper/            # Local paper staging (baseCamp)
+└── wateringHole/          # Handoff documentation (37 versioned handoffs)
 ```
 
 ## Key Insight: Games ↔ Science Visualization
@@ -461,25 +462,30 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (820 workspace total: barracuda lib + barracuda --tests incl. ipc integration + forge + 100 experiments)
+# All tests (665+ workspace: barracuda lib + barracuda --tests + forge + benchmarks)
 cargo test --workspace
 
-# Run a specific experiment
-cargo run --bin exp017_bsp_level_generation
+# UniBin subcommands (ipc + guidestone features required)
+cargo run --bin ludospring -- certify          # Three-tier certification (L0-L8)
+cargo run --bin ludospring -- validate         # Run scenario registry
+cargo run --bin ludospring -- validate --list  # List available scenarios
+cargo run --bin ludospring -- server           # biomeOS niche deployment
+cargo run --bin ludospring -- status           # Composition health
+cargo run --bin ludospring -- version          # Version + capabilities
 
 # Python baselines + drift check
 python3 baselines/python/run_all_baselines.py
 python3 baselines/python/check_drift.py
 
-# UniBin server (biomeOS niche deployment)
-cargo run --features ipc --bin ludospring -- server
-
-# Quality checks
+# Quality checks (all must pass with zero warnings)
 cargo fmt --check
-cargo clippy -p ludospring-barracuda --all-features -- -D warnings
+cargo clippy --workspace --all-targets
 cargo doc -p ludospring-barracuda --all-features --no-deps
 cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
     --ignore-filename-regex bin/ --fail-under-lines 90
+
+# Fossilized experiments (archaeology — not in workspace)
+# See fossilRecord/README.md for instructions on building old experiment crates
 ```
 
 ## Quality

@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 8, 2026 (V56 — Phase 60 parity audit. Circuit breaker extracted to reusable module. Registry cross-sync tests added (local TOML ↔ niche.rs ↔ primalSpring canonical). GPU protocol tags centralized. Python CPU benchmark added. Paper queue documented. 15 methods unregistered upstream — handback pending.)
+**Last updated:** May 9, 2026 (V58 — Eukaryotic UniBin evolution. Certification organelle absorbs guidestone. 100 experiments fossilized. Method constants consolidated. GAP-13 resolved upstream. Zero clippy warnings.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -45,7 +45,7 @@
 **Status:** PARTIAL — typed client exists; product engine path still not wired
 **Proto-nucleate:** Required (`shader.compile`, `shader.list`)
 **Impact:** `barracuda/src/ipc/coralreef.rs` exposes `compile_wgsl` / `list_shaders`
-via NeuralBridge `capability_call` to the shader domain, and `experiments/exp085_shader_dispatch_chain`
+via NeuralBridge `capability_call` to the shader domain, and `fossilRecord/experiments_prokaryotic_may2026/exp085_shader_dispatch_chain`
 exercises compile → dispatch. Production GPU paths in `game/engine/gpu.rs` still
 load WGSL with `include_str!` and dispatch through toadStool — they do not invoke
 the coralReef client.

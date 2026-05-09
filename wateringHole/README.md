@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 9, 2026 — **V57 is current** (Interstadial eukaryotic evolution)
+**Last Updated:** May 9, 2026 — **V58 is current** (Deep debt resolution — zero clippy warnings, method consolidation)
 
 ---
 
@@ -25,14 +25,14 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V57** | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | **Current: V57** — Interstadial eukaryotic evolution. UniBin (certify/validate/serve/status/version), certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
+| **V58** | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | **Current: V58** — Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
+| V57 | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | Interstadial eukaryotic evolution. UniBin, certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
 | V56 | [LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md) | May 8 | Phase 60 cross-spring parity response. Registry cross-sync, circuit breaker, GPU centralization, Squirrel node. |
-| V55 | [LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md) | Apr 27 | Deep debt resolution: `RpcClient` extraction, capability-first niche, typed errors. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 100 experiments, 820+ workspace tests, V56 pure composition + guideStone standard v1.2.0)
+ludoSpring (game science composition, 665+ workspace tests, V58 eukaryotic UniBin + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -85,7 +85,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## Composition Gap Status (V56, updated May 8, 2026)
+## Composition Gap Status (V58, updated May 9, 2026)
 
 | GAP | Owner | Status | Notes |
 |-----|-------|--------|-------|
@@ -97,7 +97,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | GAP-06: No UDS transport | **rhizoCrypt** | **OPEN** | Critical — blocks 4 experiments |
 | GAP-09: Neural API registration | **biomeOS** | OPEN | -14 checks (exp087, 088) |
 | GAP-12: Registry cross-sync | **primalSpring** | OPEN | 15 ludoSpring methods unregistered in canonical |
-| GAP-13: barraCuda build regression | **barraCuda** | **OPEN** | 0.3.13 breaks non-GPU consumers |
+| GAP-13: barraCuda build regression | **barraCuda** | **RESOLVED** | V57: `#[cfg(feature = "gpu")]` gate on `for_precision_tier` — pushed upstream |
 | GAP-14: Provenance commit hash | **ludoSpring** | OPEN | Multiple commit hashes across validators |
 | GAP-15: Squirrel in graph | **ludoSpring** | **RESOLVED** | V56: node added |
 | GAP-07: loamSpine startup panic | **loamSpine** | **RESOLVED** | PG-33 |
@@ -114,6 +114,7 @@ See: [V56 Phase 60 handoff](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V55 | `handoffs/archive/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md` | V58 Deep Debt Zero Warnings |
 | V53 | `handoffs/archive/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
 | V52 | `handoffs/archive/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
 | V49 | `handoffs/archive/LUDOSPRING_V49_DEEP_DEBT_RESOLUTION_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |

@@ -65,7 +65,7 @@ hierarchical community structure. Same math, different vocabulary.
 
 ### Experiment
 
-`ludoSpring/experiments/exp055_usurper/` — ~50 validation checks
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp055_usurper/` — ~50 validation checks
 
 ---
 
@@ -112,7 +112,7 @@ persistent specimens with growth/degradation curves, type classification
 
 ### Experiment
 
-`ludoSpring/experiments/exp056_integrase/` — ~40 validation checks
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp056_integrase/` — ~40 validation checks
 
 ---
 
@@ -158,7 +158,7 @@ resources based on contribution standing.
 
 ### Experiment
 
-`ludoSpring/experiments/exp057_symbiont/` — ~35 validation checks
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp057_symbiont/` — ~35 validation checks
 
 ---
 
@@ -204,7 +204,7 @@ laboratory "meta-progresses" toward successful results across failed attempts.
 
 ### Experiment
 
-`ludoSpring/experiments/exp058_conjugant/` — ~40 validation checks
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp058_conjugant/` — ~40 validation checks
 
 ---
 
@@ -249,7 +249,7 @@ decisions, lab results, and vital signs. Each event is a DAG vertex. The
 
 ### Experiment
 
-`ludoSpring/experiments/exp059_quorum/` — ~45 validation checks
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp059_quorum/` — ~45 validation checks
 
 ---
 
@@ -297,7 +297,7 @@ expose, rather than implement.
 
 ### Experiment
 
-`ludoSpring/experiments/exp060_pathogen/` — ~30 validation checks
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp060_pathogen/` — ~30 validation checks
 
 ---
 
@@ -358,7 +358,7 @@ credential verification, supply chain tracking.
 
 ### Implementation Status
 
-`ludoSpring/experiments/exp061_fermenting/` — 89 validation checks (DONE)
+`ludoSpring/fossilRecord/experiments_prokaryotic_may2026/exp061_fermenting/` — 89 validation checks (DONE)
 
 **Trio modifications shipped:**
 - loam-spine-core: `CertificateTradeOffer/Accept/Reject/Cancel` entry types
