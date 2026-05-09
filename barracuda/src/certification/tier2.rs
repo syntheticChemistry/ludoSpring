@@ -110,7 +110,7 @@ pub fn validate_procedural(ctx: &mut CompositionContext, v: &mut ValidationResul
 }
 
 pub fn validate_tensor_and_compute(ctx: &mut CompositionContext, v: &mut ValidationResult) {
-    use ludospring_barracuda::ipc::methods;
+    use crate::ipc::methods;
 
     check_method_exists(
         ctx,
@@ -140,7 +140,7 @@ pub fn validate_tensor_and_compute(ctx: &mut CompositionContext, v: &mut Validat
 }
 
 fn validate_tensor_matmul(ctx: &mut CompositionContext, v: &mut ValidationResult) {
-    use ludospring_barracuda::ipc::methods;
+    use crate::ipc::methods;
     let cap = "tensor";
 
     let lhs = match ctx.call(

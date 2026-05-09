@@ -384,6 +384,11 @@ pub fn resolve_neural_api_socket() -> Option<std::path::PathBuf> {
 }
 
 #[cfg(test)]
+#[expect(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "test assertions use unwrap/expect for clarity"
+)]
 mod tests {
     use super::*;
 
@@ -502,7 +507,7 @@ mod tests {
 
     #[test]
     fn capabilities_match_local_registry_toml() {
-        let toml_str = include_str!("../config/capability_registry.toml");
+        let toml_str = include_str!("../../config/capability_registry.toml");
         let parsed: toml::Value = toml::from_str(toml_str).expect("parse registry TOML");
 
         let caps_table = parsed
@@ -540,8 +545,7 @@ mod tests {
 
     #[test]
     fn capabilities_subset_of_primalspring_canonical() {
-        let canonical_str =
-            include_str!("../../../../primalSpring/config/capability_registry.toml");
+        let canonical_str = include_str!("../../../primalSpring/config/capability_registry.toml");
         let parsed: toml::Value =
             toml::from_str(canonical_str).expect("parse primalSpring registry");
 

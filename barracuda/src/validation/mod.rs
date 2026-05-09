@@ -33,6 +33,13 @@
 //! h.finish();
 //! ```
 
+/// Eukaryotic validation scenarios — absorbed experiments with ScenarioMeta.
+#[allow(
+    missing_docs,
+    reason = "scenario internals — validation runners, not public API"
+)]
+pub mod scenarios;
+
 /// Provenance record tying expected values to their source computation.
 ///
 /// Every hardcoded expected value in a validation binary should trace back
@@ -267,6 +274,14 @@ impl<S: ValidationSink> ValidationHarness<S> {
         self.checks.len()
     }
 
+    /// Returns (passed, failed) counts.
+    #[must_use]
+    pub fn counts(&self) -> (u32, u32) {
+        let p = u32::try_from(self.checks.iter().filter(|c| c.passed).count()).unwrap_or(u32::MAX);
+        let f = u32::try_from(self.checks.iter().filter(|c| !c.passed).count()).unwrap_or(u32::MAX);
+        (p, f)
+    }
+
     /// Whether all checks passed.
     #[must_use]
     pub fn all_passed(&self) -> bool {
@@ -499,7 +514,11 @@ impl ValidationResult {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used)]
+#[expect(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "test assertions use unwrap/expect for clarity"
+)]
 mod tests {
     use super::*;
 

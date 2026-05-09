@@ -19,6 +19,75 @@ use ludospring_barracuda::ipc::IpcServer;
 use ludospring_barracuda::niche;
 use tracing::info;
 
+fn cmd_certify(max_tier: u8) {
+    #[cfg(feature = "guidestone")]
+    {
+        let result = ludospring_barracuda::certification::certify(max_tier);
+        std::process::exit(result.exit_code());
+    }
+    #[cfg(not(feature = "guidestone"))]
+    {
+        let _ = max_tier;
+        eprintln!(
+            "[certify] Requires `guidestone` feature. Build with: cargo build --features guidestone"
+        );
+        std::process::exit(2);
+    }
+}
+
+fn cmd_validate(
+    tier_filter: Option<String>,
+    track_filter: Option<String>,
+    scenario_id: Option<String>,
+    list: bool,
+) {
+    use ludospring_barracuda::validation::scenarios::{self, Tier};
+
+    let registry = scenarios::build_registry();
+
+    if list {
+        println!("Available scenarios ({}):", registry.len());
+        for s in registry.all() {
+            println!(
+                "  {} [{}] (tier: {}, track: {})",
+                s.meta.id, s.meta.provenance_crate, s.meta.tier, s.meta.track
+            );
+        }
+        return;
+    }
+
+    let tier = tier_filter.as_deref().and_then(Tier::from_str_loose);
+    let scenarios: Vec<_> = if let Some(id) = &scenario_id {
+        registry.find(id).into_iter().collect()
+    } else if let Some(t) = tier {
+        registry.filter_by_tier(t)
+    } else {
+        registry.filter_by_tier(Tier::Rust)
+    };
+
+    let _ = track_filter;
+
+    println!("Running {} scenario(s)...\n", scenarios.len());
+    let mut total_pass = 0_u32;
+    let mut total_fail = 0_u32;
+
+    for s in &scenarios {
+        println!("━━━ {} ━━━", s.meta.id);
+        println!("  {}", s.meta.description);
+        let mut h = ludospring_barracuda::validation::ValidationHarness::new(s.meta.id);
+        (s.run)(&mut h);
+        let (p, f) = h.counts();
+        total_pass += p;
+        total_fail += f;
+        println!();
+    }
+
+    println!("═══ Summary: {total_pass} passed, {total_fail} failed ═══");
+    if total_fail > 0 {
+        std::process::exit(1);
+    }
+}
+
 fn cmd_server(port: Option<u16>) -> Result<(), ludospring_barracuda::ipc::IpcError> {
     use ludospring_barracuda::ipc::classify_io_error;
 
@@ -123,6 +192,27 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Run certification (guidestone three-tier validation).
+    Certify {
+        /// Maximum tier to validate (1=bare, 2=IPC, 3=NUCLEUS).
+        #[arg(long, default_value = "3")]
+        tier: u8,
+    },
+    /// Run validation scenarios (absorbed experiments).
+    Validate {
+        /// Filter by tier: rust, live, both/all.
+        #[arg(long)]
+        tier: Option<String>,
+        /// Filter by track: interaction, procedural, engagement, composition, performance.
+        #[arg(long)]
+        track: Option<String>,
+        /// Run a specific scenario by id.
+        #[arg(long)]
+        scenario: Option<String>,
+        /// List available scenarios without running them.
+        #[arg(long)]
+        list: bool,
+    },
     /// Start the IPC server (germination mode).
     Server {
         /// TCP port for genomeBin/orchestrator binding (informational — logged only).
@@ -152,6 +242,19 @@ fn main() {
 
     let cli = Cli::parse();
     let result: Result<(), commands::CliError> = match cli.command {
+        Command::Certify { tier } => {
+            cmd_certify(tier);
+            Ok(())
+        }
+        Command::Validate {
+            tier,
+            track,
+            scenario,
+            list,
+        } => {
+            cmd_validate(tier, track, scenario, list);
+            Ok(())
+        }
         Command::Server { port } => cmd_server(port).map_err(Into::into),
         Command::Status => {
             cmd_status();

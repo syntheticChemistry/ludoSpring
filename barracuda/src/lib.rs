@@ -109,6 +109,14 @@ pub mod telemetry;
 /// Visualization data channels for any visualization-capable consumer.
 pub mod visualization;
 
+/// Certification organelle — absorbed guidestone layers (L0-L8, 3-tier).
+#[cfg(feature = "guidestone")]
+#[allow(
+    missing_docs,
+    reason = "certification internals — validation, not public API"
+)]
+pub mod certification;
+
 /// IPC server: JSON-RPC 2.0 over Unix socket.
 #[cfg(feature = "ipc")]
 pub mod ipc;

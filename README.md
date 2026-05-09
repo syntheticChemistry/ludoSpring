@@ -2,9 +2,9 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** May 8, 2026
-**Version:** V56 (Phase 60 parity audit — circuit breaker extracted to reusable module (`ipc/circuit_breaker.rs`), registry cross-sync tests (local TOML ↔ niche.rs ↔ primalSpring canonical), GPU protocol tags centralized, Python CPU benchmark for performance parity, paper queue + dataset plan documented, gaming niche graph gains Squirrel AI node, `game.wfc_step` added to composition validation, toadStool capability naming aligned. **820+** workspace tests.)
-**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README (**820+** as of V56); if they diverge, treat this README and `cargo test --workspace` as canonical.
+**Date:** May 9, 2026
+**Version:** V57 (Interstadial eukaryotic evolution — UniBin with `certify`/`validate`/`serve`/`status`/`version` subcommands. Certification organelle (`certification/`) absorbs guidestone three-tier validation. Validation scenarios (`validation/scenarios/`) with `ScenarioMeta` registry (5 absorbed experiments). 100 prokaryotic experiment crates fossilized to `fossilRecord/`. `ipc` is now default feature. All `#[allow()]` replaced with `#[expect(, reason)]`. primalSpring v0.9.25 pinned. barraCuda GAP-13 fixed upstream. Zero errors, zero warnings on `cargo check + fmt + test`.)
+**Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
 **barraCuda:** v0.3.11 (standalone, default-features = false — CPU-only default, GPU opt-in)

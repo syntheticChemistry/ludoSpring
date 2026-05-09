@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 8, 2026 — **V56 is current** (Phase 60 cross-spring parity)
+**Last Updated:** May 9, 2026 — **V57 is current** (Interstadial eukaryotic evolution)
 
 ---
 
@@ -25,8 +25,9 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V56** | [LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md) | May 8 | **Current: V56** — Phase 60 cross-spring parity audit response. Registry cross-sync tests, circuit breaker extraction, GPU centralization, Squirrel in gaming niche graph, Python CPU benchmark, paper queue, 4 new gaps documented. |
-| V55 | [LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md) | Apr 27 | Deep debt resolution: `RpcClient` extraction, capability-first niche, typed errors, guidestone modularized. 820 tests. |
+| **V57** | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | **Current: V57** — Interstadial eukaryotic evolution. UniBin (certify/validate/serve/status/version), certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
+| V56 | [LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md) | May 8 | Phase 60 cross-spring parity response. Registry cross-sync, circuit breaker, GPU centralization, Squirrel node. |
+| V55 | [LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md) | Apr 27 | Deep debt resolution: `RpcClient` extraction, capability-first niche, typed errors. |
 
 ## Cross-Spring Context
 

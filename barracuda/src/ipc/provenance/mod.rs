@@ -18,7 +18,9 @@
 //! - [`loamspine`] — certificate operations (mint, verify, lifecycle, spines)
 //! - [`sweetgrass`] — attribution (braids, lineage, dehydration records)
 
-use super::circuit_breaker::{circuit_allows, reset_circuit, resilient_call, trip_circuit};
+use super::circuit_breaker::resilient_call;
+#[cfg(test)]
+use super::circuit_breaker::{circuit_allows, reset_circuit, trip_circuit};
 use super::neural_bridge::NeuralBridge;
 use serde::{Deserialize, Serialize};
 
@@ -410,7 +412,11 @@ fn unavailable_result() -> ProvenanceResult {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used)]
+#[expect(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "test assertions use unwrap/expect for clarity"
+)]
 mod tests {
     use super::*;
 

@@ -12,7 +12,7 @@ keywords = ["games", "ludology", "procedural-generation", "interaction", "gpu"]
 categories = ["science", "game-engines", "command-line-utilities"]
 
 [features]
-default = []
+default = ["ipc"]
 gpu = ["barracuda/gpu", "dep:wgpu", "dep:tokio"]
 # JSON-RPC IPC server for biomeOS (ludospring-server binary).
 ipc = ["dep:clap", "dep:tracing", "dep:tracing-subscriber", "dep:signal-hook", "dep:tokio"]
@@ -45,12 +45,12 @@ wgpu = { version = "28", default-features = false, features = [
 ], optional = true }
 tokio = { version = "1", features = ["rt", "net", "io-util", "sync"], optional = true }
 tarpc = { version = "0.37", features = ["full"], optional = true }
-primalspring = { path = "../../primalSpring/ecoPrimal", optional = true }
+primalspring = { path = "../../primalSpring/ecoPrimal", version = "0.9.25", optional = true }
 
 [[bin]]
 name = "ludospring"
 path = "src/bin/ludospring.rs"
-required-features = ["ipc"]
+required-features = ["ipc", "guidestone"]
 
 [[bin]]
 name = "validate_interaction"
