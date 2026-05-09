@@ -83,7 +83,7 @@ pub struct ScenarioRegistry {
 }
 
 impl ScenarioRegistry {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             scenarios: Vec::new(),
         }
@@ -115,11 +115,11 @@ impl ScenarioRegistry {
         self.scenarios.iter().find(|s| s.meta.id == id)
     }
 
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.scenarios.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.scenarios.is_empty()
     }
 }

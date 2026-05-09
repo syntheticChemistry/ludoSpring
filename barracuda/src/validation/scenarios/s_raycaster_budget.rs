@@ -53,7 +53,7 @@ fn run_raycaster_budget(h: &mut ValidationHarness) {
     let start = std::time::Instant::now();
     let mut hit_count = 0_u32;
     for col in 0..columns {
-        let angle_offset = -half_fov + (f64::from(col) / f64::from(columns)) * fov;
+        let angle_offset = (f64::from(col) / f64::from(columns)).mul_add(fov, -half_fov);
         let ray_angle = player.angle + angle_offset;
         if cast_ray(&player, ray_angle, &map, 64.0).is_some() {
             hit_count += 1;

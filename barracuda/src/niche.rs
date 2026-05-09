@@ -384,7 +384,7 @@ pub fn resolve_neural_api_socket() -> Option<std::path::PathBuf> {
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

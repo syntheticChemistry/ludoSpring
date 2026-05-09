@@ -309,7 +309,7 @@ fn compute_result_from_state_field(result: serde_json::Value) -> ComputeResult {
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

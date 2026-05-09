@@ -68,7 +68,7 @@ pub fn tick_game_logic(entities: &mut [Entity], dt: f64) -> TickResult {
         let adj = suggest_adjustment(&window, DDA_TARGET_SUCCESS_RATE);
         total_adjustment += adj;
 
-        entity.challenge = (entity.challenge + adj * 0.01).clamp(0.0, 1.0);
+        entity.challenge = adj.mul_add(0.01, entity.challenge).clamp(0.0, 1.0);
     }
 
     TickResult {

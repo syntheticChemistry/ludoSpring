@@ -54,7 +54,7 @@ fn base_retry_delay_ms() -> u64 {
 static CIRCUIT_OPEN_SINCE: AtomicU64 = AtomicU64::new(0);
 
 /// Check whether the circuit breaker allows a call.
-pub(crate) fn circuit_allows() -> bool {
+pub(in crate::ipc) fn circuit_allows() -> bool {
     let opened = CIRCUIT_OPEN_SINCE.load(Ordering::Relaxed);
     if opened == 0 {
         return true;
@@ -68,12 +68,12 @@ pub(crate) fn circuit_allows() -> bool {
 }
 
 /// Trip the circuit breaker open.
-pub(crate) fn trip_circuit() {
+pub(in crate::ipc) fn trip_circuit() {
     CIRCUIT_OPEN_SINCE.store(epoch_ms(), Ordering::Relaxed);
 }
 
 /// Reset the circuit breaker (call succeeded).
-pub(crate) fn reset_circuit() {
+pub(in crate::ipc) fn reset_circuit() {
     CIRCUIT_OPEN_SINCE.store(0, Ordering::Relaxed);
 }
 
@@ -93,7 +93,7 @@ fn epoch_ms() -> u64 {
 /// If the circuit is open, returns `None` immediately (graceful degradation).
 /// On failure, retries up to `MAX_RETRIES` times with exponential backoff,
 /// then trips the circuit.
-pub(crate) fn resilient_call<F>(f: F) -> Option<serde_json::Value>
+pub(in crate::ipc) fn resilient_call<F>(f: F) -> Option<serde_json::Value>
 where
     F: Fn(&NeuralBridge) -> Result<serde_json::Value, IpcError>,
 {
@@ -129,7 +129,7 @@ where
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

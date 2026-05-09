@@ -244,9 +244,9 @@ pub fn cast_ray(
 
         if map.get(map_x as usize, map_y as usize) {
             let wall_offset = if vertical_hit {
-                (player.y + distance * dir_y).fract()
+                distance.mul_add(dir_y, player.y).fract()
             } else {
-                (player.x + distance * dir_x).fract()
+                distance.mul_add(dir_x, player.x).fract()
             };
             return Some(RayHit {
                 distance,
@@ -281,7 +281,7 @@ pub fn cast_screen(
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

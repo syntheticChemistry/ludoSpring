@@ -194,7 +194,7 @@ pub fn verify_transition(
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"
@@ -272,27 +272,28 @@ mod tests {
 
     #[test]
     fn verify_transition_all_checks_pass() {
-        let char_pre = test_character(10, 20);
-        let char_post = char_pre.clone();
+        let inv = vec![InventoryItem {
+            id: "sword".into(),
+            name: "Blade".into(),
+            combat_relevant: true,
+            plane_metadata: HashMap::new(),
+        }];
+        let npc = vec![NpcDisposition {
+            npc_id: "npc1".into(),
+            trust: 0.5,
+            emotional_state: "calm".into(),
+            hostile: false,
+        }];
+        let know = vec![KnowledgeEntry {
+            fact: "secret".into(),
+            source_plane: PlaneType::Dialogue,
+            cross_plane: true,
+        }];
         let pre = base_snapshot(
-            char_pre,
-            vec![InventoryItem {
-                id: "sword".into(),
-                name: "Blade".into(),
-                combat_relevant: true,
-                plane_metadata: HashMap::new(),
-            }],
-            vec![NpcDisposition {
-                npc_id: "npc1".into(),
-                trust: 0.5,
-                emotional_state: "calm".into(),
-                hostile: false,
-            }],
-            vec![KnowledgeEntry {
-                fact: "secret".into(),
-                source_plane: PlaneType::Dialogue,
-                cross_plane: true,
-            }],
+            test_character(10, 20),
+            inv.clone(),
+            npc.clone(),
+            know.clone(),
             vec![Condition {
                 name: "Frightened".into(),
                 value: 1,
@@ -300,14 +301,18 @@ mod tests {
                 turns_remaining: Some(3),
             }],
         );
-        let mut post = pre.clone();
-        post.character = char_post;
-        post.conditions = vec![Condition {
-            name: "Frightened".into(),
-            value: 1,
-            decay_per_turn: 1,
-            turns_remaining: Some(3),
-        }];
+        let post = base_snapshot(
+            test_character(10, 20),
+            inv,
+            npc,
+            know,
+            vec![Condition {
+                name: "Frightened".into(),
+                value: 1,
+                decay_per_turn: 1,
+                turns_remaining: Some(3),
+            }],
+        );
         let v = verify_transition(&pre, &post, &dialogue_to_tactical_mappings());
         assert!(v.passed(), "{:?}", v.issues);
     }
@@ -457,28 +462,71 @@ mod tests {
             }],
         );
         let mappings = dialogue_to_tactical_mappings();
-        let mut post = pre.clone();
-        post.conditions = vec![Condition {
-            name: "Fascinated".into(),
-            value: 1,
-            decay_per_turn: 5,
-            turns_remaining: None,
-        }];
+        let post = base_snapshot(
+            test_character(5, 5),
+            vec![],
+            vec![],
+            vec![],
+            vec![Condition {
+                name: "Fascinated".into(),
+                value: 1,
+                decay_per_turn: 5,
+                turns_remaining: None,
+            }],
+        );
         let v = verify_transition(&pre, &post, &mappings);
         assert_eq!(v.issues, vec![TransitionIssue::ConditionMismatch]);
+    }
 
-        let mut post_ok = pre.clone();
-        post_ok.conditions = map_conditions(&pre.conditions, &mappings);
-        let v_ok = verify_transition(&pre, &post_ok, &mappings);
-        assert!(v_ok.passed());
-
-        let mut post_bad_value = pre.clone();
-        post_bad_value.conditions = vec![Condition {
-            name: "Fascinated".into(),
-            value: 99,
+    #[test]
+    fn verify_transition_condition_mapped_ok() {
+        let pre_conditions = vec![Condition {
+            name: "Charmed".into(),
+            value: 2,
             decay_per_turn: 5,
             turns_remaining: None,
         }];
+        let mappings = dialogue_to_tactical_mappings();
+        let post_conditions = map_conditions(&pre_conditions, &mappings);
+        let pre = base_snapshot(test_character(5, 5), vec![], vec![], vec![], pre_conditions);
+        let post_ok = base_snapshot(
+            test_character(5, 5),
+            vec![],
+            vec![],
+            vec![],
+            post_conditions,
+        );
+        let v_ok = verify_transition(&pre, &post_ok, &mappings);
+        assert!(v_ok.passed());
+    }
+
+    #[test]
+    fn verify_transition_condition_mismatch_bad_value() {
+        let pre = base_snapshot(
+            test_character(5, 5),
+            vec![],
+            vec![],
+            vec![],
+            vec![Condition {
+                name: "Charmed".into(),
+                value: 2,
+                decay_per_turn: 5,
+                turns_remaining: None,
+            }],
+        );
+        let mappings = dialogue_to_tactical_mappings();
+        let post_bad_value = base_snapshot(
+            test_character(5, 5),
+            vec![],
+            vec![],
+            vec![],
+            vec![Condition {
+                name: "Fascinated".into(),
+                value: 99,
+                decay_per_turn: 5,
+                turns_remaining: None,
+            }],
+        );
         let v_bad = verify_transition(&pre, &post_bad_value, &mappings);
         assert_eq!(v_bad.issues, vec![TransitionIssue::ConditionMismatch]);
     }
@@ -486,16 +534,14 @@ mod tests {
     #[test]
     fn verify_transition_hp_changed_current_or_max() {
         let pre = base_snapshot(test_character(10, 20), vec![], vec![], vec![], vec![]);
-        let mut post = pre.clone();
-        post.character.hp_current = 9;
+        let post_current = base_snapshot(test_character(9, 20), vec![], vec![], vec![], vec![]);
         assert_eq!(
-            verify_transition(&pre, &post, &[]).issues,
+            verify_transition(&pre, &post_current, &[]).issues,
             vec![TransitionIssue::HpChanged]
         );
-        let mut post2 = pre.clone();
-        post2.character.hp_max = 21;
+        let post_max = base_snapshot(test_character(10, 21), vec![], vec![], vec![], vec![]);
         assert_eq!(
-            verify_transition(&pre, &post2, &[]).issues,
+            verify_transition(&pre, &post_max, &[]).issues,
             vec![TransitionIssue::HpChanged]
         );
     }

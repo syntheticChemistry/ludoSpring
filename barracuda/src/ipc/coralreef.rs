@@ -83,7 +83,7 @@ const fn shader_success(data: serde_json::Value) -> ShaderResult {
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

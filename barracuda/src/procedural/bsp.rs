@@ -179,9 +179,9 @@ fn split_recursive(bounds: Rect, min_size: f64, seed: u64, depth: usize) -> BspN
     let (next_seed, ratio) = lcg_ratio(seed);
     let split_ratio = ratio.mul_add(0.4, 0.3);
     let split_pos = if horizontal {
-        bounds.y + span * split_ratio
+        span.mul_add(split_ratio, bounds.y)
     } else {
-        bounds.x + span * split_ratio
+        span.mul_add(split_ratio, bounds.x)
     };
 
     let (left_bounds, right_bounds) = if horizontal {

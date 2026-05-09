@@ -38,7 +38,7 @@ pub mod btsp;
 pub mod methods;
 pub mod rpc_client;
 
-pub(crate) mod circuit_breaker;
+mod circuit_breaker;
 mod envelope;
 mod handlers;
 mod neural_bridge;

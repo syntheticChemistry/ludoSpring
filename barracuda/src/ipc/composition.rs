@@ -135,7 +135,7 @@ pub fn composition_json() -> Result<serde_json::Value, super::envelope::IpcError
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

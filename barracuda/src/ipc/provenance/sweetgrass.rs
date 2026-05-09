@@ -220,7 +220,7 @@ pub fn provenance_attribution(braid_id: &str) -> Result<ProvenanceResult, IpcErr
 }
 
 #[cfg(test)]
-#[expect(
+#[allow(
     clippy::unwrap_used,
     clippy::expect_used,
     reason = "test assertions use unwrap/expect for clarity"

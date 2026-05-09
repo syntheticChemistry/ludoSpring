@@ -362,10 +362,9 @@ mod tests {
 
         assert!(wait_for_socket(&sock), "socket did not appear");
 
-        let sock_path = sock.clone();
         let clients: Vec<_> = (0..3)
             .map(|_| {
-                let p = sock_path.clone();
+                let p = sock.clone();
                 std::thread::spawn(move || {
                     let mut stream =
                         UnixStream::connect(&p).unwrap_or_else(|e| panic!("connect: {e}"));
