@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 9, 2026 (V58 — Eukaryotic UniBin evolution. Certification organelle absorbs guidestone. 100 experiments fossilized. Method constants consolidated. GAP-13 resolved upstream. Zero clippy warnings.)
+**Last updated:** May 10, 2026 (V59 — Post-interstadial. GAP-06 rhizoCrypt UDS RESOLVED. GAP-03/09 biomeOS RESOLVED. JH-11 token federation RESOLVED. All critical upstream blockers cleared. Tier 4 rewiring complete. 28 game.* methods canonical. skunkBat wired.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -164,13 +164,12 @@ provenance is composed via Nest Atomic overlay graph.
 ### GAP-06: rhizoCrypt TCP-Only Transport
 
 **Primal:** rhizoCrypt
-**Status:** OPEN (upstream) — no ludoSpring-side fix; still TCP-only vs
-proto-nucleate `transport = "uds_only"`
-**Impact:** 9 composition checks fail; all provenance pipeline operations blocked
-in UDS-only deployments.
-**Severity:** CRITICAL
+**Status:** RESOLVED (upstream) — rhizoCrypt S66 confirms UDS operational since S23.
+Provenance trio integration test added. Verified by primalSpring May 10, 2026 audit.
+**Impact:** ~~9 composition checks fail~~ → +9 checks now passing with updated binary.
+**Severity:** ~~CRITICAL~~ → RESOLVED
 **Owner:** rhizoCrypt team
-**Tracking:** Documented in CONTEXT.md V37.1 gap matrix
+**Tracking:** primalSpring/docs/PRIMAL_GAPS.md GAP-06 RESOLVED
 
 ---
 
@@ -258,9 +257,11 @@ math, visualization, AI, storage, and provenance primals.
 
 ## Gaps Handed to Primal Teams
 
-- **GAP-06** (rhizoCrypt TCP-only) → rhizoCrypt team — **OPEN**, only remaining critical gap
+- **GAP-06** (rhizoCrypt TCP-only) → rhizoCrypt team — **RESOLVED** (S66, UDS operational since S23)
 - **GAP-07** (loamSpine panic) → loamSpine team — **RESOLVED** (PG-33, d34100f)
 - **GAP-08** (barraCuda formula mismatch) → barraCuda team — **SUPERSEDED** by GAP-11 → **RESOLVED** (PG-38)
+
+All critical upstream blockers are now resolved as of May 10, 2026.
 
 ## Upstream PGs Noted from Composition Explorer Guide (V54)
 

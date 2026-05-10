@@ -184,6 +184,19 @@ impl NeuralBridge {
             .call(super::methods::capability::DEREGISTER, &params)
     }
 
+    /// Call an arbitrary JSON-RPC method on the Neural API.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed [`IpcError`](super::envelope::IpcError) on failure.
+    pub fn call_raw(
+        &self,
+        method: &str,
+        params: &serde_json::Value,
+    ) -> Result<serde_json::Value, super::envelope::IpcError> {
+        self.client.call(method, params)
+    }
+
     /// The resolved socket path for this bridge.
     #[must_use]
     pub fn socket_path(&self) -> &std::path::Path {

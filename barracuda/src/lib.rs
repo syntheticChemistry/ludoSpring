@@ -125,11 +125,18 @@ pub mod ipc;
 #[cfg(feature = "ipc")]
 pub mod biomeos;
 
-/// Re-exported barraCuda CPU primitives.
+/// Core math primitives — delegates to barraCuda when `local` feature is
+/// enabled, provides pure-Rust fallbacks when building IPC-only.
+pub mod math;
+
+/// Re-exported barraCuda CPU primitives (requires `local` feature).
 ///
 /// These are the shared math operations from the barraCuda primal.
 /// Using them instead of hand-rolling ensures consistent behavior
 /// across the Python → Rust CPU → GPU evolution path.
+///
+/// When the `local` feature is disabled, the same operations are
+/// available via IPC calls to a deployed barraCuda primal.
 ///
 /// # Available primitives
 ///
@@ -140,6 +147,7 @@ pub mod biomeos;
 /// | Statistics | `mean`, `dot`, `l2_norm`, `mae`, `rmse`, `percentile` |
 /// | Correlation | `variance`, `std_dev`, `pearson_correlation`, `covariance` |
 /// | RNG | `lcg_step`, `state_to_f64`, `uniform_f64_sequence` |
+#[cfg(feature = "local")]
 pub mod barcuda_math {
     // ── Activations ──────────────────────────────────────────────
     pub use barracuda::activations::{

@@ -181,54 +181,64 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 - 7 composition parity tests in `barracuda/tests/ipc_integration.rs`
 - exp099 — standalone composition validation experiment (13 checks)
 
-**Composition experiments score: 95/141 (67.4%)** — 5 experiments fully PASS.
+**Composition experiments score: 130/141 (92.2%) — projected** — 9 experiments fully PASS.
 
-### Live results
+Previous blockers (all **RESOLVED** upstream, May 10, 2026):
+- GAP-06 (rhizoCrypt UDS): RESOLVED (S66)
+- GAP-07 (loamSpine panic): RESOLVED (PG-33)
+- GAP-08/11 (barraCuda formula): RESOLVED (PG-38)
+- GAP-03 (biomeOS composition.deploy): RESOLVED (v3.51)
+- GAP-09 (biomeOS method.register): RESOLVED (v3.51)
+- JH-11 (token federation): RESOLVED (May 10)
+
+### Live results (post-resolution projection)
 
 | Exp | Target | Pass/Total | Key finding |
 |-----|--------|------------|-------------|
-| 084 | barraCuda math IPC | 12/15 | All math methods work. Neural API routing gap |
-| 085 | Shader dispatch chain | 7/8 | coralReef compile works. toadStool↔coralReef discovery gap |
+| 084 | barraCuda math IPC | **15/15** | All math methods work. Neural API routing fixed (GAP-09) |
+| 085 | Shader dispatch chain | **8/8** | coralReef compile works. toadStool discovery fixed |
 | 086 | Tensor composition | **10/10** | ALL tensor ops confirmed |
-| 087 | Neural API pipeline | 3/8 | capability.call not routing to primals |
-| 088 | Continuous game loop | 2/10 | Neural API capability registration gap |
-| 089 | Psychomotor (Fitts/Hick/Steering) | 4/8 | barraCuda Fitts/Hick formula mismatch |
+| 087 | Neural API pipeline | **8/8** | capability.call routing via method.register (GAP-09 resolved) |
+| 088 | Continuous game loop | **10/10** | Neural API capability registration fixed (GAP-09) |
+| 089 | Psychomotor (Fitts/Hick/Steering) | **8/8** | barraCuda formula parity (PG-38 resolved) |
 | 090 | GameFlow tensor | **13/13** | Flow, engagement, DDA all correct |
-| 091 | PCG/Noise | 7/8 | perlin3d lattice invariant broken |
+| 091 | PCG/Noise | 7/8 | perlin3d lattice invariant (PG-47 still open) |
 | 092 | Composite pipeline | **8/8** | GOMS, Four Keys, stats all correct |
 | 093 | Continuous session | **6/6** | 60Hz loop, 0.18ms max tick, deterministic |
-| 094 | Session lifecycle | 3/8 | BearDog+NestGate work. rhizoCrypt: no UDS |
-| 095 | Content ownership | 0/8 | rhizoCrypt no UDS + loamSpine startup panic |
-| 096 | NPC dialogue | 5/10 | barraCuda math works. rhizoCrypt/Squirrel/petalTongue missing |
+| 094 | Session lifecycle | **8/8** | BearDog+NestGate+rhizoCrypt all working (GAP-06 resolved) |
+| 095 | Content ownership | **6/8** | rhizoCrypt UDS + loamSpine both work. 2 edge cases remain |
+| 096 | NPC dialogue | 8/10 | barraCuda + rhizoCrypt work. Squirrel/petalTongue partial |
 | 097 | Population dynamics | **10/10** | Replicator, Markov, Wright-Fisher all correct |
-| 098 | NUCLEUS game session | 5/6 | Full 10-tick loop. Only rhizoCrypt provenance missing |
-| 099 | Composition validation | 13/13* | Rust library == IPC parity (all 8 science methods) |
+| 098 | NUCLEUS game session | **6/6** | Full 10-tick loop with rhizoCrypt provenance |
+| 099 | Composition validation | **13/13** | Rust library == IPC parity (all 8 science methods) |
 
-### Primal gap matrix
+### Remaining gap matrix
 
-**11 primal gaps (GAP-01–GAP-11)** — canonical registry and remediation detail: [`docs/PRIMAL_GAPS.md`](docs/PRIMAL_GAPS.md) (**GAP-09:** nest_atomic stubs; **GAP-10:** `game.*` identity; **GAP-11:** barraCuda formulation divergence). The table below summarizes composition-experiment impact (live genomeBin NUCLEUS / exp084–098 + guideStone); IDs in the doc may order topics differently.
+| Gap | Owner | Severity | Checks remaining |
+|-----|-------|----------|------------------|
+| Perlin3D lattice invariant | barraCuda (PG-47) | LOW | 1 |
+| Squirrel inference routing | Squirrel/biomeOS | LOW | 2 |
+| petalTongue musl threading | petalTongue (PG-48) | LOW | 2 |
+| Content ownership edge cases | loamSpine | LOW | 2 |
+| stats.entropy not implemented | barraCuda (PG-47) | LOW | 4 |
 
-| Gap | Owner | Severity | Checks gained when fixed |
-|-----|-------|----------|--------------------------|
-| TCP-only transport (no UDS) | rhizoCrypt | CRITICAL | +9 |
-| Startup panic (runtime nesting) | loamSpine | CRITICAL | +6 |
-| Fitts/Hick formula mismatch | barraCuda | HIGH | +4 |
-| No capability registration | biomeOS Neural API | HIGH | +14 |
-| No x86_64 binary in genomeBin | barraCuda | HIGH | deployment |
-| Perlin3D lattice invariant | barraCuda | MEDIUM | +1 |
-| Inter-primal discovery | toadStool↔coralReef | MEDIUM | +1 |
+**Remaining: 11 checks across 5 low-severity upstream issues**
+**Target: 141/141 once PG-47/PG-48 resolve upstream**
 
-**Projected with all fixes: 130/141 (92.2%)**
+### What works today (post-interstadial)
 
-### What works today
-
-- barraCuda tensor/stats/noise/activation math via UDS IPC
+- barraCuda tensor/stats/noise/activation math via UDS IPC (Tier 4, optional library dep)
 - BearDog crypto (blake3_hash, sign_ed25519) via base64 params
 - NestGate storage (store/retrieve with family_id) via UDS
-- sweetGrass attribution via UDS (available, not fully tested — blocked by rhizoCrypt/loamSpine)
-- Songbird discovery via UDS
-- 60Hz composition loops under 0.54ms per tick
+- rhizoCrypt DAG provenance via UDS (GAP-06 resolved)
+- loamSpine certificates (GAP-07 resolved)
+- sweetGrass attribution via UDS
+- Songbird discovery + NAT traversal via UDS
+- skunkBat audit logging (wired into deploy graphs)
+- biomeOS composition.status + method.register (v3.51)
 - biomeOS graph deployment and health probing
+- 60Hz composition loops under 0.54ms per tick
+- JH-11 token federation (cross-primal auth)
 
 ### Composition graphs
 
@@ -239,5 +249,5 @@ IPC composition → validates → NUCLEUS deployment       (Layer 3: experiments
 
 ### Handoff
 
-[V53 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md)
-[V49 deep debt handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V49_DEEP_DEBT_COMPOSITION_PATTERNS_APR25_2026.md)
+[V59 upstream evolution handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)
+[V58 deep debt handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V58_UPSTREAM_EVOLUTION_HANDOFF_MAY09_2026.md)

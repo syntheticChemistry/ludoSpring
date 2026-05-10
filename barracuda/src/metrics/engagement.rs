@@ -89,7 +89,7 @@ pub fn compute_engagement(snap: &EngagementSnapshot) -> EngagementMetrics {
         deliberation.min(1.0),
     ];
     let weights = [ENGAGEMENT_WEIGHT; 5];
-    let raw = barracuda::stats::dot(&components, &weights);
+    let raw = crate::math::dot(&components, &weights);
 
     EngagementMetrics {
         actions_per_minute: apm,

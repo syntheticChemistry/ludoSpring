@@ -13,6 +13,7 @@ mod s_engagement_metrics;
 mod s_interaction_laws;
 mod s_procedural_gen;
 mod s_raycaster_budget;
+mod s_tier4_math_parity;
 
 /// Build the full scenario registry for ludoSpring.
 pub fn build_registry() -> ScenarioRegistry {
@@ -22,5 +23,6 @@ pub fn build_registry() -> ScenarioRegistry {
     r.register(s_engagement_metrics::SCENARIO);
     r.register(s_composition_parity::SCENARIO);
     r.register(s_raycaster_budget::SCENARIO);
+    r.register(s_tier4_math_parity::SCENARIO);
     r
 }

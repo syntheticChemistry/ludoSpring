@@ -269,6 +269,37 @@ timeout_ms = 20000
 "interaction.subscribe" = "interaction.subscribe"
 "interaction.poll" = "interaction.poll"
 
+# ── Meta: Audit & Observability (skunkBat) ─────────────────────────────
+
+[[nodes]]
+id = "skunkbat"
+depends_on = ["beardog", "songbird"]
+output = "skunkbat-ready"
+capabilities = [
+    "baseline.observe",
+    "baseline.anomaly",
+    "metadata.scan",
+    "metadata.compare",
+    "response.graduated",
+    "security.audit_log",
+    "health.liveness",
+]
+
+[nodes.primal]
+by_capability = "defense"
+
+[nodes.operation]
+name = "start"
+
+[nodes.operation.params]
+mode = "server"
+family_id = "${FAMILY_ID}"
+forwarding = ["rhizocrypt", "sweetgrass"]
+
+[nodes.constraints]
+timeout_ms = 15000
+required = false
+
 # ── Validation ───────────────────────────────────────────────────────
 # No ludospring node — game science is served by the composition of
 # barraCuda (math/activation/stats/noise), Squirrel (AI), petalTongue
@@ -276,7 +307,7 @@ timeout_ms = 20000
 
 [[nodes]]
 id = "validate-cell"
-depends_on = ["beardog", "songbird", "barracuda", "petaltongue"]
+depends_on = ["beardog", "songbird", "barracuda", "petaltongue", "skunkbat"]
 output = "cell-validated"
 
 [nodes.operation]
@@ -287,6 +318,7 @@ check_beardog = true
 check_songbird = true
 check_barracuda = true
 check_petaltongue = true
+check_skunkbat = true
 timeout_seconds = 20
 
 [nodes.constraints]

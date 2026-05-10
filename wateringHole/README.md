@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 9, 2026 — **V58 is current** (Deep debt resolution — zero clippy warnings, method consolidation)
+**Last Updated:** May 10, 2026 — **V59 is current** (Post-interstadial evolution — Tier 4 rewiring, 28 game.* canonical, skunkBat wired, biomeOS v3.51 absorbed)
 
 ---
 
@@ -25,14 +25,14 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V58** | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | **Current: V58** — Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
+| **V59** | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | **Current: V59** — Tier 4 rewiring (barracuda optional), 28 game.* methods canonical, skunkBat audit logging, biomeOS v3.51 composition.status + method.register, dual-path math module, 6 scenarios. |
+| V58 | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
 | V57 | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | Interstadial eukaryotic evolution. UniBin, certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
-| V56 | [LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md) | May 8 | Phase 60 cross-spring parity response. Registry cross-sync, circuit breaker, GPU centralization, Squirrel node. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 665+ workspace tests, V58 eukaryotic UniBin + guideStone standard v1.2.0)
+ludoSpring (game science composition, 665+ workspace tests, V59 Tier 4 IPC-first + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)

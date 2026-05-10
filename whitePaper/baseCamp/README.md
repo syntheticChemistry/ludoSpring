@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** May 9, 2026
+**Date:** May 10, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V58 — Eukaryotic UniBin evolution complete. Single `ludospring` binary with `certify`/`validate`/`serve`/`status`/`version` subcommands. Certification organelle absorbs guidestone three-tier validation into library module. 5 representative experiments absorbed as `validation/scenarios/` with `ScenarioMeta` registry. 100 prokaryotic experiments fossilized to `fossilRecord/`. IPC-first (default feature). Zero clippy warnings, zero bare `#[allow]`, zero TODO/FIXME. Method constants consolidated (15 domain modules in `ipc/methods.rs`). FMA accuracy (mul_add). primalSpring v0.9.25 pinned. barraCuda GAP-13 resolved upstream. **665+** workspace tests. guideStone readiness **4** (NUCLEUS validated): Tier 1 (20 bare), Tier 2 (15 IPC), Tier 3 (8 cross-atomic). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0. ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port → Primal composition (NUCLEUS graph). 14 primal gaps tracked (GAP-07/08/10/11/15 resolved).
+**Status:** V59 — Post-interstadial evolution. **Tier 4 rewiring complete**: `barracuda` is now `optional = true`, feature-gated behind `local`; IPC-only sovereign builds work without library linkage. 28 `game.*` methods registered in canonical primalSpring registry (was 18). skunkBat audit logging wired into deploy graphs. biomeOS v3.51 `composition.status` + `method.register` absorbed. `crate::math` dual-path module (library or inline fallback). 6 validation scenarios (new: `tier4_math_parity`). All upstream blockers resolved (GAP-06 rhizoCrypt UDS, GAP-03/09 biomeOS, JH-11 token federation). **Composition parity: 130/141 (92.2%)**. Zero clippy warnings, zero bare `#[allow]`, zero TODO/FIXME. primalSpring v0.9.25 pinned. **665+** workspace tests. guideStone readiness **4** (NUCLEUS validated). MCP surface complete (15/15 tools). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port → Primal composition (NUCLEUS graph).
 
 ---
 

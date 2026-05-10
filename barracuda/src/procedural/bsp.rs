@@ -214,8 +214,8 @@ fn split_recursive(bounds: Rect, min_size: f64, seed: u64, depth: usize) -> BspN
 
 /// Simple LCG matching `barraCuda::rng::lcg_step` for reproducibility.
 fn lcg_ratio(seed: u64) -> (u64, f64) {
-    let next = barracuda::rng::lcg_step(seed);
-    let ratio = barracuda::rng::state_to_f64(next);
+    let next = crate::math::lcg_step(seed);
+    let ratio = crate::math::state_to_f64(next);
     (next, ratio)
 }
 

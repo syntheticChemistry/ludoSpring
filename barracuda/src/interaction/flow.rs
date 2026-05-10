@@ -110,7 +110,7 @@ impl DifficultyCurve {
             .map(|i| {
                 let t = f64::from(i) / f64::from(n);
                 let x = (t - 0.5) * steepness;
-                let s = barracuda::activations::sigmoid(x);
+                let s = crate::math::sigmoid(x);
                 (t, (ceiling - floor).mul_add(s, floor))
             })
             .collect();
