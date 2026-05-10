@@ -2,7 +2,7 @@
 
 **Date:** May 10, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V59 — Post-interstadial evolution. **Tier 4 rewiring complete**: `barracuda` is now `optional = true`, feature-gated behind `local`; IPC-only sovereign builds work without library linkage. 28 `game.*` methods registered in canonical primalSpring registry (was 18). skunkBat audit logging wired into deploy graphs. biomeOS v3.51 `composition.status` + `method.register` absorbed. `crate::math` dual-path module (library or inline fallback). 6 validation scenarios (new: `tier4_math_parity`). All upstream blockers resolved (GAP-06 rhizoCrypt UDS, GAP-03/09 biomeOS, JH-11 token federation). **Composition parity: 130/141 (92.2%)**. Zero clippy warnings, zero bare `#[allow]`, zero TODO/FIXME. primalSpring v0.9.25 pinned. **665+** workspace tests. guideStone readiness **4** (NUCLEUS validated). MCP surface complete (15/15 tools). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port → Primal composition (NUCLEUS graph).
+**Status:** V59.1 — Post-interstadial deep debt resolved. **Tier 4 rewiring complete**: `barracuda` `optional = true`, feature-gated behind `local`; IPC-only sovereign builds work without library linkage. 28 `game.*` methods canonical (413 ecosystem total). skunkBat audit logging wired. biomeOS v3.51 `composition.status` + `method.register` absorbed. `crate::math` dual-path module (library or inline fallback, LCG constants verified against barraCuda). 6 validation scenarios. `python_parity` tests split into 4 focused modules. All upstream blockers resolved (GAP-06, GAP-03/09, GAP-12, JH-11). **Composition parity: 130/141 (92.2%)**. Zero clippy warnings, zero bare `#[allow]`, zero TODO/FIXME. primalSpring v0.9.25. **815+** workspace tests. guideStone readiness **4** (NUCLEUS validated). MCP surface complete (15/15 tools). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
 
 ---
 
@@ -321,67 +321,41 @@ The same WFC that generates dungeons can compose music (harmonic adjacency).
 The same DDA that tunes monster density can tune exam difficulty.
 The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 
-### How to Reproduce
+### How to Reproduce (V59 — Eukaryotic UniBin)
 
 ```bash
 cd ludoSpring
-python3 baselines/python/run_all_baselines.py       # Python reference data
-cargo test --features ipc -p ludospring-barracuda --lib --tests  # part of 817 workspace tests (V53)
-cargo run --bin exp023_open_systems_benchmark        # benchmark: 16/16 checks
-cargo run --bin exp024_doom_terminal                 # playable Doom walker
-cargo run --bin exp025_roguelike_explorer            # playable roguelike
-cargo run --bin exp026_game_telemetry -- validate   # telemetry protocol: 13/13 checks
-cargo run --bin exp027_veloren_adapter -- validate  # Veloren adapter: 9/9 checks
-cargo run --bin exp028_fishfolk_adapter -- validate # Fish Folk adapter: 7/7 checks
-cargo run --bin exp029_abstreet_adapter -- validate # A/B Street adapter: 8/8 checks
-cargo run --bin exp030_cpu_gpu_parity               # CPU-vs-GPU parity: 32/32 checks
-cargo run --bin exp031_dispatch_routing              # dispatch routing: 10/10 checks
-cargo run --bin exp032_mixed_hardware                # mixed hardware: 18/18 checks
-cargo run --bin exp033_nucleus_pipeline              # NUCLEUS pipeline: 19/19 checks
-cargo run --bin exp034_python_parity_bench           # Python parity: 15/15 checks
-cargo run --bin exp035_noise_throughput              # BM-002 noise: 10/10 checks
-cargo run --bin exp036_raycaster_throughput          # BM-003 raycaster: 10/10 checks
-cargo run --bin exp037_tick_budget                   # tick budget: 10/10 checks
-cargo run --bin exp038_external_roguelike_control    # external control: 12/12 checks
-cargo run --bin exp039_noise_cross_validation        # noise cross-val: 12/12 checks
-cargo run --bin exp040_quality_discrimination        # quality discrim: 12/12 checks
-cargo run --release -p ludospring-exp041 -- validate # NCBI QS integration: 12/12 checks
-cargo run --release -p ludospring-exp042 -- validate # Tower Atomic local: 10/10 checks
-cargo run --release -p ludospring-exp043 -- validate # QS gene dataset: 10/10 checks
-cargo run --release -p ludospring-exp044 -- validate # Anderson QS explorer: 12/12 checks
-cargo run --release -p ludospring-exp045 -- validate # Ruleset control systems: 49/49 checks
-cargo run --release -p ludospring-exp046 -- validate # Text adventure DAG: 33/33 checks
-cargo run --release -p ludospring-exp047 -- validate # MTG card provenance: 23/23 checks
-cargo run --release -p ludospring-exp048 -- validate # Stack resolution folding: 36/36 checks
-cargo run --release -p ludospring-exp049 -- validate # Novel data combinatorics: 33/33 checks
-cargo run --release -p ludospring-exp050 -- validate # Game tree design metric: 30/30 checks
-cargo run --release -p ludospring-exp051 -- validate # Games@Home: 28/28 checks
-cargo run --release -p ludospring-exp052 -- validate # Provenance trio integration: 37/37 checks
-cargo run --release -p ludospring-exp053 -- validate # Extraction shooter provenance: 65/65 checks
-cargo run --release -p ludospring-exp054 -- validate # Composable raid visualization: 40/40 checks
-cargo run --release -p ludospring-exp055 -- validate # Usurper: Nemesis system: 48/48 checks
-cargo run --release -p ludospring-exp056 -- validate # Integrase: capture mechanics: 47/47 checks
-cargo run --release -p ludospring-exp057 -- validate # Symbiont: faction reputation: 35/35 checks
-cargo run --release -p ludospring-exp058 -- validate # Conjugant: roguelite meta-progression: 40/40 checks
-cargo run --release -p ludospring-exp059 -- validate # Quorum: emergent narrative: 39/39 checks
-cargo run --release -p ludospring-exp060 -- validate # Pathogen: gacha anti-pattern: 28/28 checks
-cargo run --release -p ludospring-exp061 -- validate # Fermenting: full lifecycle: 89/89 checks
-cargo run --release -p ludospring-exp062              # Field sample provenance: 39/39 checks
-cargo run --release -p ludospring-exp063              # Consent-gated medical access: 35/35 checks
-cargo run --release -p ludospring-exp064              # BearDog-signed chain: 39/39 checks
-cargo run --release -p ludospring-exp065              # Cross-domain fraud unification: 74/74 checks
-cargo run --release -p ludospring-exp066              # Radiating attribution: 41/41 checks
-cargo run -p ludospring-exp067                        # NPC knowledge bounds: 38/38 checks
-cargo run -p ludospring-exp068                        # Lie detection: 21/21 checks
-cargo run -p ludospring-exp069                        # Internal voices: 75/75 checks
-cargo run -p ludospring-exp070                        # Voice priority: 25/25 checks
-cargo run -p ludospring-exp071                        # NPC memory DAG: 26/26 checks
-cargo run -p ludospring-exp072                        # Trust dynamics: 45/45 checks
-cargo run -p ludospring-exp073                        # Dialogue skill checks: 34/34 checks
-cargo run -p ludospring-exp074                        # Dialogue flow: 26/26 checks
-cargo run -p ludospring-exp075                        # Plane transitions: 31/31 checks
-cargo run --features ipc --bin ludospring -- dashboard  # petalTongue visualization
+
+# ── Python baselines (correctness reference) ────────────────────────
+python3 baselines/python/run_all_baselines.py       # Generate combined_baselines.json
+python3 baselines/python/check_drift.py             # Verify zero baseline drift
+python3 baselines/python/bench_cpu_parity.py        # CPU timing: perlin, fBm, raycaster, Fitts
+
+# ── Rust validation (815+ tests) ────────────────────────────────────
+cargo test --workspace --lib --tests                 # Full test suite (0 failures)
+cargo test --no-default-features --features ipc -p ludospring-barracuda --lib  # IPC-only mode
+
+# ── UniBin subcommands ──────────────────────────────────────────────
+cargo run --features "ipc,guidestone" --bin ludospring -- certify   # 3-tier certification (L0-L8)
+cargo run --features "ipc,guidestone" --bin ludospring -- validate  # 6 scenarios via ScenarioRegistry
+cargo run --features "ipc,guidestone" --bin ludospring -- status    # Niche identity + health
+cargo run --features "ipc,guidestone" --bin ludospring -- version   # Build metadata
+
+# ── Standalone validation binaries ──────────────────────────────────
+cargo run --bin validate_interaction                  # Fitts, Hick, Steering, GOMS, Flow, DDA
+cargo run --bin validate_procedural                  # Perlin, fBm, WFC, L-systems, BSP
+cargo run --bin validate_engagement                  # Engagement composite, Four Keys, Tufte
+cargo run --bin validate_composition                 # IPC golden-value parity (28 game.* methods)
+cargo run --bin validate_primal_proof                # Raw IPC to live barraCuda primals
+
+# ── Composition (requires deployed primals from plasmidBin) ─────────
+biomeos deploy --graph graphs/ludospring_cell.toml   # Full NUCLEUS composition
+cargo run --features ipc --bin ludospring -- serve    # IPC server (28 game.* + health probes)
 ```
+
+**Note:** 100 prokaryotic experiment crates are preserved in `fossilRecord/experiments_prokaryotic_may2026/`
+for historical reference. They are no longer workspace members — representative experiments
+were absorbed into `validation/scenarios/` as eukaryotic validation units.
 
 ---
 

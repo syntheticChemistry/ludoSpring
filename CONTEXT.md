@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 9, 2026 (V58 — Eukaryotic UniBin evolution: single binary with certify/validate/serve/status/version, certification organelle, scenario registry, 100 experiments fossilized to `fossilRecord/`, IPC default feature, zero clippy warnings, method constant consolidation, FMA accuracy, primalSpring v0.9.25 pinned; 665+ workspace tests)
+**Last updated:** May 10, 2026 (V59 — Post-interstadial evolution. Tier 4 rewiring: barracuda `optional = true` with `local` feature gate, IPC-only builds work. 28 `game.*` methods canonical (was 18). skunkBat audit logging wired. biomeOS v3.51 `composition.status` + `method.register` absorbed. `crate::math` dual-path. All upstream blockers resolved (GAP-06, GAP-03/09, JH-11). 815 workspace tests. Composition parity: 130/141 (92.2%). python_parity split into 4 focused modules.)
 
 ## What is this?
 
@@ -57,8 +57,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 665+ workspace `#[test]` functions (V58, post-fossilization)
-- **Experiments**: 100 total (fossilized to `fossilRecord/`; 5 representative scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
+- **Tests**: 815+ workspace `#[test]` functions (V59, post-fossilization + math module + parity split)
+- **Experiments**: 100 total (fossilized to `fossilRecord/`; 6 representative scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural, gpu}.rs` — three-tier dispatch (lifecycle → infrastructure → science)
@@ -249,5 +249,5 @@ Previous blockers (all **RESOLVED** upstream, May 10, 2026):
 
 ### Handoff
 
-[V59 upstream evolution handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)
-[V58 deep debt handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V58_UPSTREAM_EVOLUTION_HANDOFF_MAY09_2026.md)
+[V59 Tier 4 post-interstadial handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)
+[V59 local handoff](wateringHole/handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)

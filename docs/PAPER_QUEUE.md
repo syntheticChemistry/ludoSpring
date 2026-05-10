@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 8, 2026 (Phase 60)
+**Last updated:** May 10, 2026 (V59 post-interstadial — Tier 4 IPC-first, 28 game.* canonical, 815+ tests)
 
 ## Foundation Thread Assignment
 

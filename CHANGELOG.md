@@ -3,7 +3,57 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V53).
+This project does not use SemVer — versions are session-sequential (V1–V59).
+
+## [V59] — 2026-05-10
+
+### Post-interstadial evolution — Tier 4 rewiring + deep debt resolution
+
+- **Tier 4 IPC-first:** `barracuda` is now `optional = true`, feature-gated behind `local`.
+  IPC-only builds (`--no-default-features --features ipc`) compile without barraCuda linkage.
+- **`crate::math` dual-path module:** sigmoid, dot, lcg_step, state_to_f64 dispatch to
+  `barracuda` when `local` enabled, pure-Rust inline fallbacks when disabled. LCG constants
+  verified against `barracuda::rng` (increment=1, `>>33` bit extraction).
+- **28 `game.*` methods canonical:** registered in primalSpring `capability_registry.toml`
+  (was 18). Ecosystem total 413 methods. Bidirectional CI cross-sync test added.
+- **skunkBat audit logging:** wired into `ludospring_cell.toml` + `ludospring_deploy.toml`.
+- **biomeOS v3.51 absorption:** `composition.status` (health/pressure) + `method.register`
+  (dynamic capability registration). `NeuralBridge::call_raw` for generic JSON-RPC.
+- **Validation scenario:** `s_tier4_math_parity` — verifies dual-path numerical parity.
+- **python_parity refactor:** 872-line monolith split into 4 focused submodules
+  (interaction, noise, procedural, metrics).
+- **7 unit tests** added to `crate::math` module.
+- **All upstream blockers resolved:** GAP-03 (biomeOS), GAP-06 (rhizoCrypt UDS),
+  GAP-09 (Neural API), GAP-12 (registry cross-sync), JH-11 (token federation).
+- **815+ workspace tests**, zero clippy warnings, zero bare `#[allow]`, zero TODO/FIXME.
+- **Composition parity:** 130/141 (92.2%).
+
+## [V58] — 2026-05-09
+
+### Eukaryotic UniBin evolution — interstadial primordial extinction
+
+- **UniBin binary:** single `ludospring` binary with certify/validate/serve/status/version
+  subcommands. Certification organelle (`certification/`), scenario registry
+  (`validation/scenarios/`).
+- **100 experiments fossilized** to `fossilRecord/experiments_prokaryotic_may2026/` with
+  dated provenance README. No longer workspace members.
+- **IPC default feature:** `ipc` is now part of default features.
+- **Method constant consolidation:** `GAME_METHODS` const array replaces scattered strings.
+- **FMA accuracy:** `mul_add` intrinsics for fused multiply-add correctness.
+- **primalSpring v0.9.25 pinned.**
+- **665+ workspace tests** (post-fossilization), zero clippy warnings.
+
+## [V56–V57] — 2026-05-08
+
+### Phase 60 cross-spring parity alignment
+
+- **GAP-12 resolved:** 10 `game.*` methods added to primalSpring canonical registry.
+- **GAP-13 resolved:** `barraCuda` build regression fixed upstream (`#[cfg(feature = "gpu")]`
+  gate on `for_precision_tier`).
+- **Registry cross-sync test** added against primalSpring 403-method capability registry.
+- **exp094 replication:** Full NUCLEUS parity validation (Tower + Node + Nest + cross-atomic).
+- **15 Squirrel in graph** node added to deploy graphs.
+- **guideStone L5** validated (54/54 checks, standard v1.2.0).
 
 ## [V55] — 2026-04-27
 

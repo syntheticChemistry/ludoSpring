@@ -61,7 +61,7 @@ cargo build                     ✓ (default features: ipc + local)
 cargo build --no-default-features --features ipc   ✓ (IPC-only)
 cargo fmt --check               ✓ (zero diffs)
 cargo clippy --workspace --all-targets   ✓ (zero warnings)
-cargo test --workspace --lib --tests     ✓ (665+ tests, 0 failures)
+cargo test --workspace --lib --tests     ✓ (815+ tests, 0 failures)
 ```
 
 ---

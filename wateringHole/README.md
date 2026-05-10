@@ -25,14 +25,16 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V59** | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | **Current: V59** — Tier 4 rewiring (barracuda optional), 28 game.* methods canonical, skunkBat audit logging, biomeOS v3.51 composition.status + method.register, dual-path math module, 6 scenarios. |
+| **V59.1** | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | **Current: V59.1** — Tier 4 rewiring (barracuda optional), 28 game.* canonical (413 ecosystem), skunkBat wired, biomeOS v3.51 absorbed, dual-path math, 6 scenarios, 815+ tests, python_parity refactored. |
+| V59.1 | [Central: LUDOSPRING_V59_DEEP_DEBT_EVOLUTION_HANDOFF_MAY10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V59_DEEP_DEBT_EVOLUTION_HANDOFF_MAY10_2026.md) | May 10 | Deep debt patterns, evolution guidance for springs + primals, composition parity 130/141, LCG parity lesson. |
+| V59 | [Central: LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 reference for ecosystem adoption. |
 | V58 | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
 | V57 | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | Interstadial eukaryotic evolution. UniBin, certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 665+ workspace tests, V59 Tier 4 IPC-first + guideStone standard v1.2.0)
+ludoSpring (game science composition, 815+ workspace tests, V59 Tier 4 IPC-first + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -85,26 +87,26 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## Composition Gap Status (V58, updated May 9, 2026)
+## Composition Gap Status (V59, updated May 10, 2026)
 
 | GAP | Owner | Status | Notes |
 |-----|-------|--------|-------|
 | GAP-01: coralReef IPC client | **coralReef** | OPEN | Shader pipeline not exercised |
 | GAP-02: NestGate game state | **NestGate** | OPEN | storage.store/retrieve wired but not validated E2E |
-| GAP-03: biomeOS game_logic orchestration | **biomeOS** | OPEN | Cell graph exists, no live biomeOS deploy tested |
+| GAP-03: biomeOS game_logic orchestration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `composition.deploy` route alias |
 | GAP-04: provenance commit chain | **rhizoCrypt** | OPEN | Commit exists but deterministic replay not validated |
 | GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |
-| GAP-06: No UDS transport | **rhizoCrypt** | **OPEN** | Critical — blocks 4 experiments |
-| GAP-09: Neural API registration | **biomeOS** | OPEN | -14 checks (exp087, 088) |
-| GAP-12: Registry cross-sync | **primalSpring** | OPEN | 15 ludoSpring methods unregistered in canonical |
-| GAP-13: barraCuda build regression | **barraCuda** | **RESOLVED** | V57: `#[cfg(feature = "gpu")]` gate on `for_precision_tier` — pushed upstream |
+| GAP-06: rhizoCrypt UDS transport | **rhizoCrypt** | **RESOLVED** | S66: UDS operational since S23 |
+| GAP-09: Neural API registration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `method.register` |
+| GAP-12: Registry cross-sync | **primalSpring** | **RESOLVED** | V59: 28 `game.*` methods registered (413 total) |
+| GAP-13: barraCuda build regression | **barraCuda** | **RESOLVED** | V57: `#[cfg(feature = "gpu")]` gate |
 | GAP-14: Provenance commit hash | **ludoSpring** | OPEN | Multiple commit hashes across validators |
 | GAP-15: Squirrel in graph | **ludoSpring** | **RESOLVED** | V56: node added |
 | GAP-07: loamSpine startup panic | **loamSpine** | **RESOLVED** | PG-33 |
 | GAP-08/11: Fitts/Hick formulation | **barraCuda** | **RESOLVED** | PG-38 |
 | GAP-10: game.* graph identity | **ludoSpring** | **RESOLVED** | V53: pure composition |
 
-**Score**: 95/141 (67.4%) composition checks + exp099 13/13 + exp100 27. Projected with GAP-06+GAP-13 fix: ~143/154 (92.9%).
+**Score**: 130/141 (92.2%) composition checks. Remaining 11 low-severity (PG-47 perlin3d, PG-48 petalTongue threading, Squirrel inference routing, content ownership edge cases).
 
 **guideStone:** 54/54 checks passed (L4 NUCLEUS validated). Standard v1.2.0.
 
