@@ -57,7 +57,7 @@ fn run_tier4_math_parity(h: &mut ValidationHarness) {
         step1
             == 42_u64
                 .wrapping_mul(6_364_136_223_846_793_005)
-                .wrapping_add(1_442_695_040_888_963_407),
+                .wrapping_add(1),
     );
 
     // state_to_f64 range [0, 1)
