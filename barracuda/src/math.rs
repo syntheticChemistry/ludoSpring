@@ -55,7 +55,12 @@ pub fn state_to_f64(state: u64) -> f64 {
     }
     #[cfg(not(feature = "local"))]
     {
-        (state >> 33) as f64 / (u32::MAX as f64)
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "post-shift value is 31 bits — fits in f64 mantissa exactly"
+        )]
+        let numerator = (state >> 33) as f64;
+        numerator / f64::from(u32::MAX)
     }
 }
 

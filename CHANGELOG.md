@@ -3,7 +3,22 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V61).
+This project does not use SemVer — versions are session-sequential (V1–V62).
+
+## [V62] — 2026-05-11
+
+### Tier 4 IPC-first defaults — interstadial exit gate compliance
+
+- **`default = ["ipc"]`** — removed `"local"` from default features. `cargo build` no longer
+  links barraCuda library. Users who want local compute opt in with `--features local`.
+  ludoSpring now qualifies for the Pillar 5 Tier 4 exit gate (3rd spring after groundSpring
+  and healthSpring).
+- **Foundation Thread 10** (Provenance/Economics) seeded: 10 data sources (Merkle, W3C PROV-DM,
+  Hasan, Kahneman, Skinner, King, Nakamoto, sunCloud attribution, cross-domain fraud) + 11
+  validation targets.
+- **Clippy `cast_precision_loss`** fixed in `math.rs` IPC-only fallback path (post-shift 31-bit
+  value safely cast with documented `#[allow]`).
+- **plasmidBin manifest** updated: 854 tests, V62 Tier 4 note, composed model confirmed.
 
 ## [V61] — 2026-05-11
 

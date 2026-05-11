@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 11, 2026 (V61 — Deep debt resolution: zero unsafe, zero TODO/FIXME/HACK, zero bare `#[allow]`, zero mocks in production, all files <800L. Hardcoded audit source strings evolved to `NICHE_NAME` constant. PRIMAL_GAPS.md reconciled: GAP-12/13/15 all RESOLVED. Tolerance constant-invariant tests added to all 7 tolerances/ modules + certification/constants.rs (29 new tests). 854 workspace tests. Zero clippy warnings.)
+**Last updated:** May 11, 2026 (V62 — **Tier 4 IPC-first defaults**: `default = ["ipc"]` (removed `"local"` from defaults). `cargo build` no longer links barraCuda library — IPC-only by default, library opt-in via `--features local`. Foundation Thread 10 (Provenance/Economics) seeded: 10 sources + 11 targets. plasmidBin manifest updated (854 tests). Clippy `cast_precision_loss` fixed in `math.rs` fallback path. 854 workspace tests, zero clippy warnings.)
 
 ## What is this?
 
