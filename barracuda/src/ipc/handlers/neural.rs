@@ -337,7 +337,10 @@ fn viz_render_dispatch(
                 .map_err(|e| map_ipc_to_json_rpc(&req.id, e))?;
             viz_delegated_ok(req)
         }
-        _ => unreachable!("render dispatch called for non-render method"),
+        other => Err(JsonRpcError::internal(
+            &req.id,
+            &format!("unexpected render dispatch method: {other}"),
+        )),
     }
 }
 

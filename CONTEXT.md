@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 11, 2026 (V62 — **Tier 4 IPC-first defaults**: `default = ["ipc"]` (removed `"local"` from defaults). `cargo build` no longer links barraCuda library — IPC-only by default, library opt-in via `--features local`. Foundation Thread 10 (Provenance/Economics) seeded: 10 sources + 11 targets. plasmidBin manifest updated (854 tests). Clippy `cast_precision_loss` fixed in `math.rs` fallback path. 854 workspace tests, zero clippy warnings.)
+**Last updated:** May 11, 2026 (V63 — SPDX headers on all 122 `.rs` files. `unreachable!` in production evolved to structured error. Doc version refs aligned to V63. Tier 4 IPC-first defaults (`default = ["ipc"]`). Foundation Threads 9+10 seeded. 854 workspace tests, zero clippy warnings.)
 
 ## What is this?
 
@@ -57,7 +57,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 854 workspace `#[test]` functions (V61, +29 from tolerance/certification constant-invariant tests)
+- **Tests**: 854 workspace `#[test]` functions (V63, 29 constant-invariant tests, Tier 4 IPC-first default verified)
 - **Experiments**: 100 total (fossilized to `fossilRecord/`; 8 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
@@ -249,6 +249,6 @@ Previous blockers (all **RESOLVED** upstream, May 10, 2026):
 
 ### Handoff
 
+[V63 deep debt + SPDX handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md)
 [V61 deep debt handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md)
 [V60 skunkBat + foundation handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md)
-[V59 local handoff](wateringHole/handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 use primalspring::composition::{self, CompositionContext, is_skip_error};
 use primalspring::validation::ValidationResult;
 

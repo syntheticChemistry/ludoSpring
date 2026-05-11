@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 use super::constants::CROSS_ATOMIC_PAYLOAD_B64;
 use primalspring::composition::{CompositionContext, call_or_skip};
 use primalspring::validation::ValidationResult;

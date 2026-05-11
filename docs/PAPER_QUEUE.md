@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 11, 2026 (V61 — 854 tests, 8 scenarios, deep debt resolved, Foundation Thread 9 seeded)
+**Last updated:** May 11, 2026 (V63 — 854 tests, 8 scenarios, deep debt resolved, Foundation Threads 9+10 seeded)
 
 ## Foundation Thread Assignment
 

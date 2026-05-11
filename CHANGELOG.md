@@ -3,7 +3,21 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V62).
+This project does not use SemVer — versions are session-sequential (V1–V63).
+
+## [V63] — 2026-05-11
+
+### Deep debt — SPDX headers, production safety, doc alignment
+
+- **SPDX headers** added to all 4 missing `certification/` files (`constants.rs`,
+  `tier1.rs`, `tier2.rs`, `tier3.rs`). All 122 `.rs` files now carry
+  `SPDX-License-Identifier: AGPL-3.0-or-later`.
+- **`unreachable!` eliminated from production:** `viz_render_dispatch` match arm
+  evolved to structured `JsonRpcError::internal` — no panics in production paths.
+- **Doc version alignment:** `PRIMAL_GAPS.md`, `PAPER_QUEUE.md`,
+  `whitePaper/baseCamp/README.md`, `CONTEXT.md`, `README.md` all reference V63
+  as current. Historical entries preserved in changelog.
+- **854 workspace tests**, zero clippy warnings, zero fmt diffs
 
 ## [V62] — 2026-05-11
 

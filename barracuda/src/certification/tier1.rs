@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 use super::constants::{
     BARE_RECOMPUTE_TOL, FITTS_MT_D100_W10, HICK_RT_N7, LOG2_OF_8, PERLIN_ORIGIN, SIGMOID_HALF,
     STATS_MEAN_1_5, STATS_VAR_8ELEM,

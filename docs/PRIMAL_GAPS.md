@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 11, 2026 (V61 — GAP-12/13/15 RESOLVED. Deep debt: 854 tests, constant-invariant tests, hardcoding→NICHE_NAME. 8 validation scenarios. 13/15 gaps resolved; remaining: GAP-01/02/04/05 partial, GAP-14 low.)
+**Last updated:** May 11, 2026 (V63 — SPDX headers added, unreachable! evolved. 854 tests, 8 validation scenarios. 13/15 gaps resolved; remaining: GAP-01/02/04/05 partial, GAP-14 low.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

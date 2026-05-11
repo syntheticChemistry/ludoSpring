@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** May 11, 2026
-**Version:** V62 (**Tier 4 IPC-first defaults**: `default = ["ipc"]` — `cargo build` no longer links barraCuda library. Library opt-in: `--features local`. Foundation Threads 9+10 seeded. 854 tests, zero clippy, zero unsafe. V61: deep debt, 29 constant-invariant tests, GAP-12/13/15 RESOLVED. V60: skunkBat Rust IPC, 8 scenarios, Foundation Thread 9. V59: Tier 4 rewiring. V58: UniBin eukaryotic.)
+**Version:** V63 (Deep debt: SPDX headers on all 122 `.rs` files, `unreachable!` in production evolved to structured JSON-RPC error, doc version alignment. V62: Tier 4 IPC-first defaults `default = ["ipc"]`. V61: 29 constant-invariant tests, GAP-12/13/15 RESOLVED. V60: skunkBat Rust IPC, 8 scenarios. V59: Tier 4 rewiring. V58: UniBin eukaryotic. 854 tests, zero clippy, zero unsafe.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)

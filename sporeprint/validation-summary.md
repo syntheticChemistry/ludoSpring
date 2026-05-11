@@ -35,8 +35,8 @@ springs = ["ludospring"]
 
 ## Workload TOMLs
 
-Not yet created — contribute to `projectNUCLEUS/workloads/ludospring/`.
-Foundation thread 9 (Gaming/Creative) + thread 10 (Provenance/Economics) mapped.
+Two ready in `projectNUCLEUS/workloads/ludospring/`: `ludospring-game-validation.toml`,
+`ludospring-composition-parity.toml`. Foundation threads 9 (Gaming) + 10 (Provenance) seeded.
 
 ## See Also
 
