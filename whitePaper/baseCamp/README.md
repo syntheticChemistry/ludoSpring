@@ -411,7 +411,7 @@ Any world + any ruleset = playable RPG. Lord of the Rings + PF2e. Dune + FATE. O
 4. Attribution + economics (sweetGrass + sunCloud)
 
 **Full specification**: `ludoSpring/specs/RPGPT_DEEP_SYSTEM_DESIGN.md`
-**baseCamp paper**: `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`
+**baseCamp paper**: Paper 18 (pending baseCamp write-up — experimental validation complete in exp045-047)
 
 ---
 
@@ -461,7 +461,7 @@ AR assists physical card games without replacing them:
 - **Remote pod play**: A remote Commander player's physical cards on their table, AR captures board state, opponents see the digital mirror
 - **Stack visualization**: LIFO stack (exp048) rendered as visible overlay — reduces rules confusion
 
-**baseCamp paper**: `gen3/baseCamp/19_games_at_home_distributed_human_computation.md`
+**baseCamp paper**: Paper 19 (pending baseCamp write-up — experimental validation complete in exp048-051)
 
 ---
 

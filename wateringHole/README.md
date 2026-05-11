@@ -111,7 +111,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **guideStone:** 54/54 checks passed (L4 NUCLEUS validated). Standard v1.2.0.
 
-See: [V56 Phase 60 handoff](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md), [V55 deep debt (previous)](handoffs/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md).
+See: [V56 Phase 60 handoff](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md), [V55 deep debt (archive)](handoffs/archive/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md).
 
 ## Archive
 

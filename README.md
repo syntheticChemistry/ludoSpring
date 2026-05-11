@@ -81,70 +81,42 @@ Games are the most demanding real-time interactive systems humans build. They so
 | `procedural::bsp` | B | Recursive → iterative conversion | Stack elimination |
 | `procedural::lsystem` | B | Parallel string rewriting | Variable-length output |
 
-## Playable Prototypes (baseCamp Expeditions)
+## Validated Experiments (100 — Fossilized to `fossilRecord/`)
 
-These build on validated math — every game mechanic traces to a published paper:
+All 100 experiments have been validated and absorbed into the eukaryotic UniBin. The
+science results are preserved here; original sources live in `fossilRecord/experiments_prokaryotic_may2026/`.
+Modern validation uses `ludospring validate` (8 scenarios) and `ludospring certify` (three-tier).
 
-```bash
-# Doom-in-a-terminal: BSP levels + DDA raycaster + collision + ratatui
-cargo run --bin exp024_doom_terminal
+### Playable Prototypes (exp023-025)
 
-# Roguelike explorer: engagement-driven dungeon with DDA, Flow, fun classification
-cargo run --bin exp025_roguelike_explorer
+Built on validated math — every game mechanic traces to a published paper:
+- **Doom-in-a-terminal** (exp024): BSP levels + DDA raycaster + collision + ratatui
+- **Roguelike explorer** (exp025): engagement-driven dungeon with DDA, Flow, fun classification
+- **Open-systems benchmark** (exp023): ludoSpring vs fastnoise-lite (0.93x — we're faster), Bevy patterns
 
-# Open-systems benchmark: compare ludoSpring vs fastnoise-lite, Bevy patterns
-cargo run --bin exp023_open_systems_benchmark
-```
+### GPU Parity + NUCLEUS Coordination (exp030-033)
 
-## Compute Dispatch + metalForge (GPU Parity, Mixed Hardware, NUCLEUS)
+- 32/32 CPU-vs-GPU parity (fog-of-war, tile lighting, pathfind wavefront WGSL shaders)
+- 10/10 real hardware discovery via toadStool dispatch routing
+- 23/23 PCIe + mixed pipelines + NPU→GPU direct + metalForge integration
+- 27/27 NUCLEUS atomics + toadStool dispatch + biomeOS graph
 
-Validates the CPU → GPU evolution pipeline and NUCLEUS atomic coordination:
+### External Control Groups (exp038-040)
 
-```bash
-cargo run --bin exp030_cpu_gpu_parity               # 32/32 CPU-vs-GPU parity (Tier A WGSL shaders; fog-of-war, tile lighting, pathfind wavefront)
-cargo run --bin exp031_dispatch_routing              # 10/10 real hardware discovery
-cargo run --bin exp032_mixed_hardware                # 23/23 PCIe + mixed pipelines + NPU→GPU direct + Forge integration
-cargo run --bin exp033_nucleus_pipeline              # 27/27 NUCLEUS atomics + toadStool dispatch + biomeOS graph + mixed pipeline / NPU
-```
-
-## External Control Groups
-
-Validates the metrics framework against real external game libraries:
-
-```bash
-cargo run --bin exp038_external_roguelike_control    # 12/12 metrics on foreign content
-cargo run --bin exp039_noise_cross_validation        # 12/12 three-way noise comparison
-cargo run --bin exp040_quality_discrimination        # 12/12 archetype quality separation
-```
-
-Key results:
 - **Metrics work on foreign content**: bracket-pathfinding roguelike produces valid engagement, flow, fun, DDA
-- **We're the fastest noise impl**: 0.93x fastnoise-lite (C), 2.85x faster than noise-rs
+- **Fastest noise impl**: 0.93x fastnoise-lite (C), 2.85x faster than noise-rs
 - **Flow discriminates quality**: 4/5 good games in Flow, 5/5 bad games NOT in Flow
 - **Scientific finding**: engagement alone doesn't measure quality — you need Flow state (Csikszentmihalyi 1990)
 
-## Cross-Spring Experiments (NCBI, NUCLEUS, Anderson QS)
+### Cross-Spring Experiments (exp041-044)
 
-First experiments bridging ludoSpring game science with wetSpring bioinformatics and biomeOS infrastructure:
+- **Live NCBI integration**: luxI/luxS/agrB gene search, protein databases via E-utilities
+- **Tower Atomic boot**: Crypto primal discovered by `crypto.hash` capability
+- **Anderson QS explorer**: QS propagation with localization transition, engagement/flow/fun/DDA
 
-```bash
-cargo run --release -p ludospring-exp041 -- validate  # 12/12 NCBI QS gene pipeline
-cargo run --release -p ludospring-exp042 -- validate  # Tower Atomic (capability-based crypto+IPC discovery)
-cargo run --release -p ludospring-exp043 -- validate  # 10/10 QS gene dataset (6 families × 20 genera)
-cargo run --release -p ludospring-exp044 -- validate  # 12/12 Anderson QS interactive explorer
-```
+### RPGPT — Sovereign RPG Engine (Paper 18, exp045-047)
 
-Key results:
-- **Live NCBI integration**: luxI/luxS/agrB gene search, SRA metagenomes, protein databases via E-utilities
-- **Biological validation**: gut microbes use AI-2 (luxS) not AHL (luxI) — NCBI data confirms published biology
-- **Tower Atomic boot**: Crypto primal discovered by `crypto.hash` capability, validated via JSON-RPC over Unix sockets
-- **Anderson QS explorer**: Perlin noise as disorder landscape, QS propagation with localization transition, engagement/flow/fun/DDA metrics on microbial exploration. Diversity dominates O2 in the W model (wetSpring Exp356).
-
-## RPGPT — Sovereign RPG Engine (Paper 18)
-
-Architecture defined for a provenance-backed RPG system where **any open ruleset** (Pathfinder 2e, FATE Core, Cypher, PbtA) can be ingested as a loamSpine certificate and combined with **any world** to produce a playable RPG. The player designs the world and quest hooks; AI (Squirrel) narrates within provably anchored rules.
-
-The core insight: **anti-cheat is chain-of-custody**. The same rhizoCrypt DAG that tracks item lineage in extraction shooters tracks sample lineage in field genomics and loot lineage in tabletop RPGs. Same code path, different vocabulary.
+Architecture for a provenance-backed RPG system: any open ruleset (Pathfinder 2e, FATE Core, Cypher, PbtA) ingested as loamSpine certificate, AI (Squirrel) narrates within provably anchored rules. Core insight: **anti-cheat is chain-of-custody** — the same rhizoCrypt DAG tracks item lineage in extraction shooters, sample lineage in field genomics, and loot lineage in tabletop RPGs.
 
 | Primal | RPGPT Role |
 |--------|-----------|
@@ -155,188 +127,56 @@ The core insight: **anti-cheat is chain-of-custody**. The same rhizoCrypt DAG th
 | BearDog | Anti-cheat action signing |
 | Squirrel | AI narration constrained by ruleset cert |
 
-See `specs/RPGPT_DEEP_SYSTEM_DESIGN.md` (planes architecture, NPC personality, internal voices) and `gen3/baseCamp/18_rpgpt_sovereign_rpg_engine.md`.
+See `specs/RPGPT_DEEP_SYSTEM_DESIGN.md` for planes architecture, NPC personality, internal voices.
 
-```bash
-cargo run --release -p ludospring-exp045 -- validate  # 49/49 Ruleset control systems (PF2e, FATE, Cairn)
-cargo run --release -p ludospring-exp046 -- validate  # 33/33 Text adventure DAG
-cargo run --release -p ludospring-exp047 -- validate  # 23/23 MTG card provenance
-```
+### Games@Home — Distributed Human Computation (Paper 19, exp048-051)
 
-## Games@Home — Distributed Human Computation (Paper 19)
+Proves human gameplay IS distributed computation. Stack resolution is protein folding (same components, different order → different outcomes). Folding@Home isomorphism maps 1:1 across 12 concepts.
 
-Proves that human gameplay is distributed computation. Stack resolution is protein folding (same components, different order → different outcomes). Game tree complexity is a measurable design metric. Folding@Home isomorphism maps 1:1 across 12 concepts.
+### Provenance Trio + Extraction Shooters + Fraud Detection (exp052-054, Track 14-16)
 
-```bash
-cargo run --release -p ludospring-exp048 -- validate  # 36/36 Stack resolution as folding
-cargo run --release -p ludospring-exp049 -- validate  # 33/33 Novel data combinatorics
-cargo run --release -p ludospring-exp050 -- validate  # 30/30 Game tree design metric
-cargo run --release -p ludospring-exp051 -- validate  # 28/28 Games@Home distributed human computation
-```
+- **rhizoCrypt DAG**: game session as vertex graph, content-addressed (Blake3)
+- **loamSpine certificates**: ruleset and card certificates mint correctly
+- **sweetGrass braids**: PROV-O attribution links game actions to player DIDs
+- **12 fraud types across 3 tiers**: spatial, consumable, basic — all detected structurally
+- **Composable architecture**: zero chimeric deps, 5-node topology, 60 Hz budget met
 
-## Provenance Trio Integration (Track 14)
+### Lysogeny — Open Recreation of Proprietary Mechanics (Track 17, exp055-060)
 
-First direct import of the three provenance primals into ludoSpring. The trio lives
-among the biomeOS atomics — deployed via the rootpulse niche as a Continuous 60 Hz graph.
-
-```bash
-cargo run --release -p ludospring-exp052 -- validate  # 37/37 Trio integration
-```
-
-Key results:
-- **rhizoCrypt DAG wired**: game session as vertex graph, content-addressed (Blake3), frontier tracking
-- **loamSpine certificates wired**: ruleset (PF2e, FATE) and card (Grizzly Bears, Lightning Bolt) certificates mint correctly
-- **sweetGrass braids wired**: PROV-O attribution links game actions to player DIDs with source primal tagging
-- **biomeOS topology verified**: 4-node graph (ludoSpring → rhizoCrypt → loamSpine + sweetGrass) fits in 16.67ms tick at 60 Hz
-- **Cross-primal round-trip**: vertex hex → braid data hash → DID identity preserved across all three primals
-
-## Extraction Shooter Provenance + Fraud Detection (Track 15)
-
-Models extraction shooters (Tarkov, DMZ, The Cycle) as a provenance problem.
-Every raid action is a rhizoCrypt DAG vertex. Every item is a loamSpine certificate.
-Fraud detection reduces to checking provenance chain integrity.
-
-```bash
-cargo run --release -p ludospring-exp053 -- validate  # 65/65 Fraud detection + spatial cheats
-```
-
-Key results:
-- **12 fraud types across 3 tiers**: basic (orphan/dupe/speed/range/unattributed/aimbot), consumable (phantom rounds/overconsumption), spatial (identity spoof/ghost action/through-wall shot/teleport)
-- **Zone topology model**: adjacency + line-of-sight graph catches spatial fraud structurally
-- **Identity spoof**: DAG timeline mismatch between claimed shooter zone and actual zone at tick
-- **Ghost action**: kill/loot in a zone with no prior Spawn or Move vertex
-- **Through-wall shot**: shooter and target in zones with no `LoS` per map topology
-- **Teleport detection**: non-adjacent zone transitions with no intermediate Move vertices
-- **Per-round provenance**: every bullet is an individual cert — mint on spawn/loot, consume on fire
-- **Consumable lifecycle**: medical, food, and ammo tracked through full lifecycle with cert proof
-
-## Composable Raid Visualization (Track 16)
-
-Demonstrates the composable primal architecture. Infrastructure primals (biomeOS, songbird, petalTongue) are NOT Cargo dependencies — they are independent binaries that communicate via JSON-RPC 2.0 over Unix sockets. Data primals (trio) remain direct deps.
-
-```bash
-cargo run --release -p ludospring-exp054 -- validate  # 40/40 Composable architecture
-```
-
-Key results:
-- **Zero chimeric deps**: protocol types defined locally, matching wire format of 3 infrastructure primals
-- **biomeOS `DeploymentGraph`**: Continuous coordination at 20 Hz, 5-node topology with feedback edges
-- **songbird discovery**: 2 player agents + raid server discovered by capability (`game.player_input`)
-- **petalTongue `DataBinding`**: zone heatmap, health gauges, action timelines, fraud bar, inventory — all round-trip through JSON
-- **End-to-end**: simulation → snapshot → dashboard → JSON → deserialize preserves all bindings
-
-## Lysogeny — Open Recreation of Proprietary Game Mechanics (Track 17)
-
-Recreates proprietary game mechanics from published scientific math, cross-validates
-across biology and ecology, releases under AGPL-3.0. Every equation traces to a
-published paper predating the proprietary implementation.
-
-```bash
-cargo run --release -p ludospring-exp055 -- validate  # 48/48 Usurper (Nemesis system)
-cargo run --release -p ludospring-exp056 -- validate  # 47/47 Integrase (capture mechanics)
-cargo run --release -p ludospring-exp057 -- validate  # 35/35 Symbiont (faction reputation)
-cargo run --release -p ludospring-exp058 -- validate  # 40/40 Conjugant (roguelite meta-progression)
-cargo run --release -p ludospring-exp059 -- validate  # 39/39 Quorum (emergent narrative)
-cargo run --release -p ludospring-exp060 -- validate  # 28/28 Pathogen (gacha anti-pattern)
-```
-
-Key results:
-- **Usurper**: persistent adaptive NPC hierarchy from replicator dynamics + spatial PD + Lotka-Volterra with memory. Maps 1:1 to antibiotic resistance populations.
-- **Integrase**: capture probability from Wright-Fisher fixation, QS bond threshold, Markov evolution chains. The enzyme that integrates phage DNA into a host IS the cross-domain proof.
-- **Symbiont**: multi-faction reputation from multi-species Lotka-Volterra competition coefficients. Factions = bacterial guilds, reputation = fitness contribution.
-- **Conjugant**: roguelite meta-progression from horizontal gene transfer + Price equation. Dead runs release genes; survivors conjugate.
-- **Quorum**: emergent procedural narrative from agent-based modeling + DAG causality. Quorum sensing threshold triggers collective phase transition = story event.
-- **Pathogen**: defensive anti-pattern study quantifying gacha exploitation using operant conditioning + prospect theory. Measures and exposes, does not implement.
+Recreates proprietary game mechanics from published scientific math under AGPL-3.0:
+- **Usurper** (Nemesis): replicator dynamics + Lotka-Volterra with memory
+- **Integrase** (capture): Wright-Fisher fixation + QS bond threshold
+- **Symbiont** (faction rep): multi-species Lotka-Volterra competition
+- **Conjugant** (roguelite meta): horizontal gene transfer + Price equation
+- **Quorum** (emergent narrative): agent-based modeling + DAG causality
+- **Pathogen** (gacha anti-pattern): operant conditioning + prospect theory
 
 See `specs/LYSOGENY_CATALOG.md` for full citation tables and cross-domain mapping.
 
-## Cross-Spring Provenance (exp062-066)
+### Cross-Spring Provenance (exp062-066)
 
-Five experiments extending the fermenting system (exp061) into cross-spring scaffolds:
+- **BearDog signing end-to-end**: Ed25519 on every vertex, certificate, and braid
+- **Cross-domain fraud unification**: Same `GenericFraudDetector` catches fraud across gaming, science, medical (>80% structural similarity)
+- **Radiating attribution**: sunCloud value distribution with conservation (shares sum to 1.0)
 
-```bash
-cargo run --release -p ludospring-exp064                   # 39/39 BearDog-signed provenance chain
-cargo run --release -p ludospring-exp062                   # 39/39 Field sample provenance (wetSpring scaffold)
-cargo run --release -p ludospring-exp063                   # 35/35 Consent-gated medical access (healthSpring scaffold)
-cargo run --release -p ludospring-exp065                   # 74/74 Cross-domain fraud unification
-cargo run --release -p ludospring-exp066                   # 41/41 Radiating attribution calculator
-```
+### RPGPT Dialogue Plane (exp067-075)
 
-Key results:
-- **BearDog signing end-to-end**: Every vertex, certificate, and braid signed with Ed25519. Tamper detection at exact point.
-- **Field sample lifecycle**: Collect → transport → store → extract → amplify → sequence → analyze → publish. 6 fraud types. DAG isomorphism with extraction shooter.
-- **Consent-gated medical access**: Patient owns record (loamSpine cert). Provider gets scoped lending (consent cert). Every access logged. 5 fraud types. Zero-knowledge access proofs.
-- **Cross-domain fraud unification**: Same `GenericFraudDetector` catches fraud across gaming, science, and medical with >80% structural similarity.
-- **Radiating attribution**: sunCloud value distribution walks sweetGrass chains. Shares always sum to 1.0 (conservation). Decay models and role weighting.
+- **NPC personality certificates**: loamSpine-anchored personality + knowledge bounds
+- **Internal voices**: Disco Elysium-style skill-as-perspective (10 voices)
+- **Trust dynamics**: multi-factor disposition, trust gates on knowledge sharing
+- **Plane transitions**: state preserved across 7 planes (Exploration ↔ Dialogue ↔ Tactical ↔ Investigation ↔ Political ↔ Crafting ↔ Card/Stack)
 
-Papers 21 (Sovereign Sample Provenance) and 22 (Zero-Knowledge Medical Provenance) are pending gen3 baseCamp write-up — the experimental validation is complete.
+### Performance Benchmarks (exp034-037)
 
-## RPGPT Dialogue Plane (exp067-075)
-
-Nine experiments validating the Dialogue Plane of the RPGPT system — NPC personality,
-knowledge bounds, internal voices, trust dynamics, and plane transition continuity:
-
-```bash
-cargo run --release -p ludospring-exp067 -- validate  # NPC knowledge bounds enforcement
-cargo run --release -p ludospring-exp068 -- validate  # Lie detection via passive checks
-cargo run --release -p ludospring-exp069 -- validate  # Internal voice personality consistency
-cargo run --release -p ludospring-exp070 -- validate  # Voice priority and concurrency
-cargo run --release -p ludospring-exp071 -- validate  # NPC memory DAG retrieval
-cargo run --release -p ludospring-exp072 -- validate  # Trust dynamics and NPC arc progression
-cargo run --release -p ludospring-exp073 -- validate  # Dialogue plane skill check resolution
-cargo run --release -p ludospring-exp074 -- validate  # Dialogue plane flow monitoring
-cargo run --release -p ludospring-exp075 -- validate  # Plane transition continuity (Dialogue <-> Tactical)
-```
-
-Key results:
-- **NPC personality certificates**: loamSpine-anchored personality + knowledge bounds — NPCs know what they know, refuse what they don't
-- **Internal voices**: Disco Elysium-style skill-as-perspective via constrained Squirrel AI calls (10 voices: Logic, Empathy, Rhetoric, Perception, Endurance, Authority, Composure, Imagination, History, Esotericism)
-- **Trust dynamics**: Multi-factor disposition (faction + personal + relationship + debt), trust gates on knowledge sharing
-- **Plane transitions**: State preserved across Exploration ↔ Dialogue ↔ Tactical ↔ Investigation ↔ Political ↔ Crafting ↔ Card/Stack
-
-## Specs Paper Validation + Performance Benchmarks
-
-Validates claims from the specs/ paper queue against live measurements:
-
-```bash
-cargo run --bin exp034_python_parity_bench           # 15/15 Python-vs-Rust math parity
-cargo run --bin exp035_noise_throughput               # 10/10 BM-002 noise (0.93x fastnoise)
-cargo run --bin exp036_raycaster_throughput           # 10/10 BM-003 raycaster (6,623 FPS)
-cargo run --bin exp037_tick_budget                    # 10/10 tick budget (70% headroom)
-```
-
-Key results:
-- **Python parity proven**: sigmoid, Fitts, Hick, LCG, dot, L2, Perlin all match Python within 1e-15
-- **Faster than fastnoise-lite**: 0.93x ratio at 256x256 Perlin (we're faster, not just within 2x)
+- **Python parity proven**: sigmoid, Fitts, Hick, LCG, dot, L2, Perlin match within 1e-15
 - **110x 60Hz headroom**: raycaster at 6,623 FPS on CPU alone
 - **70% tick budget headroom**: 10K entities ticked in 910us (budget: 3,000us)
 
-Both playable games now emit telemetry (NDJSON) during gameplay. After a session:
+### Portable Game Telemetry Protocol (exp026-029)
 
-```bash
-cargo run --bin exp026_game_telemetry -- analyze exp024_session_42.ndjson
-```
-
-## Portable Game Telemetry Protocol
-
-Any game can emit NDJSON events; ludoSpring analyzes them. The protocol is the portability layer.
-
-```bash
-# Protocol validation (13 checks)
-cargo run --bin exp026_game_telemetry -- validate
-
-# Generate synthetic session + analyze
-cargo run --bin exp026_game_telemetry -- generate session.ndjson
-cargo run --bin exp026_game_telemetry -- analyze session.ndjson
-
-# External game adapters
-cargo run --bin exp027_veloren_adapter -- validate   # Veloren (SPECS ECS)
-cargo run --bin exp028_fishfolk_adapter -- validate  # Fish Folk (Bevy)
-cargo run --bin exp029_abstreet_adapter -- validate  # A/B Street (simulation)
-```
-
-13 event types, all `Serialize + Deserialize`. Any language that writes JSON is compatible:
-Rust (direct lib call), Unity (C#), Godot (GDScript), web (JS).
+13 event types, all `Serialize + Deserialize`. External game adapters validated:
+Veloren (SPECS ECS), Fish Folk (Bevy), A/B Street (simulation). Any language
+that writes JSON is compatible: Rust, Unity (C#), Godot (GDScript), web (JS).
 
 ## Beyond Games: Extensibility
 
@@ -518,172 +358,24 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 | GPU tolerances | Named constants in `tolerances::gpu` + `tolerances::validation` (single source of truth; raycaster tolerances re-exported from validation where shared) |
 | Validation infrastructure | `check_abs_or_rel`, `exit_skipped` (exit 2), `load_baseline_f64`, `OrExit<T>` |
 
-## V32 Comprehensive Audit + Deep Debt Evolution (March 29, 2026)
+## Evolution History (V17–V63)
 
-Full codebase audit + systematic remediation across 110 files:
+Detailed version history is in `CHANGELOG.md`. Key milestones:
 
-- **Provenance integrity** — all 77 experiment provenance blocks aligned to current baselines commit (`4b683e3e`); 34 analytical experiments populated with commit hashes and dates
-- **Tolerance centralization** — 6 new named constants (`STRICT_ANALYTICAL_TOL`, `NUMERICAL_FLOOR`, `DDA_ADJUSTMENT_EPSILON`, `SPAN_FLOOR`, `TRUST_EQUALITY_TOL`); all test `1e-10` literals replaced with `ANALYTICAL_TOL` across 6 library modules
-- **exp030 harness migration** — 525-line rewrite from legacy `ValidationResult` to `ValidationHarness<S>` with GPU-skip via `EXIT_SKIPPED`
-- **OrExit adoption** — 27 experiment files migrated from manual `eprintln!("FATAL:..."); exit(1)` to `.or_exit("context")`; zero manual FATAL patterns remain
-- **Capability-based evolution** — GPU degradation messages made primal-agnostic; MCP tool descriptions reference capabilities not names; `"biomeos"` socket dir extracted to `niche::ECOSYSTEM_SOCKET_DIR`
-- **Deploy manifest fix** — added missing `game.gpu.batch_raycast`, corrected 26→27 capability count
-- **deny.toml fix** — `unmaintained = "warn"` (invalid for cargo-deny 0.19) → `"workspace"`
-- **CI hardening** — added baseline drift check job, workspace-wide `cargo check`, full workspace clippy
-- **Coverage floor aligned** — Makefile 80%→85%→90% matching CI
-- **Python parity expansion** — 5 new tests: fun_keys zero/max, fBm 3D lattice, L-system turtle geometry
-- **TensorSession documented** — future-only status with shader promotion roadmap in `specs/BARRACUDA_REQUIREMENTS.md`
-- **`specs/BARRACUDA_REQUIREMENTS.md`** — new: consumed/unused modules, shader tiers, upstream evolution requests
-
-## V32.2 Compute Evolution — GPU Parity + NPU Dispatch + NUCLEUS (March 29, 2026)
-
-Builds on the V32 audit with active compute-path evolution and broader validation:
-
-- **exp030 game shader parity** — CPU↔GPU checks expanded **24→32**: fog-of-war, tile lighting, and pathfind wavefront parity alongside existing Tier A WGSL coverage
-- **metalForge NPU evolution** — forge tests **19→26**: `Substrate::Npu`, `recommend_substrate_full`, NPU pipeline bands (`BandTarget::NpuCompute`, `BandTarget::NpuToGpuTransfer`), direct NPU→GPU PCIe transfer paths, mixed hardware profiles, and budget fields
-- **exp032 Forge integration** — mixed-hardware validation **20→23** checks (Forge routing + pipeline integration)
-- **exp033 NUCLEUS deepening** — atomic coordination checks **19→27** (mixed pipeline + biomeOS NPU graph)
-- **Experiment matrix** — all **82 experiments validated** (**81 green + 1 live-IPC**)
-
-## V31 Deep Debt + esotericWebb Alignment (March 28, 2026)
-
-- **Workspace lint enforcement** — all 82 experiments + benchmarks now inherit `[lints] workspace = true` (was 24/82)
-- **esotericWebb response alignment** — FlowResult, EngagementResult, DifficultyAdjustmentResult, DialogueResponse, NarrationResponse shapes compatible with Webb's LudoSpringClient
-- **GPU IPC handlers** — 4 `game.gpu.*` methods routed to toadStool delegation with CPU fallback
-- **MCP expansion** — 13 tools (was 8): added session, dialogue, narration, scene push
-- **Visualization delegation** — neural.rs stubs evolved to complete petalTongue delegation with degraded responses
-- **Fog of war LOS** — WGSL shader implements Bresenham line-of-sight with terrain wall occlusion
-- **Tolerance dedup** — GPU raycaster tolerances re-export from validation module (single source of truth)
-- **`#[allow()]` elimination** — 3 remaining instances migrated to `#[expect(reason)]`; dead import removed
-- **CI expansion** — forge tests + workspace-wide doc check added to pipeline
-- **ValidationHarness adoption** — forge validation binary migrated from manual counters
-- **27 capabilities** — `game.gpu.batch_raycast` added to registry with semantic mapping and cost estimate
-- **Python version fix** — corrected provenance claim from >= 3.12 to >= 3.10
-
-## V30 Deep Evolution — Modern Rust, 91% Coverage, MCP (March 23, 2026; superseded by V31 above)
-
-- **Handler refactor** — `ipc/handlers.rs` (1208 LOC) split into 5 domain submodules: `lifecycle`, `science`, `delegation`, `mcp`, `neural` — all under 300 LOC each
-- **UniBin consolidation** — Dashboard, live-session, and tufte-dashboard merged as `ludospring` subcommands (7 total); old binaries deprecated
-- **MCP tools support** — `tools.list` returns 8 science tool descriptors with JSON Schema; `tools.call` dispatches to existing handlers
-- **tarpc optional feature** — `tarpc-ipc` feature with `LudoSpringService` typed RPC trait mirroring JSON-RPC surface
-- **thiserror migration** — All error types now `#[derive(thiserror::Error)]`, eliminating manual `Display`/`Error` impls
-- **Coverage push** — 80.2% → 91.27% line coverage (+273 tests): provenance trio 40% → 84%, external clients 48% → 84%, handler tests 70% → 95%
-- **CI pipeline** — `.github/workflows/ci.yml` with fmt, clippy, test, doc, cargo deny gates
-- **Stricter clippy** — `cast_possible_truncation = deny`, `cast_sign_loss = deny`, `cast_precision_loss = warn`
-- **Deploy graph** — `deploy/ludospring.toml` primalSpring fragment: 27 capabilities, optional deps
-- **Rustdoc cleanup** — All 14 broken intra-doc links fixed
-- **CONTEXT.md** — Created per `PUBLIC_SURFACE_STANDARD`
-- **Triple license** — `LICENSE-ORC` + `LICENSE-CC-BY-SA` files, README triple license section
-- **Mock IPC harness** — `IpcTestServer` for integration tests exercising connected code paths
-- **Neural handler** — `lifecycle.register`, `capability.deregister`, `capability.discover`, `capability.call` routed through dispatch
-
-## V28 Capability-Based Discovery + Deep Code Quality (March 18, 2026)
-
-- **Capability-based discovery** — exp042 evolved from hardcoded `"beardog"`/`"songbird"` to `discover_primals()` → `registry.find("crypto.hash")` / `registry.find("system.ping")`; exp054 parameterized `viz_register(primal_id, ...)` removing hardcoded `"petaltongue"`
-- **Configurable output paths** — 3 dashboard binaries evolved from `Path::new("sandbox/...")` to `LUDOSPRING_OUTPUT_DIR` env var with fallback
-- **IPC integration test fixes** — 3 pre-existing failures fixed (field name mismatch, response structure, test isolation race condition)
-- **Doc completeness** — `# Errors` sections added to 2 public `Result`-returning functions in `ipc/envelope.rs`
-
-## V27 Deep Debt Sprint (March 18, 2026)
-
-- **Zero `#[allow()]`** — all 9 remaining instances migrated to `#[expect(reason)]` with curated dictionary
-- **Zero `.expect()` in validation** — 4 calls migrated to `OrExit` pattern
-- **Workspace lint centralization** — 16 experiment `Cargo.toml` files migrated to `[lints] workspace = true`
-- **Smart refactoring** — `exp062/sample.rs` monolithic `detect_sample_fraud` extracted into 6 focused functions with structural type tracking
-
-## V26 Full Harness Migration (March 18, 2026)
-
-- **Full `ValidationHarness` migration** — all 71 validation experiments use `ValidationHarness` + `BaselineProvenance`
-- **GPU tolerance centralization** — 14 named constants in `tolerances::gpu`
-- **Shader dedup audit** — 7 upstream absorption candidates documented, 2 domain-specific retained
-
-## V25 Deep Debt Sprint (March 18, 2026)
-
-- **`ValidationHarness` migration** — exp002–exp010 migrated from legacy `ValidationResult`
-- **GPU tolerance centralization** — `tolerances::gpu` module (10 constants)
-- **`exit_skipped` pattern** — `exit(2)` for unavailable hardware
-- **`check_abs_or_rel`** — compound tolerance for multi-order GPU parity
-- **`load_baseline_f64`** — runtime JSON loader for Python baselines
-- **Proptest tuning** — Fitts, Hick, flow state bumped to 1024 cases
-
-## V24 Ecosystem Absorption Sprint (March 17, 2026)
-
-Absorbed 8 patterns from 7 sibling springs and 5 infrastructure primals. Adds
-resilience, fuzz testing, health probes, and structured dispatch classification:
-
-- **`OrExit<T>` trait** — `.or_exit("context")` on `Result`/`Option` replaces `let Ok else { eprintln!; exit(1) }` boilerplate (groundSpring V112, wetSpring V123)
-- **`DispatchOutcome<T>` enum** — `Ok` / `ProtocolError` / `ApplicationError` classification for RPC responses with `classify()` and `into_result()` (groundSpring V112, petalTongue V166)
-- **4-format capability parsing** — `extract_capabilities()` handles flat arrays, object arrays, nested, and double-nested formats + `result` wrapper (airSpring v0.8.7, rhizoCrypt S17)
-- **`health.liveness` + `health.readiness` probes** — Kubernetes-style probes registered as capabilities; 26 total (was 24) (healthSpring V32, coralReef Iter 51)
-- **Resilient provenance trio IPC** — circuit breaker (5s cooldown) + exponential backoff (50ms base, 2 retries) wrapping all trio calls; graceful degradation when trio unavailable (healthSpring V32)
-- **JSON-RPC proptest fuzz** — 7 property-based tests covering `extract_rpc_result`, `DispatchOutcome`, and `extract_capabilities` with arbitrary JSON (airSpring v0.8.7)
-- **`deny.toml` evolution** — `yanked = "deny"` (was `"warn"`) for supply chain hardening (toadStool S157b)
-- **Leverage guide** — cross-primal composition catalog: standalone, trio combos, wider primal combos, 6 novel cross-spring compositions
-
-### V23 Cross-Ecosystem Deep Debt (preserved)
-
-- Zero `#[allow()]` anywhere — `#[expect(reason)]` curated dictionary (wetSpring V122)
-- Zero-panic validation binaries — 14 experiments (groundSpring V109)
-- Centralized `extract_rpc_result()` (healthSpring V29)
-- `deny.toml wildcards=deny` (barraCuda Sprint 6)
-- XDG socket resolution, named unit constants
-- Large file review — `handlers.rs`, `session.rs`, `mapper.rs` confirmed coherent
-
-### V22 Ecosystem Absorption (preserved)
-
-- toadStool `compute.dispatch.*` — 3 direct dispatch methods for low-latency game GPU compute
-- Dual-format capability discovery — array and nested-object response formats (neuralSpring S156 fix)
-- Python tolerance mirror — 46 constants mirroring Rust tolerances (wetSpring V121 pattern)
-- Write→Absorb→Lean documentation on `procedural::noise`
-- Deploy graph evolution — `compute.dispatch.submit/result/capabilities` capabilities added
-- 4 new discovery tests
-
-### V21 Deep Debt Evolution (preserved)
-
-- **Session decomposition** — `GameSession::resolve()` extracted into per-command methods (`resolve_wait`, `resolve_end_turn`, `resolve_use_item`, `resolve_custom`, etc.), eliminating `#[allow(clippy::too_many_lines)]`
-- **Typed transition verification** — `TransitionVerification` booleans replaced with `TransitionIssue` enum (`InventoryLost`, `DispositionChanged`, `KnowledgeLost`, `ConditionMismatch`, `HpChanged`) + `Vec<TransitionIssue>`, eliminating `#[allow(clippy::struct_excessive_bools)]`
-- **Pluggable validation output** — `ValidationSink` trait with `StderrSink` (default) and `BufferSink` (testing); `ValidationHarness<S>` generic over sink, replacing hardcoded `eprintln!`
-- **Typed toadStool IPC client** — `ipc/toadstool.rs` with `ComputeResult`, `SubstrateCapabilities`, typed methods (`submit_workload`, `workload_status`, `query_capabilities`), graceful degradation when Neural API unavailable
-- **IPC integration tests** — 6 tests in `barracuda/tests/ipc_integration.rs`: lifecycle status, capability list, game method evaluation, error handling, health check
-- **`#[expect]` evolution** — `#[allow(dead_code)]` replaced with `#[expect(dead_code, reason = "...")]` for justified IPC wire types (edition 2024 pattern)
-- **Platform-agnostic paths** — hardcoded `/tmp/biomeos/` and `/tmp/petaltongue/` replaced with `std::env::temp_dir().join(...)` in test fixtures
-- **Centralized game tolerance** — `GAME_STATE_TOL` constant in `tolerances/game.rs`, replacing inline `0.01` across 4 experiments
-- **ValidationHarness adoption** — `exp001` fully rewritten from legacy `ValidationResult` to `ValidationHarness` + `BaselineProvenance`
-- **75 .rs files, 19,302 lines** — net +544 lines (typed clients, integration tests, extracted methods)
-
-### V20 Deep Primal Integration (preserved)
-
-- IPC method alignment: 19 external methods aligned to canonical JSON-RPC specs
-- Capability domains registry: 24 capabilities (10 local, 14 external)
-- Tolerance decomposition: 6 domain-specific submodules
-- Typed provenance pipeline: `DehydrationSummary` + `TrioStage`
-- Game engine core: `RulesetCert` validation, concrete `apply()`, `GridMap` bridge
-- `discover_by_capability()` runtime peer lookup
-- 394 tests pass, zero clippy warnings
-
-### V19 Foundation (preserved)
-
-- Magic numbers eliminated — 9 tolerance constants with provenance citations
-- Clone abuse eliminated — `&serde_json::Value` constructors
-- Production panic eliminated — `BlockPalette::register()` → `Result`
-- Provenance decomposed — 773-line monolith → 3 focused submodules
-- Audio narration refactored — 5 focused functions
-
-### V18 Foundation (preserved)
-
-- `niche.rs` single source of truth — 24 capabilities, semantic mappings, cost estimates
-- `NeuralBridge` typed IPC client for all inter-primal communication
-- Platform-agnostic paths, XDG-compliant socket chain
-- Squirrel AI, NestGate storage, petalTongue scene push, provenance trio all wired
-- GPU compute: fog of war, tile lighting, pathfinding, Perlin terrain via toadStool/barraCuda
-
-### V17 Foundation (preserved)
-
-- Zero `#[allow()]` in production code
-- 11 WGSL shaders extracted for toadStool absorption
-- 12 proptest invariants
-- Structured `tracing` in all IPC/biomeOS code
-- Capability-based viz discovery
+| Version | Date | Milestone |
+|---------|------|-----------|
+| V63 | May 11 | SPDX on all 122 `.rs` files, `unreachable!` eliminated, doc alignment |
+| V62 | May 11 | Tier 4 IPC-first defaults (`default = ["ipc"]`), Foundation Thread 10 seeded |
+| V61 | May 11 | 29 constant-invariant tests, GAP-12/13/15 RESOLVED, deep debt zero |
+| V60 | May 11 | skunkBat Rust IPC, 8 validation scenarios, Foundation Thread 9 seeded |
+| V59 | May 10 | Tier 4 rewiring (barracuda optional), biomeOS v3.51 absorbed, `crate::math` dual-path |
+| V58 | May 9 | UniBin eukaryotic evolution, certification organelle, 100 experiments fossilized |
+| V55 | Apr 27 | Deep debt: zero `#[allow]`, zero `Result<_, String>`, `ipc::methods` 10 modules |
+| V52 | Apr 25 | `game.tick` composite handler, composition loop |
+| V32 | Mar 29 | Full audit: provenance integrity, tolerance centralization, 110 files remediated |
+| V30 | Mar 23 | Handler refactor (1208→5×300 LOC), UniBin consolidation, MCP tools, 91% coverage |
+| V24 | Mar 17 | Ecosystem absorption: 8 patterns from 7 springs, `OrExit<T>`, health probes |
+| V17 | Mar 15 | Foundation: `niche.rs` SSOT, `NeuralBridge`, 11 WGSL shaders, `#[forbid(unsafe_code)]` |
 
 ## Benchmark Gaps (Documented)
 

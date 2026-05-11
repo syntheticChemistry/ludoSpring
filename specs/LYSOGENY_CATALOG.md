@@ -367,7 +367,7 @@ credential verification, supply chain tracking.
 
 ### Economics
 
-See `whitePaper/gen3/baseCamp/20_novel_ferment_transcript_economics.md` for the
+See Paper 20 (pending baseCamp write-up — experimental validation complete) for the
 full sunCloud connection: radiating attribution activation through optional public
 chain anchoring. Value flows backward through the sweetGrass attribution chain
 to every contributor, proportionally.
@@ -415,4 +415,4 @@ chemistry. Each has published prior art predating any game patent. See
 
 **Total**: 228 cross-spring checks, 0 failures.
 
-**Papers**: Paper 21 (Sovereign Sample Provenance), Paper 22 (Zero-Knowledge Medical Provenance) in `gen3/baseCamp/`.
+**Papers**: Paper 21 (Sovereign Sample Provenance), Paper 22 (Zero-Knowledge Medical Provenance) — pending baseCamp write-up, experimental validation complete.
