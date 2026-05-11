@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 10, 2026 (V59 — Post-interstadial evolution. Tier 4 rewiring: barracuda `optional = true` with `local` feature gate, IPC-only builds work. 28 `game.*` methods canonical (was 18). skunkBat audit logging wired. biomeOS v3.51 `composition.status` + `method.register` absorbed. `crate::math` dual-path. All upstream blockers resolved (GAP-06, GAP-03/09, JH-11). 815 workspace tests. Composition parity: 130/141 (92.2%). python_parity split into 4 focused modules.)
+**Last updated:** May 11, 2026 (V60 — skunkBat Rust IPC module (`ipc/skunkbat.rs`): typed audit client with graceful degradation, 5 public API functions, security method constants. 8 validation scenarios (new: `audit_integration` + `composition_gaps`). Composition gap closure: PG-47/PG-48 exercised via live-tier scenario. Foundation Thread 9 (Gaming) seeded with 14 data sources + 13 validation targets. 825 workspace tests. Release binary verified for NUCLEUS workload dispatch.)
 
 ## What is this?
 
@@ -57,8 +57,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 815+ workspace `#[test]` functions (V59, post-fossilization + math module + parity split)
-- **Experiments**: 100 total (fossilized to `fossilRecord/`; 6 representative scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
+- **Tests**: 825 workspace `#[test]` functions (V60, post-fossilization + math module + parity split + skunkBat)
+- **Experiments**: 100 total (fossilized to `fossilRecord/`; 8 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural, gpu}.rs` — three-tier dispatch (lifecycle → infrastructure → science)
@@ -234,7 +234,7 @@ Previous blockers (all **RESOLVED** upstream, May 10, 2026):
 - loamSpine certificates (GAP-07 resolved)
 - sweetGrass attribution via UDS
 - Songbird discovery + NAT traversal via UDS
-- skunkBat audit logging (wired into deploy graphs)
+- skunkBat audit logging (deploy graphs + Rust IPC module: audit_log, audit_session, audit_certification, audit_validation, query_audit_trail)
 - biomeOS composition.status + method.register (v3.51)
 - biomeOS graph deployment and health probing
 - 60Hz composition loops under 0.54ms per tick

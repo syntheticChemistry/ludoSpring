@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 10, 2026 — **V59 is current** (Post-interstadial evolution — Tier 4 rewiring, 28 game.* canonical, skunkBat wired, biomeOS v3.51 absorbed)
+**Last Updated:** May 11, 2026 — **V60 is current** (skunkBat Rust IPC module, 8 scenarios, composition gap closure, foundation Thread 9 seeded, 825 tests, release binary verified)
 
 ---
 
@@ -25,8 +25,8 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V59.1** | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | **Current: V59.1** — Tier 4 rewiring (barracuda optional), 28 game.* canonical (413 ecosystem), skunkBat wired, biomeOS v3.51 absorbed, dual-path math, 6 scenarios, 815+ tests, python_parity refactored. |
-| V59.1 | [Central: LUDOSPRING_V59_DEEP_DEBT_EVOLUTION_HANDOFF_MAY10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V59_DEEP_DEBT_EVOLUTION_HANDOFF_MAY10_2026.md) | May 10 | Deep debt patterns, evolution guidance for springs + primals, composition parity 130/141, LCG parity lesson. |
+| **V60** | [Central: LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md) | May 11 | **Current: V60** — skunkBat Rust IPC, 8 scenarios, composition gap closure, foundation Thread 9 seeded, 825 tests, release binary verified. |
+| V59.1 | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 rewiring, 28 game.* canonical, biomeOS v3.51, dual-path math, python_parity split. |
 | V59 | [Central: LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 reference for ecosystem adoption. |
 | V58 | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
 | V57 | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | Interstadial eukaryotic evolution. UniBin, certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
@@ -34,7 +34,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 815+ workspace tests, V59 Tier 4 IPC-first + guideStone standard v1.2.0)
+ludoSpring (game science composition, 825 workspace tests, V60 Tier 4 IPC-first + skunkBat IPC + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)

@@ -173,6 +173,18 @@ pub mod spine {
     pub const ENTRY_APPEND: &str = "entry.append";
 }
 
+/// Security domain — skunkBat audit and defense.
+pub mod security {
+    /// Query or emit audit trail events.
+    pub const AUDIT_LOG: &str = "security.audit_log";
+    /// Request a security scan.
+    pub const SCAN: &str = "security.scan";
+    /// Detect anomalies / threats.
+    pub const DETECT: &str = "security.detect";
+    /// Retrieve security metrics.
+    pub const METRICS: &str = "security.metrics";
+}
+
 /// Tensor domain — barraCuda tensor operations.
 pub mod tensor {
     /// Create a tensor from data + shape.
@@ -241,6 +253,10 @@ mod tests {
             spine::CREATE,
             spine::SEAL,
             spine::ENTRY_APPEND,
+            security::AUDIT_LOG,
+            security::SCAN,
+            security::DETECT,
+            security::METRICS,
             tensor::CREATE,
             tensor::MATMUL,
         ];

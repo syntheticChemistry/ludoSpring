@@ -7,7 +7,7 @@
 //! Per wateringHole `UNIVERSAL_IPC_STANDARD_V3`, each primal implements
 //! IPC independently (~500–1000 lines).
 //!
-//! **Domain capabilities** (27 FQNs in [`crate::niche::CAPABILITIES`]): game science
+//! **Domain capabilities** (28 FQNs in [`crate::niche::CAPABILITIES`]): game science
 //! (`game.evaluate_flow`, `game.fitts_cost`, `game.engagement`, `game.analyze_ui`,
 //! `game.accessibility`, `game.wfc_step`, `game.difficulty_adjustment`,
 //! `game.generate_noise`); provenance and telemetry (`game.begin_session`,
@@ -54,6 +54,7 @@ pub mod coralreef;
 pub mod discovery;
 pub mod nestgate;
 pub mod provenance;
+pub mod skunkbat;
 pub mod squirrel;
 pub mod toadstool;
 

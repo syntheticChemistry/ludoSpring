@@ -8,6 +8,8 @@ pub mod registry;
 
 pub use registry::{Scenario, ScenarioMeta, ScenarioRegistry, Tier, Track};
 
+mod s_audit_integration;
+mod s_composition_gaps;
 mod s_composition_parity;
 mod s_engagement_metrics;
 mod s_interaction_laws;
@@ -24,5 +26,7 @@ pub fn build_registry() -> ScenarioRegistry {
     r.register(s_composition_parity::SCENARIO);
     r.register(s_raycaster_budget::SCENARIO);
     r.register(s_tier4_math_parity::SCENARIO);
+    r.register(s_audit_integration::SCENARIO);
+    r.register(s_composition_gaps::SCENARIO);
     r
 }
