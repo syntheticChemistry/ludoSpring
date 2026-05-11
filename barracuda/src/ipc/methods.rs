@@ -97,6 +97,18 @@ pub mod math {
     pub const MEAN: &str = "math.mean";
     /// Variance of a dataset.
     pub const VARIANCE: &str = "math.variance";
+    /// Flow state evaluation (composed: sigmoid + clamp).
+    pub const FLOW_EVALUATE: &str = "math.flow.evaluate";
+    /// Engagement composite score (composed: weighted mean + tensor ops).
+    pub const ENGAGEMENT_COMPOSITE: &str = "math.engagement.composite";
+}
+
+/// Shader compilation domain — coralReef.
+pub mod shader {
+    /// Compile a WGSL shader to native binary.
+    pub const COMPILE: &str = "shader.compile";
+    /// List available compiled shaders.
+    pub const LIST: &str = "shader.list";
 }
 
 /// Noise domain — procedural generation.
@@ -230,6 +242,10 @@ mod tests {
             math::SIGMOID,
             math::MEAN,
             math::VARIANCE,
+            math::FLOW_EVALUATE,
+            math::ENGAGEMENT_COMPOSITE,
+            shader::COMPILE,
+            shader::LIST,
             noise::PERLIN_2D,
             noise::PERLIN_3D,
             noise::FBM,

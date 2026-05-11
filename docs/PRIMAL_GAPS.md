@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 11, 2026 (V63 — SPDX headers added, unreachable! evolved. 854 tests, 8 validation scenarios. 13/15 gaps resolved; remaining: GAP-01/02/04/05 partial, GAP-14 low.)
+**Last updated:** May 11, 2026 (V64 — `default = []`, coralReef IPC wired in GPU path, domain method constants added. 854+ tests, 8 validation scenarios. GAP-01 WIRED (blocked upstream), GAP-02 ADVANCED. Remaining: GAP-04/05 partial, GAP-14 low.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -39,16 +39,16 @@
 
 ## Gap Registry
 
-### GAP-01: coralReef IPC Client Not Wired
+### GAP-01: coralReef IPC — Wired, Blocked on Upstream
 
 **Primal:** coralReef
-**Status:** PARTIAL — typed client exists; product engine path still not wired
+**Status:** WIRED (V64) — `try_coralreef_compile(op)` in `game/engine/gpu.rs` calls
+coralReef via IPC first, falls back to embedded WGSL. `shader.compile` and `shader.list`
+method constants added to `ipc::methods::shader`. Typed client in `ipc/coralreef.rs`.
+**Blocked:** coralReef SM rebuild not yet shipped — all calls currently degrade gracefully.
 **Proto-nucleate:** Required (`shader.compile`, `shader.list`)
-**Impact:** `barracuda/src/ipc/coralreef.rs` exposes `compile_wgsl` / `list_shaders`
-via NeuralBridge `capability_call` to the shader domain, and `fossilRecord/experiments_prokaryotic_may2026/exp085_shader_dispatch_chain`
-exercises compile → dispatch. Production GPU paths in `game/engine/gpu.rs` still
-load WGSL with `include_str!` and dispatch through toadStool — they do not invoke
-the coralReef client.
+**Impact:** When coralReef goes live, ludoSpring will automatically use sovereign
+compilation without code changes.
 
 **Proposed wire:**
 ```json
@@ -61,10 +61,14 @@ the coralReef client.
 
 ---
 
-### GAP-02: barraCuda Direct Rust Import (Not IPC)
+### GAP-02: barraCuda Domain Method Parity
 
 **Primal:** barraCuda
-**Status:** PARTIAL → guideStone readiness 4, live NUCLEUS validated (V47, April 20 2026).
+**Status:** ADVANCED (V64) — `math.flow.evaluate` and `math.engagement.composite` method
+constants added. Library imports fully feature-gated behind `local`. `default = []` (no
+features by default). All science methods served locally AND composable via IPC when
+barraCuda offers the upstream endpoints.
+**Previous:** guideStone readiness 4, live NUCLEUS validated (V47, April 20 2026).
 `ludospring_guidestone` binary — three-tier architecture (54/54 checks, exit 0):
 Tier 1 (bare, 31 checks): 20 structural + 11 BLAKE3 integrity.
 Tier 2 (IPC, 15 checks): domain science via `primalspring::composition` with upstream

@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 11, 2026 (V63 — SPDX headers on all 122 `.rs` files. `unreachable!` in production evolved to structured error. Doc version refs aligned to V63. Tier 4 IPC-first defaults (`default = ["ipc"]`). Foundation Threads 9+10 seeded. 854 workspace tests, zero clippy warnings.)
+**Last updated:** May 11, 2026 (V64 — `default = []` (pure library, zero optional deps by default). coralReef IPC wired into GPU engine (`try_coralreef_compile`). Domain method constants: `math.flow.evaluate`, `math.engagement.composite`, `shader.compile`, `shader.list`. IPC-dependent scenarios feature-gated. 854 workspace tests, zero clippy.)
 
 ## What is this?
 

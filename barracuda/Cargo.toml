@@ -12,7 +12,7 @@ keywords = ["games", "ludology", "procedural-generation", "interaction", "gpu"]
 categories = ["science", "game-engines", "command-line-utilities"]
 
 [features]
-default = ["ipc"]
+default = []
 gpu = ["local", "barracuda/gpu", "dep:wgpu", "dep:tokio"]
 # Direct barraCuda library linkage (CPU math). Disable for pure IPC-only binary.
 local = ["dep:barracuda"]

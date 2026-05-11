@@ -8,7 +8,9 @@ pub mod registry;
 
 pub use registry::{Scenario, ScenarioMeta, ScenarioRegistry, Tier, Track};
 
+#[cfg(feature = "ipc")]
 mod s_audit_integration;
+#[cfg(feature = "ipc")]
 mod s_composition_gaps;
 mod s_composition_parity;
 mod s_engagement_metrics;
@@ -26,7 +28,9 @@ pub fn build_registry() -> ScenarioRegistry {
     r.register(s_composition_parity::SCENARIO);
     r.register(s_raycaster_budget::SCENARIO);
     r.register(s_tier4_math_parity::SCENARIO);
+    #[cfg(feature = "ipc")]
     r.register(s_audit_integration::SCENARIO);
+    #[cfg(feature = "ipc")]
     r.register(s_composition_gaps::SCENARIO);
     r
 }

@@ -3,7 +3,24 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V63).
+This project does not use SemVer — versions are session-sequential (V1–V64).
+
+## [V64] — 2026-05-11
+
+### Primal composition sprint — `default = []`, coralReef IPC, domain methods
+
+- **`default = []`** — library compiles with zero optional deps. `ipc`, `local`, `gpu`,
+  `guidestone`, `tarpc-ipc` all explicit opt-in. Aligns with ecosystem standard (8/8
+  springs at Tier 4 with empty defaults). IPC-dependent validation scenarios
+  (`s_audit_integration`, `s_composition_gaps`) gated behind `#[cfg(feature = "ipc")]`.
+- **coralReef IPC wired** (GAP-01 → WIRED): `try_coralreef_compile(op)` in
+  `game/engine/gpu.rs` calls coralReef `shader.compile` via IPC before falling back to
+  embedded WGSL. `shader.compile` and `shader.list` method constants added to
+  `ipc::methods::shader`. Blocked on coralReef SM rebuild shipping.
+- **Domain method parity** (GAP-02 → ADVANCED): `math.flow.evaluate` and
+  `math.engagement.composite` method constants registered for IPC composition routing.
+  These methods are served locally AND composable via upstream barraCuda when available.
+- **854 workspace tests** (427 library-only + 427 IPC-dependent), zero clippy, zero fmt diffs
 
 ## [V63] — 2026-05-11
 

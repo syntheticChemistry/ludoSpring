@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** May 11, 2026
-**Version:** V63 (Deep debt: SPDX headers on all 122 `.rs` files, `unreachable!` in production evolved to structured JSON-RPC error, doc version alignment. V62: Tier 4 IPC-first defaults `default = ["ipc"]`. V61: 29 constant-invariant tests, GAP-12/13/15 RESOLVED. V60: skunkBat Rust IPC, 8 scenarios. V59: Tier 4 rewiring. V58: UniBin eukaryotic. 854 tests, zero clippy, zero unsafe.)
+**Version:** V64 (`default = []` — library compiles with zero optional deps. coralReef IPC wired into GPU path via `try_coralreef_compile`. Domain composition methods `math.flow.evaluate` + `math.engagement.composite` registered. IPC-dependent scenarios feature-gated. 854 tests, zero clippy, zero unsafe.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)

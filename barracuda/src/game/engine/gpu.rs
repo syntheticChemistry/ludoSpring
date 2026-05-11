@@ -23,7 +23,7 @@
 //! - `perlin_2d.wgsl` — terrain generation (validated exp030)
 //! - `dda_raycast.wgsl` — batch line-of-sight (validated exp030)
 
-/// Embedded shader sources.
+/// Embedded shader sources (fallback when coralReef IPC is unavailable).
 pub mod shaders {
     /// Fog of war — per-tile visibility computation.
     pub const FOG_OF_WAR: &str = include_str!("../../../shaders/game/fog_of_war.wgsl");
@@ -40,6 +40,25 @@ pub mod shaders {
 
     /// DDA raycaster — batch line-of-sight (validated exp030, pending barraCuda absorption).
     pub const DDA_RAYCAST: &str = include_str!("../../../shaders/game/validated/dda_raycast.wgsl");
+}
+
+/// Attempt to compile a shader via coralReef IPC, falling back to embedded WGSL.
+///
+/// This is the Tier 4 shader compilation path: if coralReef is available via the
+/// composition graph, it compiles WGSL to native GPU binary. If unavailable, the
+/// engine transparently uses the embedded source with in-process wgpu.
+///
+/// Returns `Some(data)` with the compiled binary if coralReef responded, or `None`
+/// to indicate the caller should use the embedded WGSL source directly.
+#[cfg(feature = "ipc")]
+pub fn try_coralreef_compile(op: GpuOp) -> Option<serde_json::Value> {
+    let source = op.wgsl_source()?;
+    let result = crate::ipc::coralreef::compile_wgsl(source, "main", op.shader_name()).ok()?;
+    if result.available {
+        Some(result.data)
+    } else {
+        None
+    }
 }
 
 /// A named GPU compute operation the engine can dispatch.
