@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** May 10, 2026
+**Date:** May 11, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V59.1 — Post-interstadial deep debt resolved. **Tier 4 rewiring complete**: `barracuda` `optional = true`, feature-gated behind `local`; IPC-only sovereign builds work without library linkage. 28 `game.*` methods canonical (413 ecosystem total). skunkBat audit logging wired. biomeOS v3.51 `composition.status` + `method.register` absorbed. `crate::math` dual-path module (library or inline fallback, LCG constants verified against barraCuda). 6 validation scenarios. `python_parity` tests split into 4 focused modules. All upstream blockers resolved (GAP-06, GAP-03/09, GAP-12, JH-11). **Composition parity: 130/141 (92.2%)**. Zero clippy warnings, zero bare `#[allow]`, zero TODO/FIXME. primalSpring v0.9.25. **815+** workspace tests. guideStone readiness **4** (NUCLEUS validated). MCP surface complete (15/15 tools). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
+**Status:** V61 — Deep debt fully resolved. **854 workspace tests**, 8 validation scenarios, zero clippy, zero unsafe, zero TODO/FIXME, all `#[allow]` with `reason`, all files <800L, GAP-12/13/15 RESOLVED. skunkBat Rust IPC module (5 API functions). Foundation Thread 9 (Gaming) seeded (14 sources, 13 targets). Tier 4 IPC-first: `barracuda` `optional = true`, 28 `game.*` canonical (413 ecosystem). Composition parity: 130/141 (92.2%). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). MCP surface complete (15/15 tools). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
 
 ---
 
@@ -115,9 +115,7 @@ Layer 1: Python ↔ Rust  (python_parity.rs — parity vs Python baselines)
 | `envelope.rs` at 824 lines | Split: 409 lines production + `envelope_tests.rs` | Under threshold, tests isolated for maintenance |
 | `ludospring_guidestone.rs` at 812 lines | `guidestone/` module: `main.rs`, `constants.rs`, `tier1.rs`, `tier2.rs`, `tier3.rs` | Each file under 220 lines; tier logic separated |
 
-**Test delta:** 817 → 820 (new: `RpcClient` connect error classification,
-method constants consistency with `niche::CAPABILITIES`, `BaselineError`
-variant matching).
+**Test delta:** 817 → 820 (V55), → 825 (V60 skunkBat), → 854 (V61 tolerance/certification invariants).
 
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
@@ -321,7 +319,7 @@ The same WFC that generates dungeons can compose music (harmonic adjacency).
 The same DDA that tunes monster density can tune exam difficulty.
 The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 
-### How to Reproduce (V59 — Eukaryotic UniBin)
+### How to Reproduce (V61 — Eukaryotic UniBin)
 
 ```bash
 cd ludoSpring
@@ -331,7 +329,7 @@ python3 baselines/python/run_all_baselines.py       # Generate combined_baseline
 python3 baselines/python/check_drift.py             # Verify zero baseline drift
 python3 baselines/python/bench_cpu_parity.py        # CPU timing: perlin, fBm, raycaster, Fitts
 
-# ── Rust validation (815+ tests) ────────────────────────────────────
+# ── Rust validation (854 tests) ─────────────────────────────────────
 cargo test --workspace --lib --tests                 # Full test suite (0 failures)
 cargo test --no-default-features --features ipc -p ludospring-barracuda --lib  # IPC-only mode
 

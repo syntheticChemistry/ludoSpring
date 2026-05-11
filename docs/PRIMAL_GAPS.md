@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 11, 2026 (V60 — GAP-12 RESOLVED (28 game.* canonical, 413 ecosystem total). GAP-13 RESOLVED (barraCuda 0.3.13 build regression fixed V57). GAP-15 RESOLVED (V56: Squirrel node added). skunkBat Rust IPC wired. 825 tests. 8 validation scenarios. All critical and moderate gaps resolved.)
+**Last updated:** May 11, 2026 (V61 — GAP-12/13/15 RESOLVED. Deep debt: 854 tests, constant-invariant tests, hardcoding→NICHE_NAME. 8 validation scenarios. 13/15 gaps resolved; remaining: GAP-01/02/04/05 partial, GAP-14 low.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

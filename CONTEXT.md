@@ -249,5 +249,6 @@ Previous blockers (all **RESOLVED** upstream, May 10, 2026):
 
 ### Handoff
 
-[V59 Tier 4 post-interstadial handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)
+[V61 deep debt handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md)
+[V60 skunkBat + foundation handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md)
 [V59 local handoff](wateringHole/handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md)

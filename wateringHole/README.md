@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V60** | [Central: LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md) | May 11 | **Current: V60** — skunkBat Rust IPC, 8 scenarios, composition gap closure, foundation Thread 9 seeded, 825 tests, release binary verified. |
+| **V61** | [Central: LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V60_SKUNKBAT_FOUNDATION_HANDOFF_MAY11_2026.md) | May 11 | **Current: V61** — Deep debt resolved: 854 tests, constant-invariant tests, GAP-12/13/15 RESOLVED, hardcoding→NICHE_NAME. V60: skunkBat Rust IPC, 8 scenarios, composition gap closure, foundation Thread 9 seeded. |
 | V59.1 | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 rewiring, 28 game.* canonical, biomeOS v3.51, dual-path math, python_parity split. |
 | V59 | [Central: LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 reference for ecosystem adoption. |
 | V58 | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
