@@ -140,3 +140,123 @@ pub fn check_method_exists(
         }
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "test assertions use unwrap for clarity")]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fitts_mt_matches_formula() {
+        let expected = 50.0 + 150.0 * (2.0 * 100.0_f64 / 10.0).log2();
+        assert!((FITTS_MT_D100_W10 - expected).abs() < 1e-10);
+    }
+
+    #[test]
+    fn hick_rt_is_exact() {
+        let expected = 200.0 + 150.0 * 8.0_f64.log2();
+        assert!((HICK_RT_N7 - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn sigmoid_half_matches() {
+        let expected = 1.0 / (1.0 + (-0.5_f64).exp());
+        assert!((SIGMOID_HALF - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn ipc_fitts_uses_barracuda_formulation() {
+        let expected = 50.0 + 150.0 * (100.0_f64 / 10.0 + 1.0).log2();
+        assert!((IPC_FITTS_MT_D100_W10 - expected).abs() < 1e-10);
+    }
+
+    #[test]
+    fn ipc_hick_uses_barracuda_formulation() {
+        let expected = 200.0 + 150.0 * 7.0_f64.log2();
+        assert!((IPC_HICK_RT_N7 - expected).abs() < 1e-10);
+    }
+
+    #[test]
+    fn ipc_sample_variance() {
+        assert!((IPC_STATS_VAR_8ELEM_SAMPLE - 32.0 / 7.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn extract_any_scalar_from_result_key() {
+        let v = serde_json::json!({"result": 3.14});
+        assert!((extract_any_scalar(&v).unwrap() - 3.14).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn extract_any_scalar_from_array() {
+        let v = serde_json::json!({"result": [42.0, 0.0]});
+        assert!((extract_any_scalar(&v).unwrap() - 42.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn extract_any_scalar_from_value_key() {
+        let v = serde_json::json!({"value": 2.718});
+        assert!((extract_any_scalar(&v).unwrap() - 2.718).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn extract_any_scalar_from_bare_f64() {
+        let v = serde_json::json!(1.0);
+        assert!((extract_any_scalar(&v).unwrap() - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn extract_any_scalar_from_data_array() {
+        let v = serde_json::json!({"data": [99.9]});
+        assert!((extract_any_scalar(&v).unwrap() - 99.9).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn extract_any_scalar_returns_none_for_empty() {
+        let v = serde_json::json!({"other": "text"});
+        assert!(extract_any_scalar(&v).is_none());
+    }
+
+    #[test]
+    fn cross_atomic_payload_decodes() {
+        let decoded = base64_decode(CROSS_ATOMIC_PAYLOAD_B64);
+        assert_eq!(decoded, b"ludospring-guidestone-cross-atomic-test-v1");
+    }
+
+    fn base64_decode(input: &str) -> Vec<u8> {
+        let table: [u8; 128] = {
+            let mut t = [0xFF_u8; 128];
+            for (i, &c) in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+                .iter()
+                .enumerate()
+            {
+                t[c as usize] = i as u8;
+            }
+            t
+        };
+        let bytes: Vec<u8> = input
+            .bytes()
+            .filter(|&b| b != b'=' && b != b'\n' && b != b'\r')
+            .collect();
+        let mut out = Vec::with_capacity(bytes.len() * 3 / 4);
+        for chunk in bytes.chunks(4) {
+            let mut buf = 0u32;
+            let mut count = 0;
+            for &b in chunk {
+                buf = (buf << 6) | u32::from(table[b as usize]);
+                count += 1;
+            }
+            buf <<= (4 - count) * 6;
+            if count >= 2 {
+                out.push((buf >> 16) as u8);
+            }
+            if count >= 3 {
+                out.push((buf >> 8) as u8);
+            }
+            if count >= 4 {
+                out.push(buf as u8);
+            }
+        }
+        out
+    }
+}

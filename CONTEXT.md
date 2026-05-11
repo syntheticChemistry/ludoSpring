@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 11, 2026 (V60 — skunkBat Rust IPC module (`ipc/skunkbat.rs`): typed audit client with graceful degradation, 5 public API functions, security method constants. 8 validation scenarios (new: `audit_integration` + `composition_gaps`). Composition gap closure: PG-47/PG-48 exercised via live-tier scenario. Foundation Thread 9 (Gaming) seeded with 14 data sources + 13 validation targets. 825 workspace tests. Release binary verified for NUCLEUS workload dispatch.)
+**Last updated:** May 11, 2026 (V61 — Deep debt resolution: zero unsafe, zero TODO/FIXME/HACK, zero bare `#[allow]`, zero mocks in production, all files <800L. Hardcoded audit source strings evolved to `NICHE_NAME` constant. PRIMAL_GAPS.md reconciled: GAP-12/13/15 all RESOLVED. Tolerance constant-invariant tests added to all 7 tolerances/ modules + certification/constants.rs (29 new tests). 854 workspace tests. Zero clippy warnings.)
 
 ## What is this?
 
@@ -57,7 +57,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 825 workspace `#[test]` functions (V60, post-fossilization + math module + parity split + skunkBat)
+- **Tests**: 854 workspace `#[test]` functions (V61, +29 from tolerance/certification constant-invariant tests)
 - **Experiments**: 100 total (fossilized to `fossilRecord/`; 8 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`

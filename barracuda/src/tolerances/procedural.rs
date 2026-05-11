@@ -31,3 +31,39 @@ pub const CPK_SODIUM: [f32; 4] = [0.7, 0.0, 0.7, 1.0];
 pub const CPK_CHLORINE: [f32; 4] = [0.0, 0.8, 0.0, 1.0];
 /// Jmol calcium — gray.
 pub const CPK_CALCIUM: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dda_near_zero_is_above_epsilon() {
+        assert!(DDA_NEAR_ZERO > f64::EPSILON);
+    }
+
+    #[test]
+    fn cpk_colors_have_full_opacity() {
+        let colors = [
+            CPK_HYDROGEN,
+            CPK_CARBON,
+            CPK_NITROGEN,
+            CPK_OXYGEN,
+            CPK_PHOSPHORUS,
+            CPK_SULFUR,
+            CPK_IRON,
+            CPK_SODIUM,
+            CPK_CHLORINE,
+            CPK_CALCIUM,
+        ];
+        for c in &colors {
+            assert!((c[3] - 1.0).abs() < f32::EPSILON, "alpha must be 1.0");
+            for &ch in &c[..3] {
+                assert!((0.0..=1.0).contains(&ch), "RGB channels must be in [0, 1]");
+            }
+        }
+    }
+}

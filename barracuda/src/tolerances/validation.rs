@@ -100,3 +100,58 @@ pub const DDA_ADJUSTMENT_EPSILON: f64 = 1e-6;
 /// zero for extreme channel widths. 1e-6 prevents a divide-by-zero while
 /// remaining several orders of magnitude below meaningful flow parameters.
 pub const SPAN_FLOOR: f64 = 1e-6;
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tolerance_hierarchy() {
+        assert!(
+            STRICT_ANALYTICAL_TOL < ANALYTICAL_TOL,
+            "strict < analytical"
+        );
+        assert!(
+            ANALYTICAL_TOL < NOISE_COHERENCE_TOL,
+            "analytical < noise coherence"
+        );
+    }
+
+    #[test]
+    fn all_tolerances_positive() {
+        let tols = [
+            ANALYTICAL_TOL,
+            RAYCASTER_DISTANCE_TOL,
+            NOISE_COHERENCE_TOL,
+            UI_DATA_INK_TOL,
+            UI_COVERAGE_TOL,
+            RAYCASTER_HIT_RATE_TOL,
+            NOISE_MEAN_TOL,
+            PERLIN_SAFE_BOUND,
+            BSP_AREA_CONSERVATION_TOL,
+            STRICT_ANALYTICAL_TOL,
+            NUMERICAL_FLOOR,
+            DDA_ADJUSTMENT_EPSILON,
+            SPAN_FLOOR,
+        ];
+        for &t in &tols {
+            assert!(t > 0.0);
+        }
+    }
+
+    #[test]
+    fn numerical_floor_prevents_div_by_zero() {
+        let result = 1.0 / NUMERICAL_FLOOR;
+        assert!(result.is_finite());
+    }
+
+    #[test]
+    fn perlin_safe_bound_exceeds_theoretical_max() {
+        let theoretical_max = (2.0_f64).sqrt() / 2.0;
+        assert!(PERLIN_SAFE_BOUND > theoretical_max);
+    }
+}

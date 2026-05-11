@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 11, 2026 — **V60 is current** (skunkBat Rust IPC module, 8 scenarios, composition gap closure, foundation Thread 9 seeded, 825 tests, release binary verified)
+**Last Updated:** May 11, 2026 — **V61 is current** (Deep debt: 29 constant-invariant tests, hardcoding→NICHE_NAME, GAP-12/13/15 RESOLVED, 854 tests, zero clippy)
 
 ---
 
@@ -34,7 +34,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 825 workspace tests, V60 Tier 4 IPC-first + skunkBat IPC + guideStone standard v1.2.0)
+ludoSpring (game science composition, 854 workspace tests, V61 Tier 4 IPC-first + deep debt resolved + guideStone standard v1.2.0)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)

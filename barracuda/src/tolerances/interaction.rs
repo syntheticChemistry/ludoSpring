@@ -49,3 +49,50 @@ pub const FLOW_CHANNEL_WIDTH: f64 = 0.15;
 /// in games." ACM SIGCHI '05. Section 4 recommends 0.6–0.75; 0.7 is the
 /// midpoint.
 pub const DDA_TARGET_SUCCESS_RATE: f64 = 0.7;
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fitts_coefficients_positive() {
+        assert!(FITTS_A_MOUSE_MS >= 0.0);
+        assert!(FITTS_B_MOUSE_MS > 0.0);
+    }
+
+    #[test]
+    fn hick_coefficients_positive() {
+        assert!(HICK_A_MS > 0.0);
+        assert!(HICK_B_MS > 0.0);
+    }
+
+    #[test]
+    fn steering_coefficients_positive() {
+        assert!(STEERING_A_MS >= 0.0);
+        assert!(STEERING_B_MS > 0.0);
+    }
+
+    #[test]
+    fn flow_channel_width_in_unit_interval() {
+        assert!(FLOW_CHANNEL_WIDTH > 0.0 && FLOW_CHANNEL_WIDTH < 0.5);
+    }
+
+    #[test]
+    fn dda_target_success_rate_valid() {
+        assert!(DDA_TARGET_SUCCESS_RATE > 0.0 && DDA_TARGET_SUCCESS_RATE < 1.0);
+    }
+
+    #[test]
+    fn fitts_mt_for_known_id() {
+        let d = 300.0_f64;
+        let w = 50.0_f64;
+        let id = (2.0 * d / w).log2();
+        let mt = FITTS_B_MOUSE_MS.mul_add(id, FITTS_A_MOUSE_MS);
+        assert!(mt > FITTS_A_MOUSE_MS, "MT must exceed intercept");
+        assert!(mt < 1000.0, "MT for moderate ID should be < 1s");
+    }
+}

@@ -65,3 +65,41 @@ pub const TUFTE_LARGE_ELEMENT_THRESHOLD: f64 = 0.05;
 /// Justification: Prevents division-by-near-zero for extremely short
 /// sessions. 0.01 minutes = 0.6 seconds.
 pub const MIN_SESSION_MINUTES: f64 = 0.01;
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn engagement_weights_sum_to_one() {
+        let sum = ENGAGEMENT_WEIGHT * 5.0;
+        assert!((sum - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn tufte_thresholds_ordered() {
+        assert!(TUFTE_SEVERE_DECORATION_THRESHOLD < TUFTE_SIMPLIFIABLE_THRESHOLD);
+        assert!(TUFTE_SIMPLIFIABLE_THRESHOLD > TUFTE_MIN_DATA_INK_RATIO);
+    }
+
+    #[test]
+    fn hud_coverage_in_unit_interval() {
+        assert!(MAX_HUD_COVERAGE > 0.0 && MAX_HUD_COVERAGE < 1.0);
+    }
+
+    #[test]
+    fn apm_ceiling_positive() {
+        assert!(ENGAGEMENT_APM_CEILING > 0.0);
+    }
+
+    #[test]
+    fn min_session_minutes_prevents_div_zero() {
+        assert!(MIN_SESSION_MINUTES > 0.0);
+        let apm = 10.0 / MIN_SESSION_MINUTES;
+        assert!(apm.is_finite());
+    }
+}

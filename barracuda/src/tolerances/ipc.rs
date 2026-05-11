@@ -53,3 +53,35 @@ pub const RPC_TIMEOUT_SECS: u64 = DEFAULT_RPC_TIMEOUT_SECS;
 pub const PROBE_TIMEOUT_MS: u64 = DEFAULT_PROBE_TIMEOUT_MS;
 /// Backward-compatible constant (prefer [`connect_probe_timeout_ms`] for env override).
 pub const CONNECT_PROBE_TIMEOUT_MS: u64 = DEFAULT_CONNECT_PROBE_TIMEOUT_MS;
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn defaults_match_constants() {
+        assert_eq!(RPC_TIMEOUT_SECS, DEFAULT_RPC_TIMEOUT_SECS);
+        assert_eq!(PROBE_TIMEOUT_MS, DEFAULT_PROBE_TIMEOUT_MS);
+        assert_eq!(CONNECT_PROBE_TIMEOUT_MS, DEFAULT_CONNECT_PROBE_TIMEOUT_MS);
+    }
+
+    #[test]
+    fn probe_faster_than_rpc() {
+        assert!(PROBE_TIMEOUT_MS < RPC_TIMEOUT_SECS * 1000);
+    }
+
+    #[test]
+    fn connect_probe_fastest() {
+        assert!(CONNECT_PROBE_TIMEOUT_MS < PROBE_TIMEOUT_MS);
+    }
+
+    #[test]
+    fn env_u64_returns_default_for_missing() {
+        let val = env_u64("LUDOSPRING_NONEXISTENT_VAR_FOR_TEST", 42);
+        assert_eq!(val, 42);
+    }
+}

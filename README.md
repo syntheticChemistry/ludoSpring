@@ -462,7 +462,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (825 workspace: barracuda lib + barracuda --tests + forge + benchmarks)
+# All tests (854 workspace: barracuda lib + barracuda --tests + forge + benchmarks)
 cargo test --workspace
 
 # UniBin subcommands (ipc + guidestone features required)
@@ -494,7 +494,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 825 total (barracuda lib + 4 parity modules + 8 scenarios + forge), 0 failures |
+| `cargo test --workspace` | 854 total (barracuda lib + 4 parity modules + 8 scenarios + forge), 0 failures |
 | `cargo build --no-default-features --features ipc` | IPC-only (no barraCuda linkage) — 0 errors |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 8 validation scenarios | UniBin `ludospring validate` (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps) |

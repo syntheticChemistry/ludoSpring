@@ -65,7 +65,7 @@ pub fn audit_session(
 ) -> Result<AuditResult, IpcError> {
     audit_log(
         event_type,
-        "ludospring",
+        crate::niche::NICHE_NAME,
         &serde_json::json!({
             "session_id": session_id,
             "details": details,
@@ -89,7 +89,7 @@ pub fn audit_certification(
 ) -> Result<AuditResult, IpcError> {
     audit_log(
         "certification",
-        "ludospring",
+        crate::niche::NICHE_NAME,
         &serde_json::json!({
             "tier": tier,
             "passed": passed,
@@ -115,7 +115,7 @@ pub fn audit_validation(
 ) -> Result<AuditResult, IpcError> {
     audit_log(
         "validation",
-        "ludospring",
+        crate::niche::NICHE_NAME,
         &serde_json::json!({
             "scenario_id": scenario_id,
             "track": track,

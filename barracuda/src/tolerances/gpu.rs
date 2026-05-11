@@ -90,3 +90,45 @@ pub use super::validation::RAYCASTER_DISTANCE_TOL as GPU_RAYCASTER_DISTANCE_ABS_
 /// Justification: 1/r² attenuation + multi-light accumulation in f32 produces
 /// ~1e-5 absolute error versus f64 reference. Validated in exp030 `lighting_gpu_parity`.
 pub const GPU_LIGHTING_ABS_TOL: f64 = 1e-5;
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tolerances_are_positive_and_ordered() {
+        let tols = [
+            GPU_UNARY_ABS_TOL,
+            GPU_PERLIN_ABS_TOL,
+            GPU_FBM_ABS_TOL,
+            GPU_FBM_ABS_TOL_LOOSE,
+            GPU_REDUCTION_ABS_TOL,
+            GPU_SOFTMAX_ABS_TOL,
+            GPU_ENGAGEMENT_REL_TOL,
+            GPU_LCG_ABS_TOL,
+            GPU_ENGAGEMENT_ABS_TOL,
+            GPU_LIGHTING_ABS_TOL,
+        ];
+        for &t in &tols {
+            assert!(t > 0.0, "tolerance must be positive");
+            assert!(t < 10.0, "tolerance must be reasonable");
+        }
+    }
+
+    #[test]
+    fn fbm_loose_exceeds_strict() {
+        assert!(GPU_FBM_ABS_TOL_LOOSE > GPU_FBM_ABS_TOL);
+    }
+
+    #[test]
+    fn lcg_tolerance_is_tight() {
+        assert!(
+            GPU_LCG_ABS_TOL < 1e-6,
+            "integer arithmetic should have tight tolerance"
+        );
+    }
+}

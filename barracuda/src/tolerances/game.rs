@@ -96,3 +96,41 @@ pub const SECONDS_PER_MINUTE: f64 = 60.0;
 ///
 /// Derived from [`TARGET_FRAME_RATE_HZ`]. Used in `TickBudget::default()`.
 pub const DEFAULT_DT_S: f64 = 1.0 / TARGET_FRAME_RATE_HZ;
+
+#[cfg(test)]
+#[allow(
+    clippy::assertions_on_constants,
+    reason = "validating constant relationships is the purpose of these tests"
+)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dt_matches_frame_rate() {
+        let expected = 1.0 / 60.0;
+        assert!((DEFAULT_DT_S - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn proximity_constants_are_positive() {
+        assert!(NPC_PROXIMITY_TILES > 0);
+        assert!(AREA_DESCRIPTION_RANGE_TILES > NPC_PROXIMITY_TILES);
+        assert!(ITEM_PROXIMITY_TILES > 0);
+    }
+
+    #[test]
+    fn tolerances_are_reasonable() {
+        assert!(GAME_STATE_TOL > 0.0 && GAME_STATE_TOL < 1.0);
+        assert!(TRUST_EQUALITY_TOL > 0.0 && TRUST_EQUALITY_TOL < GAME_STATE_TOL);
+    }
+
+    #[test]
+    fn d6_success_threshold_in_valid_range() {
+        assert!(D6_SUCCESS_THRESHOLD >= 1 && D6_SUCCESS_THRESHOLD <= 6);
+    }
+
+    #[test]
+    fn ema_alpha_in_unit_interval() {
+        assert!(DIALOGUE_EMA_ALPHA > 0.0 && DIALOGUE_EMA_ALPHA < 1.0);
+    }
+}

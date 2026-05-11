@@ -3,7 +3,32 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V59).
+This project does not use SemVer — versions are session-sequential (V1–V61).
+
+## [V61] — 2026-05-11
+
+### Deep debt resolution — constant-invariant tests + gap reconciliation
+
+- **29 new tests across 8 files:** tolerance constant-invariant tests for all 7
+  `tolerances/` modules (game, interaction, gpu, ipc, metrics, procedural, validation)
+  + `certification/constants.rs` golden value verification. Validates formula parity,
+  range invariants, ordering relationships, and base64 payload decoding.
+- **Hardcoded source strings evolved:** `skunkbat.rs` audit functions now use
+  `crate::niche::NICHE_NAME` instead of literal `"ludospring"`.
+- **PRIMAL_GAPS.md reconciled:** GAP-12 (registry cross-sync) → RESOLVED V59,
+  GAP-13 (barraCuda build regression) → RESOLVED V57, GAP-15 (Squirrel node) → RESOLVED V56.
+- **854 workspace tests**, zero clippy warnings, zero unsafe, all files <800L.
+
+## [V60] — 2026-05-11
+
+### skunkBat Rust IPC + Foundation seeding + composition gap closure
+
+- **skunkBat IPC module** (`ipc/skunkbat.rs`): 5 public API functions, security method
+  constants, graceful degradation, 10 unit tests.
+- **2 new validation scenarios** (audit_integration, composition_gaps): exercise skunkBat
+  wiring and the remaining 11 low-severity composition checks (PG-47/48, Squirrel, provenance).
+- **Foundation Thread 9** (Gaming/Creative): 14 data sources + 13 validation targets seeded.
+- **825 workspace tests**, release binary verified for NUCLEUS workload dispatch.
 
 ## [V59] — 2026-05-10
 

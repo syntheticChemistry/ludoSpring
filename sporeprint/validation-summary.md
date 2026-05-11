@@ -1,6 +1,6 @@
 +++
 title = "ludoSpring Validation Summary"
-description = "Game science, HCI, procedural generation — 825 tests, 13 HCI models validated, Tier 4 IPC-first"
+description = "Game science, HCI, procedural generation — 854 tests, 13 HCI models validated, Tier 4 IPC-first"
 date = 2026-05-11
 
 [taxonomies]
@@ -10,7 +10,7 @@ springs = ["ludospring"]
 
 ## Status
 
-- **825** workspace tests (unit, integration, property, determinism, parity)
+- **854** workspace tests (unit, integration, property, determinism, parity)
 - **13 foundational HCI models** validated against published research
 - **8 validation scenarios** absorbed into UniBin (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps)
 - **100 experiments** fossilized to `fossilRecord/` (prokaryotic → eukaryotic evolution)

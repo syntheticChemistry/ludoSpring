@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 10, 2026 (V59 — Post-interstadial. GAP-06 rhizoCrypt UDS RESOLVED. GAP-03/09 biomeOS RESOLVED. JH-11 token federation RESOLVED. All critical upstream blockers cleared. Tier 4 rewiring complete. 28 game.* methods canonical. skunkBat wired.)
+**Last updated:** May 11, 2026 (V60 — GAP-12 RESOLVED (28 game.* canonical, 413 ecosystem total). GAP-13 RESOLVED (barraCuda 0.3.13 build regression fixed V57). GAP-15 RESOLVED (V56: Squirrel node added). skunkBat Rust IPC wired. 825 tests. 8 validation scenarios. All critical and moderate gaps resolved.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -407,39 +407,23 @@ unifies the dual-value approach into a single-value approach with explicit conve
 
 ---
 
-### GAP-12: Registry Cross-Sync — 15 Methods Unregistered Upstream
+### GAP-12: Registry Cross-Sync — RESOLVED (V59)
 
 **Primal:** primalSpring (canonical registry)
-**Status:** HANDBACK PENDING — ludoSpring serves 30 capabilities; primalSpring
-canonical `[game]` section only lists 15. The following are served by ludoSpring
-but not in `primalSpring/config/capability_registry.toml`:
-
-- `game.record_action`, `game.poll_telemetry`, `game.subscribe_interaction`,
-  `game.poll_interaction`, `game.query_vertices`, `game.mint_certificate`,
-  `game.storage_put`, `game.storage_get`
-- `game.gpu.fog_of_war`, `game.gpu.tile_lighting`, `game.gpu.pathfind`,
-  `game.gpu.perlin_terrain`, `game.gpu.batch_raycast`
-- `health.liveness`, `health.readiness` (universal, likely in `[health]` already)
-
-**Impact:** Cross-spring consumers cannot discover these via canonical registry.
-**Action:** Hand back to primalSpring for inclusion in canonical. Health methods
-may already exist under `[health]` domain (not duplicated in `[game]`).
-**Owner:** primalSpring / ludoSpring
+**Status:** **RESOLVED** — All 28 `game.*` methods now registered in primalSpring
+canonical `config/capability_registry.toml` (ecosystem total: 413 methods).
+Bidirectional CI cross-sync test validates zero drift.
+**Resolved:** V59 (May 10, 2026)
 
 ---
 
-### GAP-13: barraCuda Upstream Build Regression
+### GAP-13: barraCuda Upstream Build Regression — RESOLVED (V57)
 
 **Primal:** barraCuda
-**Status:** BLOCKING — `tolerances/precision.rs:138` references
-`crate::device::precision_tier::PrecisionTier` without `#[cfg(feature = "gpu")]`
-gate, causing compilation failure with `default-features = false`.
-
-**Impact:** ludoSpring (and all consumers using barraCuda without `gpu` feature)
-cannot `cargo check` after upstream version bump to 0.3.13.
-**Action:** Fix upstream: either gate `for_precision_tier` behind `gpu` feature
-or extract `PrecisionTier` enum to a non-GPU module.
-**Owner:** barraCuda team
+**Status:** **RESOLVED** — `#[cfg(feature = "gpu")]` gate added to
+`for_precision_tier` upstream. barraCuda 0.3.13 compiles cleanly with
+`default-features = false`.
+**Resolved:** V57 (May 8, 2026)
 
 ---
 
@@ -457,17 +441,12 @@ from `git rev-parse HEAD` at generation time.
 
 ---
 
-### GAP-15: gaming_niche Deploy Graph Missing Squirrel Node
+### GAP-15: gaming_niche Deploy Graph Missing Squirrel Node — RESOLVED (V56)
 
 **Primal:** ludoSpring (internal)
-**Status:** LOW — `graphs/ludospring_gaming_niche.toml` does not include a
-`squirrel` node, diverging from the proto-nucleate manifest which lists
-Squirrel as a required dependency.
-
-**Impact:** Niche-mode deployment would not discover AI capabilities.
-**Action:** Add squirrel node to gaming niche graph with appropriate
+**Status:** **RESOLVED** — Squirrel node added to deploy graphs with
 `by_capability = "ai"` wiring.
-**Owner:** ludoSpring
+**Resolved:** V56 (May 8, 2026)
 
 ---
 
