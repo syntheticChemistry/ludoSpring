@@ -40,18 +40,35 @@ fn cmd_validate(
     track_filter: Option<String>,
     scenario_id: Option<String>,
     list: bool,
+    format_json: bool,
 ) {
     use ludospring_barracuda::validation::scenarios::{self, Tier};
 
     let registry = scenarios::build_registry();
 
     if list {
-        println!("Available scenarios ({}):", registry.len());
-        for s in registry.all() {
-            println!(
-                "  {} [{}] (tier: {}, track: {})",
-                s.meta.id, s.meta.provenance_crate, s.meta.tier, s.meta.track
-            );
+        if format_json {
+            let items: Vec<_> = registry
+                .all()
+                .iter()
+                .map(|s| {
+                    serde_json::json!({
+                        "id": s.meta.id,
+                        "tier": s.meta.tier.to_string(),
+                        "track": s.meta.track,
+                        "crate": s.meta.provenance_crate,
+                    })
+                })
+                .collect();
+            println!("{}", serde_json::to_string(&items).unwrap_or_default());
+        } else {
+            println!("Available scenarios ({}):", registry.len());
+            for s in registry.all() {
+                println!(
+                    "  {} [{}] (tier: {}, track: {})",
+                    s.meta.id, s.meta.provenance_crate, s.meta.tier, s.meta.track
+                );
+            }
         }
         return;
     }
@@ -67,22 +84,48 @@ fn cmd_validate(
 
     let _ = track_filter;
 
-    println!("Running {} scenario(s)...\n", scenarios.len());
+    if !format_json {
+        println!("Running {} scenario(s)...\n", scenarios.len());
+    }
     let mut total_pass = 0_u32;
     let mut total_fail = 0_u32;
+    let mut scenario_results: Vec<serde_json::Value> = Vec::new();
 
     for s in &scenarios {
-        println!("━━━ {} ━━━", s.meta.id);
-        println!("  {}", s.meta.description);
+        if !format_json {
+            println!("━━━ {} ━━━", s.meta.id);
+            println!("  {}", s.meta.description);
+        }
         let mut h = ludospring_barracuda::validation::ValidationHarness::new(s.meta.id);
         (s.run)(&mut h);
         let (p, f) = h.counts();
         total_pass += p;
         total_fail += f;
-        println!();
+
+        if format_json {
+            scenario_results.push(serde_json::json!({
+                "id": s.meta.id,
+                "passed": p,
+                "failed": f,
+                "status": if f == 0 { "PASS" } else { "FAIL" },
+            }));
+        } else {
+            println!();
+        }
     }
 
-    println!("═══ Summary: {total_pass} passed, {total_fail} failed ═══");
+    if format_json {
+        let output = serde_json::json!({
+            "status": if total_fail == 0 { "PASS" } else { "FAIL" },
+            "checks": total_pass + total_fail,
+            "passed": total_pass,
+            "failed": total_fail,
+            "scenarios": scenario_results,
+        });
+        println!("{}", serde_json::to_string(&output).unwrap_or_default());
+    } else {
+        println!("═══ Summary: {total_pass} passed, {total_fail} failed ═══");
+    }
     if total_fail > 0 {
         std::process::exit(1);
     }
@@ -212,6 +255,9 @@ enum Command {
         /// List available scenarios without running them.
         #[arg(long)]
         list: bool,
+        /// Output format: omit for human-readable, "json" for structured output (Tier 2).
+        #[arg(long)]
+        format: Option<String>,
     },
     /// Start the IPC server (germination mode).
     Server {
@@ -251,8 +297,15 @@ fn main() {
             track,
             scenario,
             list,
+            format,
         } => {
-            cmd_validate(tier, track, scenario, list);
+            cmd_validate(
+                tier,
+                track,
+                scenario,
+                list,
+                format.as_deref() == Some("json"),
+            );
             Ok(())
         }
         Command::Server { port } => cmd_server(port).map_err(Into::into),

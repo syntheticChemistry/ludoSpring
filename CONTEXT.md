@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 12, 2026 (V65 — Foundation Thread 9 expression `GAMING_CREATIVE_SCIENCE.md` authored. Thread 10 expression `PROVENANCE_ECONOMICS.md` co-seeded with primalSpring. 3 notebooks verified executable (`nbconvert --execute`). V64: `default = []`, coralReef IPC, domain method parity. 854 workspace tests, zero clippy.)
+**Last updated:** May 12, 2026 (V66 — `--format json` on `ludospring validate` for Tier 2 toadStool dispatch. barraCuda v0.4.0 absorbed. V65: Thread 9+10 expressions, notebook CI. 854 workspace tests, zero clippy.)
 
 ## What is this?
 

@@ -3,7 +3,21 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V65).
+This project does not use SemVer — versions are session-sequential (V1–V66).
+
+## [V66] — 2026-05-12
+
+### Tier 2 readiness — `--format json`, barraCuda v0.4.0
+
+- **`--format json` flag** on `ludospring validate` subcommand. Outputs structured
+  JSON compatible with `toadstool.validate` dispatch (Pass 14 prep):
+  `{"status": "PASS", "checks": N, "passed": N, "failed": 0, "scenarios": [...]}`.
+  Also works with `--list` for machine-readable scenario enumeration.
+- **barraCuda v0.4.0** absorbed — upstream version bump from v0.3.13 (new
+  `sovereign_dispatch_wire` module). Both `barracuda/Cargo.toml` and
+  `metalForge/forge/Cargo.toml` updated.
+- **854 workspace tests**, zero clippy, zero fmt diffs across all feature
+  configurations.
 
 ## [V65] — 2026-05-12
 
