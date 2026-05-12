@@ -1,13 +1,13 @@
 # ludoSpring guideStone BLAKE3 checksum manifest
 # Property 3: Self-Verifying — tampered inputs detected, non-zero exit
-# Generated: 2026-05-08 (V56 — Phase 60 parity audit, primalSpring v0.9.25)
+# Generated: 2026-05-12 (V67 — Tier 2 convergence, 858 tests, primalSpring v0.9.25)
 # Regenerate: b3sum <files> > validation/CHECKSUMS
 
-8dab0a4a0af6f58f95ca571c2d95d7dd4147a3822ec75c2e5537169654f50aa0  barracuda/src/bin/guidestone/main.rs
-a89f7fdb7f86789090798b3d6a0aad7b2794200acddb0ec423eaee507693d6a9  barracuda/src/bin/guidestone/constants.rs
-2facb9f3b0486a7a86cd8921b5207f3ec77ed1f85c879446f2e2d59f11b9b5ca  barracuda/src/bin/guidestone/tier1.rs
-8de2a154d50bd3083fe1feecafbff7e8053fd0a3fd9aa43a03560315c0f3594e  barracuda/src/bin/guidestone/tier2.rs
-e1f06d94c1547b7a7a21acbc4acfea643e353eba46830c9c589e65c239cd8b56  barracuda/src/bin/guidestone/tier3.rs
+568fb82b3d8b9ba56881e3c0b53d592bf855c63920905350049ef9bb99c5217d  barracuda/src/bin/guidestone/main.rs
+0249d0e6558e91c43ba412f072b35e9156bbf013fecd9b95a4ae3877bd363626  barracuda/src/certification/constants.rs
+2d6c3ed0f0c300f5651cebfe990225e4c91c190f136981c83b13f0eae8c87ae5  barracuda/src/certification/tier1.rs
+f56629f9f46942978e8e64716a12dc96e3eee7c5ba5bff94b4154f57610830aa  barracuda/src/certification/tier2.rs
+ada9f4b5550b32ed9ff77e8fd2cdd65ec51c1698858c91f186d162c1d76f6352  barracuda/src/certification/tier3.rs
 2fee6b7b9312d048664bff38ea5e875ec3e482d0bb20be217162e7037a76aa59  baselines/python/interaction_laws.py
 8a1626fe559e1f5ba282d96827dcf67eebba98ce62c00a1b9300cd926ff2326b  baselines/python/perlin_noise.py
 add36d122b350a6f28e528e2cb25d2bff15e844d0469744667b60cd456ec9d8d  baselines/python/flow_engagement.py

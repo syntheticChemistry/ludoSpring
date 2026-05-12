@@ -25,12 +25,13 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V63** | [Central: LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md) | May 11 | **Current: V63** — SPDX on all 122 .rs files, `unreachable!` evolved, doc version alignment. |
-| V62 | [Central: LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md) | May 11 | Tier 4 IPC-first defaults (`default = ["ipc"]`), Foundation Thread 10 seeded, plasmidBin manifest updated. |
+| **V67** | [Central: LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md) | May 12 | **Current: V67** — Tier 2 convergence wired. `toadstool.validate` + `precision.route`. 858 tests. |
+| V63 | [Central: LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md) | May 11 | SPDX on all 122 .rs files, `unreachable!` evolved, doc version alignment. |
+| V62 | [Central: LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md) | May 11 | Tier 4 IPC-first defaults, Foundation Thread 10 seeded, plasmidBin manifest updated. |
 | V59.1 | [LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 rewiring, 28 game.* canonical, biomeOS v3.51, dual-path math, python_parity split. |
 | V59 | [Central: LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V59_TIER4_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 reference for ecosystem adoption. |
-| V58 | [LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | Zero clippy warnings, method constant consolidation, FMA accuracy, unreachable→error, const fn promotion. |
-| V57 | [LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | Interstadial eukaryotic evolution. UniBin, certification organelle, scenario registry, 100 experiments fossilized, ipc default, primalSpring v0.9.25 pinned. |
+| V58 | [archive/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md](handoffs/archive/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md) | May 9 | Zero clippy warnings, method constant consolidation, FMA accuracy. |
+| V57 | [archive/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md](handoffs/archive/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md) | May 9 | UniBin, certification organelle, scenario registry, 100 experiments fossilized. |
 
 ## Cross-Spring Context
 
@@ -111,7 +112,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **guideStone:** 54/54 checks passed (L4 NUCLEUS validated). Standard v1.2.0.
 
-See: [V59 post-interstadial](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md), [V65 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V65_DOWNSTREAM_SEEDING_HANDOFF_MAY12_2026.md).
+See: [V67 Tier 2 convergence](../../infra/wateringHole/handoffs/LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md), [V59 post-interstadial](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md).
 
 ## Archive
 

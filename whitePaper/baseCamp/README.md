@@ -115,7 +115,7 @@ Layer 1: Python ↔ Rust  (python_parity.rs — parity vs Python baselines)
 | `envelope.rs` at 824 lines | Split: 409 lines production + `envelope_tests.rs` | Under threshold, tests isolated for maintenance |
 | `ludospring_guidestone.rs` at 812 lines | `guidestone/` module: `main.rs`, `constants.rs`, `tier1.rs`, `tier2.rs`, `tier3.rs` | Each file under 220 lines; tier logic separated |
 
-**Test delta:** 817 → 820 (V55), → 825 (V60 skunkBat), → 854 (V61 tolerance/certification invariants).
+**Test delta:** 817 → 820 (V55), → 825 (V60 skunkBat), → 854 (V61 tolerance/certification invariants), → 858 (V67 Tier 2 convergence).
 
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
@@ -329,7 +329,7 @@ python3 baselines/python/run_all_baselines.py       # Generate combined_baseline
 python3 baselines/python/check_drift.py             # Verify zero baseline drift
 python3 baselines/python/bench_cpu_parity.py        # CPU timing: perlin, fBm, raycaster, Fitts
 
-# ── Rust validation (854 tests) ─────────────────────────────────────
+# ── Rust validation (858 tests) ─────────────────────────────────────
 cargo test --workspace --lib --tests                 # Full test suite (0 failures)
 cargo test --no-default-features --features ipc -p ludospring-barracuda --lib  # IPC-only mode
 
