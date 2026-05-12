@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 11, 2026 — **V64 is current** (`default = []`, coralReef IPC wired, domain method parity advanced. 854 tests, zero clippy)
+**Last Updated:** May 12, 2026 — **V65 is current** (Foundation Thread 9+10 expressions authored. Notebooks verified for sporePrint CI. V64: `default = []`, coralReef IPC, domain methods. 854 tests, zero clippy)
 
 ---
 
@@ -35,7 +35,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 854 workspace tests, V64 `default=[]` + coralReef IPC + guideStone standard v1.2.0)
+ludoSpring (game science composition, 854 workspace tests, V65 — Thread 9+10 expressions, notebooks CI-verified)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -88,12 +88,12 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## Composition Gap Status (V59, updated May 10, 2026)
+## Composition Gap Status (V65, updated May 12, 2026)
 
 | GAP | Owner | Status | Notes |
 |-----|-------|--------|-------|
-| GAP-01: coralReef IPC client | **coralReef** | OPEN | Shader pipeline not exercised |
-| GAP-02: NestGate game state | **NestGate** | OPEN | storage.store/retrieve wired but not validated E2E |
+| GAP-01: coralReef IPC client | **coralReef** | **WIRED** (V64) | `try_coralreef_compile` in GPU path, blocked on upstream SM rebuild |
+| GAP-02: Domain method parity | **ludoSpring** | **ADVANCED** (V64) | `math.flow.evaluate` + `math.engagement.composite` registered |
 | GAP-03: biomeOS game_logic orchestration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `composition.deploy` route alias |
 | GAP-04: provenance commit chain | **rhizoCrypt** | OPEN | Commit exists but deterministic replay not validated |
 | GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |

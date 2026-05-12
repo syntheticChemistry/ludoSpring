@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 11, 2026 (V64 — `default = []`, coralReef IPC wired in GPU path, domain method constants added. 854+ tests, 8 validation scenarios. GAP-01 WIRED (blocked upstream), GAP-02 ADVANCED. Remaining: GAP-04/05 partial, GAP-14 low.)
+**Last updated:** May 12, 2026 (V65 — Foundation Threads 9+10 active. No new gap changes. GAP-01 WIRED (blocked upstream), GAP-02 ADVANCED. Remaining: GAP-04/05 partial, GAP-14 low.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

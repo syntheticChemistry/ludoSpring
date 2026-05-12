@@ -3,7 +3,28 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V64).
+This project does not use SemVer — versions are session-sequential (V1–V65).
+
+## [V65] — 2026-05-12
+
+### Foundation downstream seeding — Thread 9+10 expressions, notebook CI
+
+- **Foundation Thread 9 expression** — `GAMING_CREATIVE_SCIENCE.md` authored in
+  `sporeGarden/foundation/expressions/`. Covers all 6 dimensions of game science
+  validation: interaction science, flow/engagement, procedural generation, cross-domain
+  isomorphism, provenance as anti-cheat, distributed computation. Maps paper set
+  (17-19, 24a) to NUCLEUS composition blueprint and downstream products (esotericWebb,
+  Games@Home). Thread 9 status elevated from "mapped" to "active".
+- **Foundation Thread 10 expression** — `PROVENANCE_ECONOMICS.md` co-seeded with
+  primalSpring. Documents the Novel Ferment Transcript (memory-bound digital objects),
+  provenance trio composition (rhizoCrypt DAG + loamSpine ledger + sweetGrass braids),
+  cross-domain mapping (game items ↔ scientific samples ↔ medical records), and
+  Gompertz fermentation economics model. Thread 10 expression field populated.
+- **Notebook CI verification** — all 3 notebooks (`01_interaction_laws`,
+  `02_perlin_noise`, `03_flow_engagement`) verified executable under
+  `python3 -m nbconvert --to notebook --execute`. Ready for sporePrint CI integration.
+- **Doc alignment** — all root documentation (README, CONTEXT, CHANGELOG,
+  wateringHole/README, whitePaper/baseCamp/README, docs/PAPER_QUEUE) updated to V65.
 
 ## [V64] — 2026-05-11
 

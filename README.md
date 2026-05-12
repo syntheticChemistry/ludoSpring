@@ -2,8 +2,8 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** May 11, 2026
-**Version:** V64 (`default = []` — library compiles with zero optional deps. coralReef IPC wired into GPU path via `try_coralreef_compile`. Domain composition methods `math.flow.evaluate` + `math.engagement.composite` registered. IPC-dependent scenarios feature-gated. 854 tests, zero clippy, zero unsafe.)
+**Date:** May 12, 2026
+**Version:** V65 (Foundation Thread 9 expression written (`GAMING_CREATIVE_SCIENCE.md`). Thread 10 co-seeded (`PROVENANCE_ECONOMICS.md`). 3 notebooks verified executable under `nbconvert --execute` for sporePrint CI. V64: `default = []`, coralReef IPC wired, domain method parity. 854 tests, zero clippy, zero unsafe.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
@@ -364,6 +364,8 @@ Detailed version history is in `CHANGELOG.md`. Key milestones:
 
 | Version | Date | Milestone |
 |---------|------|-----------|
+| V65 | May 12 | Foundation Thread 9+10 expressions, notebook CI verification |
+| V64 | May 11 | `default = []`, coralReef IPC wired, domain method parity |
 | V63 | May 11 | SPDX on all 122 `.rs` files, `unreachable!` eliminated, doc alignment |
 | V62 | May 11 | Tier 4 IPC-first defaults (`default = ["ipc"]`), Foundation Thread 10 seeded |
 | V61 | May 11 | 29 constant-invariant tests, GAP-12/13/15 RESOLVED, deep debt zero |

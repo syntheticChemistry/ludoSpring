@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 11, 2026 (V64 — `default = []` (pure library, zero optional deps by default). coralReef IPC wired into GPU engine (`try_coralreef_compile`). Domain method constants: `math.flow.evaluate`, `math.engagement.composite`, `shader.compile`, `shader.list`. IPC-dependent scenarios feature-gated. 854 workspace tests, zero clippy.)
+**Last updated:** May 12, 2026 (V65 — Foundation Thread 9 expression `GAMING_CREATIVE_SCIENCE.md` authored. Thread 10 expression `PROVENANCE_ECONOMICS.md` co-seeded with primalSpring. 3 notebooks verified executable (`nbconvert --execute`). V64: `default = []`, coralReef IPC, domain method parity. 854 workspace tests, zero clippy.)
 
 ## What is this?
 

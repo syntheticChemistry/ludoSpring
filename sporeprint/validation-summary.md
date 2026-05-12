@@ -1,7 +1,7 @@
 +++
 title = "ludoSpring Validation Summary"
-description = "Game science, HCI, procedural generation — 854 tests, 13 HCI models validated, Tier 4 IPC-first"
-date = 2026-05-11
+description = "Game science, HCI, procedural generation — 854 tests, 13 HCI models validated, Tier 4 IPC-first, Foundation Threads 9+10 active"
+date = 2026-05-12
 
 [taxonomies]
 primals = ["barracuda", "toadstool", "petaltongue", "biomeos", "squirrel", "skunkbat"]
@@ -36,7 +36,8 @@ springs = ["ludospring"]
 ## Workload TOMLs
 
 Two ready in `projectNUCLEUS/workloads/ludospring/`: `ludospring-game-validation.toml`,
-`ludospring-composition-parity.toml`. Foundation threads 9 (Gaming) + 10 (Provenance) seeded.
+`ludospring-composition-parity.toml`. Foundation threads 9 (Gaming) + 10 (Provenance) active
+(expressions authored V65). 3 notebooks verified executable under `nbconvert --execute`.
 
 ## See Also
 

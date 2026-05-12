@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 11, 2026 (V63 — 854 tests, 8 scenarios, deep debt resolved, Foundation Threads 9+10 seeded)
+**Last updated:** May 12, 2026 (V65 — Thread 9 expression authored, Thread 10 co-seeded. Notebooks verified for sporePrint CI. 854 tests, 8 scenarios.)
 
 ## Foundation Thread Assignment
 
