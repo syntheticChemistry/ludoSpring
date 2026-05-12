@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 12, 2026 — **V65 is current** (Foundation Thread 9+10 expressions authored. Notebooks verified for sporePrint CI. V64: `default = []`, coralReef IPC, domain methods. 854 tests, zero clippy)
+**Last Updated:** May 12, 2026 — **V67 is current** (Tier 2 convergence: `toadstool.validate` + `precision.route` wired. Pass 14 unblocked. 858 tests, 9 scenarios, zero clippy)
 
 ---
 
@@ -35,7 +35,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 854 workspace tests, V65 — Thread 9+10 expressions, notebooks CI-verified)
+ludoSpring (game science composition, 858 workspace tests, V67 — Tier 2 convergence wired, Pass 14 unblocked)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)

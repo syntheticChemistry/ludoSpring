@@ -3,7 +3,26 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V66).
+This project does not use SemVer — versions are session-sequential (V1–V67).
+
+## [V67] — 2026-05-12
+
+### Tier 2 convergence — toadstool.validate + precision.route wired
+
+- **`toadstool.validate` workload pre-flight** wired via `NeuralBridge`. Returns
+  structured `WorkloadValidation` with `valid`, `gpu_available`, `precision_tier`,
+  `estimated_dispatch_time_ms`, `warnings`, and `required_capabilities` fields.
+  Graceful degradation when toadStool is not reachable.
+- **`barracuda.precision.route` advisory** wired. Returns `PrecisionAdvice` with
+  `tier` (u8, 1-15 ladder), `hardware_hint`, and `requires_compiler` fields.
+  Enables toadStool dispatch to route workloads by precision requirements.
+- **New validation scenario `tier2_convergence`** — Tier::Live scenario exercising
+  both new APIs with degradation acceptance + structural parsing tests (9 checks).
+- **Method constants** added: `compute::VALIDATE`, `compute::LIST_WORKLOADS`,
+  `precision::ROUTE` in `ipc/methods.rs`.
+- **Track serialization fix** in UniBin `--format json --list` output (`.to_string()`).
+- **858 workspace tests** (+4), zero clippy, zero fmt diffs across all feature
+  configurations.
 
 ## [V66] — 2026-05-12
 

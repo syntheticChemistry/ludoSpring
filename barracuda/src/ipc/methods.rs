@@ -131,6 +131,16 @@ pub mod compute {
     pub const RESULT: &str = "compute.result";
     /// Query available compute capabilities.
     pub const CAPABILITIES: &str = "compute.capabilities";
+    /// Pre-flight workload validation (Tier 2 — Pass 14).
+    pub const VALIDATE: &str = "compute.validate";
+    /// List available workload TOMLs.
+    pub const LIST_WORKLOADS: &str = "compute.list_workloads";
+}
+
+/// Precision domain — barraCuda precision routing.
+pub mod precision {
+    /// Route a computation to the appropriate precision tier.
+    pub const ROUTE: &str = "precision.route";
 }
 
 /// Storage domain — NestGate content-addressed storage.
@@ -253,6 +263,9 @@ mod tests {
             compute::SUBMIT,
             compute::RESULT,
             compute::CAPABILITIES,
+            compute::VALIDATE,
+            compute::LIST_WORKLOADS,
+            precision::ROUTE,
             storage::PUT,
             storage::GET,
             storage::LIST,

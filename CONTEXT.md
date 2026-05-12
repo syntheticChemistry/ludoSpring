@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 12, 2026 (V66 — `--format json` on `ludospring validate` for Tier 2 toadStool dispatch. barraCuda v0.4.0 absorbed. V65: Thread 9+10 expressions, notebook CI. 854 workspace tests, zero clippy.)
+**Last updated:** May 12, 2026 (V67 — Tier 2 convergence wiring: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory. Pass 14 unblocked. 858 workspace tests, zero clippy.)
 
 ## What is this?
 

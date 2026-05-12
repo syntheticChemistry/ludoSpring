@@ -55,7 +55,7 @@ fn cmd_validate(
                     serde_json::json!({
                         "id": s.meta.id,
                         "tier": s.meta.tier.to_string(),
-                        "track": s.meta.track,
+                        "track": s.meta.track.to_string(),
                         "crate": s.meta.provenance_crate,
                     })
                 })

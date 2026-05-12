@@ -1,6 +1,6 @@
 +++
 title = "ludoSpring Validation Summary"
-description = "Game science, HCI, procedural generation — 854 tests, 13 HCI models validated, Tier 4 IPC-first, Foundation Threads 9+10 active"
+description = "Game science, HCI, procedural generation — 858 tests, 13 HCI models validated, Tier 2 convergence wired, Foundation Threads 9+10 active"
 date = 2026-05-12
 
 [taxonomies]
@@ -10,9 +10,10 @@ springs = ["ludospring"]
 
 ## Status
 
-- **854** workspace tests (unit, integration, property, determinism, parity)
+- **858** workspace tests (unit, integration, property, determinism, parity)
 - **13 foundational HCI models** validated against published research
-- **8 validation scenarios** absorbed into UniBin (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps)
+- **9 validation scenarios** absorbed into UniBin (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps, tier2 convergence)
+- **Tier 2 convergence** wired: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory (Pass 14 unblocked)
 - **100 experiments** fossilized to `fossilRecord/` (prokaryotic → eukaryotic evolution)
 - **2 playable prototypes** (Doom terminal raycaster, roguelike explorer)
 - **L4 guideStone** (54/54 checks: Tier 1 bare + Tier 2 IPC + Tier 3 NUCLEUS)

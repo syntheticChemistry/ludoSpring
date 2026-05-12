@@ -270,6 +270,188 @@ pub fn dispatch_capabilities() -> Result<SubstrateCapabilities, IpcError> {
         )
 }
 
+/// Pre-flight validation of a workload TOML before dispatch (Tier 2).
+///
+/// Asks toadStool whether a given workload can be executed on the current
+/// hardware. Returns structured pre-flight data including `valid`,
+/// `gpu_available`, `precision_tier`, `estimated_dispatch_time_ms`,
+/// `warnings`, and `required_capabilities`.
+///
+/// # Errors
+///
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn validate_workload(workload_toml: &str) -> Result<WorkloadValidation, IpcError> {
+    let Ok(bridge) = NeuralBridge::discover() else {
+        return Ok(WorkloadValidation::unavailable());
+    };
+
+    let args = serde_json::json!({
+        "workload": workload_toml,
+        "requester": crate::niche::NICHE_NAME,
+    });
+
+    bridge
+        .capability_call("compute", "validate", &args)
+        .map_or_else(
+            |_| Ok(WorkloadValidation::unavailable()),
+            |result| Ok(WorkloadValidation::from_response(&result)),
+        )
+}
+
+/// Query the precision routing tier for a given operation (Tier 2).
+///
+/// Asks barraCuda upstream which precision tier and hardware hint apply
+/// to a given mathematical operation. Returns advisory routing information
+/// for toadStool dispatch.
+///
+/// # Errors
+///
+/// Returns an [`IpcError`] only on non-recoverable failures.
+pub fn precision_route(
+    operation: &str,
+    input_precision: &str,
+) -> Result<PrecisionAdvice, IpcError> {
+    let Ok(bridge) = NeuralBridge::discover() else {
+        return Ok(PrecisionAdvice::unavailable());
+    };
+
+    let args = serde_json::json!({
+        "operation": operation,
+        "input_precision": input_precision,
+        "requester": crate::niche::NICHE_NAME,
+    });
+
+    bridge
+        .capability_call("precision", "route", &args)
+        .map_or_else(
+            |_| Ok(PrecisionAdvice::unavailable()),
+            |result| Ok(PrecisionAdvice::from_response(&result)),
+        )
+}
+
+/// Result of workload pre-flight validation from toadStool.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct WorkloadValidation {
+    /// Whether toadStool responded.
+    pub available: bool,
+    /// Whether the workload is valid for dispatch.
+    pub valid: bool,
+    /// Whether GPU hardware is available for this workload.
+    pub gpu_available: bool,
+    /// Recommended precision tier (e.g. "f32", "f64", "mixed").
+    pub precision_tier: String,
+    /// Estimated dispatch time in milliseconds.
+    pub estimated_dispatch_time_ms: Option<u64>,
+    /// Pre-flight warnings (non-fatal issues).
+    pub warnings: Vec<String>,
+    /// Capabilities required by this workload.
+    pub required_capabilities: Vec<String>,
+}
+
+impl WorkloadValidation {
+    pub(crate) fn unavailable() -> Self {
+        Self {
+            available: false,
+            valid: false,
+            gpu_available: false,
+            precision_tier: String::new(),
+            estimated_dispatch_time_ms: None,
+            warnings: vec!["toadStool not reachable".into()],
+            required_capabilities: Vec::new(),
+        }
+    }
+
+    /// Parse a toadStool `compute.validate` JSON response into structured form.
+    pub fn from_response(v: &serde_json::Value) -> Self {
+        Self {
+            available: true,
+            valid: v
+                .get("valid")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false),
+            gpu_available: v
+                .get("gpu_available")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false),
+            precision_tier: v
+                .get("precision_tier")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("")
+                .to_owned(),
+            estimated_dispatch_time_ms: v
+                .get("estimated_dispatch_time_ms")
+                .and_then(serde_json::Value::as_u64),
+            warnings: v
+                .get("warnings")
+                .and_then(serde_json::Value::as_array)
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|w| w.as_str().map(str::to_owned))
+                        .collect()
+                })
+                .unwrap_or_default(),
+            required_capabilities: v
+                .get("required_capabilities")
+                .and_then(serde_json::Value::as_array)
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|c| c.as_str().map(str::to_owned))
+                        .collect()
+                })
+                .unwrap_or_default(),
+        }
+    }
+}
+
+/// Precision routing advisory from barraCuda.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct PrecisionAdvice {
+    /// Whether barraCuda precision routing responded.
+    pub available: bool,
+    /// Recommended precision tier (1-15 in barraCuda's ladder).
+    pub tier: u8,
+    /// Hardware routing hint: "compute" or "tensor_core".
+    pub hardware_hint: String,
+    /// Whether this precision requires compiler support (coralReef).
+    pub requires_compiler: bool,
+    /// Full advisory response.
+    pub raw: serde_json::Value,
+}
+
+impl PrecisionAdvice {
+    const fn unavailable() -> Self {
+        Self {
+            available: false,
+            tier: 0,
+            hardware_hint: String::new(),
+            requires_compiler: false,
+            raw: serde_json::Value::Null,
+        }
+    }
+
+    /// Parse a barraCuda `precision.route` JSON response into structured form.
+    pub fn from_response(v: &serde_json::Value) -> Self {
+        Self {
+            available: true,
+            tier: v
+                .get("tier")
+                .and_then(serde_json::Value::as_u64)
+                .and_then(|t| u8::try_from(t).ok())
+                .unwrap_or(0),
+            hardware_hint: v
+                .get("hardware_hint")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("compute")
+                .to_owned(),
+            requires_compiler: v
+                .get("requires_compiler")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false),
+            raw: v.clone(),
+        }
+    }
+}
+
 fn unavailable(message: &str) -> ComputeResult {
     ComputeResult {
         available: false,
@@ -555,5 +737,54 @@ mod tests {
             "gpu_name": 42
         }));
         assert_eq!(r.gpu_name, "");
+    }
+
+    #[test]
+    fn validate_workload_degrades_gracefully_without_neural_api() {
+        let result = validate_workload("ludospring-game-validation.toml");
+        let v = result.expect("should not error");
+        assert!(!v.available);
+        assert!(!v.valid);
+        assert!(!v.warnings.is_empty());
+    }
+
+    #[test]
+    fn precision_route_degrades_gracefully_without_neural_api() {
+        let result = precision_route("math.sigmoid", "f64");
+        let p = result.expect("should not error");
+        assert!(!p.available);
+        assert_eq!(p.tier, 0);
+    }
+
+    #[test]
+    fn workload_validation_from_response_parses_fields() {
+        let v = WorkloadValidation::from_response(&serde_json::json!({
+            "valid": true,
+            "gpu_available": true,
+            "precision_tier": "f64",
+            "estimated_dispatch_time_ms": 42,
+            "warnings": ["GPU memory low"],
+            "required_capabilities": ["compute.dispatch"]
+        }));
+        assert!(v.available);
+        assert!(v.valid);
+        assert!(v.gpu_available);
+        assert_eq!(v.precision_tier, "f64");
+        assert_eq!(v.estimated_dispatch_time_ms, Some(42));
+        assert_eq!(v.warnings, vec!["GPU memory low"]);
+        assert_eq!(v.required_capabilities, vec!["compute.dispatch"]);
+    }
+
+    #[test]
+    fn precision_advice_from_response_parses_fields() {
+        let p = PrecisionAdvice::from_response(&serde_json::json!({
+            "tier": 7,
+            "hardware_hint": "tensor_core",
+            "requires_compiler": true
+        }));
+        assert!(p.available);
+        assert_eq!(p.tier, 7);
+        assert_eq!(p.hardware_hint, "tensor_core");
+        assert!(p.requires_compiler);
     }
 }

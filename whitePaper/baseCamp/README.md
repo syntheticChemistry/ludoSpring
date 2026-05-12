@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** May 11, 2026
+**Date:** May 12, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V65 — **854 workspace tests**, 8 validation scenarios, zero clippy, zero unsafe, zero `unreachable!` in production, zero TODO/FIXME, all `#[allow]` with `reason`, all files <800L, all SPDX headers present, GAP-12/13/15 RESOLVED. `default = []` (V64, pure library). coralReef IPC wired (V64). Foundation Thread 9 expression written, Thread 10 co-seeded (V65). 3 notebooks verified executable (`nbconvert --execute`). 28 `game.*` canonical (413 ecosystem). Composition parity: 130/141 (92.2%). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). MCP surface complete (15/15 tools). ecoBin: genomeBin v5.1. 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
+**Status:** V67 — **858 workspace tests**, 9 validation scenarios, zero clippy, zero unsafe. Tier 2 convergence wired (`toadstool.validate` pre-flight + `barracuda.precision.route` advisory). `--format json` Tier 2 dispatch ready (V66). `default = []` (V64). coralReef IPC wired (V64). Foundation Thread 9+10 active (V65). 3 notebooks CI-verified. 28 `game.*` canonical (413 ecosystem). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
 
 ---
 
@@ -319,7 +319,7 @@ The same WFC that generates dungeons can compose music (harmonic adjacency).
 The same DDA that tunes monster density can tune exam difficulty.
 The same Fitts's law that scores HUD reachability can evaluate any clickable UI.
 
-### How to Reproduce (V65 — Eukaryotic UniBin)
+### How to Reproduce (V67 — Eukaryotic UniBin)
 
 ```bash
 cd ludoSpring
