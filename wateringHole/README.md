@@ -111,12 +111,15 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 
 **guideStone:** 54/54 checks passed (L4 NUCLEUS validated). Standard v1.2.0.
 
-See: [V56 Phase 60 handoff](handoffs/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md), [V55 deep debt (archive)](handoffs/archive/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md).
+See: [V59 post-interstadial](handoffs/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md), [V65 central handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V65_DOWNSTREAM_SEEDING_HANDOFF_MAY12_2026.md).
 
 ## Archive
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V58 | `handoffs/archive/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md` | V59 Post-Interstadial |
+| V57 | `handoffs/archive/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md` | V59 Post-Interstadial |
+| V56 | `handoffs/archive/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md` | V59 Post-Interstadial |
 | V55 | `handoffs/archive/LUDOSPRING_V55_DEEP_DEBT_RESOLUTION_HANDOFF_APR27_2026.md` | V58 Deep Debt Zero Warnings |
 | V53 | `handoffs/archive/LUDOSPRING_V53_COMPOSITION_EVOLUTION_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
 | V52 | `handoffs/archive/LUDOSPRING_V52_COMPOSITION_LOOP_HANDOFF_APR25_2026.md` | V55 Deep Debt Resolution |
