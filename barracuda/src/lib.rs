@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![forbid(unsafe_code)]
 //! ludoSpring — The Science of Play, Interaction, and Game Design (via `barraCuda`)
 //!
 //! Ludology (from Latin *ludus*: play, game) is the study of games and play as
