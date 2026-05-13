@@ -3,7 +3,31 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V67).
+This project does not use SemVer — versions are session-sequential (V1–V68).
+
+## [V68] — 2026-05-13
+
+### Tier 2 wire contract alignment
+
+- **`toadstool.validate` params aligned** to upstream `LIVE_SCIENCE_API.md`:
+  `{ "workload_path": "...", "dry_run": true }` (was workload-body + requester).
+  Capability call routes to `toadstool.validate` (was `compute.validate`).
+- **`barracuda.precision.route` params aligned** to upstream contract:
+  `{ "domain": "...", "hardware_hint": "..." }` (was operation + input_precision).
+  Response fields: `recommended_tier` (string), `fma_safe` (bool),
+  `requires_compiler`, `hardware_hint`.
+- **`list_workloads` function added** — queries `toadstool.list_workloads` with
+  filter param. Graceful degradation returning empty workloads list.
+- **`tier2_types.rs` extracted** from `toadstool.rs` (822 → 692 LOC) — single-
+  responsibility: Tier 2 response types (`WorkloadValidation`, `PrecisionAdvice`)
+  in their own module with re-export from `toadstool`.
+- **`PRIMAL_PROOF_IPC_MAPPING.md` created** — maps every ludoSpring domain
+  operation to its JSON-RPC IPC equivalent, including precision strategy table,
+  graceful degradation pattern, and domain-specific precision requirements.
+- **musl static build verified** — `x86_64-unknown-linux-musl` produces a 4.3 MB
+  static-pie binary that runs `version` and `validate --list` standalone.
+  plasmidBin-harvestable for projectNUCLEUS workload dispatch.
+- **858 tests**, zero clippy, zero unsafe, 9 validation scenarios.
 
 ## [V67] — 2026-05-12
 

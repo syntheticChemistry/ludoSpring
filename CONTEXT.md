@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 12, 2026 (V67 — Tier 2 convergence wiring: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory. Pass 14 unblocked. 858 workspace tests, zero clippy.)
+**Last updated:** May 13, 2026 (V68 — Tier 2 wire contract alignment: params match `LIVE_SCIENCE_API.md`, `list_workloads` wired, types extracted to `tier2_types.rs`, `PRIMAL_PROOF_IPC_MAPPING.md` created, musl static build verified. 858 workspace tests, zero clippy.)
 
 ## What is this?
 

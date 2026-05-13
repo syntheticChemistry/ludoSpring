@@ -56,6 +56,7 @@ pub mod nestgate;
 pub mod provenance;
 pub mod skunkbat;
 pub mod squirrel;
+pub mod tier2_types;
 pub mod toadstool;
 
 pub use discovery::{

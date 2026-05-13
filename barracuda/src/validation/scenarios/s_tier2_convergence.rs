@@ -66,19 +66,22 @@ fn check_validate_workload_graceful(h: &mut ValidationHarness) {
 }
 
 fn check_precision_route_graceful(h: &mut ValidationHarness) {
-    let result = precision_route("math.sigmoid", "f64");
+    let result = precision_route("game_science", "compute");
     match result {
         Ok(p) => {
             if p.available {
-                h.check_bool("precision.route returns advisory with tier > 0", p.tier > 0);
+                h.check_bool(
+                    "precision.route returns non-empty recommended_tier",
+                    !p.recommended_tier.is_empty(),
+                );
                 h.check_bool(
                     "precision.route hardware_hint is populated",
                     !p.hardware_hint.is_empty(),
                 );
             } else {
                 h.check_bool(
-                    "precision.route degrades gracefully (tier == 0)",
-                    p.tier == 0,
+                    "precision.route degrades gracefully (empty tier)",
+                    p.recommended_tier.is_empty(),
                 );
             }
         }
@@ -114,11 +117,16 @@ fn check_workload_validation_struct(h: &mut ValidationHarness) {
 
 fn check_precision_advice_struct(h: &mut ValidationHarness) {
     let p = PrecisionAdvice::from_response(&serde_json::json!({
-        "tier": 12,
+        "recommended_tier": "DF64",
+        "fma_safe": false,
         "hardware_hint": "tensor_core",
         "requires_compiler": true
     }));
-    h.check_bool("PrecisionAdvice parses tier=12", p.tier == 12);
+    h.check_bool(
+        "PrecisionAdvice parses recommended_tier=DF64",
+        p.recommended_tier == "DF64",
+    );
+    h.check_bool("PrecisionAdvice parses fma_safe=false", !p.fma_safe);
     h.check_bool(
         "PrecisionAdvice parses hardware_hint=tensor_core",
         p.hardware_hint == "tensor_core",

@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 12, 2026 (V67 — Tier 2 convergence wired: `toadstool.validate` + `precision.route`. Pass 14 unblocked upstream — GAP-01 unblocked path via precision routing. Remaining: GAP-04/05 partial, GAP-14 low.)
+**Last updated:** May 13, 2026 (V68 — Tier 2 wire contract alignment: params aligned to `primalSpring/docs/LIVE_SCIENCE_API.md`, `list_workloads` wired, `PrecisionAdvice` restructured to upstream schema. `PRIMAL_PROOF_IPC_MAPPING.md` created. plasmidBin musl static build verified (4.3 MB static-pie). GAP-01 unblocked path. Remaining: GAP-04/05 partial, GAP-14 low.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

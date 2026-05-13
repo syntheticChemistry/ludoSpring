@@ -2,8 +2,8 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** May 12, 2026
-**Version:** V67 (Tier 2 convergence: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory wired. Pass 14 unblocked. 9 validation scenarios. 858 tests, zero clippy, zero unsafe.)
+**Date:** May 13, 2026
+**Version:** V68 (Tier 2 wire contract alignment: params match `LIVE_SCIENCE_API.md`, `list_workloads` wired, types extracted to `tier2_types.rs`, `PRIMAL_PROOF_IPC_MAPPING.md` created, musl static binary verified (4.3 MB static-pie). 9 validation scenarios. 858 tests, zero clippy, zero unsafe.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
@@ -377,6 +377,8 @@ Detailed version history is in `CHANGELOG.md`. Key milestones:
 | V55 | Apr 27 | Deep debt: zero `#[allow]`, zero `Result<_, String>`, `ipc::methods` 10 modules |
 | V52 | Apr 25 | `game.tick` composite handler, composition loop |
 | V32 | Mar 29 | Full audit: provenance integrity, tolerance centralization, 110 files remediated |
+| V68 | May 13 | Tier 2 wire contract alignment, `list_workloads`, types extracted, IPC mapping doc, musl verified |
+| V67 | May 12 | Tier 2 convergence: `toadstool.validate` + `precision.route`, `--format json`, 858 tests |
 | V30 | Mar 23 | Handler refactor (1208→5×300 LOC), UniBin consolidation, MCP tools, 91% coverage |
 | V24 | Mar 17 | Ecosystem absorption: 8 patterns from 7 springs, `OrExit<T>`, health probes |
 | V17 | Mar 15 | Foundation: `niche.rs` SSOT, `NeuralBridge`, 11 WGSL shaders, `#[forbid(unsafe_code)]` |

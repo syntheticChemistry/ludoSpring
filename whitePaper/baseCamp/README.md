@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** May 12, 2026
+**Date:** May 13, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V67 — **858 workspace tests**, 9 validation scenarios, zero clippy, zero unsafe. Tier 2 convergence wired (`toadstool.validate` pre-flight + `barracuda.precision.route` advisory). `--format json` Tier 2 dispatch ready (V66). `default = []` (V64). coralReef IPC wired (V64). Foundation Thread 9+10 active (V65). 3 notebooks CI-verified. 28 `game.*` canonical (413 ecosystem). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
+**Status:** V68 — **858 workspace tests**, 9 validation scenarios, zero clippy, zero unsafe. Tier 2 wire contract aligned to `LIVE_SCIENCE_API.md`, `list_workloads` wired, `PRIMAL_PROOF_IPC_MAPPING.md` created, musl static binary verified (4.3 MB). `--format json` Tier 2 dispatch ready (V66). `default = []` (V64). coralReef IPC wired (V64). Foundation Thread 9+10 active (V65). 3 notebooks CI-verified. 28 `game.*` canonical (413 ecosystem). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
 
 ---
 
