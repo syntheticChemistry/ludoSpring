@@ -246,7 +246,7 @@ fn check_skunkbat_audit(h: &mut ValidationHarness) {
             "round": 42,
         },
     });
-    match try_tower_call(&dirs, "skunkbat", "security.audit_log", &args) {
+    match try_tower_call(&dirs, "skunkbat", methods::security::AUDIT_LOG, &args) {
         TowerCallResult::Success(result) => {
             let has_events = result
                 .get("events")

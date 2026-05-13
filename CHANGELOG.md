@@ -3,7 +3,25 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V69).
+This project does not use SemVer — versions are session-sequential (V1–V70).
+
+## [V70] — 2026-05-13
+
+### Tower Atomic LIVE VALIDATED — Phase 1 COMPLETE
+
+- **6/6 Tower capabilities validated against running primals** (bearDog Wave 102, songBird Wave 204, skunkBat H2):
+  - `crypto.seed_fingerprint` → PASS (fingerprint len=32, deterministic)
+  - `crypto.sign` → PASS (Ed25519 signature len=88)
+  - `crypto.verify` → PASS (round-trip: sign → verify = true)
+  - `crypto.hash` → PASS (BLAKE3 hash len=44)
+  - `discovery.peers` → PASS (Songbird mesh, 0 peers in solo mode)
+  - `security.audit_log` → PASS (skunkBat audit log, events tracked)
+- **Protocol corrections**: bearDog uses base64-encoded `message` param, skunkBat uses `security.audit_log` (not `defense.audit`)
+- **CallResult/TowerCallResult enum**: distinguishes Success/RpcError/Unreachable for richer error reporting
+- **GAP-16 RESOLVED**: Tower Atomic live validation no longer blocked
+- Inline `simple_b64`/`b64` encoder for zero-dependency base64 in binaries/scenarios
+- Scenario `s_tower_atomic` evolved from structural checks to semantic proof
+- Upstream handoff: `LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md`
 
 ## [V69] — 2026-05-13
 
