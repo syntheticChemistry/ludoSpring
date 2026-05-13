@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![forbid(unsafe_code)]
-#![allow(missing_docs)] // validation binary — no public API
+#![allow(missing_docs, reason = "validation binary — no public API")]
 //! Level 5 — Primal proof: domain science via barraCuda IPC.
 //!
 //! Proves that ludoSpring's peer-reviewed game science produces correct
