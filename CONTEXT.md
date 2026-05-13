@@ -57,8 +57,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 854 workspace `#[test]` functions (V63, 29 constant-invariant tests, Tier 4 IPC-first default verified)
-- **Experiments**: 100 total (fossilized to `fossilRecord/`; 8 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
+- **Tests**: 858 workspace `#[test]` functions (V68, 29 constant-invariant tests, Tier 4 IPC-first default verified)
+- **Experiments**: 100 total (fossilized to `fossilRecord/`; 9 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural, gpu}.rs` — three-tier dispatch (lifecycle → infrastructure → science)

@@ -364,12 +364,13 @@ Detailed version history is in `CHANGELOG.md`. Key milestones:
 
 | Version | Date | Milestone |
 |---------|------|-----------|
-| V67 | May 12 | Tier 2 convergence: `toadstool.validate` + `precision.route` wired, Pass 14 unblocked |
+| V68 | May 13 | Tier 2 wire contract alignment, `list_workloads`, types extracted, IPC mapping doc, musl verified |
+| V67 | May 12 | Tier 2 convergence: `toadstool.validate` + `precision.route`, `--format json`, 858 tests |
 | V66 | May 12 | `--format json` Tier 2 readiness, barraCuda v0.4.0, params GPU split |
 | V65 | May 12 | Foundation Thread 9+10 expressions, notebook CI verification |
 | V64 | May 11 | `default = []`, coralReef IPC wired, domain method parity |
 | V63 | May 11 | SPDX on all 122 `.rs` files, `unreachable!` eliminated, doc alignment |
-| V62 | May 11 | Tier 4 IPC-first defaults (`default = ["ipc"]`), Foundation Thread 10 seeded |
+| V62 | May 11 | Tier 4 IPC-first defaults, Foundation Thread 10 seeded |
 | V61 | May 11 | 29 constant-invariant tests, GAP-12/13/15 RESOLVED, deep debt zero |
 | V60 | May 11 | skunkBat Rust IPC, 8 validation scenarios, Foundation Thread 9 seeded |
 | V59 | May 10 | Tier 4 rewiring (barracuda optional), biomeOS v3.51 absorbed, `crate::math` dual-path |
@@ -377,8 +378,6 @@ Detailed version history is in `CHANGELOG.md`. Key milestones:
 | V55 | Apr 27 | Deep debt: zero `#[allow]`, zero `Result<_, String>`, `ipc::methods` 10 modules |
 | V52 | Apr 25 | `game.tick` composite handler, composition loop |
 | V32 | Mar 29 | Full audit: provenance integrity, tolerance centralization, 110 files remediated |
-| V68 | May 13 | Tier 2 wire contract alignment, `list_workloads`, types extracted, IPC mapping doc, musl verified |
-| V67 | May 12 | Tier 2 convergence: `toadstool.validate` + `precision.route`, `--format json`, 858 tests |
 | V30 | Mar 23 | Handler refactor (1208→5×300 LOC), UniBin consolidation, MCP tools, 91% coverage |
 | V24 | Mar 17 | Ecosystem absorption: 8 patterns from 7 springs, `OrExit<T>`, health probes |
 | V17 | Mar 15 | Foundation: `niche.rs` SSOT, `NeuralBridge`, 11 WGSL shaders, `#[forbid(unsafe_code)]` |

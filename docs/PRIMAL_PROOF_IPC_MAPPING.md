@@ -11,8 +11,8 @@
 ## Overview
 
 This document maps every ludoSpring domain operation to its JSON-RPC IPC
-equivalent. When the `local` feature is disabled (default since V62), all
-math routes through IPC. When enabled, library calls provide identical
+equivalent. When the `local` feature is disabled (`default = []` since V64),
+all math routes through IPC. When enabled, library calls provide identical
 results with lower latency.
 
 The dual-path is validated by the `s_tier4_math_parity` scenario (identical
