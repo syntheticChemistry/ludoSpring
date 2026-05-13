@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 13, 2026 (V70 — Tower Atomic LIVE VALIDATED: 6/6 capabilities pass against running bearDog + songbird + skunkBat. Protocol corrected (base64 params, `security.audit_log`). `CallResult` enum distinguishes RPC errors from connection failures. Phase 1 atomic specialist validation COMPLETE. 858 tests, 10 scenarios, zero clippy.)
+**Last updated:** May 13, 2026 (V71 — MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline implemented. 896 tests, 10 scenarios, zero clippy. Tower Atomic LIVE (6/6). Foundation Threads 9+10 confirmed active.)
 
 ## What is this?
 

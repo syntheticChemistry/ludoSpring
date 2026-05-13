@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 13, 2026 (V70 — Tower Atomic LIVE VALIDATED 6/6. 858 tests, 10 scenarios. Thread 9+10 active. Deep debt: CLEAN.)
+**Last updated:** May 13, 2026 (V71 — MDA Framework + BM-004/005 implemented. 896 tests, 10 scenarios. Thread 9+10 active. Deep debt: CLEAN.)
 
 ## Foundation Thread Assignment
 
@@ -33,6 +33,7 @@ ludoSpring is assigned to **Thread 9 (Gaming/Creative)** and **Thread 10
 - Csíkszentmihályi (1990) — Flow theory → `interaction/flow.rs`
 - Tufte (1983, 2001) — Data-ink ratio, small multiples → `metrics/tufte_gaming.rs`
 - Lazzaro (2004) — Four Keys to Fun → `metrics/fun_keys.rs`
+- Hunicke, LeBlanc & Zubek (2004) — MDA Framework → `metrics/mda.rs`
 - Yannakakis & Togelius (2011) — Player modeling → `metrics/engagement.rs`
 
 ### Procedural Generation (Paper 17)
@@ -108,7 +109,7 @@ ludoSpring is assigned to **Thread 9 (Gaming/Creative)** and **Thread 10
 - **No Kokkos/CUDA baseline** — we validate GPU correctness but don't compare throughput vs established GPU frameworks
 - **No MLPerf-style inference benchmark** — neuralSpring composition handles this; ludoSpring benefits when Squirrel routes to it
 - **No roofline analysis** — theoretical GPU bounds vs achieved throughput not formally documented
-- **BM-004/BM-005** from `OPEN_SYSTEMS_BENCHMARK_SPECIFICATION.md` (matchmaking/chat) — not yet implemented
+- ~~**BM-004/BM-005**~~ IMPLEMENTED (V71) — `game/matchmaking.rs` (Elo, lobby formation) and `game/chat.rs` (message pipeline, rate limiting)
 
 ### Evolution Path
 1. `bench_cpu_parity.py` provides Python timing → Rust Criterion gives speedup ratio

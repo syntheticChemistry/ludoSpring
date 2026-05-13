@@ -9,7 +9,9 @@
 //!
 //! # Module map
 //!
+//! - `chat` — BM-005: multiplayer messaging pipeline (validate → filter → fan-out)
 //! - `engine` — 2D engine primitives (world, entities, actions, session, audio)
+//! - `matchmaking` — BM-004: Elo rating, skill-based lobby formation
 //! - `rpgpt` — RPGPT game substrate (planes, NPCs, voices, trust, memory, scenes)
 //! - `ruleset` — system-agnostic ruleset trait (D20, Fudge, D6Pool, D100, RollUnder)
 //! - `state` — tick models, replay buffer, session phase
@@ -17,8 +19,10 @@
 //! - `raycaster` — first-person spatial reference implementation
 //! - `voxel` — block-based spatial representation
 
+pub mod chat;
 pub mod engine;
 pub mod genre;
+pub mod matchmaking;
 pub mod raycaster;
 pub mod rpgpt;
 pub mod ruleset;

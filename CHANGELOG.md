@@ -3,7 +3,35 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V70).
+This project does not use SemVer — versions are session-sequential (V1–V71).
+
+## [V71] — 2026-05-13
+
+### Paper Queue & Benchmark Evolution
+
+- **MDA Framework (Hunicke, LeBlanc & Zubek 2004)** implemented as `metrics/mda.rs`:
+  - 8 canonical aesthetic types with entropy/evenness scoring
+  - Designer vs player perspective analysis (forward/reverse MDA pass)
+  - Alignment scoring via Jensen-Shannon divergence
+  - 13 tests covering Tetris (Challenge-dominant) and sandbox (Expression/Discovery) profiles
+- **BM-004: Matchmaking** implemented as `game/matchmaking.rs`:
+  - Elo rating system with K-factor configuration
+  - Expected score, rating update (zero-sum conservation)
+  - Greedy nearest-neighbor lobby formation (O(N log N))
+  - Lobby balance scoring via skill variance
+  - 12 tests
+- **BM-005: Chat pipeline** implemented as `game/chat.rs`:
+  - Message validation (length, empty, rate limit)
+  - Token-bucket rate limiter with sliding window
+  - Fan-out cost model for lobby messaging
+  - Batch processing with pipeline metrics
+  - 13 tests
+- Foundation Threads 9 + 10 confirmed active (expressions + targets exist upstream)
+- GAP-01 (coralReef IPC) remains wired, blocked on upstream SM rebuild — no code change needed
+
+### Metrics
+
+- **896 tests** (was 858), zero failures, zero clippy, zero unsafe
 
 ## [V70] — 2026-05-13
 
