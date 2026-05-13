@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 13, 2026 (V68 — Tier 2 wire contract aligned. 858 tests, 9 scenarios. Thread 9+10 active.)
+**Last updated:** May 13, 2026 (V69 — Tower Atomic specialist wired. 858 tests, 10 scenarios. Thread 9+10 active. Deep debt: CLEAN.)
 
 ## Foundation Thread Assignment
 
