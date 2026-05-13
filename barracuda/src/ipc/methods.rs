@@ -195,7 +195,59 @@ pub mod spine {
     pub const ENTRY_APPEND: &str = "entry.append";
 }
 
-/// Security domain — skunkBat audit and defense.
+/// Crypto domain — BearDog cryptographic operations (Tower Atomic).
+pub mod crypto {
+    /// Sign arbitrary data with BearDog keypair.
+    pub const SIGN: &str = "crypto.sign";
+    /// Verify a signature against data + public key.
+    pub const VERIFY: &str = "crypto.verify";
+    /// BLAKE3 hash.
+    pub const HASH: &str = "crypto.hash";
+    /// Derive a FAMILY_ID-scoped session fingerprint.
+    pub const SEED_FINGERPRINT: &str = "crypto.seed_fingerprint";
+    /// Generate an ephemeral keypair.
+    pub const GENERATE_KEYPAIR: &str = "crypto.generate_keypair";
+    /// ChaCha20-Poly1305 AEAD encrypt.
+    pub const ENCRYPT: &str = "crypto.encrypt_chacha20_poly1305";
+}
+
+/// BTSP domain — BearDog Transport Security Protocol (Tower Atomic).
+pub mod btsp {
+    /// Create an authenticated session.
+    pub const SESSION_CREATE: &str = "btsp.session.create";
+    /// Verify a session token.
+    pub const SESSION_VERIFY: &str = "btsp.session.verify";
+    /// Full BTSP negotiation (client → server handshake).
+    pub const NEGOTIATE: &str = "btsp.negotiate";
+}
+
+/// Discovery domain — Songbird mesh networking (Tower Atomic).
+pub mod discovery {
+    /// List known peers.
+    pub const PEERS: &str = "discovery.peers";
+    /// Announce this primal to the mesh.
+    pub const ANNOUNCE: &str = "discovery.announce";
+    /// Resolve a capability to a peer address.
+    pub const RESOLVE: &str = "ipc.resolve";
+    /// Register capabilities with the mesh.
+    pub const REGISTER: &str = "ipc.register";
+    /// Discover capabilities across the mesh.
+    pub const DISCOVER: &str = "ipc.discover";
+}
+
+/// Defense domain — skunkBat audit and threat detection (Tower Atomic).
+pub mod defense {
+    /// Emit an audit trail event.
+    pub const AUDIT: &str = "defense.audit";
+    /// Reconnaissance scan.
+    pub const RECON: &str = "defense.recon";
+    /// Threat alert.
+    pub const THREAT: &str = "defense.threat";
+    /// Security alert.
+    pub const ALERT: &str = "defense.alert";
+}
+
+/// Security domain — skunkBat audit logging (higher-level).
 pub mod security {
     /// Query or emit audit trail events.
     pub const AUDIT_LOG: &str = "security.audit_log";
@@ -282,6 +334,24 @@ mod tests {
             spine::CREATE,
             spine::SEAL,
             spine::ENTRY_APPEND,
+            crypto::SIGN,
+            crypto::VERIFY,
+            crypto::HASH,
+            crypto::SEED_FINGERPRINT,
+            crypto::GENERATE_KEYPAIR,
+            crypto::ENCRYPT,
+            btsp::SESSION_CREATE,
+            btsp::SESSION_VERIFY,
+            btsp::NEGOTIATE,
+            discovery::PEERS,
+            discovery::ANNOUNCE,
+            discovery::RESOLVE,
+            discovery::REGISTER,
+            discovery::DISCOVER,
+            defense::AUDIT,
+            defense::RECON,
+            defense::THREAT,
+            defense::ALERT,
             security::AUDIT_LOG,
             security::SCAN,
             security::DETECT,

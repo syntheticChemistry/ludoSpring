@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Fragment: Tower Atomic for ludoSpring — Game Trust Layer
+#
+# ludoSpring's Tower Atomic specialization:
+# - bearDog: session crypto, BTSP auth, state signing for multiplayer
+# - songbird: peer discovery, mesh networking for game lobbies
+# - skunkBat: anti-cheat defense, audit trail for state mutations
+#
+# Used by: validate_tower_atomic, s_tower_atomic scenario
+# Derived from: primalSpring/graphs/fragments/tower_atomic.toml v3.0.0
+
+[fragment]
+name = "ludospring_tower_atomic"
+description = "Tower Atomic — game trust layer (crypto + mesh + defense)"
+version = "1.0.0"
+particle = "electron"
+node_count = 3
+specialist_spring = "ludoSpring"
+
+[[fragment.nodes]]
+name = "beardog"
+binary = "beardog"
+order = 1
+required = true
+health_method = "health.liveness"
+by_capability = "security"
+security_model = "btsp"
+capabilities = [
+    "crypto.sign",
+    "crypto.verify",
+    "crypto.hash",
+    "crypto.seed_fingerprint",
+    "crypto.generate_keypair",
+    "crypto.encrypt_chacha20_poly1305",
+    "btsp.session.create",
+    "btsp.session.verify",
+    "btsp.negotiate",
+]
+
+[fragment.nodes.game_usage]
+session_identity = "crypto.seed_fingerprint"
+state_signing = "crypto.sign"
+state_verification = "crypto.verify"
+channel_auth = "btsp.negotiate"
+
+[[fragment.nodes]]
+name = "songbird"
+binary = "songbird"
+order = 2
+required = true
+depends_on = ["beardog"]
+health_method = "health.liveness"
+by_capability = "discovery"
+security_model = "btsp"
+capabilities = [
+    "discovery.peers",
+    "discovery.announce",
+    "ipc.resolve",
+    "ipc.register",
+    "ipc.discover",
+]
+
+[fragment.nodes.game_usage]
+lobby_discovery = "discovery.peers"
+session_announce = "discovery.announce"
+capability_resolve = "ipc.resolve"
+
+[[fragment.nodes]]
+name = "skunkbat"
+binary = "skunkbat"
+order = 3
+required = true
+depends_on = ["beardog"]
+health_method = "health.liveness"
+by_capability = "defense"
+security_model = "btsp"
+capabilities = [
+    "defense.audit",
+    "defense.recon",
+    "defense.threat",
+    "defense.alert",
+]
+
+[fragment.nodes.game_usage]
+anti_cheat = "defense.audit"
+threat_detection = "defense.recon"
+incident_alert = "defense.alert"
+
+[fragment.bonding_policy]
+bond_type = "Ionic"
+trust_model = "MethodGate"

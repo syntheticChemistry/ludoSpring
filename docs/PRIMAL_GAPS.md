@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 13, 2026 (V68 — Tier 2 wire contract alignment: params aligned to `primalSpring/docs/LIVE_SCIENCE_API.md`, `list_workloads` wired, `PrecisionAdvice` restructured to upstream schema. `PRIMAL_PROOF_IPC_MAPPING.md` created. plasmidBin musl static build verified (4.3 MB static-pie). GAP-01 unblocked path. Remaining: GAP-04/05 partial, GAP-14 low.)
+**Last updated:** May 13, 2026 (V69 — Tower Atomic Specialist: `s_tower_atomic` scenario + `validate_tower_atomic` binary. Tower method constants (`crypto.*`, `btsp.*`, `discovery.*`, `defense.*`). Deploy graph fragment. GAP-01 unblocked. Remaining: GAP-04/05 partial, GAP-14 low. New: GAP-15 Tower Atomic live.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
@@ -451,6 +451,25 @@ from `git rev-parse HEAD` at generation time.
 **Status:** **RESOLVED** — Squirrel node added to deploy graphs with
 `by_capability = "ai"` wiring.
 **Resolved:** V56 (May 8, 2026)
+
+---
+
+### GAP-16: Tower Atomic Live Validation — Pending Deploy
+
+**Primal:** bearDog, songbird, skunkBat (Tower Atomic)
+**Status:** WIRED (V69) — `s_tower_atomic` scenario + `validate_tower_atomic` binary
+exercise all 5 Tower capabilities through game domain compositions. All calls
+degrade gracefully when primals are not reachable (exit code 2, status SKIP).
+**Blocked:** Tower primals not yet deployed via plasmidBin on this host. All 5
+capabilities (`crypto.seed_fingerprint`, `crypto.sign`, `crypto.hash`,
+`discovery.peers`, `defense.audit`) are wired and pass the structural test but
+cannot be validated live until primals are running.
+**Proto-nucleate:** Required for Phase 1 Atomic Specialist validation.
+**Impact:** When bearDog + songbird + skunkBat are deployed, `validate_tower_atomic`
+will automatically exercise the full game session lifecycle (boot → auth →
+discover → audit) without code changes.
+**Owner:** ludoSpring (specialist) + primalSpring (deployment)
+**Tracking:** This file + upstream handoff
 
 ---
 

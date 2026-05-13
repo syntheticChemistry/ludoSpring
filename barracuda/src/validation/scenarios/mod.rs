@@ -20,6 +20,8 @@ mod s_raycaster_budget;
 #[cfg(feature = "ipc")]
 mod s_tier2_convergence;
 mod s_tier4_math_parity;
+#[cfg(feature = "ipc")]
+mod s_tower_atomic;
 
 /// Build the full scenario registry for ludoSpring.
 pub fn build_registry() -> ScenarioRegistry {
@@ -36,5 +38,7 @@ pub fn build_registry() -> ScenarioRegistry {
     r.register(s_composition_gaps::SCENARIO);
     #[cfg(feature = "ipc")]
     r.register(s_tier2_convergence::SCENARIO);
+    #[cfg(feature = "ipc")]
+    r.register(s_tower_atomic::SCENARIO);
     r
 }

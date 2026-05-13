@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 13, 2026 (V68 — Tier 2 wire contract alignment: params match `LIVE_SCIENCE_API.md`, `list_workloads` wired, types extracted to `tier2_types.rs`, `PRIMAL_PROOF_IPC_MAPPING.md` created, musl static build verified. 858 workspace tests, zero clippy.)
+**Last updated:** May 13, 2026 (V69 — Tower Atomic Specialist: `s_tower_atomic` scenario + `validate_tower_atomic` binary exercise bearDog crypto, songbird mesh, skunkBat defense through game compositions. Tower method constants added. Deploy graph fragment created. 858 workspace tests, 10 scenarios, zero clippy.)
 
 ## What is this?
 
@@ -57,8 +57,8 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 858 workspace `#[test]` functions (V68, 29 constant-invariant tests, Tier 4 IPC-first default verified)
-- **Experiments**: 100 total (fossilized to `fossilRecord/`; 9 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
+- **Tests**: 858 workspace `#[test]` functions (V69, 29 constant-invariant tests, Tier 4 IPC-first default verified)
+- **Experiments**: 100 total (fossilized to `fossilRecord/`; 10 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
 - **Handler layout**: `ipc/handlers/{lifecycle, science, delegation, mcp, neural, gpu}.rs` — three-tier dispatch (lifecycle → infrastructure → science)

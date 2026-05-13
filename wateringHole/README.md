@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 13, 2026 — **V68 is current** (Tier 2 wire contract alignment: params match `LIVE_SCIENCE_API.md`, `list_workloads` wired, IPC mapping doc, musl static verified. 858 tests, 9 scenarios, zero clippy)
+**Last Updated:** May 13, 2026 — **V69 is current** (Tower Atomic Specialist: scenario + binary + method constants + deploy graph. bearDog, songbird, skunkBat wired for game compositions. 858 tests, 10 scenarios, zero clippy)
 
 ---
 

@@ -3,7 +3,27 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V68).
+This project does not use SemVer — versions are session-sequential (V1–V69).
+
+## [V69] — 2026-05-13
+
+### Tower Atomic Specialist — Phase 1 individual atomic validation
+
+- **`s_tower_atomic` validation scenario** added — exercises bearDog crypto,
+  songbird mesh, skunkBat defense through game domain compositions. 9 checks
+  with graceful degradation when primals are not deployed.
+- **`validate_tower_atomic` binary** — standalone Tower Atomic validation with
+  `--format json` for CI consumption. Reports pass/fail/skip per capability
+  per primal. Exit code 0/1/2 (pass/fail/skip).
+- **Tower method constants** added to `ipc::methods`: `crypto` module (6 methods),
+  `btsp` module (3 methods), `discovery` module (5 methods), `defense` module
+  (4 methods). All 18 constants validated in `all_constants_are_dotted` test.
+- **Tower deploy graph fragment** created at `graphs/fragments/tower_atomic.toml`
+  with game-specific `[fragment.nodes.game_usage]` tables.
+- **GAP-16 opened**: Tower Atomic Live Validation blocked on primal deployment.
+- 858 workspace tests (unchanged — new scenario is live-tier, exercised at runtime).
+- 10 validation scenarios (was 9).
+- Zero clippy, zero unsafe, zero `#[allow()]` without reason.
 
 ## [V68] — 2026-05-13
 

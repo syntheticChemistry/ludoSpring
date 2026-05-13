@@ -1,10 +1,10 @@
 +++
 title = "ludoSpring Validation Summary"
-description = "Game science, HCI, procedural generation — 858 tests, 13 HCI models validated, Tier 2 wire contract aligned, musl static verified, Foundation Threads 9+10 active"
+description = "Game science, HCI, procedural generation — 858 tests, 13 HCI models validated, Tower Atomic specialist (bearDog+songbird+skunkBat), Tier 2 convergence wired, Foundation Threads 9+10 active"
 date = 2026-05-13
 
 [taxonomies]
-primals = ["barracuda", "toadstool", "petaltongue", "biomeos", "squirrel", "skunkbat"]
+primals = ["barracuda", "toadstool", "petaltongue", "biomeos", "squirrel", "skunkbat", "beardog", "songbird"]
 springs = ["ludospring"]
 +++
 
@@ -12,7 +12,7 @@ springs = ["ludospring"]
 
 - **858** workspace tests (unit, integration, property, determinism, parity)
 - **13 foundational HCI models** validated against published research
-- **9 validation scenarios** absorbed into UniBin (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps, tier2 convergence)
+- **10 validation scenarios** absorbed into UniBin (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps, tier2 convergence, tower atomic)
 - **Tier 2 convergence** wired: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory (Pass 14 unblocked)
 - **100 experiments** fossilized to `fossilRecord/` (prokaryotic → eukaryotic evolution)
 - **2 playable prototypes** (Doom terminal raycaster, roguelike explorer)
