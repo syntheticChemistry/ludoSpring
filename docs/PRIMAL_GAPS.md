@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 13, 2026 (V69 — Tower Atomic Specialist: `s_tower_atomic` scenario + `validate_tower_atomic` binary. Tower method constants (`crypto.*`, `btsp.*`, `discovery.*`, `defense.*`). Deploy graph fragment. GAP-01 unblocked. Remaining: GAP-04/05 partial, GAP-14 low. New: GAP-15 Tower Atomic live.)
+**Last updated:** May 13, 2026 (V70 — Tower Atomic LIVE VALIDATED: 6/6 capabilities pass. GAP-16 RESOLVED. Protocol corrected. Deep debt CLEAN. 858 tests, zero clippy, zero unsafe.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)
