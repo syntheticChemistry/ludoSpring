@@ -454,22 +454,22 @@ from `git rev-parse HEAD` at generation time.
 
 ---
 
-### GAP-16: Tower Atomic Live Validation — Pending Deploy
+### GAP-16: Tower Atomic Live Validation — RESOLVED (V70)
 
 **Primal:** bearDog, songbird, skunkBat (Tower Atomic)
-**Status:** WIRED (V69) — `s_tower_atomic` scenario + `validate_tower_atomic` binary
-exercise all 5 Tower capabilities through game domain compositions. All calls
-degrade gracefully when primals are not reachable (exit code 2, status SKIP).
-**Blocked:** Tower primals not yet deployed via plasmidBin on this host. All 5
-capabilities (`crypto.seed_fingerprint`, `crypto.sign`, `crypto.hash`,
-`discovery.peers`, `defense.audit`) are wired and pass the structural test but
-cannot be validated live until primals are running.
-**Proto-nucleate:** Required for Phase 1 Atomic Specialist validation.
-**Impact:** When bearDog + songbird + skunkBat are deployed, `validate_tower_atomic`
-will automatically exercise the full game session lifecycle (boot → auth →
-discover → audit) without code changes.
-**Owner:** ludoSpring (specialist) + primalSpring (deployment)
-**Tracking:** This file + upstream handoff
+**Status:** **RESOLVED** — All 6 Tower capabilities validated LIVE against running
+primals (bearDog Wave 102, songBird Wave 204, skunkBat H2):
+- `crypto.seed_fingerprint` → PASS (fingerprint len=32, deterministic)
+- `crypto.sign` → PASS (Ed25519, signature len=88)
+- `crypto.verify` → PASS (round-trip verification: true)
+- `crypto.hash` → PASS (BLAKE3, hash len=44)
+- `discovery.peers` → PASS (Songbird mesh, 0 peers — correct for solo)
+- `security.audit_log` → PASS (skunkBat audit log, events tracked)
+
+**Key finding:** bearDog uses base64-encoded `message` param (not raw string `data`).
+skunkBat routes audit via `security.audit_log` (not `defense.audit`). Binary evolved
+to use `CallResult` enum distinguishing RPC errors from connection failures.
+**Resolved:** V70 (May 13, 2026)
 
 ---
 

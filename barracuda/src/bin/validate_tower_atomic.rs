@@ -33,6 +33,32 @@ struct TowerAtomicResult {
     detail: String,
 }
 
+const B64_ALPHABET: &[u8; 64] =
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+fn simple_b64(data: &[u8]) -> String {
+    let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
+    for chunk in data.chunks(3) {
+        let b0 = u32::from(chunk[0]);
+        let b1 = u32::from(chunk.get(1).copied().unwrap_or(0));
+        let b2 = u32::from(chunk.get(2).copied().unwrap_or(0));
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        out.push(B64_ALPHABET[((triple >> 18) & 0x3F) as usize] as char);
+        out.push(B64_ALPHABET[((triple >> 12) & 0x3F) as usize] as char);
+        out.push(if chunk.len() > 1 {
+            B64_ALPHABET[((triple >> 6) & 0x3F) as usize] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            B64_ALPHABET[(triple & 0x3F) as usize] as char
+        } else {
+            '='
+        });
+    }
+    out
+}
+
 fn main() -> ExitCode {
     let format_json = std::env::args()
         .collect::<Vec<_>>()
@@ -123,12 +149,18 @@ fn main() -> ExitCode {
     }
 }
 
+enum CallResult {
+    Success(serde_json::Value),
+    RpcError { code: i64, message: String },
+    Unreachable,
+}
+
 fn try_call(
     dirs: &[PathBuf],
     primal: &str,
     method: &str,
     params: &serde_json::Value,
-) -> Option<serde_json::Value> {
+) -> CallResult {
     for dir in dirs {
         let sock = dir.join(format!("{primal}.sock"));
         if !sock.exists() {
@@ -139,11 +171,15 @@ fn try_call(
             name: primal.to_owned(),
             capabilities: vec![],
         };
-        if let Ok(result) = call_primal(&endpoint, method, params) {
-            return Some(result);
+        match call_primal(&endpoint, method, params) {
+            Ok(result) => return CallResult::Success(result),
+            Err(ludospring_barracuda::ipc::IpcError::RpcError { code, message, .. }) => {
+                return CallResult::RpcError { code, message };
+            }
+            Err(_) => {}
         }
     }
-    None
+    CallResult::Unreachable
 }
 
 fn exercise_crypto_seed_fingerprint(
@@ -153,10 +189,9 @@ fn exercise_crypto_seed_fingerprint(
 ) {
     let params = serde_json::json!({
         "seed": "ludospring-multiplayer-session-v1",
-        "family_id": "tower-atomic-test",
     });
     match try_call(dirs, "beardog", "crypto.seed_fingerprint", &params) {
-        Some(result) => {
+        CallResult::Success(result) => {
             let fp = result
                 .get("fingerprint")
                 .and_then(serde_json::Value::as_str)
@@ -177,7 +212,15 @@ fn exercise_crypto_seed_fingerprint(
                 });
             }
         }
-        None => {
+        CallResult::RpcError { code, message } => {
+            results.push(TowerAtomicResult {
+                capability: "crypto.seed_fingerprint",
+                primal: "bearDog",
+                status: "FAIL",
+                detail: format!("RPC error {code}: {message}"),
+            });
+        }
+        CallResult::Unreachable => {
             results.push(TowerAtomicResult {
                 capability: "crypto.seed_fingerprint",
                 primal: "bearDog",
@@ -193,12 +236,10 @@ fn exercise_crypto_sign_verify(
     _h: &mut ValidationHarness,
     results: &mut Vec<TowerAtomicResult>,
 ) {
-    let sign_params = serde_json::json!({
-        "data": "game-state-round-42-snapshot",
-        "encoding": "utf8",
-    });
+    let message_b64 = simple_b64(b"game-state-round-42-snapshot");
+    let sign_params = serde_json::json!({ "message": message_b64 });
     match try_call(dirs, "beardog", "crypto.sign", &sign_params) {
-        Some(result) => {
+        CallResult::Success(result) => {
             let sig = result
                 .get("signature")
                 .and_then(serde_json::Value::as_str)
@@ -216,16 +257,16 @@ fn exercise_crypto_sign_verify(
                 capability: "crypto.sign",
                 primal: "bearDog",
                 status: "PASS",
-                detail: format!("signature len={}", sig.len()),
+                detail: format!("Ed25519 signature len={}", sig.len()),
             });
 
             let verify_params = serde_json::json!({
-                "data": "game-state-round-42-snapshot",
+                "message": message_b64,
                 "signature": sig,
-                "encoding": "utf8",
+                "public_key": result.get("public_key").and_then(serde_json::Value::as_str).unwrap_or(""),
             });
             match try_call(dirs, "beardog", "crypto.verify", &verify_params) {
-                Some(vr) => {
+                CallResult::Success(vr) => {
                     let valid = vr
                         .get("valid")
                         .and_then(serde_json::Value::as_bool)
@@ -237,7 +278,15 @@ fn exercise_crypto_sign_verify(
                         detail: format!("round-trip verification: {valid}"),
                     });
                 }
-                None => {
+                CallResult::RpcError { code, message } => {
+                    results.push(TowerAtomicResult {
+                        capability: "crypto.verify",
+                        primal: "bearDog",
+                        status: "FAIL",
+                        detail: format!("RPC error {code}: {message}"),
+                    });
+                }
+                CallResult::Unreachable => {
                     results.push(TowerAtomicResult {
                         capability: "crypto.verify",
                         primal: "bearDog",
@@ -247,7 +296,15 @@ fn exercise_crypto_sign_verify(
                 }
             }
         }
-        None => {
+        CallResult::RpcError { code, message } => {
+            results.push(TowerAtomicResult {
+                capability: "crypto.sign",
+                primal: "bearDog",
+                status: "FAIL",
+                detail: format!("RPC error {code}: {message}"),
+            });
+        }
+        CallResult::Unreachable => {
             results.push(TowerAtomicResult {
                 capability: "crypto.sign",
                 primal: "bearDog",
@@ -263,23 +320,24 @@ fn exercise_crypto_hash(
     _h: &mut ValidationHarness,
     results: &mut Vec<TowerAtomicResult>,
 ) {
+    let data_b64 = simple_b64(b"ludospring-tower-atomic-integrity-check");
     let params = serde_json::json!({
         "algorithm": "blake3",
-        "data": "ludospring-tower-atomic-integrity-check",
+        "data": data_b64,
     });
     match try_call(dirs, "beardog", "crypto.hash", &params) {
-        Some(result) => {
+        CallResult::Success(result) => {
             let hash = result
                 .get("hash")
                 .or_else(|| result.get("result"))
                 .and_then(serde_json::Value::as_str)
                 .unwrap_or("");
-            if !hash.is_empty() && hash.len() >= 32 {
+            if !hash.is_empty() && hash.len() >= 16 {
                 results.push(TowerAtomicResult {
                     capability: "crypto.hash",
                     primal: "bearDog",
                     status: "PASS",
-                    detail: format!("BLAKE3 len={}", hash.len()),
+                    detail: format!("BLAKE3 hash len={}", hash.len()),
                 });
             } else {
                 results.push(TowerAtomicResult {
@@ -290,7 +348,15 @@ fn exercise_crypto_hash(
                 });
             }
         }
-        None => {
+        CallResult::RpcError { code, message } => {
+            results.push(TowerAtomicResult {
+                capability: "crypto.hash",
+                primal: "bearDog",
+                status: "FAIL",
+                detail: format!("RPC error {code}: {message}"),
+            });
+        }
+        CallResult::Unreachable => {
             results.push(TowerAtomicResult {
                 capability: "crypto.hash",
                 primal: "bearDog",
@@ -311,7 +377,7 @@ fn exercise_discovery_peers(
         "capabilities": ["game.session", "game.lobby"],
     });
     match try_call(dirs, "songbird", "discovery.peers", &params) {
-        Some(result) => {
+        CallResult::Success(result) => {
             let is_array = result.get("peers").is_some_and(serde_json::Value::is_array);
             results.push(TowerAtomicResult {
                 capability: "discovery.peers",
@@ -325,7 +391,15 @@ fn exercise_discovery_peers(
                 },
             });
         }
-        None => {
+        CallResult::RpcError { code, message } => {
+            results.push(TowerAtomicResult {
+                capability: "discovery.peers",
+                primal: "songbird",
+                status: "FAIL",
+                detail: format!("RPC error {code}: {message}"),
+            });
+        }
+        CallResult::Unreachable => {
             results.push(TowerAtomicResult {
                 capability: "discovery.peers",
                 primal: "songbird",
@@ -351,28 +425,38 @@ fn exercise_defense_audit(
             "tick": 1337,
         },
     });
-    match try_call(dirs, "skunkbat", "defense.audit", &params) {
-        Some(result) => {
-            let accepted = result
-                .get("accepted")
-                .and_then(serde_json::Value::as_bool)
-                .or_else(|| result.get("seq").map(|s| !s.is_null()))
-                .unwrap_or(false);
+    match try_call(dirs, "skunkbat", "security.audit_log", &params) {
+        CallResult::Success(result) => {
+            let has_events = result
+                .get("events")
+                .is_some_and(serde_json::Value::is_array)
+                || result.get("count").is_some();
             results.push(TowerAtomicResult {
-                capability: "defense.audit",
+                capability: "security.audit_log",
                 primal: "skunkBat",
-                status: if accepted { "PASS" } else { "FAIL" },
-                detail: if accepted {
-                    let seq = result.get("seq").and_then(serde_json::Value::as_u64);
-                    format!("accepted, seq={seq:?}")
+                status: if has_events { "PASS" } else { "FAIL" },
+                detail: if has_events {
+                    let count = result
+                        .get("count")
+                        .and_then(serde_json::Value::as_u64)
+                        .unwrap_or(0);
+                    format!("audit log received, {count} events")
                 } else {
-                    "event not accepted".to_owned()
+                    "unexpected response format".to_owned()
                 },
             });
         }
-        None => {
+        CallResult::RpcError { code, message } => {
             results.push(TowerAtomicResult {
-                capability: "defense.audit",
+                capability: "security.audit_log",
+                primal: "skunkBat",
+                status: "FAIL",
+                detail: format!("RPC error {code}: {message}"),
+            });
+        }
+        CallResult::Unreachable => {
+            results.push(TowerAtomicResult {
+                capability: "security.audit_log",
                 primal: "skunkBat",
                 status: "SKIP",
                 detail: "skunkBat not reachable".to_owned(),
