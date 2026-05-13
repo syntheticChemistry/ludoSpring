@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 13, 2026 — **V70 is current** (Tower Atomic LIVE VALIDATED: 6/6 capabilities pass against running primals. Protocol corrected. Phase 1 atomic specialist COMPLETE. GAP-16 RESOLVED. 858 tests, 10 scenarios, zero clippy)
+**Last Updated:** May 13, 2026 — **V71 is current** (MDA Framework + BM-004/005. Tower Atomic LIVE 6/6. 896 tests, 10 scenarios, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
 
 ---
 
@@ -25,7 +25,9 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V68** | [Central: LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md) | May 13 | **Current: V68** — Tier 2 wire contract aligned to `LIVE_SCIENCE_API.md`. `list_workloads` wired. IPC mapping doc. musl static verified. 858 tests. |
+| **V71** | [LUDOSPRING_V71_DEEP_DEBT_AUDIT_MAY13_2026.md](handoffs/LUDOSPRING_V71_DEEP_DEBT_AUDIT_MAY13_2026.md) | May 13 | **Current** — Deep debt CLEAN, MDA + BM-004/005 shipped, audit questions answered. 896 tests. |
+| V70 | [Central: LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md) | May 13 | Tower Atomic LIVE: 6/6 capabilities pass, protocol corrections (base64, security.audit_log). |
+| V68 | [Central: LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md) | May 13 | Tier 2 wire contract aligned to `LIVE_SCIENCE_API.md`. `list_workloads` wired. 858 tests. |
 | V63 | [Central: LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md) | May 11 | SPDX on all 122 .rs files, `unreachable!` evolved, doc version alignment. |
 | V62 | [Central: LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V61_DEEP_DEBT_HANDOFF_MAY11_2026.md) | May 11 | Tier 4 IPC-first defaults, Foundation Thread 10 seeded, plasmidBin manifest updated. |
 | V59.1 | [archive/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md](handoffs/archive/LUDOSPRING_V59_POST_INTERSTADIAL_HANDOFF_MAY10_2026.md) | May 10 | Tier 4 rewiring, 28 game.* canonical, biomeOS v3.51, dual-path math, python_parity split. |
@@ -36,7 +38,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 858 workspace tests, V68 — Tier 2 wire contract aligned, Pass 14 unblocked)
+ludoSpring (game science composition, 896 workspace tests, V71 — Tower Atomic LIVE, MDA + BM-004/005, Tier 2 aligned)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
