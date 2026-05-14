@@ -76,6 +76,8 @@ fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResul
         }
         methods::health::LIVENESS => lifecycle::handle_liveness(req),
         methods::health::READINESS => lifecycle::handle_readiness(req),
+        methods::health::VERSION => lifecycle::handle_version(req),
+        methods::health::DRAIN => lifecycle::handle_drain(req),
         methods::lifecycle::STATUS => lifecycle::handle_lifecycle_status(req),
         methods::lifecycle::COMPOSITION => lifecycle::handle_composition(req),
         methods::lifecycle::REGISTER => neural::handle_lifecycle_register(req),

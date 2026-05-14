@@ -2,7 +2,7 @@
 
 **Date:** May 13, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V71 — **896 workspace tests**, 10 validation scenarios, zero clippy, zero unsafe. Tower Atomic LIVE VALIDATED (6/6 capabilities, V70). MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline (V71). Tier 2 wire contract aligned. `--format json` dispatch ready. `default = []` (IPC-first). coralReef IPC wired (blocked upstream). Foundation Thread 9+10 active. 3 notebooks CI-verified. 28 `game.*` canonical (413 ecosystem). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
+**Status:** V71 — **896 workspace tests**, 10 validation scenarios, zero clippy, zero unsafe. Tower Atomic LIVE VALIDATED (6/6 capabilities, V70). MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline (V71). Tier 2 wire contract aligned. `--format json` dispatch ready. `default = []` (IPC-first). coralReef IPC wired (blocked upstream). Foundation Thread 9+10 active. 3 notebooks CI-verified. 28 `game.*` canonical (418 ecosystem). primalSpring v0.9.25. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph).
 
 ---
 

@@ -74,9 +74,11 @@ pub const CAPABILITIES: &[&str] = &[
     "game.gpu.pathfind",
     "game.gpu.perlin_terrain",
     "game.gpu.batch_raycast",
-    // ── Health probes (coralReef Iter 51 / healthSpring V32 pattern) ──────
+    // ── Health probes (ecosystem standard, barraCuda Sprint 69 alignment) ──
     "health.liveness",
     "health.readiness",
+    "health.version",
+    "health.drain",
 ];
 
 /// Semantic mappings: short name → fully qualified capability.
@@ -115,6 +117,8 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
     ("gpu_batch_raycast", "game.gpu.batch_raycast"),
     ("liveness", "health.liveness"),
     ("readiness", "health.readiness"),
+    ("version", "health.version"),
+    ("drain", "health.drain"),
 ];
 
 // ── Niche Dependencies (SPRING_COMPOSITION_PATTERNS §11 — MUST) ─────
@@ -252,6 +256,8 @@ pub fn operation_dependencies() -> serde_json::Value {
         "game.gpu.batch_raycast": { "requires": ["map_w", "map_h", "player_x", "player_y", "n_rays"], "external": ["compute.dispatch"] },
         "health.liveness": { "requires": [] },
         "health.readiness": { "requires": [] },
+        "health.version": { "requires": [] },
+        "health.drain": { "requires": [] },
     })
 }
 
@@ -292,6 +298,8 @@ pub fn cost_estimates() -> serde_json::Value {
         "game.gpu.batch_raycast": { "typical_latency_us": 800, "cpu_intensity": "gpu", "memory_bytes": 131_072 },
         "health.liveness": { "typical_latency_us": 1, "cpu_intensity": "none", "memory_bytes": 32 },
         "health.readiness": { "typical_latency_us": 5, "cpu_intensity": "low", "memory_bytes": 128 },
+        "health.version": { "typical_latency_us": 2, "cpu_intensity": "none", "memory_bytes": 64 },
+        "health.drain": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 64 },
     })
 }
 
@@ -400,8 +408,8 @@ mod tests {
 
     #[test]
     fn capabilities_consistent() {
-        assert_eq!(CAPABILITIES.len(), 30);
-        assert_eq!(SEMANTIC_MAPPINGS.len(), 30);
+        assert_eq!(CAPABILITIES.len(), 32);
+        assert_eq!(SEMANTIC_MAPPINGS.len(), 32);
 
         for (short, full) in SEMANTIC_MAPPINGS {
             assert!(

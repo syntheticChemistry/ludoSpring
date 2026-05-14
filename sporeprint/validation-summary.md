@@ -18,7 +18,7 @@ springs = ["ludospring"]
 - **2 playable prototypes** (Doom terminal raycaster, roguelike explorer)
 - **L4 guideStone** (54/54 checks: Tier 1 bare + Tier 2 IPC + Tier 3 NUCLEUS)
 - **Tier 4 IPC-first** — `barracuda` optional, `crate::math` dual-path (library or inline fallback)
-- **28 `game.*` capabilities** registered canonically (primalSpring 413-method registry)
+- **28 `game.*` capabilities** registered canonically (primalSpring 418-method registry)
 - **30 total capabilities** across 11 composed primals
 - **Pure composition model** — no spring binary deploys; biomeOS orchestrates primal graph
 - **Composition parity: 130/141 (92.2%)** — all critical upstream blockers resolved

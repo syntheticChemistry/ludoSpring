@@ -80,10 +80,12 @@ gpu_compute = [
     "game.gpu.batch_raycast",
 ]
 
-# Health probes
+# Health probes (barraCuda Sprint 69 trio alignment)
 health = [
     "health.liveness",
     "health.readiness",
+    "health.version",
+    "health.drain",
 ]
 
 [semantic_mappings]
@@ -117,6 +119,8 @@ gpu_perlin_terrain  = "game.gpu.perlin_terrain"
 gpu_batch_raycast   = "game.gpu.batch_raycast"
 liveness            = "health.liveness"
 readiness           = "health.readiness"
+version             = "health.version"
+drain               = "health.drain"
 
 [external_dependencies]
 "game.npc_dialogue"     = ["ai.query"]

@@ -180,7 +180,7 @@ pub const DOMAINS: &[Domain] = &[
     },
     Domain {
         prefix: "health",
-        description: "Health probes — Kubernetes-style liveness and readiness checks",
+        description: "Health probes — Kubernetes-style liveness, readiness, version, drain",
         methods: &[
             Method {
                 name: "liveness",
@@ -190,6 +190,16 @@ pub const DOMAINS: &[Domain] = &[
             Method {
                 name: "readiness",
                 fqn: "health.readiness",
+                external: false,
+            },
+            Method {
+                name: "version",
+                fqn: "health.version",
+                external: false,
+            },
+            Method {
+                name: "drain",
+                fqn: "health.drain",
                 external: false,
             },
         ],
@@ -308,6 +318,6 @@ mod tests {
         let resp = capability_list_response();
         assert_eq!(resp["primal"], "ludospring");
         assert_eq!(resp["domain"], "game");
-        assert_eq!(resp["total_capabilities"], 30);
+        assert_eq!(resp["total_capabilities"], 32);
     }
 }

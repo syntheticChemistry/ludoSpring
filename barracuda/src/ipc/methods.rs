@@ -47,6 +47,10 @@ pub mod health {
     pub const CHECK: &str = "health.check";
     /// Readiness probe (full startup complete, ready for traffic).
     pub const READINESS: &str = "health.readiness";
+    /// Version query (returns primal name, version, build metadata).
+    pub const VERSION: &str = "health.version";
+    /// Graceful drain request (stop accepting new work, finish in-flight).
+    pub const DRAIN: &str = "health.drain";
     /// Short-form alias used by some primals.
     pub const SHORT: &str = "health";
 }
@@ -288,6 +292,8 @@ mod tests {
             health::LIVENESS,
             health::CHECK,
             health::READINESS,
+            health::VERSION,
+            health::DRAIN,
             lifecycle::STATUS,
             lifecycle::HEALTH,
             lifecycle::COMPOSITION,
@@ -392,6 +398,16 @@ mod tests {
             crate::niche::CAPABILITIES.contains(&health::READINESS),
             "niche CAPABILITIES missing {}",
             health::READINESS
+        );
+        assert!(
+            crate::niche::CAPABILITIES.contains(&health::VERSION),
+            "niche CAPABILITIES missing {}",
+            health::VERSION
+        );
+        assert!(
+            crate::niche::CAPABILITIES.contains(&health::DRAIN),
+            "niche CAPABILITIES missing {}",
+            health::DRAIN
         );
     }
 }

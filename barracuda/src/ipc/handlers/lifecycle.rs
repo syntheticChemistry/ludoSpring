@@ -47,6 +47,36 @@ pub(super) fn handle_readiness(req: &JsonRpcRequest) -> HandlerResult {
     )
 }
 
+/// `health.version` — returns primal identity and build metadata.
+///
+/// Per barraCuda Sprint 69 trio consistency pattern: name, version, build target.
+pub(super) fn handle_version(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "name": crate::PRIMAL_NAME,
+            "version": env!("CARGO_PKG_VERSION"),
+            "rust_version": env!("CARGO_PKG_RUST_VERSION"),
+            "target": option_env!("TARGET").unwrap_or("unknown"),
+        }),
+    )
+}
+
+/// `health.drain` — graceful drain request.
+///
+/// Signals that this primal should stop accepting new work and finish in-flight
+/// operations. For ludoSpring (validation-only, no persistent server), this is
+/// a no-op acknowledgment.
+pub(super) fn handle_drain(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "draining": true,
+            "in_flight": 0,
+        }),
+    )
+}
+
 /// `lifecycle.status` — discovery probe response (per Universal IPC Standard V3).
 ///
 /// Returns `name`, `version`, `domain`, `capabilities`, and `status` so that
