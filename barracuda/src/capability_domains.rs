@@ -262,17 +262,24 @@ pub fn capability_list_response() -> serde_json::Value {
         })
         .collect();
 
+    let capabilities = all_methods();
+
     serde_json::json!({
+        // Canonical subset (required by primalSpring Wave 20 schema)
+        "capabilities": capabilities,
+        "count": capabilities.len(),
         "primal": crate::niche::NICHE_NAME,
+        // Enriched fields (game-engine consumers use these)
         "domain": crate::niche::NICHE_DOMAIN,
         "domains": domains,
-        "total_capabilities": all_methods().len(),
+        "total_capabilities": capabilities.len(),
         "external_count": external_methods().len(),
         "local_count": local_methods().len(),
     })
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -319,5 +326,32 @@ mod tests {
         assert_eq!(resp["primal"], "ludospring");
         assert_eq!(resp["domain"], "game");
         assert_eq!(resp["total_capabilities"], 32);
+    }
+
+    #[test]
+    fn capability_list_canonical_schema() {
+        let resp = capability_list_response();
+
+        let caps = resp["capabilities"]
+            .as_array()
+            .expect("capabilities must be a JSON array");
+        let count = resp["count"].as_u64().expect("count must be a number");
+        let primal = resp["primal"].as_str().expect("primal must be a string");
+
+        assert_eq!(
+            caps.len() as u64,
+            count,
+            "count must match capabilities array length"
+        );
+        assert_eq!(primal, "ludospring");
+        assert!(count > 0, "must have at least one capability");
+
+        for cap in caps {
+            let s = cap.as_str().expect("each capability must be a string");
+            assert!(
+                s.contains('.'),
+                "capability {s} must be dotted (domain.method)"
+            );
+        }
     }
 }

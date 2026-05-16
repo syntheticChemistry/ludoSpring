@@ -90,7 +90,7 @@ fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResul
     })
 }
 
-/// Tier 2: infrastructure — MCP, Neural API delegation, capability routing.
+/// Tier 2: infrastructure — MCP, Neural API delegation, capability routing, signals.
 fn dispatch_infrastructure(method: &str, req: &JsonRpcRequest) -> Option<HandlerResult> {
     Some(match method {
         methods::capability::CALL => neural::handle_capability_call(req),
@@ -104,6 +104,17 @@ fn dispatch_infrastructure(method: &str, req: &JsonRpcRequest) -> Option<Handler
         | methods::interaction::POLL => neural::handle_visualization_delegation(req),
         METHOD_TOOLS_LIST => mcp::handle_tools_list(req),
         METHOD_TOOLS_CALL => mcp::handle_tools_call(req),
+        // Signal dispatch — composition-level collapse signals (Wave 20).
+        // biomeOS orchestrates the actual multi-step pipeline; ludoSpring
+        // acknowledges the signal for observability and composition validation.
+        methods::signal::NEST_STORE
+        | methods::signal::NEST_COMMIT
+        | methods::signal::NEST_RETRIEVE
+        | methods::signal::TOWER_PUBLISH
+        | methods::signal::TOWER_AUTHENTICATE
+        | methods::signal::TOWER_DISCOVER
+        | methods::signal::META_OBSERVE
+        | methods::signal::META_INTENT => lifecycle::handle_signal_ack(req),
         _ => return None,
     })
 }

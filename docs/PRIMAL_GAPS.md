@@ -415,7 +415,7 @@ unifies the dual-value approach into a single-value approach with explicit conve
 
 **Primal:** primalSpring (canonical registry)
 **Status:** **RESOLVED** — All 28 `game.*` methods now registered in primalSpring
-canonical `config/capability_registry.toml` (ecosystem total: 451 methods).
+canonical `config/capability_registry.toml` (ecosystem total: 452 methods).
 Bidirectional CI cross-sync test validates zero drift.
 **Resolved:** V59 (May 10, 2026)
 
@@ -470,6 +470,17 @@ primals (bearDog Wave 102, songBird Wave 204, skunkBat H2):
 skunkBat routes audit via `security.audit_log` (not `defense.audit`). Binary evolved
 to use `CallResult` enum distinguishing RPC errors from connection failures.
 **Resolved:** V70 (May 13, 2026)
+
+---
+
+### esotericWebb Surface (V74 — confirmed COMPLETE)
+
+esotericWebb V8 references 6 `game.*` methods for downstream composition:
+`game.begin_session`, `game.complete_session`, `game.narrate_action`,
+`game.npc_dialogue`, `game.push_scene`, `game.voice_check`.
+
+All 6 are present in `niche::CAPABILITIES`, wired in `dispatch_science()`
+via the `delegation` handler module, and exposed via MCP tools. No gap.
 
 ---
 

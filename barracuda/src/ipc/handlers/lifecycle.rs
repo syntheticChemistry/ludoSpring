@@ -77,6 +77,24 @@ pub(super) fn handle_drain(req: &JsonRpcRequest) -> HandlerResult {
     )
 }
 
+/// Signal acknowledgment — composition-level collapse signals (Wave 20).
+///
+/// biomeOS orchestrates the multi-step pipeline (e.g., `nest.commit` expands to
+/// `event.append` → `crypto.sign` → `content.put` → `session.commit` → `braid.create`).
+/// ludoSpring acknowledges receipt for observability and composition validation.
+/// The actual work is delegated to the composed primals via the cell graph.
+pub(super) fn handle_signal_ack(req: &JsonRpcRequest) -> HandlerResult {
+    to_json(
+        &req.id,
+        serde_json::json!({
+            "acknowledged": true,
+            "signal": req.method,
+            "primal": crate::niche::NICHE_NAME,
+            "dispatch": "composition",
+        }),
+    )
+}
+
 /// `lifecycle.status` — discovery probe response (per Universal IPC Standard V3).
 ///
 /// Returns `name`, `version`, `domain`, `capabilities`, and `status` so that

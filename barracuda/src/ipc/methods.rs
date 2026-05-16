@@ -278,6 +278,9 @@ pub mod primal {
     pub const ANNOUNCE: &str = "primal.announce";
     /// Query primal identity, version, capabilities (read-only).
     pub const INFO: &str = "primal.info";
+    /// List all registered primals (biomeOS serves this; springs reference for sync).
+    /// Canonical response: `{ "primals": [...], "count": N }`.
+    pub const LIST: &str = "primal.list";
 }
 
 /// Signal domain — Neural API composition collapse signals.
@@ -402,6 +405,7 @@ mod tests {
             tensor::MATMUL,
             primal::ANNOUNCE,
             primal::INFO,
+            primal::LIST,
             signal::NEST_STORE,
             signal::NEST_COMMIT,
             signal::NEST_RETRIEVE,
