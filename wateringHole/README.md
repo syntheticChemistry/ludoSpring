@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 16, 2026 — **V74 is current** (petalTongue scene composition + meta-tier validation. 910 tests, 10 scenarios, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
+**Last Updated:** May 16, 2026 — **V75 is current** (Bartle Player Types + Deterding Gamification + composition validation escalation. 956 tests, 10 scenarios + 5 composition integration, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
 
 ---
 
@@ -25,16 +25,15 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V74** | [LUDOSPRING_V74_PETALTONGUE_COMPOSITION_HANDOFF_MAY16_2026.md](handoffs/LUDOSPRING_V74_PETALTONGUE_COMPOSITION_HANDOFF_MAY16_2026.md) | May 16 | **Current** — petalTongue scene composition, meta-tier validation, Neural API signals, primal evolution observations. 910 tests. |
-| V71 | [LUDOSPRING_V71_NICHE_CONVERGENCE_HANDOFF_MAY13_2026.md](handoffs/LUDOSPRING_V71_NICHE_CONVERGENCE_HANDOFF_MAY13_2026.md) | May 13 | Niche convergence: MDA + BM-004/005, Tower Atomic reference, composition patterns for sibling springs. |
-| V71 | [LUDOSPRING_V71_DEEP_DEBT_AUDIT_MAY13_2026.md](handoffs/LUDOSPRING_V71_DEEP_DEBT_AUDIT_MAY13_2026.md) | May 13 | Deep debt CLEAN, audit questions answered. 896 tests. |
+| **V75** | [LUDOSPRING_V75_GAME_SCIENCE_EXPANSION_HANDOFF_MAY16_2026.md](handoffs/LUDOSPRING_V75_GAME_SCIENCE_EXPANSION_HANDOFF_MAY16_2026.md) | May 16 | **Current** — Bartle Player Types + Deterding Gamification + NPC personality dynamics + 5-scenario composition validation. 956 tests. |
+| V74 | [LUDOSPRING_V74_PETALTONGUE_COMPOSITION_HANDOFF_MAY16_2026.md](handoffs/LUDOSPRING_V74_PETALTONGUE_COMPOSITION_HANDOFF_MAY16_2026.md) | May 16 | petalTongue scene composition, meta-tier validation, Neural API signals, primal evolution observations. 911 tests. |
 | V70 | [Central: LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md) | May 13 | Tower Atomic LIVE: 6/6 capabilities pass, protocol corrections (base64, security.audit_log). |
 | V68 | [Central: LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md) | May 13 | Tier 2 wire contract aligned to `LIVE_SCIENCE_API.md`. `list_workloads` wired. 858 tests. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 910 workspace tests, V74 — petalTongue scene composition, meta-tier validation, Tower Atomic LIVE, Tier 2 aligned)
+ludoSpring (game science composition, 956 workspace tests, V75 — Bartle + Deterding + composition validation, petalTongue scene composition, Tower Atomic LIVE, Tier 2 aligned)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -116,6 +115,8 @@ See: [V67 Tier 2 convergence](../../infra/wateringHole/handoffs/LUDOSPRING_V67_T
 
 | Version | File | Superseded by |
 |---------|------|---------------|
+| V71 | `handoffs/archive/LUDOSPRING_V71_NICHE_CONVERGENCE_HANDOFF_MAY13_2026.md` | V75 Game Science Expansion |
+| V71 | `handoffs/archive/LUDOSPRING_V71_DEEP_DEBT_AUDIT_MAY13_2026.md` | V75 Game Science Expansion |
 | V58 | `handoffs/archive/LUDOSPRING_V58_DEEP_DEBT_ZERO_WARNINGS_HANDOFF_MAY09_2026.md` | V59 Post-Interstadial |
 | V57 | `handoffs/archive/LUDOSPRING_V57_EUKARYOTIC_EVOLUTION_HANDOFF_MAY09_2026.md` | V59 Post-Interstadial |
 | V56 | `handoffs/archive/LUDOSPRING_V56_PHASE60_PARITY_HANDOFF_MAY08_2026.md` | V59 Post-Interstadial |
