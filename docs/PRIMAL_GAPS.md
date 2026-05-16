@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 13, 2026 (V71 — MDA + BM-004/005. Deep debt audit re-confirmed CLEAN. 896 tests, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
+**Last updated:** May 16, 2026 (V74 — petalTongue scene composition + meta-tier validation. 910 tests, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

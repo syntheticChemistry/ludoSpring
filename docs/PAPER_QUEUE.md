@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 13, 2026 (V71 — MDA Framework + BM-004/005 implemented. 896 tests, 10 scenarios. Thread 9+10 active. Deep debt: CLEAN.)
+**Last updated:** May 16, 2026 (V74 — petalTongue scene composition + meta-tier validation. 910 tests, 10 scenarios. Thread 9+10 active. Deep debt: CLEAN.)
 
 ## Foundation Thread Assignment
 

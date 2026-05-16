@@ -10,7 +10,7 @@ springs = ["ludospring"]
 
 ## Status
 
-- **858** workspace tests (unit, integration, property, determinism, parity)
+- **910** workspace tests (unit, integration, property, determinism, parity)
 - **13 foundational HCI models** validated against published research
 - **10 validation scenarios** absorbed into UniBin (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps, tier2 convergence, tower atomic)
 - **Tier 2 convergence** wired: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory (Pass 14 unblocked)

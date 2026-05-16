@@ -30,7 +30,7 @@ experiments, and GPU-accelerated computation where it matters.
 - **No deployed binary**: game science is served by composing primals (barraCuda,
   petalTongue, Squirrel, provenance trio) via the cell graph
 
-## Capabilities (30 total in `niche.rs`: 27 game + 3 infrastructure — `health.check`, `lifecycle.status`, `capability.list`; MCP tools)
+## Capabilities (32 total in `niche.rs`: 27 game + 5 infrastructure — `health.check`, `health.version`, `health.drain`, `lifecycle.status`, `capability.list`; MCP tools)
 
 Game science: `game.evaluate_flow`, `game.fitts_cost`, `game.engagement`,
 `game.generate_noise`, `game.wfc_step`, `game.analyze_ui`,
@@ -57,7 +57,7 @@ Optional: `tarpc-ipc` feature provides `LudoSpringService` typed RPC trait mirro
 
 ## Code quality
 
-- **Tests**: 858 workspace `#[test]` functions (V69, 29 constant-invariant tests, Tier 4 IPC-first default verified)
+- **Tests**: 910 workspace `#[test]` functions (V74, petalTongue scene + meta-validation, constant-invariant tests, Tier 4 IPC-first default verified)
 - **Experiments**: 100 total (fossilized to `fossilRecord/`; 10 validation scenarios absorbed into `validation/scenarios/` with `ScenarioMeta`)
 - **Coverage**: 90%+ line coverage (enforced via `cargo-llvm-cov` in CI and local `make coverage`)
 - **Error handling**: `thiserror` 2.x — all error types derive `thiserror::Error`
