@@ -55,7 +55,7 @@ ludoSpring is assigned to **Thread 9 (Gaming/Creative)** and **Thread 10
 ### Priority 1 — Blocks Near-Term Experiments
 | Paper/Topic | Why | Target Experiment |
 |-------------|-----|-------------------|
-| Hunicke, LeBlanc, Zubek (2004) — MDA Framework | Game design → mechanics → dynamics → aesthetics formalization | exp040 quality profiles |
+| ~~Hunicke, LeBlanc, Zubek (2004) — MDA Framework~~ | ~~Game design → mechanics → dynamics → aesthetics formalization~~ | **IMPLEMENTED V71** (`metrics/mda.rs`) |
 | Schell (2008) — Art of Game Design / Lenses | Lens-based validation against RPGPT plane system | exp045 ruleset control |
 | Bartle (1996) — Player Types | NPC personality modeling (Paper 18) | exp069 personality |
 | Deterding et al. (2011) — Gamification | Human computation economics (Paper 19) | exp051 |
