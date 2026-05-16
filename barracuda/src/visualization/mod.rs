@@ -6,11 +6,18 @@
 //! procedural generation previews, and interaction cost maps.
 //! Discovered at runtime via the `visualization` capability.
 
+pub mod meta_validation;
 #[cfg(feature = "ipc")]
 pub mod push_client;
+pub mod scene;
 
+pub use meta_validation::{
+    MetaValidationCase, MetaValidationResult, RenderIntent, game_science_validation_suite,
+    validate_meta,
+};
 #[cfg(feature = "ipc")]
 pub use push_client::{PetalTonguePushClient, VisualizationPushClient};
+pub use scene::{SceneData, ScenePayload, compose_scene, validate_payload};
 
 /// A data channel for visualization consumers.
 #[derive(Debug, Clone)]

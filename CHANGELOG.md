@@ -3,7 +3,35 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V73).
+This project does not use SemVer — versions are session-sequential (V1–V74).
+
+## [V74] — 2026-05-16
+
+### petalTongue Scene Composition & Meta-Tier Validation
+
+- **`visualization::scene`** module: maps all 15 `GameChannelType` variants to
+  petalTongue's `DataBinding` wire format (`timeseries`, `bar`, `heatmap`,
+  `gauge`, `fieldmap`, `gamescene`). Full composition pipeline with structural
+  validation (`validate_payload`).
+- **`visualization::meta_validation`** module: meta-tier validation harness using
+  `meta.observe` / `meta.intent` patterns. Declares rendering intent
+  (`AnalyticalDense`, `Interactive`, `StatusGauge`, `SpatialMap`,
+  `NarrativeSequence`) and validates structural + semantic properties of composed
+  scenes without requiring a live renderer.
+- **`game_science_validation_suite()`**: 7 validation cases covering engagement
+  curves, combat grids, dialogue trees, dice results, exploration maps, NPC
+  status, and Tufte UI analysis — exercising the full GameChannel → ScenePayload
+  → Intent verification pipeline.
+- **`push_composed_scene()`**: new IPC method on `VisualizationPushClient` that
+  serializes a `ScenePayload` and routes through `visualization.render.scene`,
+  bridging the composition pipeline to live petalTongue rendering.
+- Gardens exploration: identified `projectFOUNDATION/expressions/GAMING_CREATIVE_SCIENCE.md`
+  as the Thread 9 expression defining petalTongue as the visualization backend.
+  This module delivers the structured integration that expression requires.
+
+### Metrics
+
+- **910 tests**, zero failures, zero clippy, zero unsafe
 
 ## [V73] — 2026-05-16
 

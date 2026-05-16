@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 13, 2026 — **V71 is current** (MDA Framework + BM-004/005. Tower Atomic LIVE 6/6. 896 tests, 10 scenarios, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
+**Last Updated:** May 16, 2026 — **V74 is current** (petalTongue scene composition + meta-tier validation. 910 tests, 10 scenarios, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
 
 ---
 
@@ -38,7 +38,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 896 workspace tests, V71 — Tower Atomic LIVE, MDA + BM-004/005, Tier 2 aligned)
+ludoSpring (game science composition, 910 workspace tests, V74 — petalTongue scene composition, meta-tier validation, Tower Atomic LIVE, Tier 2 aligned)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)

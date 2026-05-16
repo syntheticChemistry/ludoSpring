@@ -286,6 +286,37 @@ impl VisualizationPushClient {
         self.send_with_result(&request)
     }
 
+    /// Push a composed `ScenePayload` from the scene module.
+    ///
+    /// Serializes the payload to JSON and routes it through
+    /// `visualization.render.scene`, connecting the scene composition
+    /// pipeline to petalTongue's `DataBindingCompiler`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed [`IpcError`](crate::ipc::IpcError) on failure.
+    pub fn push_composed_scene(
+        &self,
+        session_id: &str,
+        payload: &super::scene::ScenePayload,
+    ) -> Result<(), crate::ipc::IpcError> {
+        let scene_json = serde_json::to_value(payload)
+            .map_err(|e| crate::ipc::IpcError::Serialization(format!("scene payload: {e}")))?;
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": crate::ipc::methods::visualization::RENDER_SCENE,
+            "params": {
+                "session_id": session_id,
+                "channel": payload.id,
+                "binding_type": payload.binding_type,
+                "domain": crate::niche::NICHE_DOMAIN,
+                "scene": scene_json,
+            },
+            "id": 1
+        });
+        self.send(&request)
+    }
+
     fn send_with_result(
         &self,
         request: &serde_json::Value,

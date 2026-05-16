@@ -308,7 +308,10 @@ mod tests {
     use super::*;
 
     #[test]
-    #[allow(clippy::too_many_lines, reason = "comprehensive constant registry validation")]
+    #[allow(
+        clippy::too_many_lines,
+        reason = "comprehensive constant registry validation"
+    )]
     fn all_constants_are_dotted() {
         let all = [
             visualization::RENDER,

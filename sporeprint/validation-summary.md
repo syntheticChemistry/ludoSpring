@@ -1,6 +1,6 @@
 +++
 title = "ludoSpring Validation Summary"
-description = "Game science, HCI, procedural generation — 896 tests, 14 HCI models validated (MDA Framework added), BM-004/005 benchmarks, Tower Atomic LIVE 6/6, Foundation Threads 9+10 active"
+description = "Game science, HCI, procedural generation — 910 tests, 14 HCI models validated (MDA Framework added), BM-004/005 benchmarks, Tower Atomic LIVE 6/6, petalTongue scene composition + meta-validation, Foundation Threads 9+10 active"
 date = 2026-05-13
 
 [taxonomies]
