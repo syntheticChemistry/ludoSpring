@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 13, 2026 (V71 — MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline implemented. 896 tests, 10 scenarios, zero clippy. Tower Atomic LIVE (6/6). Foundation Threads 9+10 confirmed active.)
+**Last updated:** May 16, 2026 (V73 — Neural API Signal Elevation: `primal.announce` + 8 signal dispatch constants (tower.*, nest.*, meta.*). Registry synced to 451 ecosystem methods. 896 tests, 10 scenarios, zero clippy.)
 
 ## What is this?
 

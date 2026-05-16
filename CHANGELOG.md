@@ -3,7 +3,36 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V71).
+This project does not use SemVer — versions are session-sequential (V1–V73).
+
+## [V73] — 2026-05-16
+
+### Neural API Signal Elevation (primalSpring Wave 17)
+
+- **`primal.announce`** method constant + dispatch handler: single-call registration
+  replacing the legacy 3-call pattern (method.register + capability.register +
+  lifecycle.register). Backward-compatible — both old and new paths dispatch to
+  the same handler.
+- **`primal.info`** method constant: read-only identity/capability query.
+- **8 signal dispatch constants** (`signal::*`): composition collapse signals that
+  let biomeOS manage orchestration graphs:
+  - `nest.store` / `nest.commit` / `nest.retrieve` — provenance pipeline collapse
+  - `tower.publish` / `tower.authenticate` / `tower.discover` — Tower atomic signals
+  - `meta.observe` / `meta.intent` — agentic composition meta-tier
+- All signal constants pass the dotted-method validation test.
+- Ecosystem registry synced: 418 → **451 methods** (primalSpring HEAD).
+
+### Metrics
+
+- **896 tests**, zero failures, zero clippy, zero unsafe
+
+## [V72] — 2026-05-14
+
+### Compute Trio Alignment (barraCuda Sprint 69)
+
+- `health.version` + `health.drain` handlers wired (trio consistency pattern)
+- CAPABILITIES: 30 → 32 (version + drain added to niche, capability_domains, registry)
+- Ecosystem method count: 413 → 418 (primalSpring reconciliation)
 
 ## [V71] — 2026-05-13
 

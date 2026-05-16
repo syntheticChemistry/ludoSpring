@@ -80,7 +80,9 @@ fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResul
         methods::health::DRAIN => lifecycle::handle_drain(req),
         methods::lifecycle::STATUS => lifecycle::handle_lifecycle_status(req),
         methods::lifecycle::COMPOSITION => lifecycle::handle_composition(req),
-        methods::lifecycle::REGISTER => neural::handle_lifecycle_register(req),
+        methods::lifecycle::REGISTER | methods::primal::ANNOUNCE => {
+            neural::handle_lifecycle_register(req)
+        }
         methods::capability::LIST => lifecycle::handle_capability_list(req),
         methods::capability::DEREGISTER => neural::handle_capability_deregister(req),
         methods::capability::DISCOVER => neural::handle_capability_discover(req),

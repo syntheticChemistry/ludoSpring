@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** May 13, 2026
-**Version:** V71 (MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline. 896 tests, 10 scenarios, zero clippy, zero unsafe. Tower Atomic LIVE 6/6. Foundation Threads 9+10 active.)
+**Version:** V73 (Neural API Signal Elevation: `primal.announce` + signal dispatch constants. 896 tests, 10 scenarios, zero clippy, zero unsafe. 451 ecosystem methods synced.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)
@@ -364,6 +364,8 @@ Detailed version history is in `CHANGELOG.md`. Key milestones:
 
 | Version | Date | Milestone |
 |---------|------|-----------|
+| V73 | May 16 | Neural API Signal Elevation: `primal.announce`, 8 signal constants, 451 registry sync |
+| V72 | May 14 | `health.version` + `health.drain` wired, 418→451 registry alignment |
 | V71 | May 13 | MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat — 896 tests |
 | V70 | May 13 | **Tower Atomic LIVE VALIDATED**: 6/6 capabilities pass, protocol corrected, GAP-16 RESOLVED |
 | V69 | May 13 | Tower Atomic Specialist: scenario + binary + method constants + deploy graph fragment |

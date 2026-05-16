@@ -271,11 +271,44 @@ pub mod tensor {
     pub const MATMUL: &str = "tensor.matmul";
 }
 
+/// Primal domain — ecosystem-level primal identity and registration.
+pub mod primal {
+    /// Single-call registration replacing method.register + capability.register
+    /// + lifecycle.register (primalSpring Wave 17 / Neural API Signal Elevation).
+    pub const ANNOUNCE: &str = "primal.announce";
+    /// Query primal identity, version, capabilities (read-only).
+    pub const INFO: &str = "primal.info";
+}
+
+/// Signal domain — Neural API composition collapse signals.
+///
+/// Signals replace multi-call orchestration sequences. biomeOS decomposes
+/// each signal into the appropriate primal graph execution.
+pub mod signal {
+    /// Store content with full provenance (NestGate + rhizoCrypt + loamSpine + sweetGrass).
+    pub const NEST_STORE: &str = "nest.store";
+    /// Commit and finalize a provenance session.
+    pub const NEST_COMMIT: &str = "nest.commit";
+    /// Retrieve content with provenance chain.
+    pub const NEST_RETRIEVE: &str = "nest.retrieve";
+    /// Publish a signed event to the mesh (bearDog sign + songbird announce + skunkBat audit).
+    pub const TOWER_PUBLISH: &str = "tower.publish";
+    /// Authenticate a session (bearDog negotiate + skunkBat verify).
+    pub const TOWER_AUTHENTICATE: &str = "tower.authenticate";
+    /// Discover peers with verification (songbird + bearDog + skunkBat).
+    pub const TOWER_DISCOVER: &str = "tower.discover";
+    /// Observe composition state (meta-tier agentic signal).
+    pub const META_OBSERVE: &str = "meta.observe";
+    /// Express intent for agentic composition (meta-tier signal).
+    pub const META_INTENT: &str = "meta.intent";
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
+    #[allow(clippy::too_many_lines, reason = "comprehensive constant registry validation")]
     fn all_constants_are_dotted() {
         let all = [
             visualization::RENDER,
@@ -364,6 +397,16 @@ mod tests {
             security::METRICS,
             tensor::CREATE,
             tensor::MATMUL,
+            primal::ANNOUNCE,
+            primal::INFO,
+            signal::NEST_STORE,
+            signal::NEST_COMMIT,
+            signal::NEST_RETRIEVE,
+            signal::TOWER_PUBLISH,
+            signal::TOWER_AUTHENTICATE,
+            signal::TOWER_DISCOVER,
+            signal::META_OBSERVE,
+            signal::META_INTENT,
         ];
         for method in all {
             assert!(method.contains('.'), "method {method:?} should be dotted");

@@ -102,7 +102,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |
 | GAP-06: rhizoCrypt UDS transport | **rhizoCrypt** | **RESOLVED** | S66: UDS operational since S23 |
 | GAP-09: Neural API registration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `method.register` |
-| GAP-12: Registry cross-sync | **primalSpring** | **RESOLVED** | V59: 28 `game.*` methods registered (418 total) |
+| GAP-12: Registry cross-sync | **primalSpring** | **RESOLVED** | V59: 28 `game.*` methods registered (451 total) |
 | GAP-13: barraCuda build regression | **barraCuda** | **RESOLVED** | V57: `#[cfg(feature = "gpu")]` gate |
 | GAP-14: Provenance commit hash | **ludoSpring** | OPEN | Multiple commit hashes across validators |
 | GAP-15: Squirrel in graph | **ludoSpring** | **RESOLVED** | V56: node added |
