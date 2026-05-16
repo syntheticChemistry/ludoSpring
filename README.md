@@ -3,7 +3,7 @@
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
 **Date:** May 16, 2026
-**Version:** V74 (petalTongue Scene Composition + Meta-Tier Validation + Wave 20 schema. 911 tests, 10 scenarios, zero clippy, zero unsafe. 452 ecosystem methods synced.)
+**Version:** V75 (Bartle Player Types + Deterding Gamification + Composition Validation Escalation. 956 tests, 10 scenarios, zero clippy, zero unsafe. 452 ecosystem methods synced.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)

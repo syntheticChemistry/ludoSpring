@@ -22,6 +22,7 @@ pub mod dialogue;
 pub mod knowledge;
 pub mod memory;
 pub mod npc;
+pub mod personality_dynamics;
 pub mod plane;
 pub mod scene;
 pub mod transition;

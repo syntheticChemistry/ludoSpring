@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 16, 2026 (V74 — petalTongue Scene Composition + Meta-Tier Validation: scene module mapping all 15 GameChannelType variants to DataBinding wire format, meta-validation harness with intent declarations, `push_composed_scene()` IPC method. 910 tests, 10 scenarios, zero clippy.)
+**Last updated:** May 16, 2026 (V75 — Bartle Player Types + Deterding Gamification + Composition Validation Escalation. 956 tests, 10 scenarios, zero clippy.)
 
 ## What is this?
 

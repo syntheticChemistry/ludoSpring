@@ -33,6 +33,9 @@
 //! h.finish();
 //! ```
 
+/// Composition validation — multi-model integration pipelines.
+pub mod composition;
+
 /// Eukaryotic validation scenarios — absorbed experiments with ScenarioMeta.
 #[allow(
     missing_docs,

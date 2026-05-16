@@ -8,5 +8,7 @@
 
 pub mod engagement;
 pub mod fun_keys;
+pub mod gamification;
 pub mod mda;
+pub mod player_types;
 pub mod tufte_gaming;

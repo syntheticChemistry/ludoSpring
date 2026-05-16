@@ -3,7 +3,34 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V74).
+This project does not use SemVer — versions are session-sequential (V1–V75).
+
+## [V75] — 2026-05-16
+
+### Game Science Expansion — Bartle Player Types + Deterding Gamification
+
+- **`metrics::player_types`**: Full implementation of Bartle (1996) taxonomy.
+  4-type classic model (Achiever/Explorer/Socializer/Killer) + 8-type extended
+  (Planner, Opportunist, Scientist, Hacker, Networker, Friend, Politician,
+  Griefer). `BartleProfile` with normalization, dominant type, purity score,
+  Jensen-Shannon divergence, mechanic affinity, axes conversion, population
+  dynamics, and interaction valence graph.
+- **`metrics::gamification`**: Deterding et al. (2011) gamification framework.
+  `GamificationProfile` with engagement decay modeling, intrinsic/extrinsic
+  motivation balance, half-life calculation, overjustification risk assessment.
+  `ComputationCredit` system for Games@Home (Paper 19) — credit earning,
+  escalation, unlock progression.
+- **`game::rpgpt::personality_dynamics`**: Bridges Bartle types into RPGPT NPC
+  behavior. `derive_bartle_profile` from Maslow hierarchy, `predict_npc_interaction`
+  via interest graph valences, `personality_drift` under social pressure,
+  `behavioral_summary` for dialogue/AI systems, `recommended_mechanics` for
+  procedural quest generation.
+- **`validation::composition`**: Modern composition validation escalation.
+  5-scenario suite exercising multi-model integration: Bartle→NPC→MDA pipeline,
+  gamification→population dynamics, NPC social graph→scene payload, personality
+  drift→time series visualization, Games@Home credit→engagement gauge.
+- **956 tests** — all passing, zero clippy, zero unsafe.
+- Papers marked IMPLEMENTED: Bartle (1996), Deterding et al. (2011).
 
 ## [V74] — 2026-05-16
 
