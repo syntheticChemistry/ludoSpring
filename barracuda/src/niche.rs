@@ -525,13 +525,25 @@ mod tests {
             .expect("capabilities is a table");
 
         let mut toml_methods: Vec<&str> = Vec::new();
-        for (_group, methods) in caps_table {
-            if let Some(arr) = methods.as_array() {
-                for m in arr {
-                    if let Some(s) = m.as_str() {
-                        toml_methods.push(s);
+        for (_group, value) in caps_table {
+            match value {
+                toml::Value::Array(arr) => {
+                    for m in arr {
+                        if let Some(s) = m.as_str() {
+                            toml_methods.push(s);
+                        }
                     }
                 }
+                toml::Value::Table(tbl) => {
+                    if let Some(toml::Value::Array(arr)) = tbl.get("methods") {
+                        for m in arr {
+                            if let Some(s) = m.as_str() {
+                                toml_methods.push(s);
+                            }
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 

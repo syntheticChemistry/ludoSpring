@@ -19,9 +19,19 @@ encryption_tiers = ["TLS-internal", "mTLS-external"]
 [fragments]
 declared = ["tower_atomic", "node_atomic", "nest_atomic", "meta_tier"]
 
-[capabilities]
-# Game science
-game_science = [
+# ─────────────────────────────────────────────────────────────────────
+# Capability Domains
+#
+# Stability tiers (per primalSpring Wave 20 PM):
+#   stable    — deployed consumers depend on this name; do not rename
+#   evolving  — name may change between major waves; notify downstream
+#   internal  — test fixture or internal-only; no stability guarantee
+# ─────────────────────────────────────────────────────────────────────
+
+[capabilities.game_science]
+owner = "ludospring"
+stability = "stable"
+methods = [
     "game.evaluate_flow",
     "game.fitts_cost",
     "game.engagement",
@@ -32,47 +42,67 @@ game_science = [
     "game.generate_noise",
 ]
 
-# Provenance lifecycle
-provenance = [
+[capabilities.provenance]
+owner = "ludospring"
+stability = "stable"
+methods = [
     "game.begin_session",
     "game.record_action",
     "game.complete_session",
     "game.poll_telemetry",
 ]
 
-# AI narration (Squirrel-backed)
-ai_narration = [
+[capabilities.ai_narration]
+owner = "ludospring"
+stability = "stable"
+delegate = "squirrel"
+methods = [
     "game.npc_dialogue",
     "game.narrate_action",
     "game.voice_check",
 ]
 
-# Visualization & interaction (petalTongue-backed)
-visualization = [
+[capabilities.visualization]
+owner = "ludospring"
+stability = "stable"
+delegate = "petaltongue"
+methods = [
     "game.push_scene",
     "game.tick",
     "game.subscribe_interaction",
     "game.poll_interaction",
 ]
 
-# DAG queries (rhizoCrypt-backed)
-dag = [
+[capabilities.dag]
+owner = "ludospring"
+stability = "stable"
+delegate = "rhizocrypt"
+methods = [
     "game.query_vertices",
 ]
 
-# Certificates (loamSpine-backed)
-certificates = [
+[capabilities.certificates]
+owner = "ludospring"
+stability = "stable"
+delegate = "loamspine"
+methods = [
     "game.mint_certificate",
 ]
 
-# Storage (NestGate-backed)
-storage = [
+[capabilities.storage]
+owner = "ludospring"
+stability = "stable"
+delegate = "nestgate"
+methods = [
     "game.storage_put",
     "game.storage_get",
 ]
 
-# GPU compute (toadStool + barraCuda-backed)
-gpu_compute = [
+[capabilities.gpu_compute]
+owner = "ludospring"
+stability = "evolving"
+delegate = "toadstool"
+methods = [
     "game.gpu.fog_of_war",
     "game.gpu.tile_lighting",
     "game.gpu.pathfind",
@@ -80,8 +110,10 @@ gpu_compute = [
     "game.gpu.batch_raycast",
 ]
 
-# Health probes (barraCuda Sprint 69 trio alignment)
-health = [
+[capabilities.health]
+owner = "ludospring"
+stability = "stable"
+methods = [
     "health.liveness",
     "health.readiness",
     "health.version",
