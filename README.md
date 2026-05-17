@@ -10,7 +10,7 @@ An ecoPrimals Spring. Treats game design with the same rigor that wetSpring trea
 **barraCuda:** v0.4.0 (`optional = true`, feature-gated behind `local` — IPC-first default since V62, library opt-in via `--features local`)
 **ecoBin:** Pure Rust application code. One `-sys` dep: `renderdoc-sys` (transitive via `wgpu-hal`, GPU feature only — infrastructure C per ecoBin v3.0 guidance). `deny.toml` enforces ecoBin v3.0 banned-crate list (openssl-sys, ring, aws-lc-sys, native-tls, zstd-sys, lz4-sys, libsqlite3-sys, cryptoki-sys). Harvested to genomeBin v5.1 (46 binaries, 6 target triples).
 **Deployment model:** Pure composition — no spring binary in plasmidBin. Game science is served by composing primals via `ludospring_cell.toml` (12 NUCLEUS nodes: barraCuda for math/science, petalTongue for viz/interaction, Squirrel for AI, provenance trio, Tower Atomic). The ludospring binary is the Rust validation target (tier 2); it validates science locally but does not deploy as a primal. 32 capabilities across 11 composed primals. `lifecycle.composition` handler for runtime proto-nucleate validation.
-**Audit Status:** Complete — zero hardcoded primal names (capability-first `NicheDependency` with `hint_name` fallback), zero hardcoded paths, **zero hardcoded method strings** (`ipc::methods` expanded to 10 domain modules with compile-time consistency test), zero `#[allow()]` in application code, zero `unsafe`, **zero `Result<_, String>` in entire codebase** (library modules use `VoxelError`/`BaselineError`/`ComparisonError`; binaries use `CliError`/`RunnerError`/`IpcError`), zero external deps removable (base64 inlined), zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations, v1.2.0 ordering invariant: 7 constants), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + three-tier validation (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **910** workspace tests (V74: petalTongue scene composition + meta-tier validation), **16** primal gaps documented (GAP-01–GAP-16 in `docs/PRIMAL_GAPS.md`; all 16 resolved — GAP-16 Tower Atomic live-validated V70). **10 validation scenarios** (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps, tier2 convergence, tower atomic). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). Shared `RpcClient` for all UDS JSON-RPC transport (deduplicated from 4 files). `IpcError` source chaining (`From<serde_json::Error>`, `From<io::Error>`). `is_skip_error` graceful degradation. `game.tick` composite handler (V52). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0. Cell graph ready (`ludospring_cell.toml`). All upstream blockers resolved. petalTongue DataBinding wire contract validated (V74).
+**Audit Status:** Complete — zero hardcoded primal names (capability-first `NicheDependency` with `hint_name` fallback), zero hardcoded paths, **zero hardcoded method strings** (`ipc::methods` expanded to 10 domain modules with compile-time consistency test), zero `#[allow()]` in application code, zero `unsafe`, **zero `Result<_, String>` in entire codebase** (library modules use `VoxelError`/`BaselineError`/`ComparisonError`; binaries use `CliError`/`RunnerError`/`IpcError`), zero external deps removable (base64 inlined), zero clippy warnings (workspace-wide), zero TODO/FIXME, all experiments use `ValidationHarness` + `BaselineProvenance` (provenance unified to `19e402c0`), all tolerances centralized (named constants with citations, v1.2.0 ordering invariant: 7 constants), `GpuContext` + `TensorSession` wired behind `gpu` feature, CI pipeline with baseline drift check + three-tier validation (LOCAL_CAPABILITIES→IPC-WIRED→FULL NUCLEUS) + `validate_composition` + `validate_primal_proof` + `ludospring_guidestone` + `cargo-llvm-cov` gated at 90% floor. Fragments: `tower_atomic`, `node_atomic`, `nest_atomic`, `meta_tier`. **982** workspace tests (V76: Schell Lenses + CPU/GPU parity + NUCLEUS atomics), **16** primal gaps documented (GAP-01–GAP-16 in `docs/PRIMAL_GAPS.md`; all 16 resolved — GAP-16 Tower Atomic live-validated V70). **10 validation scenarios** (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps, tier2 convergence, tower atomic). guideStone readiness 4 (three-tier: bare + IPC + NUCLEUS cross-atomic). Shared `RpcClient` for all UDS JSON-RPC transport (deduplicated from 4 files). `IpcError` source chaining (`From<serde_json::Error>`, `From<io::Error>`). `is_skip_error` graceful degradation. `game.tick` composite handler (V52). MCP surface complete (15/15 tools). Conforms to guideStone Composition Standard v1.2.0. Cell graph ready (`ludospring_cell.toml`). All upstream blockers resolved. petalTongue DataBinding wire contract validated (V74).
 
 ---
 
@@ -302,7 +302,7 @@ Game genres are interaction architectures, not aesthetic categories:
 ## Build
 
 ```bash
-# All tests (910 workspace: barracuda lib + barracuda --tests + forge + benchmarks)
+# All tests (982 workspace: barracuda lib + barracuda --tests + forge + benchmarks)
 cargo test --workspace
 
 # UniBin subcommands (ipc + guidestone features required)
@@ -334,7 +334,7 @@ cargo llvm-cov -p ludospring-barracuda --features ipc --lib --tests \
 |-------|--------|
 | `cargo fmt --check` | 0 diffs |
 | `cargo clippy --all-features -D warnings` | 0 warnings (pedantic + nursery) |
-| `cargo test --workspace` | 910 total (barracuda lib + 4 parity modules + 10 scenarios + forge), 0 failures |
+| `cargo test --workspace` | 982 total (barracuda lib + 4 parity modules + 10 scenarios + forge + nucleus + parity), 0 failures |
 | `cargo build --no-default-features --features ipc` | IPC-only (no barraCuda linkage) — 0 errors |
 | `cargo doc --all-features --no-deps` | 0 warnings |
 | 8 validation scenarios | UniBin `ludospring validate` (interaction, procedural, engagement, composition, raycaster, tier4 math, audit integration, composition gaps) |
@@ -364,7 +364,9 @@ Detailed version history is in `CHANGELOG.md`. Key milestones:
 
 | Version | Date | Milestone |
 |---------|------|-----------|
-| V74 | May 16 | petalTongue scene composition, meta-tier validation, `push_composed_scene()` — 910 tests |
+| V76 | May 17 | Schell Lenses + CPU/GPU parity + NUCLEUS atomics composition — 982 tests |
+| V75 | May 16 | Bartle Player Types + Deterding Gamification + composition validation — 956 tests |
+| V74 | May 16 | petalTongue scene composition, meta-tier validation, `push_composed_scene()` — 911 tests |
 | V73 | May 16 | Neural API Signal Elevation: `primal.announce`, 8 signal constants, 451 registry sync |
 | V72 | May 14 | `health.version` + `health.drain` wired, 418→451 registry alignment |
 | V71 | May 13 | MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat — 896 tests |
