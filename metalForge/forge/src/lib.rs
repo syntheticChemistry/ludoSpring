@@ -16,6 +16,8 @@
 //! Both lean on `ToadStool` independently — `ludoSpring` evolves game/interaction
 //! shaders, `wetSpring` evolves bio shaders, and `ToadStool` absorbs both.
 
+pub mod nucleus;
+pub mod parity;
 mod pipeline;
 mod routing;
 mod substrate;

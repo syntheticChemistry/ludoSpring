@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 16, 2026 (V75 — Bartle Player Types + Deterding Gamification + Composition Validation Escalation. 956 tests, 10 scenarios, zero clippy.)
+**Last updated:** May 17, 2026 (V76 — Schell Lenses + CPU/GPU Parity + NUCLEUS Atomics. 982 tests, zero clippy.)
 
 ## What is this?
 

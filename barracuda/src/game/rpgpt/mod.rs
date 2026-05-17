@@ -20,6 +20,7 @@
 pub mod condition_map;
 pub mod dialogue;
 pub mod knowledge;
+pub mod lenses;
 pub mod memory;
 pub mod npc;
 pub mod personality_dynamics;

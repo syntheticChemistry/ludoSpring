@@ -3,7 +3,35 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V75).
+This project does not use SemVer — versions are session-sequential (V1–V76).
+
+## [V76] — 2026-05-17
+
+### Experiment Buildouts + Control Validation + Mixed Hardware
+
+- **`game::rpgpt::lenses`**: Schell (2008) Game Design Lenses implementation.
+  20 analytical lenses (Essential Experience, Surprise, Curiosity, Endogenous
+  Value, Problem Solving, Elemental Tetrad, Unification, Action→Outcome, Goals,
+  Skill, Expected Value, Challenge, Meaningful Choice, Transparency, Economy,
+  Fairness, Freedom, Feedback, Story/Game Balance, Flow). `evaluate_plane()`
+  produces structured quality reports for all 7 RPGPT planes. `compare_planes()`
+  generates lens-by-lens differential analysis.
+- **`metalForge::parity`**: CPU vs GPU parity validation framework. Validates
+  pure Rust math (f64) against simulated GPU dispatch (f32 quantization).
+  Tier A suite covers Perlin 2D, fBm (6 octaves), sigmoid engagement batch,
+  and DDA raycaster. Configurable absolute/relative tolerances.
+- **`metalForge::nucleus`**: NUCLEUS Atomic Composition validation. Models Tower,
+  Node, and Nest atomics with hardware substrate binding. Validates composition
+  graphs for: tier rules (no Tower→Tower), signal connectivity, hardware transfer
+  path correctness (Local, PCIe, DirectP2P, IPC), and optimization suggestions
+  (NPU→GPU PCIe → DirectP2P). Canonical ludoSpring mixed-hardware topology
+  validated (ludoSpring, barraCuda, toadStool-gpu, toadStool-npu, coralReef,
+  biomeOS).
+
+### Metrics
+- Tests: 956 → 982 (+26)
+- Zero clippy warnings, zero deep debt
+- All Priority 1 papers from queue now implemented
 
 ## [V75] — 2026-05-16
 

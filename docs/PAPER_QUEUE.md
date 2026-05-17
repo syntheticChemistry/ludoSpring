@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 16, 2026 (V75 — Bartle Player Types + Deterding Gamification + composition validation. 956 tests, 10 scenarios. Thread 9+10 active. Deep debt: CLEAN.)
+**Last updated:** May 17, 2026 (V76 — Schell Lenses + CPU/GPU parity validation + NUCLEUS atomics composition. 982 tests. Thread 9+10 active. Deep debt: CLEAN.)
 
 ## Foundation Thread Assignment
 
@@ -37,6 +37,7 @@ ludoSpring is assigned to **Thread 9 (Gaming/Creative)** and **Thread 10
 - Yannakakis & Togelius (2011) — Player modeling → `metrics/engagement.rs`
 - Bartle (1996) — Player Types → `metrics/player_types.rs`, `game/rpgpt/personality_dynamics.rs`
 - Deterding et al. (2011) — Gamification → `metrics/gamification.rs`
+- Schell (2008) — Game Design Lenses → `game/rpgpt/lenses.rs`
 
 ### Procedural Generation (Paper 17)
 - Perlin (1985, 2002) — Noise functions → `procedural/noise.rs`
@@ -58,7 +59,7 @@ ludoSpring is assigned to **Thread 9 (Gaming/Creative)** and **Thread 10
 | Paper/Topic | Why | Target Experiment |
 |-------------|-----|-------------------|
 | ~~Hunicke, LeBlanc, Zubek (2004) — MDA Framework~~ | ~~Game design → mechanics → dynamics → aesthetics formalization~~ | **IMPLEMENTED V71** (`metrics/mda.rs`) |
-| Schell (2008) — Art of Game Design / Lenses | Lens-based validation against RPGPT plane system | exp045 ruleset control |
+| ~~Schell (2008) — Art of Game Design / Lenses~~ | ~~Lens-based validation against RPGPT plane system~~ | **IMPLEMENTED V76** (`game/rpgpt/lenses.rs`) |
 | ~~Bartle (1996) — Player Types~~ | ~~NPC personality modeling (Paper 18)~~ | **IMPLEMENTED V75** (`metrics/player_types.rs`, `game/rpgpt/personality_dynamics.rs`) |
 | ~~Deterding et al. (2011) — Gamification~~ | ~~Human computation economics (Paper 19)~~ | **IMPLEMENTED V75** (`metrics/gamification.rs`) |
 
