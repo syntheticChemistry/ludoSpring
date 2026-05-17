@@ -81,6 +81,11 @@ path = "src/bin/validate_primal_proof.rs"
 required-features = ["ipc"]
 
 [[bin]]
+name = "validate_tower_atomic"
+path = "src/bin/validate_tower_atomic.rs"
+required-features = ["ipc"]
+
+[[bin]]
 name = "ludospring_guidestone"
 path = "src/bin/guidestone/main.rs"
 required-features = ["guidestone"]
