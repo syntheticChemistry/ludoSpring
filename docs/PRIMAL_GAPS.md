@@ -415,7 +415,7 @@ unifies the dual-value approach into a single-value approach with explicit conve
 
 **Primal:** primalSpring (canonical registry)
 **Status:** **RESOLVED** — All 28 `game.*` methods now registered in primalSpring
-canonical `config/capability_registry.toml` (ecosystem total: 445 methods).
+canonical `config/capability_registry.toml` (ecosystem total: 458 methods, Wave 46).
 Bidirectional CI cross-sync test validates zero drift.
 **Resolved:** V59 (May 10, 2026)
 

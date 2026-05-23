@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # primalSpring composition — deploy graph fragment for ludoSpring (game domain).
-# Capability list matches `barracuda::niche::CAPABILITIES` (27 entries).
+# Capability list matches `barracuda::niche::CAPABILITIES` (28 entries).
 
 [node]
 name = "ludospring"
@@ -36,6 +36,9 @@ capabilities = [
     "game.narrate_action",
     "game.voice_check",
     "game.push_scene",
+    "game.tick",
+    "game.subscribe_interaction",
+    "game.poll_interaction",
     "game.query_vertices",
     "game.mint_certificate",
     "game.storage_put",
@@ -47,4 +50,6 @@ capabilities = [
     "game.gpu.batch_raycast",
     "health.liveness",
     "health.readiness",
+    "health.version",
+    "health.drain",
 ]

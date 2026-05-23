@@ -47,7 +47,7 @@ wgpu = { version = "28", default-features = false, features = [
 ], optional = true }
 tokio = { version = "1", features = ["rt", "net", "io-util", "sync"], optional = true }
 tarpc = { version = "0.37", features = ["full"], optional = true }
-primalspring = { path = "../../primalSpring/ecoPrimal", version = "0.9.25", optional = true }
+primalspring = { path = "../../primalSpring/ecoPrimal", version = "0.9.27", optional = true }
 
 [[bin]]
 name = "ludospring"

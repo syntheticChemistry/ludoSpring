@@ -206,15 +206,15 @@ fn validate_tensor_matmul(ctx: &mut CompositionContext, v: &mut ValidationResult
         methods::tensor::MATMUL,
         serde_json::json!({"lhs_id": lhs_id, "rhs_id": rhs_id}),
     ) {
-        Ok(res) => {
-            let ok = res
+        Ok(matmul_result) => {
+            let ok = matmul_result
                 .get("status")
                 .and_then(serde_json::Value::as_str)
                 .is_some_and(|s| s == "completed");
             v.check_bool(
                 "ipc:tensor_matmul_identity",
                 ok,
-                &format!("matmul status: {res}"),
+                &format!("matmul status: {matmul_result}"),
             );
         }
         Err(e) if is_skip_error(&e) => {

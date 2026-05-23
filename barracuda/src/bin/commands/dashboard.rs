@@ -204,7 +204,7 @@ fn build_difficulty_profile() -> Value {
         skill_estimate.push(est);
         adjustments.push(adj);
 
-        current_difficulty = (current_difficulty + adj * 0.1).clamp(0.1, 0.95);
+        current_difficulty = adj.mul_add(0.1, current_difficulty).clamp(0.1, 0.95);
     }
 
     json!({

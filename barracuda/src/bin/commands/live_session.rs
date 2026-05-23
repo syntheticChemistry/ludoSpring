@@ -70,7 +70,7 @@ fn run_session(
 
         let skill = window.estimated_skill();
         let adj = suggest_adjustment(&window, tolerances::DDA_TARGET_SUCCESS_RATE);
-        current_difficulty = (current_difficulty + adj * 0.05).clamp(0.1, 0.95);
+        current_difficulty = adj.mul_add(0.05, current_difficulty).clamp(0.1, 0.95);
 
         let snap = EngagementSnapshot {
             session_duration_s: f64::from(tick + 1) * 0.5,

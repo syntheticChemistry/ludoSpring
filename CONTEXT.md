@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 17, 2026 (V76 — Schell Lenses + CPU/GPU Parity + NUCLEUS Atomics. 982 tests, zero clippy.)
+**Last updated:** May 23, 2026 (V77 — Wave 46 absorption: primalSpring v0.9.27, deploy TOML sync, guidestone gates verified. 982 tests, zero clippy.)
 
 ## What is this?
 

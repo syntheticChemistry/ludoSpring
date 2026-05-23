@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 17, 2026 — **V76 is current** (Schell Lenses + CPU/GPU parity + NUCLEUS atomics composition. 982 tests, zero clippy, zero unsafe. All Priority 1 papers implemented. All 16 gaps RESOLVED.)
+**Last Updated:** May 23, 2026 — **V77 is current** (Wave 46 absorption: primalSpring v0.9.27, deploy TOML sync (32 caps), guidestone gates verified. 982 tests, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
 
 ---
 
@@ -98,7 +98,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |
 | GAP-06: rhizoCrypt UDS transport | **rhizoCrypt** | **RESOLVED** | S66: UDS operational since S23 |
 | GAP-09: Neural API registration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `method.register` |
-| GAP-12: Registry cross-sync | **primalSpring** | **RESOLVED** | V59: 28 `game.*` methods registered (445 total, Wave 20: `primal.list` added) |
+| GAP-12: Registry cross-sync | **primalSpring** | **RESOLVED** | V59: 28 `game.*` methods registered (458 total, Wave 46 canonical) |
 | GAP-13: barraCuda build regression | **barraCuda** | **RESOLVED** | V57: `#[cfg(feature = "gpu")]` gate |
 | GAP-14: Provenance commit hash | **ludoSpring** | OPEN | Multiple commit hashes across validators |
 | GAP-15: Squirrel in graph | **ludoSpring** | **RESOLVED** | V56: node added |

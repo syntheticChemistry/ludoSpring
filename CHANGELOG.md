@@ -3,7 +3,26 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V76).
+This project does not use SemVer — versions are session-sequential (V1–V77).
+
+## [V77] — 2026-05-23
+
+### Wave 46 Absorption + primalSpring v0.9.27 Alignment
+
+- **primalSpring dep bumped** 0.9.25 → 0.9.27. Zero API breaks — certification
+  module compiles cleanly against typed error system and Ionic contract surface.
+- **Deploy TOML synced**: `deploy/ludospring.toml` now declares all 32
+  capabilities (was 26 — missing `game.tick`, `game.subscribe_interaction`,
+  `game.poll_interaction`, `health.version`, `health.drain`). Matches
+  `barracuda::niche::CAPABILITIES` exactly.
+- **Ecosystem registry count**: All docs updated 445/451 → 458 (Wave 46 canonical).
+- **Tier 4 guidestone rewiring**: Confirmed `default = []` already compliant.
+  All feature gates verified (bare, ipc, local, guidestone, gpu). primalSpring
+  scorecard listing `default=["ipc"]` is stale — we resolved this in V62.
+- **Clippy debt resolved**: `similar_names` (`res`/`rhs` in tier2.rs),
+  `mul_add` (dashboard, live_session), `needless_pass_by_value` (ludospring.rs
+  CLI entry point), `option_if_let_else` (scenario dispatch).
+- 982 tests, zero clippy (workspace + all features), zero unsafe.
 
 ## [V76] — 2026-05-17
 
