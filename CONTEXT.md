@@ -2,7 +2,7 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 23, 2026 (V77 — Wave 46 absorption: primalSpring v0.9.27, deploy TOML sync, guidestone gates verified. 982 tests, zero clippy.)
+**Last updated:** May 23, 2026 (V77 — ironGate covalent deployment LIVE. 11/11 proto-nucleate PASS. primalSpring v0.9.27, deploy TOML sync. 982 tests, zero clippy.)
 
 ## What is this?
 

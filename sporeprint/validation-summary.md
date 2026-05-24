@@ -1,7 +1,7 @@
 +++
 title = "ludoSpring Validation Summary"
 description = "Game science, HCI, procedural generation — 982 tests, 16 models validated (+ Schell Lenses V76), CPU/GPU parity validation, NUCLEUS atomics composition, BM-004/005 benchmarks, Tower Atomic LIVE 6/6, petalTongue scene composition + meta-validation, Foundation Threads 9+10 active"
-date = 2026-05-17
+date = 2026-05-23
 
 [taxonomies]
 primals = ["barracuda", "toadstool", "petaltongue", "biomeos", "squirrel", "skunkbat", "beardog", "songbird"]

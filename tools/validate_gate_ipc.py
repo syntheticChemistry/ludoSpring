@@ -180,19 +180,24 @@ def main():
     s, d = check_result(resp)
     record("squirrel health.readiness (TCP:9300)", s, d)
 
-    # Nest — rhizoCrypt: DAG
+    # Nest — rhizoCrypt: DAG (JSON-RPC on port 9701, raw RPC on 9700)
     sock = resolve_sock("rhizocrypt", family_id, runtime_dir, tmp_biomeos) or resolve_sock("dag", family_id, runtime_dir, tmp_biomeos)
+    resp = None
     if sock:
         resp = uds_call(sock, "dag.session.create", {"session_id": "ludo_gate_test"})
         s, d = check_result(resp)
-        record("dag.session.create (rhizocrypt UDS)", s, d)
-    else:
-        resp = tcp_call(9700, "dag.session.create", {"session_id": "ludo_gate_test"})
+        if s == "PASS":
+            record("dag.session.create (rhizocrypt UDS)", s, d)
+            resp = None
+    if resp is None or (resp and "result" not in resp):
+        resp = tcp_call(9701, "dag.session.create", {"session_id": "ludo_gate_test"})
         s, d = check_result(resp)
         if s == "PASS":
-            record("dag.session.create (rhizocrypt TCP:9700)", s, d)
+            record("dag.session.create (rhizocrypt TCP:9701)", s, d)
         else:
-            record("dag.session.create (rhizocrypt)", "SKIP", "rhizoCrypt unreachable (stale 'serve' subcommand)")
+            resp2 = tcp_call(9700, "dag.session.create", {"session_id": "ludo_gate_test"})
+            s2, d2 = check_result(resp2)
+            record("dag.session.create (rhizocrypt)", s2, d2)
 
     # Nest — loamSpine: certificate
     sock = resolve_sock("loamspine", family_id, runtime_dir, tmp_biomeos) or resolve_sock("ledger", family_id, runtime_dir, tmp_biomeos)

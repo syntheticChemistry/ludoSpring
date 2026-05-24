@@ -25,12 +25,8 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V77** | [LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md) | May 23 | **Current** — ironGate covalent deployment. 5/11 PASS, 6 SKIP (CLI drift). Live NUCLEUS validated (exp091+exp094 PASS). Multi-domain contention clean. |
-| V76 | [LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md](handoffs/LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md) | May 19 | Downstream absorption guide for projectNUCLEUS, projectFOUNDATION, esotericWebb, petalTongue. Integration patterns, workload TOMLs, GAP-021/002 evolution paths. |
-| V76 | [LUDOSPRING_V76_EXPERIMENT_BUILDOUT_HANDOFF_MAY17_2026.md](handoffs/LUDOSPRING_V76_EXPERIMENT_BUILDOUT_HANDOFF_MAY17_2026.md) | May 17 | Schell Lenses + CPU/GPU parity + NUCLEUS atomics composition + mixed hardware validation. 982 tests. |
-| V75 | [LUDOSPRING_V75_GAME_SCIENCE_EXPANSION_HANDOFF_MAY16_2026.md](handoffs/LUDOSPRING_V75_GAME_SCIENCE_EXPANSION_HANDOFF_MAY16_2026.md) | May 16 | Bartle Player Types + Deterding Gamification + NPC personality dynamics + 5-scenario composition validation. 956 tests. |
-| V70 | [Central: LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V70_TOWER_ATOMIC_LIVE_VALIDATED_MAY13_2026.md) | May 13 | Tower Atomic LIVE: 6/6 capabilities pass, protocol corrections (base64, security.audit_log). |
-| V68 | [Central: LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V67_TIER2_CONVERGENCE_HANDOFF_MAY12_2026.md) | May 13 | Tier 2 wire contract aligned to `LIVE_SCIENCE_API.md`. `list_workloads` wired. 858 tests. |
+| **V77** | [LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md) | May 23 | **Current** — ironGate covalent deployment LIVE. 11/11 proto-nucleate PASS. All atomics validated. CLI drift fixed in plasmidBin. |
+| V76 | [LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md](handoffs/LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md) | May 19 | Downstream absorption guide for projectNUCLEUS, projectFOUNDATION, esotericWebb, petalTongue. |
 
 ## Cross-Spring Context
 
