@@ -61,8 +61,25 @@ wait_for_socket() {
 
 health_check() {
     local sock="$1" method="${2:-health.liveness}"
-    echo "{\"jsonrpc\":\"2.0\",\"method\":\"$method\",\"id\":1}" | \
-        timeout 3 socat - "UNIX-CONNECT:$sock" 2>/dev/null
+    python3 -c "
+import socket, json, sys
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+try:
+    s.connect('$sock')
+    s.sendall((json.dumps({'jsonrpc':'2.0','method':'$method','id':1})+'\n').encode())
+    s.settimeout(3)
+    d = b''
+    while b'\n' not in d:
+        c = s.recv(4096)
+        if not c: break
+        d += c
+    print(d.decode().strip())
+except Exception as e:
+    print(json.dumps({'error':str(e)}), file=sys.stderr)
+    sys.exit(1)
+finally:
+    s.close()
+" 2>/dev/null
 }
 
 save_pid() {
@@ -76,18 +93,8 @@ find_binary() {
         echo "$BIN_DIR/$name"
         return
     fi
-    local release="$ECO_ROOT/primals/$name/target/release/$name"
-    [[ -x "$release" ]] && echo "$release" && return
-    # CamelCase variant (e.g. petalTongue/target/release/petaltongue)
-    for d in "$ECO_ROOT/primals"/*/; do
-        local lc
-        lc=$(basename "$d" | tr '[:upper:]' '[:lower:]')
-        if [[ "$lc" = "$name" ]] && [[ -x "$d/target/release/$name" ]]; then
-            echo "$d/target/release/$name"
-            return
-        fi
-    done
-    which "$name" 2>/dev/null || true
+    err "$name not found in plasmidBin ($BIN_DIR). Post-primordial: all binaries must come from plasmidBin."
+    return 1
 }
 
 start_primal() {
@@ -249,8 +256,7 @@ cmd_start() {
     if wants_primal petaltongue; then
         log "── Phase 4: petalTongue ──"
         local petaltongue_bin
-        petaltongue_bin="$ECO_ROOT/primals/petalTongue/target/release/petaltongue"
-        [[ -x "$petaltongue_bin" ]] || petaltongue_bin="$(find_binary petaltongue)"
+        petaltongue_bin="$(find_binary petaltongue)"
 
         if [[ -x "$petaltongue_bin" ]]; then
             local pt_logfile="/tmp/nucleus-${COMPOSITION_NAME}-petaltongue.log"
