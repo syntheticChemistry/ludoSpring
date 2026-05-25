@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V77** | [LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md) | May 23 | **Current** — ironGate covalent deployment LIVE. 11/11 proto-nucleate PASS. All atomics validated. CLI drift fixed in plasmidBin. |
+| **V78** | [LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md) | May 25 | **Current** — Wave 48 covalent mesh. 12/12 PASS. Federation :7700 LIVE. Cell deployed. |
 | V76 | [LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md](handoffs/LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md) | May 19 | Downstream absorption guide for projectNUCLEUS, projectFOUNDATION, esotericWebb, petalTongue. |
 
 ## Cross-Spring Context

@@ -2,7 +2,16 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 23, 2026 (V77 — ironGate covalent deployment LIVE. 11/11 proto-nucleate PASS. primalSpring v0.9.27, deploy TOML sync. 982 tests, zero clippy.)
+**Last updated:** May 25, 2026 (V78 — Wave 48 covalent mesh. 12/12 proto-nucleate PASS. Songbird federation :7700 LIVE. Cell deployed on ironGate. 982 tests, zero clippy.)
+
+## Gate Deployment
+
+| **Gate** | ironGate |
+| **Hardware** | i9-14900K (24c/32t), RTX 5070, 96GB DDR5 |
+| **Composition** | Full NUCLEUS (13/13 primals) |
+| **Status** | **operational** — 11/11 proto-nucleate PASS |
+| **Federation** | Songbird TCP :7700 (LAN covalent mesh) |
+| **Cell graph** | `plasmidBin/cells/ludospring_cell.toml` |
 
 ## What is this?
 

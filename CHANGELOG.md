@@ -3,7 +3,20 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V77).
+This project does not use SemVer — versions are session-sequential (V1–V78).
+
+## [V78] — 2026-05-25
+
+### Wave 48 Covalent Mesh — Sound Off
+
+- **Gate Deployment section** added to CONTEXT.md: ironGate (i9-14900K, RTX 5070, 96GB).
+- **Songbird TCP federation** enabled on port 7700 — LAN covalent mesh operational.
+- **12/12 proto-nucleate PASS**: all capabilities validated against live NUCLEUS.
+- **Cell deployment** verified via `cell_launcher.sh` with `ludospring_cell.toml`.
+- **discovery.peers** endpoint live — awaiting other gates for cross-gate linking.
+- **plasmidBin fixes**: `start_primal.sh` CLI alignment (barracuda `--unix`,
+  rhizocrypt `--unix`, coralreef `--rpc-bind`, nestgate `server --socket-only`).
+- **nucleus_launcher.sh**: Added `SONGBIRD_FEDERATION_PORT` env var support.
 
 ## [V77] — 2026-05-23
 
