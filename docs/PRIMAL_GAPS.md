@@ -39,16 +39,16 @@
 
 ## Gap Registry
 
-### GAP-01: coralReef IPC — Wired, Blocked on Upstream
+### GAP-01: coralReef IPC — RESOLVED (Wave 50)
 
 **Primal:** coralReef
-**Status:** WIRED (V64) — `try_coralreef_compile(op)` in `game/engine/gpu.rs` calls
-coralReef via IPC first, falls back to embedded WGSL. `shader.compile` and `shader.list`
-method constants added to `ipc::methods::shader`. Typed client in `ipc/coralreef.rs`.
-**Blocked:** coralReef live on ironGate (v2026.05.23) but SM rebuild not yet integrated — IPC calls degrade gracefully until shader.compile method is wired.
-**Proto-nucleate:** Required (`shader.compile`, `shader.list`)
-**Impact:** When coralReef goes live, ludoSpring will automatically use sovereign
-compilation without code changes.
+**Status:** **LIVE VALIDATED** (Wave 50) — `shader.compile.wgsl` confirmed against live
+coralReef on ironGate. Fog-of-war compute shader compiles to 688 bytes SPIR-V via UDS.
+Method is `shader.compile.wgsl` (not `shader.compile`). coralReef socket:
+`/run/user/1000/biomeos/shader.sock` (capability alias).
+**Proto-nucleate:** Validated (`shader.compile.wgsl`, `shader.compile.multi`)
+**Impact:** ludoSpring can now dispatch WGSL compilation to coralReef via NUCLEUS.
+`try_coralreef_compile(op)` in `game/engine/gpu.rs` will automatically use live IPC.
 
 **Proposed wire:**
 ```json

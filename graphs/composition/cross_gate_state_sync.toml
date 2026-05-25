@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Cross-gate game state synchronization via NUCLEUS covalent mesh
+#
+# Pattern: local NestGate → Songbird mesh → remote NestGate
+# Requires: Songbird federation active, remote gate meshed
+#
+# Usage: biomeos deploy --graph graphs/composition/cross_gate_state_sync.toml
+
+[graph]
+name = "cross_gate_state_sync"
+description = "Persist game state locally and replicate to remote gate via covalent mesh"
+version = "1.0.0"
+coordination = "sequential"
+
+[graph.metadata]
+domain = "game_science"
+pattern = "nest_sync"
+transport = "uds_primary"
+mesh_required = true
+
+[[graph.nodes]]
+name = "auth_handshake"
+order = 0
+by_capability = "security"
+operation = "btsp.authenticate"
+
+[graph.nodes.params]
+scope = "storage"
+
+[[graph.nodes]]
+name = "store_local"
+order = 1
+by_capability = "storage"
+operation = "storage.store"
+depends_on = ["auth_handshake"]
+
+[graph.nodes.params]
+key_prefix = "game_state:"
+
+[[graph.nodes]]
+name = "replicate_remote"
+order = 2
+by_capability = "storage"
+operation = "capability.call"
+depends_on = ["store_local"]
+
+[graph.nodes.params]
+method = "storage.store"
+routing = "mesh"
+target_gate = "remote"
+key_prefix = "game_state:"
+
+[[graph.nodes]]
+name = "verify_consistency"
+order = 3
+by_capability = "storage"
+operation = "storage.retrieve"
+depends_on = ["replicate_remote"]
+
+[graph.nodes.params]
+verify_hash = true

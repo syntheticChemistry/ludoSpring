@@ -3,7 +3,21 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V78).
+This project does not use SemVer — versions are session-sequential (V1–V79).
+
+## [V79] — 2026-05-25
+
+### Wave 50 — Covalent HPC Evolution
+
+- **GAP-01 RESOLVED**: `shader.compile.wgsl` live-validated against coralReef on ironGate.
+  Fog-of-war compute shader compiles to 688 bytes SPIR-V via UDS. Method is
+  `shader.compile.wgsl` (not `shader.compile`). Socket: `shader.sock` alias.
+- **Songbird mesh seeded**: `mesh.init` with node_id `irongate`, bootstrap peer
+  `192.168.1.144:7700` (eastGate). Cross-gate discovery ready.
+- **Cross-gate state sync graph**: `graphs/composition/cross_gate_state_sync.toml` —
+  NestGate local write → Songbird mesh replicate → remote NestGate. BTSP-auth first.
+- **Post-primordial confirmed**: Zero `target/release/` primal refs. plasmidBin only.
+- **primalSpring zero-port launcher**: 12/12 ALIVE via UDS, capability aliases active.
 
 ## [V78] — 2026-05-25
 
