@@ -256,18 +256,6 @@ Previous blockers (all **RESOLVED** upstream, May 10, 2026):
 - `graphs/composition/session_provenance.toml` — session lifecycle via Nest Atomic + Trio
 - `graphs/composition/math_pipeline.toml`, `engagement_pipeline.toml`, `shader_dispatch_chain.toml`, `game_loop_continuous.toml`
 
-## Gate Deployment
-
-| Field | Value |
-|-------|-------|
-| **Gate** | ironGate |
-| **Composition** | Tower Atomic (11/11 proto-nucleate PASS) |
-| **NUCLEUS status** | operational |
-| **Songbird federation** | port 7700 |
-| **LAN mesh** | ready — covalent linking via Songbird TCP |
-| **Cell graph** | `plasmidBin/cells/ludospring_cell.toml` |
-| **Launch** | `SONGBIRD_FEDERATION_PORT=7700 ./tools/nucleus_launcher.sh start` then `./tools/cell_launcher.sh ludospring start` |
-
 ### Handoff
 
 [V63 deep debt + SPDX handoff](../../infra/wateringHole/handoffs/LUDOSPRING_V63_DEEP_DEBT_SPDX_HANDOFF_MAY11_2026.md)
