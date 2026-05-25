@@ -55,9 +55,9 @@ outputs regardless of path).
 
 | Operation | IPC Method | Status |
 |-----------|-----------|--------|
-| Compile Perlin 2D WGSL | `shader.compile.wgsl` | GAP-01 — blocked on FECS stability |
-| Compile fBm WGSL | `shader.compile.wgsl` | GAP-01 — blocked on FECS stability |
-| Compile raycaster WGSL | `shader.compile.wgsl` | GAP-01 — blocked on FECS stability |
+| Compile Perlin 2D WGSL | `shader.compile.wgsl` | **LIVE** (Wave 50 — coralReef via `shader.sock` alias) |
+| Compile fBm WGSL | `shader.compile.wgsl` | **LIVE** (Wave 50 — coralReef via `shader.sock` alias) |
+| Compile raycaster WGSL | `shader.compile.wgsl` | **LIVE** (Wave 50 — coralReef via `shader.sock` alias) |
 
 ## Visualization (petalTongue)
 

@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 17, 2026 (V76 — Schell Lenses + CPU/GPU parity validation + NUCLEUS atomics composition. 982 tests. Thread 9+10 active. Deep debt: CLEAN.)
+**Last updated:** May 25, 2026 (V79 — Wave 50 covalent HPC. All Priority 1 papers implemented. 982 tests. Thread 9+10 active.)
 
 ## Foundation Thread Assignment
 

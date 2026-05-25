@@ -8,8 +8,8 @@
 
 | **Gate** | ironGate |
 | **Hardware** | i9-14900K (24c/32t), RTX 5070, 96GB DDR5 |
-| **Composition** | Full NUCLEUS (13/13 primals) |
-| **Status** | **operational** — 11/11 proto-nucleate PASS |
+| **Composition** | Full NUCLEUS (12/12 ALIVE, zero-port UDS) |
+| **Status** | **operational** — Wave 50 covalent HPC ready |
 | **Federation** | Songbird TCP :7700 (LAN covalent mesh) |
 | **Cell graph** | `plasmidBin/cells/ludospring_cell.toml` |
 

@@ -1,8 +1,8 @@
 # Cross-Tier Parity — ludoSpring
 
-**Last updated:** May 17, 2026 (V76 — Wave 20 PM absorption)
+**Last updated:** May 25, 2026 (V79 — Wave 50 covalent HPC)
 **Pattern source:** `primalSpring/docs/VALIDATION_TIERS.md`, lithoSpore reference implementation
-**Status:** Active — Tier 1 and Tier 2 operational, Tier 3 wired (trio pending upstream)
+**Status:** Active — All tiers operational. Tier 3 live (12/12 NUCLEUS, trio validated via UDS)
 
 ---
 

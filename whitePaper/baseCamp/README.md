@@ -1,8 +1,8 @@
 # ludoSpring baseCamp — Game Design as Rigorous Science
 
-**Date:** May 17, 2026
+**Date:** May 25, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V76 — **982 workspace tests**, 10 validation scenarios + 5 composition integration scenarios, zero clippy, zero unsafe. Schell (2008) Lenses + CPU/GPU parity + NUCLEUS atomics composition (V76). Bartle (1996) Player Types + Deterding (2011) Gamification (V75). Tower Atomic LIVE VALIDATED (6/6 capabilities, V70). MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline (V71). petalTongue scene composition + meta-tier validation (V74). Neural API signals wired: `primal.announce`, 8 signal dispatch constants (V73). `health.version` + `health.drain` (V72). Tier 2 wire contract aligned. `--format json` dispatch ready. `default = []` (IPC-first). coralReef IPC wired (blocked upstream). Foundation Thread 9+10 active. 3 notebooks CI-verified. 28 `game.*` canonical (458 ecosystem). primalSpring v0.9.27. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph). All Priority 1 papers implemented.
+**Status:** V79 — **982 workspace tests**, 10 validation scenarios + 5 composition integration scenarios, zero clippy, zero unsafe. Wave 50 covalent HPC. 12/12 NUCLEUS ALIVE. GAP-01 coralReef LIVE (shader.compile.wgsl validated). Songbird mesh seeded. Schell (2008) Lenses + CPU/GPU parity + NUCLEUS atomics composition (V76). Bartle (1996) Player Types + Deterding (2011) Gamification (V75). MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline (V71). Foundation Thread 9+10 active. 28 `game.*` canonical (458 ecosystem). primalSpring v0.9.27. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph). All Priority 1 papers implemented.
 
 ---
 

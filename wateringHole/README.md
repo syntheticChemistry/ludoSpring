@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 23, 2026 — **V77 is current** (Wave 46 absorption: primalSpring v0.9.27, deploy TOML sync (32 caps), guidestone gates verified. 982 tests, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
+**Last Updated:** May 25, 2026 — **V79 is current** (Wave 50 covalent HPC. 12/12 NUCLEUS ALIVE. GAP-01 coralReef LIVE. Songbird mesh seeded. 982 tests, zero clippy, zero unsafe.)
 
 ---
 
@@ -25,7 +25,7 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V78** | [LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_GATE_DEPLOYMENT_MAY23_2026.md) | May 25 | **Current** — Wave 48 covalent mesh. 12/12 PASS. Federation :7700 LIVE. Cell deployed. |
+| **V79** | [LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md) | May 25 | **Current** — Wave 50 covalent HPC. 12/12 ALIVE. GAP-01 coralReef LIVE. Mesh seeded. Federation :7700. |
 | V76 | [LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md](handoffs/LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md) | May 19 | Downstream absorption guide for projectNUCLEUS, projectFOUNDATION, esotericWebb, petalTongue. |
 
 ## Cross-Spring Context

@@ -21,7 +21,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-FAMILY_ID="${FAMILY_ID:-irongate}"
+FAMILY_ID="${FAMILY_ID:-nucleus01}"
 JSON_OUTPUT=false
 
 while [[ $# -gt 0 ]]; do
