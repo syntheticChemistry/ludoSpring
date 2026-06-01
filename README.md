@@ -2,8 +2,8 @@
 
 An ecoPrimals Spring. Treats game design with the same rigor that wetSpring treats bioinformatics and hotSpring treats nuclear physics: validated models, reproducible experiments, GPU-accelerated computation where it matters.
 
-**Date:** May 25, 2026
-**Version:** V79 (Wave 50 covalent HPC. 12/12 NUCLEUS ALIVE. GAP-01 coralReef shader.compile.wgsl LIVE. Songbird mesh seeded (irongate → eastGate). Cross-gate state sync graph. primalSpring v0.9.27, 32 capabilities, 982 tests, zero clippy, zero unsafe.)
+**Date:** Jun 1, 2026
+**Version:** V80 (Wave 67 glacial cutover absorbed. ironGate operational — S1 TLS 13d clean, covalent mesh ready, post-primordial confirmed. primalSpring v0.9.31, 32 capabilities, 982 tests, zero clippy, zero unsafe.)
 **Spring alignment table:** The ludoSpring row in sibling `../primalSpring/wateringHole/NUCLEUS_SPRING_ALIGNMENT.md` uses the same workspace test total as this README; if they diverge, treat this README and `cargo test --workspace` as canonical.
 **License:** AGPL-3.0-or-later (scyBorg triple: AGPL + ORC + CC-BY-SA-4.0)
 **MSRV:** 1.87 (edition 2024)

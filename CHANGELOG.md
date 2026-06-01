@@ -3,7 +3,25 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V79).
+This project does not use SemVer — versions are session-sequential (V1–V80).
+
+## [V80] — 2026-06-01
+
+### Wave 67 — Glacial Cutover Absorption
+
+- **GLACIAL_CUTOVER_PLAN.md absorbed**: ironGate critical path reviewed. ludoSpring
+  confirmed operational — zero code blockers for glacial transition.
+- **S1 TLS graduation**: 13 days clean. Caddy S1 on ironGate ready to declare OPERATIONAL
+  (cellMembrane gate action, no ludoSpring code change required).
+- **S4 auth validation**: bearDog BTSP from southGate — ironGate will consume. ludoSpring's
+  NestGate composition already validates BTSP auth (confirmed Wave 50).
+- **sporePrint composition ready**: `sporeprint/validation-summary.md` current, front matter
+  valid. Ready for petalTongue content renderer deploy on golgiBody-ext (Phase 2).
+- **Forgejo Actions CI shadow**: P2/Phase 3 — `.github/workflows/ci.yml` compatible with
+  Forgejo Actions syntax. Shadow runner to be provisioned on ironGate (Wave 70+).
+- **Covalent mesh**: Songbird :7700 federation confirmed LAN-reachable. Peer seeding in
+  place (irongate → eastGate). Awaiting Phase 1 `discovery.peers` smoke test from eastGate.
+- **Zero debt maintained**: 982 tests, zero clippy, zero unsafe, zero TODO/FIXME.
 
 ## [V79] — 2026-05-25
 

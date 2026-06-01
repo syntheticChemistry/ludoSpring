@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** May 25, 2026 — **V79 is current** (Wave 50 covalent HPC. 12/12 NUCLEUS ALIVE. GAP-01 coralReef LIVE. Songbird mesh seeded. 982 tests, zero clippy, zero unsafe.)
+**Last Updated:** Jun 1, 2026 — **V80 is current** (Wave 67 glacial cutover absorbed. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready. 982 tests, zero clippy, zero unsafe.)
 
 ---
 
@@ -25,7 +25,8 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V79** | [LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md) | May 25 | **Current** — Wave 50 covalent HPC. 12/12 ALIVE. GAP-01 coralReef LIVE. Mesh seeded. Federation :7700. |
+| **V80** | (Wave 67 glacial cutover — no new handoff, infrastructure-only) | Jun 1 | **Current** — Glacial cutover absorbed. Zero code blockers. S1 TLS 13d, mesh ready. |
+| V79 | [LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md](../../infra/wateringHole/handoffs/archive/LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md) | May 25 | Wave 50 covalent HPC. 12/12 ALIVE. GAP-01 coralReef LIVE. Mesh seeded. Federation :7700. |
 | V76 | [LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md](handoffs/LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md) | May 19 | Downstream absorption guide for projectNUCLEUS, projectFOUNDATION, esotericWebb, petalTongue. |
 
 ## Cross-Spring Context
@@ -84,20 +85,20 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## Composition Gap Status (V68, updated May 13, 2026)
+## Composition Gap Status (V80, updated Jun 1, 2026)
 
 | GAP | Owner | Status | Notes |
 |-----|-------|--------|-------|
-| GAP-01: coralReef IPC client | **coralReef** | **WIRED** (V64) | `try_coralreef_compile` in GPU path, blocked on upstream SM rebuild |
+| GAP-01: coralReef IPC client | **coralReef** | **LIVE VALIDATED** (V79) | `shader.compile.wgsl` confirmed against live coralReef on ironGate |
 | GAP-02: Domain method parity | **ludoSpring** | **ADVANCED** (V64) | `math.flow.evaluate` + `math.engagement.composite` registered |
 | GAP-03: biomeOS game_logic orchestration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `composition.deploy` route alias |
-| GAP-04: provenance commit chain | **rhizoCrypt** | OPEN | Commit exists but deterministic replay not validated |
-| GAP-05: Trio not in proto-nucleate | **primalSpring** | OPEN | Graph completeness |
+| GAP-04: TensorSession product paths | **barraCuda** | PARTIAL | Typed IPC clients exist; product-path exercise pending upstream |
+| GAP-05: Trio in proto-nucleate | **primalSpring** | PARTIAL | Typed IPC clients in `ipc/provenance/`; trio nodes present in graph |
 | GAP-06: rhizoCrypt UDS transport | **rhizoCrypt** | **RESOLVED** | S66: UDS operational since S23 |
 | GAP-09: Neural API registration | **biomeOS** | **RESOLVED** | biomeOS v3.51 `method.register` |
 | GAP-12: Registry cross-sync | **primalSpring** | **RESOLVED** | V59: 28 `game.*` methods registered (458 total, Wave 46 canonical) |
 | GAP-13: barraCuda build regression | **barraCuda** | **RESOLVED** | V57: `#[cfg(feature = "gpu")]` gate |
-| GAP-14: Provenance commit hash | **ludoSpring** | OPEN | Multiple commit hashes across validators |
+| GAP-14: Provenance commit hash | **ludoSpring** | LOW | Multiple commit hashes — cosmetic; provenance unified to `19e402c0` |
 | GAP-15: Squirrel in graph | **ludoSpring** | **RESOLVED** | V56: node added |
 | GAP-07: loamSpine startup panic | **loamSpine** | **RESOLVED** | PG-33 |
 | GAP-08/11: Fitts/Hick formulation | **barraCuda** | **RESOLVED** | PG-38 |

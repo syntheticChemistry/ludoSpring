@@ -2,7 +2,7 @@
 
 # ludoSpring — Paper Queue & Science Thread Map
 
-**Last updated:** May 25, 2026 (V79 — Wave 50 covalent HPC. All Priority 1 papers implemented. 982 tests. Thread 9+10 active.)
+**Last updated:** Jun 1, 2026 (V80 — Wave 67 glacial. All Priority 1 papers implemented. 982 tests. Thread 9+10 active.)
 
 ## Foundation Thread Assignment
 

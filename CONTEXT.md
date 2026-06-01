@@ -2,14 +2,14 @@
 
 # ludoSpring — Context
 
-**Last updated:** May 25, 2026 (V79 — Wave 50 covalent HPC. 12/12 NUCLEUS ALIVE. GAP-01 coralReef LIVE VALIDATED. Songbird mesh seeded. Cross-gate state sync graph. 982 tests, zero clippy.)
+**Last updated:** Jun 1, 2026 (V80 — Wave 67 glacial cutover absorbed. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready. 982 tests, zero clippy.)
 
 ## Gate Deployment
 
 | **Gate** | ironGate |
 | **Hardware** | i9-14900K (24c/32t), RTX 5070, 96GB DDR5 |
 | **Composition** | Full NUCLEUS (12/12 ALIVE, zero-port UDS) |
-| **Status** | **operational** — Wave 50 covalent HPC ready |
+| **Status** | **operational** — Wave 67 glacial cutover ready |
 | **Federation** | Songbird TCP :7700 (LAN covalent mesh) |
 | **Cell graph** | `plasmidBin/cells/ludospring_cell.toml` |
 
