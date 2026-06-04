@@ -1,6 +1,6 @@
 +++
 title = "ludoSpring Validation Summary"
-description = "Game science, HCI, procedural generation — 982 tests, 16 models validated (+ Schell Lenses V76), CPU/GPU parity validation, NUCLEUS atomics composition, BM-004/005 benchmarks, Tower Atomic LIVE 6/6, petalTongue scene composition + meta-validation, Foundation Threads 9+10 active"
+description = "Game science, HCI, procedural generation — 995 tests, 16 models validated (+ Schell Lenses V76), CPU/GPU parity validation, NUCLEUS atomics composition, BM-004/005 benchmarks, Tower Atomic LIVE 6/6, petalTongue scene composition + meta-validation, Foundation Threads 9+10 active"
 date = 2026-06-01
 
 [taxonomies]
@@ -10,7 +10,7 @@ springs = ["ludospring"]
 
 ## Status
 
-- **982** workspace tests (unit, integration, property, determinism, parity, composition)
+- **995** workspace tests (unit, integration, property, determinism, parity, composition, certification)
 - **16 foundational models** validated against published research (13 HCI + Bartle Player Types + Deterding Gamification + Schell Game Design Lenses)
 - **10 validation scenarios** absorbed into UniBin + 5 composition integration scenarios
 - **Tier 2 convergence** wired: `toadstool.validate` pre-flight + `barracuda.precision.route` advisory (Pass 14 unblocked)

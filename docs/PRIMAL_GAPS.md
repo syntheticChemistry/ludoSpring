@@ -2,7 +2,7 @@
 
 # ludoSpring — Primal Gaps
 
-**Last updated:** May 17, 2026 (V76 — Schell Lenses + CPU/GPU parity + NUCLEUS atomics. 982 tests, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
+**Last updated:** Jun 3, 2026 (V82 — Wave 76 parity. 995 tests, zero clippy, zero unsafe. All 16 gaps RESOLVED.)
 **Proto-nucleate:** `primalSpring/graphs/downstream/downstream_manifest.toml` (ludospring entry)
 **Cell graph:** `ludospring_cell.toml` (12 nodes, pure composition — no spring binary node)
 **Composition model:** `pure` (no downstream binary — biomeOS deploys the graph)

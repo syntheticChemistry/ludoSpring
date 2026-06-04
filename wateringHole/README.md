@@ -1,7 +1,7 @@
 # ludoSpring wateringHole — Cross-Project Handoffs
 
 **Project:** ludoSpring (game science, HCI, procedural generation, cross-spring provenance)
-**Last Updated:** Jun 1, 2026 — **V80 is current** (Wave 67 glacial cutover absorbed. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready. 982 tests, zero clippy, zero unsafe.)
+**Last Updated:** Jun 3, 2026 — **V82 is current** (Wave 76 parity sprint. Deep debt resolved. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready. 995 tests, zero clippy, zero unsafe.)
 
 ---
 
@@ -25,14 +25,14 @@ primalSpring (composition patterns), esotericWebb (gen4 product composition).
 
 | Version | File | Date | Scope |
 |---------|------|------|-------|
-| **V80** | (Wave 67 glacial cutover — no new handoff, infrastructure-only) | Jun 1 | **Current** — Glacial cutover absorbed. Zero code blockers. S1 TLS 13d, mesh ready. |
+| **V82** | [LUDOSPRING_V82_WAVE76_PARITY_DEEP_DEBT_JUN03_2026.md](../../infra/wateringHole/handoffs/LUDOSPRING_V82_WAVE76_PARITY_DEEP_DEBT_JUN03_2026.md) | Jun 3 | **Current** — Wave 76 parity ACK. Deep debt resolved. 995 tests, zero clippy. |
 | V79 | [LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md](../../infra/wateringHole/handoffs/archive/LUDOSPRING_WAVE50_COVALENT_HPC_MAY25_2026.md) | May 25 | Wave 50 covalent HPC. 12/12 ALIVE. GAP-01 coralReef LIVE. Mesh seeded. Federation :7700. |
 | V76 | [LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md](handoffs/LUDOSPRING_V76_DOWNSTREAM_ABSORPTION_HANDOFF_MAY19_2026.md) | May 19 | Downstream absorption guide for projectNUCLEUS, projectFOUNDATION, esotericWebb, petalTongue. |
 
 ## Cross-Spring Context
 
 ```
-ludoSpring (game science composition, 982 workspace tests, V76 — Schell Lenses + CPU/GPU parity + NUCLEUS atomics, petalTongue scene composition, Tower Atomic LIVE, Tier 2 aligned)
+ludoSpring (game science composition, 995 workspace tests, V82 — Wave 76 parity + deep debt + const fn lenses, petalTongue scene composition, Tower Atomic LIVE, Tier 2 aligned)
     │
     ├─→ barraCuda (absorb: Perlin, fBm, engagement batch, flow eval, fun classify, tolerance pattern, capability_domains pattern)
     ├─→ toadStool (dispatch: noise fields, raycaster, WFC, metrics batch, NUCLEUS pipeline, 3 game WGSL shaders, GPU dispatch for game.gpu.*)
@@ -85,7 +85,7 @@ Fallback: JSON files in `sandbox/scenarios/`, `sandbox/tufte/`, `sandbox/session
 | `GenericFraudDetector` (exp065) | ~300 | Domain-agnostic graph fraud analysis | P3 |
 | `compute_distribution` (exp066) | ~200 | Weighted-sum attribution with decay | P3 |
 
-## Composition Gap Status (V80, updated Jun 1, 2026)
+## Composition Gap Status (V82, updated Jun 3, 2026)
 
 | GAP | Owner | Status | Notes |
 |-----|-------|--------|-------|

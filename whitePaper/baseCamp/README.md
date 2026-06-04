@@ -2,7 +2,7 @@
 
 **Date:** Jun 1, 2026
 **Paper:** #17 in ecoPrimals baseCamp (gen3)
-**Status:** V80 — **982 workspace tests**, 10 validation scenarios + 5 composition integration scenarios, zero clippy, zero unsafe. Wave 67 glacial cutover absorbed. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready (Songbird :7700 LAN federation). GAP-01 coralReef LIVE. Schell (2008) Lenses + CPU/GPU parity + NUCLEUS atomics composition (V76). Bartle (1996) Player Types + Deterding (2011) Gamification (V75). MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline (V71). Foundation Thread 9+10 active. 28 `game.*` canonical (458 ecosystem). primalSpring v0.9.31. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph). All Priority 1 papers implemented.
+**Status:** V82 — **995 workspace tests**, 10 validation scenarios + 5 composition integration scenarios, zero clippy, zero unsafe. Wave 76 parity sprint complete. Deep debt resolved (lenses.rs const fn refactor). 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready (Songbird :7700 LAN federation). GAP-01 coralReef LIVE. Schell (2008) Lenses + CPU/GPU parity + NUCLEUS atomics composition (V76). Bartle (1996) Player Types + Deterding (2011) Gamification (V75). MDA Framework (Hunicke 2004), BM-004 matchmaking, BM-005 chat pipeline (V71). Foundation Thread 9+10 active. 28 `game.*` canonical (458 ecosystem). primalSpring v0.9.31. guideStone readiness **4** (NUCLEUS validated). 3-tier validation ladder: Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph). All Priority 1 papers implemented.
 
 ---
 
@@ -117,7 +117,7 @@ Layer 1: Python ↔ Rust  (python_parity.rs — parity vs Python baselines)
 | `envelope.rs` at 824 lines | Split: 409 lines production + `envelope_tests.rs` | Under threshold, tests isolated for maintenance |
 | `ludospring_guidestone.rs` at 812 lines | `guidestone/` module: `main.rs`, `constants.rs`, `tier1.rs`, `tier2.rs`, `tier3.rs` | Each file under 220 lines; tier logic separated |
 
-**Test delta:** 817 → 820 (V55), → 825 (V60 skunkBat), → 854 (V61 tolerance/certification invariants), → 858 (V67 Tier 2 convergence), → 896 (V71 MDA + BM-004/005), → 911 (V74 petalTongue scenes), → 956 (V75 Bartle + Deterding + composition validation), → 982 (V76 Schell Lenses + CPU/GPU parity + NUCLEUS atomics).
+**Test delta:** 817 → 820 (V55), → 825 (V60 skunkBat), → 854 (V61 tolerance/certification invariants), → 858 (V67 Tier 2 convergence), → 896 (V71 MDA + BM-004/005), → 911 (V74 petalTongue scenes), → 956 (V75 Bartle + Deterding + composition validation), → 982 (V76 Schell Lenses + CPU/GPU parity + NUCLEUS atomics), → 995 (V81 Wave 76 parity + guidestone certification).
 
 Key artifacts:
 - **`config/capability_registry.toml`** — Machine-readable SSOT for ludoSpring capabilities, semantic mappings, external dependencies, and proto-nucleate graph reference
@@ -336,7 +336,7 @@ python3 baselines/python/run_all_baselines.py       # Generate combined_baseline
 python3 baselines/python/check_drift.py             # Verify zero baseline drift
 python3 baselines/python/bench_cpu_parity.py        # CPU timing: perlin, fBm, raycaster, Fitts
 
-# ── Rust validation (982 tests) ─────────────────────────────────────
+# ── Rust validation (995 tests) ─────────────────────────────────────
 cargo test --workspace --lib --tests                 # Full test suite (0 failures)
 cargo test --no-default-features --features ipc -p ludospring-barracuda --lib  # IPC-only mode
 

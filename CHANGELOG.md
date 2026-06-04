@@ -3,7 +3,24 @@
 All notable changes to ludoSpring are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-This project does not use SemVer — versions are session-sequential (V1–V80).
+This project does not use SemVer — versions are session-sequential (V1–V82).
+
+## [V82] — 2026-06-03
+
+### Wave 76 — Parity Sprint + Deep Debt
+
+- **Wave 76 parity sprint**: `cargo test --workspace --features ipc,local,guidestone` → 995
+  pass, 0 fail, zero clippy, zero fmt drift. FRAGO `wave76-parity-sprint-springs` ACK'd.
+- **CI clippy fix**: `--all-features` → explicit feature list. `wgpu` 28.0 requires Rust 1.92;
+  our MSRV is 1.87. The `gpu` feature is opt-in only, not gated in CI.
+- **Fitts golden value formula bug**: Test used `log₂(2D/W)` but constant stores Shannon
+  formulation `log₂(2D/W + 1)`. Corrected test formula and doc comment. Latent bug
+  only surfaced when `guidestone` feature was compiled in test configuration.
+- **Deep debt — lenses.rs refactored**: 20 separate `eval_*` functions (1012 lines, heap-
+  allocating `Vec<String>` per call) → single `const fn lookup_evaluation` data table with
+  static `&str` slices. Zero allocation. Compile-time evaluable. 899 lines post-fmt.
+- **primalSpring dep bump**: 0.9.27 → 0.9.31 (V80). Zero API breaks.
+- **rustfmt drift resolved**: Long lines in `ludospring.rs` reformatted.
 
 ## [V80] — 2026-06-01
 

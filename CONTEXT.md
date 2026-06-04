@@ -2,14 +2,14 @@
 
 # ludoSpring — Context
 
-**Last updated:** Jun 1, 2026 (V80 — Wave 67 glacial cutover absorbed. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready. 982 tests, zero clippy.)
+**Last updated:** Jun 3, 2026 (V82 — Wave 76 parity sprint complete. Deep debt resolved. 12/12 NUCLEUS ALIVE. Post-primordial. Covalent mesh ready. 995 tests, zero clippy.)
 
 ## Gate Deployment
 
 | **Gate** | ironGate |
 | **Hardware** | i9-14900K (24c/32t), RTX 5070, 96GB DDR5 |
 | **Composition** | Full NUCLEUS (12/12 ALIVE, zero-port UDS) |
-| **Status** | **operational** — Wave 67 glacial cutover ready |
+| **Status** | **operational** — Wave 76 parity confirmed |
 | **Federation** | Songbird TCP :7700 (LAN covalent mesh) |
 | **Cell graph** | `plasmidBin/cells/ludospring_cell.toml` |
 

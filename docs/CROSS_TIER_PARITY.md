@@ -1,6 +1,6 @@
 # Cross-Tier Parity — ludoSpring
 
-**Last updated:** Jun 1, 2026 (V80 — Wave 67 glacial cutover. All tiers operational.)
+**Last updated:** Jun 3, 2026 (V82 — Wave 76 parity. All tiers operational.)
 **Pattern source:** `primalSpring/docs/VALIDATION_TIERS.md`, lithoSpore reference implementation
 **Status:** Active — All tiers operational. Tier 3 live (12/12 NUCLEUS, trio validated via UDS)
 
