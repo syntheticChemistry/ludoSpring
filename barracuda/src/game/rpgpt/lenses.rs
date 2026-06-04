@@ -222,637 +222,524 @@ pub fn evaluate_plane(plane: PlaneType) -> PlaneAnalysis {
     PlaneAnalysis { plane, evaluations }
 }
 
-/// Apply a single lens to a plane.
+/// Apply a single lens to a plane using the data-driven evaluation table.
 fn evaluate_single_lens(lens: Lens, plane: PlaneType) -> LensEvaluation {
-    let (score, strengths, gaps) = match lens {
-        Lens::EssentialExperience => eval_essential_experience(plane),
-        Lens::Surprise => eval_surprise(plane),
-        Lens::Curiosity => eval_curiosity(plane),
-        Lens::EndogenousValue => eval_endogenous_value(plane),
-        Lens::ProblemSolving => eval_problem_solving(plane),
-        Lens::ElementalTetrad => eval_elemental_tetrad(plane),
-        Lens::Unification => eval_unification(plane),
-        Lens::ActionOutcome => eval_action_outcome(plane),
-        Lens::Goals => eval_goals(plane),
-        Lens::Skill => eval_skill(plane),
-        Lens::ExpectedValue => eval_expected_value(plane),
-        Lens::Challenge => eval_challenge(plane),
-        Lens::MeaningfulChoice => eval_meaningful_choice(plane),
-        Lens::Transparency => eval_transparency(plane),
-        Lens::Economy => eval_economy(plane),
-        Lens::Fairness => eval_fairness(plane),
-        Lens::Freedom => eval_freedom(plane),
-        Lens::Feedback => eval_feedback(plane),
-        Lens::StoryGameBalance => eval_story_game_balance(plane),
-        Lens::Flow => eval_flow(plane),
-    };
-
+    let entry = lookup_evaluation(lens, plane);
     LensEvaluation {
         lens,
-        score,
-        strengths,
-        gaps,
+        score: entry.score,
+        strengths: entry.strengths.iter().map(|&s| s.into()).collect(),
+        gaps: entry.gaps.iter().map(|&s| s.into()).collect(),
     }
 }
 
-fn eval_essential_experience(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.9, vec!["Discovery and wonder".into()], vec![]),
-        PlaneType::Dialogue => (
+struct EvalEntry {
+    score: f64,
+    strengths: &'static [&'static str],
+    gaps: &'static [&'static str],
+}
+
+impl EvalEntry {
+    const fn new(
+        score: f64,
+        strengths: &'static [&'static str],
+        gaps: &'static [&'static str],
+    ) -> Self {
+        Self {
+            score,
+            strengths,
+            gaps,
+        }
+    }
+}
+
+#[allow(clippy::too_many_lines, clippy::enum_glob_use)]
+const fn lookup_evaluation(lens: Lens, plane: PlaneType) -> EvalEntry {
+    use Lens::*;
+    use PlaneType::*;
+
+    match (lens, plane) {
+        // ─── Essential Experience ───
+        (EssentialExperience, Exploration) => EvalEntry::new(0.9, &["Discovery and wonder"], &[]),
+        (EssentialExperience, Dialogue) => EvalEntry::new(
             0.85,
-            vec!["Social deduction and empathy".into()],
-            vec!["Voice system complexity".into()],
+            &["Social deduction and empathy"],
+            &["Voice system complexity"],
         ),
-        PlaneType::Tactical => (0.9, vec!["Strategic mastery".into()], vec![]),
-        PlaneType::Investigation => (
-            0.8,
-            vec!["Mystery and deduction".into()],
-            vec!["Pacing control needed".into()],
-        ),
-        PlaneType::Political => (
+        (EssentialExperience, Tactical) => EvalEntry::new(0.9, &["Strategic mastery"], &[]),
+        (EssentialExperience, Investigation) => {
+            EvalEntry::new(0.8, &["Mystery and deduction"], &["Pacing control needed"])
+        }
+        (EssentialExperience, Political) => EvalEntry::new(
             0.75,
-            vec!["Power dynamics".into()],
-            vec!["Long-term consequence tracking".into()],
+            &["Power dynamics"],
+            &["Long-term consequence tracking"],
         ),
-        PlaneType::Crafting => (
-            0.7,
-            vec!["Creative expression".into()],
-            vec!["Recipe discovery depth".into()],
-        ),
-        PlaneType::CardStack => (0.85, vec!["Combinatorial depth".into()], vec![]),
-    }
-}
+        (EssentialExperience, Crafting) => {
+            EvalEntry::new(0.7, &["Creative expression"], &["Recipe discovery depth"])
+        }
+        (EssentialExperience, CardStack) => EvalEntry::new(0.85, &["Combinatorial depth"], &[]),
 
-fn eval_surprise(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.9, vec!["Procedural discovery".into()], vec![]),
-        PlaneType::Dialogue => (
+        // ─── Surprise ───
+        (Surprise, Exploration) => EvalEntry::new(0.9, &["Procedural discovery"], &[]),
+        (Surprise, Dialogue) => EvalEntry::new(
             0.7,
-            vec!["NPC personality emergence".into()],
-            vec!["AI unpredictability bounded by cert".into()],
+            &["NPC personality emergence"],
+            &["AI unpredictability bounded by cert"],
         ),
-        PlaneType::Tactical => (
+        (Surprise, Tactical) => EvalEntry::new(
             0.6,
-            vec!["Dice variance".into()],
-            vec!["Deterministic grid limits surprise".into()],
+            &["Dice variance"],
+            &["Deterministic grid limits surprise"],
         ),
-        PlaneType::Investigation => (0.85, vec!["Clue revelation timing".into()], vec![]),
-        PlaneType::Political => (0.8, vec!["Betrayal mechanics".into()], vec![]),
-        PlaneType::Crafting => (
+        (Surprise, Investigation) => EvalEntry::new(0.85, &["Clue revelation timing"], &[]),
+        (Surprise, Political) => EvalEntry::new(0.8, &["Betrayal mechanics"], &[]),
+        (Surprise, Crafting) => EvalEntry::new(
             0.65,
-            vec!["Unexpected synergies".into()],
-            vec!["Recipe system predictable after mastery".into()],
+            &["Unexpected synergies"],
+            &["Recipe system predictable after mastery"],
         ),
-        PlaneType::CardStack => (
-            0.9,
-            vec!["Stack interaction emergent behavior".into()],
-            vec![],
-        ),
-    }
-}
+        (Surprise, CardStack) => EvalEntry::new(0.9, &["Stack interaction emergent behavior"], &[]),
 
-fn eval_curiosity(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.95, vec!["Map mystery, fog of war".into()], vec![]),
-        PlaneType::Dialogue => (0.8, vec!["NPC secrets, hidden knowledge".into()], vec![]),
-        PlaneType::Tactical => (
+        // ─── Curiosity ───
+        (Curiosity, Exploration) => EvalEntry::new(0.95, &["Map mystery, fog of war"], &[]),
+        (Curiosity, Dialogue) => EvalEntry::new(0.8, &["NPC secrets, hidden knowledge"], &[]),
+        (Curiosity, Tactical) => EvalEntry::new(
             0.5,
-            vec!["Enemy capability unknown".into()],
-            vec!["Rules-heavy reduces wonder".into()],
+            &["Enemy capability unknown"],
+            &["Rules-heavy reduces wonder"],
         ),
-        PlaneType::Investigation => (0.95, vec!["Core mechanic IS curiosity".into()], vec![]),
-        PlaneType::Political => (0.75, vec!["Hidden agendas".into()], vec![]),
-        PlaneType::Crafting => (
-            0.7,
-            vec!["Unknown recipes".into()],
-            vec!["Finite discovery space".into()],
-        ),
-        PlaneType::CardStack => (
-            0.7,
-            vec!["Novel combinations".into()],
-            vec!["Solved states possible".into()],
-        ),
-    }
-}
+        (Curiosity, Investigation) => EvalEntry::new(0.95, &["Core mechanic IS curiosity"], &[]),
+        (Curiosity, Political) => EvalEntry::new(0.75, &["Hidden agendas"], &[]),
+        (Curiosity, Crafting) => {
+            EvalEntry::new(0.7, &["Unknown recipes"], &["Finite discovery space"])
+        }
+        (Curiosity, CardStack) => {
+            EvalEntry::new(0.7, &["Novel combinations"], &["Solved states possible"])
+        }
 
-fn eval_endogenous_value(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.8, vec!["Landmarks have narrative weight".into()], vec![]),
-        PlaneType::Dialogue => (0.85, vec!["Trust is earned, secrets matter".into()], vec![]),
-        PlaneType::Tactical => (
+        // ─── Endogenous Value ───
+        (EndogenousValue, Exploration) => {
+            EvalEntry::new(0.8, &["Landmarks have narrative weight"], &[])
+        }
+        (EndogenousValue, Dialogue) => {
+            EvalEntry::new(0.85, &["Trust is earned, secrets matter"], &[])
+        }
+        (EndogenousValue, Tactical) => EvalEntry::new(
             0.7,
-            vec!["Position matters, HP meaningful".into()],
-            vec!["Abstract numbers vs world".into()],
+            &["Position matters, HP meaningful"],
+            &["Abstract numbers vs world"],
         ),
-        PlaneType::Investigation => (0.9, vec!["Clues unlock narrative".into()], vec![]),
-        PlaneType::Political => (0.9, vec!["Reputation drives access".into()], vec![]),
-        PlaneType::Crafting => (0.75, vec!["Created items have provenance".into()], vec![]),
-        PlaneType::CardStack => (0.8, vec!["Card value context-dependent".into()], vec![]),
-    }
-}
+        (EndogenousValue, Investigation) => EvalEntry::new(0.9, &["Clues unlock narrative"], &[]),
+        (EndogenousValue, Political) => EvalEntry::new(0.9, &["Reputation drives access"], &[]),
+        (EndogenousValue, Crafting) => {
+            EvalEntry::new(0.75, &["Created items have provenance"], &[])
+        }
+        (EndogenousValue, CardStack) => EvalEntry::new(0.8, &["Card value context-dependent"], &[]),
 
-fn eval_problem_solving(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
+        // ─── Problem Solving ───
+        (ProblemSolving, Exploration) => EvalEntry::new(
             0.6,
-            vec!["Navigation, resource management".into()],
-            vec!["Low structured challenge".into()],
+            &["Navigation, resource management"],
+            &["Low structured challenge"],
         ),
-        PlaneType::Dialogue => (0.75, vec!["Social puzzle solving".into()], vec![]),
-        PlaneType::Tactical => (
-            0.95,
-            vec!["Core mechanic IS problem solving".into()],
-            vec![],
-        ),
-        PlaneType::Investigation => (0.9, vec!["Deduction chains".into()], vec![]),
-        PlaneType::Political => (0.8, vec!["Multi-agent optimization".into()], vec![]),
-        PlaneType::Crafting => (0.85, vec!["Material constraint puzzles".into()], vec![]),
-        PlaneType::CardStack => (0.9, vec!["Sequencing optimization".into()], vec![]),
-    }
-}
+        (ProblemSolving, Dialogue) => EvalEntry::new(0.75, &["Social puzzle solving"], &[]),
+        (ProblemSolving, Tactical) => {
+            EvalEntry::new(0.95, &["Core mechanic IS problem solving"], &[])
+        }
+        (ProblemSolving, Investigation) => EvalEntry::new(0.9, &["Deduction chains"], &[]),
+        (ProblemSolving, Political) => EvalEntry::new(0.8, &["Multi-agent optimization"], &[]),
+        (ProblemSolving, Crafting) => EvalEntry::new(0.85, &["Material constraint puzzles"], &[]),
+        (ProblemSolving, CardStack) => EvalEntry::new(0.9, &["Sequencing optimization"], &[]),
 
-fn eval_elemental_tetrad(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    let base = 0.7;
-    let bonus = match plane {
-        PlaneType::Exploration | PlaneType::CardStack => 0.15,
-        PlaneType::Dialogue | PlaneType::Investigation | PlaneType::Political => 0.1,
-        PlaneType::Tactical | PlaneType::Crafting => 0.05,
-    };
-    (
-        base + bonus,
-        vec!["All four elements present".into()],
-        vec!["Technology element weakest (terminal rendering)".into()],
-    )
-}
-
-fn eval_unification(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
-            0.9,
-            vec!["Theme: discovery unites movement+fog+lore".into()],
-            vec![],
-        ),
-        PlaneType::Dialogue => (
+        // ─── Elemental Tetrad ───
+        (ElementalTetrad, Exploration | CardStack) => EvalEntry::new(
             0.85,
-            vec!["Theme: understanding unites voice+trust+knowledge".into()],
-            vec![],
+            &["All four elements present"],
+            &["Technology element weakest (terminal rendering)"],
         ),
-        PlaneType::Tactical => (
+        (ElementalTetrad, Dialogue | Investigation | Political) => EvalEntry::new(
             0.8,
-            vec!["Theme: mastery unites positioning+timing+resources".into()],
-            vec![],
+            &["All four elements present"],
+            &["Technology element weakest (terminal rendering)"],
         ),
-        PlaneType::Investigation => (
-            0.95,
-            vec!["Theme: truth unites clues+deduction+revelation".into()],
-            vec![],
-        ),
-        PlaneType::Political => (
-            0.7,
-            vec!["Theme: power unites reputation+alliance+betrayal".into()],
-            vec!["Multiple competing themes".into()],
-        ),
-        PlaneType::Crafting => (
+        (ElementalTetrad, Tactical | Crafting) => EvalEntry::new(
             0.75,
-            vec!["Theme: creation unites materials+recipes+products".into()],
-            vec!["Economic subsystem splits focus".into()],
+            &["All four elements present"],
+            &["Technology element weakest (terminal rendering)"],
         ),
-        PlaneType::CardStack => (
-            0.8,
-            vec!["Theme: timing unites priority+sequencing+response".into()],
-            vec![],
-        ),
-    }
-}
 
-fn eval_action_outcome(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
-            0.7,
-            vec!["Movement→discovery clear".into()],
-            vec!["Long-term consequences opaque".into()],
-        ),
-        PlaneType::Dialogue => (
-            0.6,
-            vec!["Skill check outcomes defined".into()],
-            vec!["NPC reaction partially opaque (intentional)".into()],
-        ),
-        PlaneType::Tactical => (
-            0.95,
-            vec!["DCs, hit chances, damage fully transparent".into()],
-            vec![],
-        ),
-        PlaneType::Investigation => (
-            0.7,
-            vec!["Clue gathering predictable".into()],
-            vec!["Deduction leaps uncertain".into()],
-        ),
-        PlaneType::Political => (
-            0.5,
-            vec!["Immediate actions clear".into()],
-            vec!["Faction ripple effects intentionally opaque".into()],
-        ),
-        PlaneType::Crafting => (
-            0.9,
-            vec!["Recipe inputs→outputs deterministic".into()],
-            vec![],
-        ),
-        PlaneType::CardStack => (
+        // ─── Unification ───
+        (Unification, Exploration) => {
+            EvalEntry::new(0.9, &["Theme: discovery unites movement+fog+lore"], &[])
+        }
+        (Unification, Dialogue) => EvalEntry::new(
             0.85,
-            vec!["Stack resolution rules-determined".into()],
-            vec!["Opponent response unknown".into()],
+            &["Theme: understanding unites voice+trust+knowledge"],
+            &[],
         ),
-    }
-}
-
-fn eval_goals(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
-            0.6,
-            vec!["Emergent goals from discovery".into()],
-            vec!["No explicit goal structure".into()],
+        (Unification, Tactical) => EvalEntry::new(
+            0.8,
+            &["Theme: mastery unites positioning+timing+resources"],
+            &[],
         ),
-        PlaneType::Dialogue => (
-            0.7,
-            vec!["Trust thresholds as goals".into()],
-            vec!["Relationship goals implicit".into()],
-        ),
-        PlaneType::Tactical => (
+        (Unification, Investigation) => EvalEntry::new(
             0.95,
-            vec!["Defeat enemies, survive, achieve objective".into()],
-            vec![],
+            &["Theme: truth unites clues+deduction+revelation"],
+            &[],
         ),
-        PlaneType::Investigation => (0.85, vec!["Solve the mystery".into()], vec![]),
-        PlaneType::Political => (
+        (Unification, Political) => EvalEntry::new(
             0.7,
-            vec!["Gain influence/power".into()],
-            vec!["Multi-objective ambiguity".into()],
+            &["Theme: power unites reputation+alliance+betrayal"],
+            &["Multiple competing themes"],
         ),
-        PlaneType::Crafting => (0.8, vec!["Create target item".into()], vec![]),
-        PlaneType::CardStack => (
-            0.9,
-            vec!["Win the match, reduce opponent to 0".into()],
-            vec![],
-        ),
-    }
-}
-
-fn eval_skill(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
-            0.5,
-            vec!["Resource management".into()],
-            vec!["Low skill ceiling".into()],
-        ),
-        PlaneType::Dialogue => (
-            0.7,
-            vec!["Social intelligence rewarded".into()],
-            vec!["Dice override player skill".into()],
-        ),
-        PlaneType::Tactical => (
-            0.9,
-            vec!["Positioning, timing, resource optimization".into()],
-            vec![],
-        ),
-        PlaneType::Investigation => (
+        (Unification, Crafting) => EvalEntry::new(
             0.75,
-            vec!["Deductive reasoning".into()],
-            vec!["GUMSHOE auto-gives clues (by design)".into()],
+            &["Theme: creation unites materials+recipes+products"],
+            &["Economic subsystem splits focus"],
         ),
-        PlaneType::Political => (
-            0.7,
-            vec!["Social strategy".into()],
-            vec!["Memory/tracking burden".into()],
+        (Unification, CardStack) => EvalEntry::new(
+            0.8,
+            &["Theme: timing unites priority+sequencing+response"],
+            &[],
         ),
-        PlaneType::Crafting => (
-            0.6,
-            vec!["Recipe optimization".into()],
-            vec!["Mastery ceiling low after discovery".into()],
-        ),
-        PlaneType::CardStack => (
-            0.95,
-            vec!["Sequencing, risk assessment, meta-knowledge".into()],
-            vec![],
-        ),
-    }
-}
 
-fn eval_expected_value(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    let base = match plane {
-        PlaneType::Exploration | PlaneType::Dialogue => 0.7,
-        PlaneType::Tactical | PlaneType::CardStack => 0.85,
-        PlaneType::Investigation | PlaneType::Political | PlaneType::Crafting => 0.75,
-    };
-    (
-        base,
-        vec!["Risk/reward structures present".into()],
-        vec!["Balance requires playtesting".into()],
-    )
-}
-
-fn eval_challenge(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
-            0.6,
-            vec!["Environmental hazards".into()],
-            vec!["Low active challenge without encounters".into()],
-        ),
-        PlaneType::Dialogue => (
+        // ─── Action → Outcome ───
+        (ActionOutcome, Exploration) => EvalEntry::new(
             0.7,
-            vec!["Social difficulty curves".into()],
-            vec!["DDA for conversation pace needed".into()],
+            &["Movement→discovery clear"],
+            &["Long-term consequences opaque"],
         ),
-        PlaneType::Tactical => (
-            0.9,
-            vec!["Encounter design is calibrated challenge".into()],
-            vec![],
+        (ActionOutcome, Dialogue) => EvalEntry::new(
+            0.6,
+            &["Skill check outcomes defined"],
+            &["NPC reaction partially opaque (intentional)"],
         ),
-        PlaneType::Investigation => (0.8, vec!["Puzzle difficulty scaling".into()], vec![]),
-        PlaneType::Political => (
+        (ActionOutcome, Tactical) => {
+            EvalEntry::new(0.95, &["DCs, hit chances, damage fully transparent"], &[])
+        }
+        (ActionOutcome, Investigation) => EvalEntry::new(
+            0.7,
+            &["Clue gathering predictable"],
+            &["Deduction leaps uncertain"],
+        ),
+        (ActionOutcome, Political) => EvalEntry::new(
+            0.5,
+            &["Immediate actions clear"],
+            &["Faction ripple effects intentionally opaque"],
+        ),
+        (ActionOutcome, Crafting) => {
+            EvalEntry::new(0.9, &["Recipe inputs→outputs deterministic"], &[])
+        }
+        (ActionOutcome, CardStack) => EvalEntry::new(
+            0.85,
+            &["Stack resolution rules-determined"],
+            &["Opponent response unknown"],
+        ),
+
+        // ─── Goals ───
+        (Goals, Exploration) => EvalEntry::new(
+            0.6,
+            &["Emergent goals from discovery"],
+            &["No explicit goal structure"],
+        ),
+        (Goals, Dialogue) => EvalEntry::new(
+            0.7,
+            &["Trust thresholds as goals"],
+            &["Relationship goals implicit"],
+        ),
+        (Goals, Tactical) => {
+            EvalEntry::new(0.95, &["Defeat enemies, survive, achieve objective"], &[])
+        }
+        (Goals, Investigation) => EvalEntry::new(0.85, &["Solve the mystery"], &[]),
+        (Goals, Political) => EvalEntry::new(
+            0.7,
+            &["Gain influence/power"],
+            &["Multi-objective ambiguity"],
+        ),
+        (Goals, Crafting) => EvalEntry::new(0.8, &["Create target item"], &[]),
+        (Goals, CardStack) => EvalEntry::new(0.9, &["Win the match, reduce opponent to 0"], &[]),
+
+        // ─── Skill ───
+        (Skill, Exploration) => {
+            EvalEntry::new(0.5, &["Resource management"], &["Low skill ceiling"])
+        }
+        (Skill, Dialogue) => EvalEntry::new(
+            0.7,
+            &["Social intelligence rewarded"],
+            &["Dice override player skill"],
+        ),
+        (Skill, Tactical) => {
+            EvalEntry::new(0.9, &["Positioning, timing, resource optimization"], &[])
+        }
+        (Skill, Investigation) => EvalEntry::new(
+            0.75,
+            &["Deductive reasoning"],
+            &["GUMSHOE auto-gives clues (by design)"],
+        ),
+        (Skill, Political) => {
+            EvalEntry::new(0.7, &["Social strategy"], &["Memory/tracking burden"])
+        }
+        (Skill, Crafting) => EvalEntry::new(
+            0.6,
+            &["Recipe optimization"],
+            &["Mastery ceiling low after discovery"],
+        ),
+        (Skill, CardStack) => {
+            EvalEntry::new(0.95, &["Sequencing, risk assessment, meta-knowledge"], &[])
+        }
+
+        // ─── Expected Value ───
+        (ExpectedValue, Exploration | Dialogue) => EvalEntry::new(
+            0.7,
+            &["Risk/reward structures present"],
+            &["Balance requires playtesting"],
+        ),
+        (ExpectedValue, Tactical | CardStack) => EvalEntry::new(
+            0.85,
+            &["Risk/reward structures present"],
+            &["Balance requires playtesting"],
+        ),
+        (ExpectedValue, Investigation | Political | Crafting) => EvalEntry::new(
+            0.75,
+            &["Risk/reward structures present"],
+            &["Balance requires playtesting"],
+        ),
+
+        // ─── Challenge ───
+        (Challenge, Exploration) => EvalEntry::new(
+            0.6,
+            &["Environmental hazards"],
+            &["Low active challenge without encounters"],
+        ),
+        (Challenge, Dialogue) => EvalEntry::new(
+            0.7,
+            &["Social difficulty curves"],
+            &["DDA for conversation pace needed"],
+        ),
+        (Challenge, Tactical) => {
+            EvalEntry::new(0.9, &["Encounter design is calibrated challenge"], &[])
+        }
+        (Challenge, Investigation) => EvalEntry::new(0.8, &["Puzzle difficulty scaling"], &[]),
+        (Challenge, Political) => EvalEntry::new(
             0.65,
-            vec!["Competing agents scale challenge".into()],
-            vec!["Difficulty invisible to player".into()],
+            &["Competing agents scale challenge"],
+            &["Difficulty invisible to player"],
         ),
-        PlaneType::Crafting => (
+        (Challenge, Crafting) => EvalEntry::new(
             0.7,
-            vec!["Material scarcity creates challenge".into()],
-            vec!["Linear difficulty curve".into()],
+            &["Material scarcity creates challenge"],
+            &["Linear difficulty curve"],
         ),
-        PlaneType::CardStack => (
-            0.85,
-            vec!["Opponent skill = dynamic challenge".into()],
-            vec![],
-        ),
-    }
-}
+        (Challenge, CardStack) => {
+            EvalEntry::new(0.85, &["Opponent skill = dynamic challenge"], &[])
+        }
 
-fn eval_meaningful_choice(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
+        // ─── Meaningful Choice ───
+        (MeaningfulChoice, Exploration) => EvalEntry::new(
             0.75,
-            vec!["Path selection, resource allocation".into()],
-            vec!["Many choices equivalent".into()],
+            &["Path selection, resource allocation"],
+            &["Many choices equivalent"],
         ),
-        PlaneType::Dialogue => (
-            0.9,
-            vec!["Every dialogue option has consequences".into()],
-            vec![],
-        ),
-        PlaneType::Tactical => (
-            0.85,
-            vec!["Action selection, positioning trade-offs".into()],
-            vec![],
-        ),
-        PlaneType::Investigation => (
+        (MeaningfulChoice, Dialogue) => {
+            EvalEntry::new(0.9, &["Every dialogue option has consequences"], &[])
+        }
+        (MeaningfulChoice, Tactical) => {
+            EvalEntry::new(0.85, &["Action selection, positioning trade-offs"], &[])
+        }
+        (MeaningfulChoice, Investigation) => EvalEntry::new(
             0.7,
-            vec!["Which leads to follow".into()],
-            vec!["GUMSHOE gives all clues regardless".into()],
+            &["Which leads to follow"],
+            &["GUMSHOE gives all clues regardless"],
         ),
-        PlaneType::Political => (
-            0.95,
-            vec!["Alliance/betrayal has cascading consequences".into()],
-            vec![],
-        ),
-        PlaneType::Crafting => (
+        (MeaningfulChoice, Political) => {
+            EvalEntry::new(0.95, &["Alliance/betrayal has cascading consequences"], &[])
+        }
+        (MeaningfulChoice, Crafting) => EvalEntry::new(
             0.6,
-            vec!["Material allocation".into()],
-            vec!["Optimal path often obvious".into()],
+            &["Material allocation"],
+            &["Optimal path often obvious"],
         ),
-        PlaneType::CardStack => (
-            0.9,
-            vec!["Play order, resource commitment, bluffing".into()],
-            vec![],
-        ),
-    }
-}
+        (MeaningfulChoice, CardStack) => {
+            EvalEntry::new(0.9, &["Play order, resource commitment, bluffing"], &[])
+        }
 
-fn eval_transparency(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.8, vec!["Simple rules, few mechanics".into()], vec![]),
-        PlaneType::Dialogue => (
+        // ─── Transparency ───
+        (Transparency, Exploration) => EvalEntry::new(0.8, &["Simple rules, few mechanics"], &[]),
+        (Transparency, Dialogue) => EvalEntry::new(
             0.6,
-            vec!["Skill checks transparent".into()],
-            vec!["NPC internal state hidden".into()],
+            &["Skill checks transparent"],
+            &["NPC internal state hidden"],
         ),
-        PlaneType::Tactical => (
+        (Transparency, Tactical) => EvalEntry::new(
             0.7,
-            vec!["Rules heavy but documented".into()],
-            vec!["PF2e complexity barrier".into()],
+            &["Rules heavy but documented"],
+            &["PF2e complexity barrier"],
         ),
-        PlaneType::Investigation => (
+        (Transparency, Investigation) => EvalEntry::new(
             0.75,
-            vec!["Evidence rules clear".into()],
-            vec!["Deduction logic implicit".into()],
+            &["Evidence rules clear"],
+            &["Deduction logic implicit"],
         ),
-        PlaneType::Political => (
+        (Transparency, Political) => EvalEntry::new(
             0.5,
-            vec!["Basic rules clear".into()],
-            vec!["Social dynamics opaque by design".into()],
+            &["Basic rules clear"],
+            &["Social dynamics opaque by design"],
         ),
-        PlaneType::Crafting => (
-            0.85,
-            vec!["Recipe system deterministic and visible".into()],
-            vec![],
-        ),
-        PlaneType::CardStack => (
+        (Transparency, Crafting) => {
+            EvalEntry::new(0.85, &["Recipe system deterministic and visible"], &[])
+        }
+        (Transparency, CardStack) => EvalEntry::new(
             0.8,
-            vec!["Stack rules fully specified".into()],
-            vec!["Rule interactions complex".into()],
+            &["Stack rules fully specified"],
+            &["Rule interactions complex"],
         ),
-    }
-}
 
-fn eval_economy(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
-            0.6,
-            vec!["Supply management".into()],
-            vec!["Economy minimal".into()],
-        ),
-        PlaneType::Dialogue => (
-            0.5,
-            vec!["Trust as currency".into()],
-            vec!["Informal economy".into()],
-        ),
-        PlaneType::Tactical => (
-            0.85,
-            vec!["Action economy (3 actions/turn PF2e)".into()],
-            vec![],
-        ),
-        PlaneType::Investigation => (
-            0.6,
-            vec!["Time/attention as resource".into()],
-            vec!["Not formalized".into()],
-        ),
-        PlaneType::Political => (
-            0.8,
-            vec!["Favor economy, reputation as capital".into()],
-            vec![],
-        ),
-        PlaneType::Crafting => (
+        // ─── Economy ───
+        (Economy, Exploration) => EvalEntry::new(0.6, &["Supply management"], &["Economy minimal"]),
+        (Economy, Dialogue) => EvalEntry::new(0.5, &["Trust as currency"], &["Informal economy"]),
+        (Economy, Tactical) => EvalEntry::new(0.85, &["Action economy (3 actions/turn PF2e)"], &[]),
+        (Economy, Investigation) => {
+            EvalEntry::new(0.6, &["Time/attention as resource"], &["Not formalized"])
+        }
+        (Economy, Political) => EvalEntry::new(0.8, &["Favor economy, reputation as capital"], &[]),
+        (Economy, Crafting) => EvalEntry::new(0.9, &["Material economy is core mechanic"], &[]),
+        (Economy, CardStack) => EvalEntry::new(0.95, &["Mana/resource system fully designed"], &[]),
+
+        // ─── Fairness ───
+        (Fairness, Tactical | CardStack) => EvalEntry::new(
             0.9,
-            vec!["Material economy is core mechanic".into()],
-            vec![],
+            &["Single-player or cooperative — fairness vs system"],
+            &["PvP balance requires extensive testing"],
         ),
-        PlaneType::CardStack => (
-            0.95,
-            vec!["Mana/resource system fully designed".into()],
-            vec![],
+        (Fairness, Exploration | Crafting) => EvalEntry::new(
+            0.85,
+            &["Single-player or cooperative — fairness vs system"],
+            &["PvP balance requires extensive testing"],
         ),
-    }
-}
+        (Fairness, Dialogue | Investigation | Political) => EvalEntry::new(
+            0.75,
+            &["Single-player or cooperative — fairness vs system"],
+            &["PvP balance requires extensive testing"],
+        ),
 
-fn eval_fairness(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    let base = 0.75;
-    let modifier = match plane {
-        PlaneType::Tactical | PlaneType::CardStack => 0.15,
-        PlaneType::Exploration | PlaneType::Crafting => 0.1,
-        PlaneType::Dialogue | PlaneType::Investigation | PlaneType::Political => 0.0,
-    };
-    (
-        base + modifier,
-        vec!["Single-player or cooperative — fairness vs system".into()],
-        vec!["PvP balance requires extensive testing".into()],
-    )
-}
-
-fn eval_freedom(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.95, vec!["Maximum player agency".into()], vec![]),
-        PlaneType::Dialogue => (
+        // ─── Freedom ───
+        (Freedom, Exploration) => EvalEntry::new(0.95, &["Maximum player agency"], &[]),
+        (Freedom, Dialogue) => EvalEntry::new(
             0.8,
-            vec!["Conversation approach is player's choice".into()],
-            vec!["Bounded by NPC knowledge system".into()],
+            &["Conversation approach is player's choice"],
+            &["Bounded by NPC knowledge system"],
         ),
-        PlaneType::Tactical => (
+        (Freedom, Tactical) => EvalEntry::new(
             0.7,
-            vec!["Tactical creativity within rules".into()],
-            vec!["Rules constrain novel solutions".into()],
+            &["Tactical creativity within rules"],
+            &["Rules constrain novel solutions"],
         ),
-        PlaneType::Investigation => (
+        (Freedom, Investigation) => EvalEntry::new(
             0.65,
-            vec!["Approach to investigation free".into()],
-            vec!["Solution path predetermined".into()],
+            &["Approach to investigation free"],
+            &["Solution path predetermined"],
         ),
-        PlaneType::Political => (0.85, vec!["Strategy entirely player-driven".into()], vec![]),
-        PlaneType::Crafting => (
+        (Freedom, Political) => EvalEntry::new(0.85, &["Strategy entirely player-driven"], &[]),
+        (Freedom, Crafting) => EvalEntry::new(
             0.7,
-            vec!["Creative expression in combinations".into()],
-            vec!["Recipe list bounds possibility".into()],
+            &["Creative expression in combinations"],
+            &["Recipe list bounds possibility"],
         ),
-        PlaneType::CardStack => (
+        (Freedom, CardStack) => EvalEntry::new(
             0.75,
-            vec!["Deck construction as expression".into()],
-            vec!["Card pool limits options".into()],
+            &["Deck construction as expression"],
+            &["Card pool limits options"],
         ),
-    }
-}
 
-fn eval_feedback(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
+        // ─── Feedback ───
+        (Feedback, Exploration) => EvalEntry::new(
             0.7,
-            vec!["Map reveals, inventory updates".into()],
-            vec!["Long-term impact unclear".into()],
+            &["Map reveals, inventory updates"],
+            &["Long-term impact unclear"],
         ),
-        PlaneType::Dialogue => (
+        (Feedback, Dialogue) => EvalEntry::new(
             0.75,
-            vec!["Trust level visible, NPC reactions".into()],
-            vec!["Subtle shifts hard to convey in text".into()],
+            &["Trust level visible, NPC reactions"],
+            &["Subtle shifts hard to convey in text"],
         ),
-        PlaneType::Tactical => (
-            0.9,
-            vec!["HP, conditions, initiative — constant state".into()],
-            vec![],
-        ),
-        PlaneType::Investigation => (
+        (Feedback, Tactical) => {
+            EvalEntry::new(0.9, &["HP, conditions, initiative — constant state"], &[])
+        }
+        (Feedback, Investigation) => EvalEntry::new(
             0.7,
-            vec!["Evidence board accumulation".into()],
-            vec!["Insight moments hard to pace".into()],
+            &["Evidence board accumulation"],
+            &["Insight moments hard to pace"],
         ),
-        PlaneType::Political => (
+        (Feedback, Political) => EvalEntry::new(
             0.6,
-            vec!["Reputation scores visible".into()],
-            vec!["Faction relations multi-dimensional".into()],
+            &["Reputation scores visible"],
+            &["Faction relations multi-dimensional"],
         ),
-        PlaneType::Crafting => (
-            0.85,
-            vec!["Recipe progress, material consumption clear".into()],
-            vec![],
-        ),
-        PlaneType::CardStack => (
-            0.9,
-            vec!["Board state, life totals, stack visible".into()],
-            vec![],
-        ),
-    }
-}
+        (Feedback, Crafting) => {
+            EvalEntry::new(0.85, &["Recipe progress, material consumption clear"], &[])
+        }
+        (Feedback, CardStack) => {
+            EvalEntry::new(0.9, &["Board state, life totals, stack visible"], &[])
+        }
 
-fn eval_story_game_balance(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (0.85, vec!["Discovery IS the story".into()], vec![]),
-        PlaneType::Dialogue => (0.95, vec!["Conversation IS narrative".into()], vec![]),
-        PlaneType::Tactical => (
+        // ─── Story/Game Balance ───
+        (StoryGameBalance, Exploration) => EvalEntry::new(0.85, &["Discovery IS the story"], &[]),
+        (StoryGameBalance, Dialogue) => EvalEntry::new(0.95, &["Conversation IS narrative"], &[]),
+        (StoryGameBalance, Tactical) => EvalEntry::new(
             0.6,
-            vec!["Combat serves narrative context".into()],
-            vec!["Mechanics can overshadow story".into()],
+            &["Combat serves narrative context"],
+            &["Mechanics can overshadow story"],
         ),
-        PlaneType::Investigation => (0.9, vec!["Mystery solving IS the narrative".into()], vec![]),
-        PlaneType::Political => (
-            0.85,
-            vec!["Political maneuvering creates story".into()],
-            vec![],
-        ),
-        PlaneType::Crafting => (
+        (StoryGameBalance, Investigation) => {
+            EvalEntry::new(0.9, &["Mystery solving IS the narrative"], &[])
+        }
+        (StoryGameBalance, Political) => {
+            EvalEntry::new(0.85, &["Political maneuvering creates story"], &[])
+        }
+        (StoryGameBalance, Crafting) => EvalEntry::new(
             0.5,
-            vec!["Crafting serves equipment needs".into()],
-            vec!["Mechanical, low narrative integration".into()],
+            &["Crafting serves equipment needs"],
+            &["Mechanical, low narrative integration"],
         ),
-        PlaneType::CardStack => (
+        (StoryGameBalance, CardStack) => EvalEntry::new(
             0.6,
-            vec!["Card themes provide flavor".into()],
-            vec!["Abstraction distances from narrative".into()],
+            &["Card themes provide flavor"],
+            &["Abstraction distances from narrative"],
         ),
-    }
-}
 
-fn eval_flow(plane: PlaneType) -> (f64, Vec<String>, Vec<String>) {
-    match plane {
-        PlaneType::Exploration => (
+        // ─── Flow ───
+        (Flow, Exploration) => EvalEntry::new(
             0.8,
-            vec!["Ambient discovery promotes flow".into()],
-            vec!["Low challenge may drop engagement".into()],
+            &["Ambient discovery promotes flow"],
+            &["Low challenge may drop engagement"],
         ),
-        PlaneType::Dialogue => (
+        (Flow, Dialogue) => EvalEntry::new(
             0.75,
-            vec!["Conversational flow natural".into()],
-            vec!["Dice interrupts may break flow".into()],
+            &["Conversational flow natural"],
+            &["Dice interrupts may break flow"],
         ),
-        PlaneType::Tactical => (
+        (Flow, Tactical) => EvalEntry::new(
             0.85,
-            vec!["Turn structure maintains engagement".into()],
-            vec!["Rules lookup breaks flow".into()],
+            &["Turn structure maintains engagement"],
+            &["Rules lookup breaks flow"],
         ),
-        PlaneType::Investigation => (
+        (Flow, Investigation) => EvalEntry::new(
             0.7,
-            vec!["Puzzle flow when clues connect".into()],
-            vec!["Dead ends break flow".into()],
+            &["Puzzle flow when clues connect"],
+            &["Dead ends break flow"],
         ),
-        PlaneType::Political => (
+        (Flow, Political) => EvalEntry::new(
             0.6,
-            vec!["Intrigue drives forward momentum".into()],
-            vec!["Long timescales reduce flow".into()],
+            &["Intrigue drives forward momentum"],
+            &["Long timescales reduce flow"],
         ),
-        PlaneType::Crafting => (
+        (Flow, Crafting) => EvalEntry::new(
             0.65,
-            vec!["Crafting loops can be meditative".into()],
-            vec!["Material gathering interrupts".into()],
+            &["Crafting loops can be meditative"],
+            &["Material gathering interrupts"],
         ),
-        PlaneType::CardStack => (
-            0.85,
-            vec!["Rapid decision-making promotes flow".into()],
-            vec![],
-        ),
+        (Flow, CardStack) => EvalEntry::new(0.85, &["Rapid decision-making promotes flow"], &[]),
     }
 }
 
