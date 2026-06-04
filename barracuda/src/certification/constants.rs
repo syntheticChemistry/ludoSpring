@@ -11,7 +11,7 @@ use primalspring::validation::ValidationResult;
 // Python commit: 231928a, date: 2026-04-17
 // Rust Level 2: validate_interaction, validate_procedural, validate_engagement
 
-/// Fitts' Law: MT = 50 + 150 × log₂(2 × 100 / 10)
+/// Fitts' Law (Shannon formulation): MT = 50 + 150 × log₂(2 × 100 / 10 + 1)
 /// Fitts (1954), MacKenzie (1992)
 pub const FITTS_MT_D100_W10: f64 = 708.847_613_416_814;
 
@@ -143,13 +143,19 @@ pub fn check_method_exists(
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, reason = "test assertions use unwrap for clarity")]
+#[allow(
+    clippy::unwrap_used,
+    clippy::approx_constant,
+    clippy::cast_possible_truncation,
+    clippy::suboptimal_flops,
+    reason = "test assertions: unwrap for clarity, approx values are JSON payloads not std consts, truncation is safe in base64 decoder, golden values computed with separate mul+add"
+)]
 mod tests {
     use super::*;
 
     #[test]
     fn fitts_mt_matches_formula() {
-        let expected = 50.0 + 150.0 * (2.0 * 100.0_f64 / 10.0).log2();
+        let expected = 50.0 + 150.0 * (2.0 * 100.0_f64 / 10.0 + 1.0).log2();
         assert!((FITTS_MT_D100_W10 - expected).abs() < 1e-10);
     }
 

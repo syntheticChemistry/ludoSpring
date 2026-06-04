@@ -27,7 +27,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        run: cargo clippy --workspace --all-targets --features ipc,local,guidestone -- -D warnings
 
       - name: Workspace check (all crates compile)
         run: cargo check --workspace

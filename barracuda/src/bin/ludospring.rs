@@ -35,7 +35,10 @@ fn cmd_certify(max_tier: u8) {
     }
 }
 
-#[allow(clippy::needless_pass_by_value, reason = "CLI entry point — clap produces owned values")]
+#[allow(
+    clippy::needless_pass_by_value,
+    reason = "CLI entry point — clap produces owned values"
+)]
 fn cmd_validate(
     tier_filter: Option<String>,
     track_filter: Option<String>,
@@ -76,7 +79,12 @@ fn cmd_validate(
 
     let tier = tier_filter.as_deref().and_then(Tier::from_str_loose);
     let scenarios: Vec<_> = scenario_id.as_deref().map_or_else(
-        || tier.map_or_else(|| registry.filter_by_tier(Tier::Rust), |t| registry.filter_by_tier(t)),
+        || {
+            tier.map_or_else(
+                || registry.filter_by_tier(Tier::Rust),
+                |t| registry.filter_by_tier(t),
+            )
+        },
         |id| registry.find(id).into_iter().collect(),
     );
 
