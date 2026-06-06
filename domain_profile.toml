@@ -1,0 +1,151 @@
+# Domain Profile: ludoSpring — Game Science & Interactive Systems
+# Covers HCI validation (Fitts, Hick, Steering, GOMS, Flow), game design
+# frameworks (MDA, Schell Lenses, Bartle, Deterding), procedural generation
+# (Perlin, WFC, L-systems, BSP), and interactive system composition.
+
+[profile]
+id = "ludospring-game-science"
+version = "1.0.0"
+domain = "game-science"
+subdomain = ["human-computer-interaction", "game-design", "procedural-generation", "interactive-systems"]
+tools = ["Rust", "Python (baselines)", "WGSL (coralReef shaders)"]
+methods = [
+    "fitts-law-prediction",
+    "hick-law-reaction-time",
+    "steering-law-path",
+    "goms-task-analysis",
+    "flow-state-detection",
+    "dynamic-difficulty-adjustment",
+    "mda-framework-analysis",
+    "schell-lens-evaluation",
+    "bartle-player-classification",
+    "deterding-gamification-scoring",
+    "perlin-noise-generation",
+    "wave-function-collapse",
+    "l-system-growth",
+    "bsp-spatial-partitioning",
+]
+
+[translation]
+
+[[translation.entity_groups]]
+name = "interaction_laws"
+domain_description = "Validated HCI models: movement time, decision time, path steering, task decomposition"
+computation = "Fitts MT=a+b×log₂(2D/W+1), Hick RT=a+b×log₂(n+1), Steering T=a+b×(A/W), GOMS KLM decomposition"
+modules = ["interaction"]
+
+[[translation.entity_groups]]
+name = "engagement_dynamics"
+domain_description = "Flow theory, DDA, Four Keys to Fun, engagement composite metrics"
+computation = "Csikszentmihalyi flow state evaluation, adaptive difficulty curves, Lazzaro fun classification"
+modules = ["metrics"]
+
+[[translation.entity_groups]]
+name = "game_design_analysis"
+domain_description = "MDA Framework, Schell Lenses, Bartle Player Types, Deterding Gamification"
+computation = "Hunicke MDA decomposition, 20-lens const evaluation table, 4-type player classification, gamification scoring"
+modules = ["game"]
+
+[[translation.entity_groups]]
+name = "procedural_generation"
+domain_description = "Noise fields, tile constraint solving, formal grammars, spatial partitioning"
+computation = "Perlin 2D/3D gradient noise, fBm octaves, WFC constraint propagation, Lindenmayer rewriting, BSP recursive split"
+modules = ["procedural"]
+
+[[translation.entity_groups]]
+name = "rpgpt_planes"
+domain_description = "RPGPT game plane systems: exploration, dialogue, tactical, investigation, political, crafting, card stack"
+computation = "Plane transition graphs, NPC personality dynamics, trust systems, Schell lens evaluation per plane"
+modules = ["game::rpgpt"]
+
+[[translation.entity_groups]]
+name = "composition_validation"
+domain_description = "NUCLEUS primal composition verification: IPC golden-value parity, cross-tier validation"
+computation = "JSON-RPC UDS calls to 11 composed primals, tolerance-bounded numerical comparison against baselines"
+modules = ["ipc", "certification"]
+
+[derivation]
+
+[[derivation.pipeline]]
+name = "three_tier_validation"
+description = "Python baselines → Rust port (UniBin) → Primal composition (NUCLEUS graph)"
+input = "baselines/python/*.py golden values"
+output = "Tier pass/fail with tolerance-bounded comparison"
+tool = "ludospring certify + validate_composition"
+
+[[derivation.pipeline]]
+name = "lens_analysis"
+description = "Apply 20 Schell Game Design Lenses to any PlaneType configuration"
+input = "PlaneType enum variant"
+output = "PlaneAnalysis: 20 lens scores, strengths, gaps, overall score"
+tool = "ludospring-barracuda::game::rpgpt::lenses"
+
+[[derivation.pipeline]]
+name = "gpu_shader_compilation"
+description = "Game-relevant WGSL shaders compiled via coralReef IPC"
+input = "WGSL source (fog-of-war, noise fields, raycaster)"
+output = "SPIR-V bytecode via shader.compile.wgsl"
+tool = "coralReef primal (IPC composition)"
+
+[audit]
+
+[[audit.checks]]
+name = "python_rust_parity"
+description = "Rust implementation matches Python baseline within named tolerance"
+applies_to = "all"
+
+[[audit.checks]]
+name = "gpu_cpu_parity"
+description = "GPU-accelerated path produces identical results to CPU reference (f32 quantization tolerance)"
+applies_to = ["procedural::noise", "procedural::wfc"]
+
+[[audit.checks]]
+name = "cross_tier_parity"
+description = "L1 (Python) → L2 (Rust local) → L3 (IPC composition) produce consistent values"
+applies_to = ["interaction", "metrics", "procedural"]
+
+[[audit.checks]]
+name = "named_tolerance_coverage"
+description = "All numerical comparisons use named tolerances (7 constants with citations, zero inline literals)"
+applies_to = "all"
+
+[[audit.checks]]
+name = "composition_parity"
+description = "IPC calls to live NUCLEUS primals match local computation within tolerance"
+applies_to = ["ipc::handlers"]
+
+[[audit.checks]]
+name = "guidestone_certification"
+description = "L4 guideStone: 54/54 checks across Tier 1 (bare) + Tier 2 (IPC) + Tier 3 (NUCLEUS)"
+applies_to = ["certification"]
+
+[figures]
+auto_generate = false
+
+[[figures.plot]]
+name = "fitts_movement_time"
+module = "interaction"
+type = "1d_line"
+x_axis = "Index of Difficulty (bits)"
+y_axis = "Movement Time (ms)"
+
+[[figures.plot]]
+name = "flow_channel"
+module = "metrics"
+type = "2d_region"
+x_axis = "Skill level"
+y_axis = "Challenge level"
+
+[[figures.plot]]
+name = "perlin_noise_field"
+module = "procedural"
+type = "2d_heatmap"
+x_axis = "x"
+y_axis = "y"
+
+[[figures.plot]]
+name = "lens_radar"
+module = "game::rpgpt::lenses"
+type = "radar"
+x_axis = "Lens"
+y_axis = "Score (0–1)"
