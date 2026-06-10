@@ -15,6 +15,7 @@ mod s_composition_gaps;
 mod s_composition_parity;
 mod s_engagement_metrics;
 mod s_interaction_laws;
+mod s_niche_depth;
 mod s_procedural_gen;
 mod s_raycaster_budget;
 #[cfg(feature = "ipc")]
@@ -32,6 +33,7 @@ pub fn build_registry() -> ScenarioRegistry {
     r.register(s_composition_parity::SCENARIO);
     r.register(s_raycaster_budget::SCENARIO);
     r.register(s_tier4_math_parity::SCENARIO);
+    r.register(s_niche_depth::SCENARIO);
     #[cfg(feature = "ipc")]
     r.register(s_audit_integration::SCENARIO);
     #[cfg(feature = "ipc")]

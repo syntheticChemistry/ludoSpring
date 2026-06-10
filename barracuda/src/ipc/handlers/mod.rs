@@ -84,6 +84,7 @@ fn dispatch_lifecycle(method: &str, req: &JsonRpcRequest) -> Option<HandlerResul
             neural::handle_lifecycle_register(req)
         }
         methods::capability::LIST => lifecycle::handle_capability_list(req),
+        methods::lifecycle::METHOD_DESCRIBE => lifecycle::handle_method_describe(req),
         methods::capability::DEREGISTER => neural::handle_capability_deregister(req),
         methods::capability::DISCOVER => neural::handle_capability_discover(req),
         _ => return None,

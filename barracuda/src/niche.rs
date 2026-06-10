@@ -74,10 +74,11 @@ pub const CAPABILITIES: &[&str] = &[
     "game.gpu.pathfind",
     "game.gpu.perlin_terrain",
     "game.gpu.batch_raycast",
-    // ── Health probes (ecosystem standard, barraCuda Sprint 69 alignment) ──
+    // ── Health probes + introspection (ecosystem standard) ──
     "health.liveness",
     "health.readiness",
     "health.version",
+    "method.describe",
     "health.drain",
 ];
 
@@ -119,6 +120,7 @@ pub const SEMANTIC_MAPPINGS: &[(&str, &str)] = &[
     ("readiness", "health.readiness"),
     ("version", "health.version"),
     ("drain", "health.drain"),
+    ("describe", "method.describe"),
 ];
 
 // ── Niche Dependencies (SPRING_COMPOSITION_PATTERNS §11 — MUST) ─────
@@ -258,6 +260,7 @@ pub fn operation_dependencies() -> serde_json::Value {
         "health.readiness": { "requires": [] },
         "health.version": { "requires": [] },
         "health.drain": { "requires": [] },
+        "method.describe": { "requires": [] },
     })
 }
 
@@ -300,6 +303,7 @@ pub fn cost_estimates() -> serde_json::Value {
         "health.readiness": { "typical_latency_us": 5, "cpu_intensity": "low", "memory_bytes": 128 },
         "health.version": { "typical_latency_us": 2, "cpu_intensity": "none", "memory_bytes": 64 },
         "health.drain": { "typical_latency_us": 10, "cpu_intensity": "low", "memory_bytes": 64 },
+        "method.describe": { "typical_latency_us": 5, "cpu_intensity": "none", "memory_bytes": 2048 },
     })
 }
 
@@ -408,8 +412,8 @@ mod tests {
 
     #[test]
     fn capabilities_consistent() {
-        assert_eq!(CAPABILITIES.len(), 32);
-        assert_eq!(SEMANTIC_MAPPINGS.len(), 32);
+        assert_eq!(CAPABILITIES.len(), 33);
+        assert_eq!(SEMANTIC_MAPPINGS.len(), 33);
 
         for (short, full) in SEMANTIC_MAPPINGS {
             assert!(
@@ -421,7 +425,7 @@ mod tests {
 
     #[test]
     fn all_capabilities_are_namespaced() {
-        let allowed_prefixes = ["game.", "health."];
+        let allowed_prefixes = ["game.", "health.", "method."];
         for cap in CAPABILITIES {
             assert!(
                 allowed_prefixes.iter().any(|p| cap.starts_with(p)),

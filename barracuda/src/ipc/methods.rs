@@ -65,6 +65,8 @@ pub mod lifecycle {
     pub const COMPOSITION: &str = "lifecycle.composition";
     /// Register a primal with the lifecycle manager.
     pub const REGISTER: &str = "lifecycle.register";
+    /// Runtime method introspection — returns metadata for all available methods.
+    pub const METHOD_DESCRIBE: &str = "method.describe";
 }
 
 /// Capability domain — capability-based routing.

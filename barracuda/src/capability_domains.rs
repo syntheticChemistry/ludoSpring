@@ -204,10 +204,19 @@ pub const DOMAINS: &[Domain] = &[
             },
         ],
     },
+    Domain {
+        prefix: "method",
+        description: "Runtime introspection — method discovery and metadata",
+        methods: &[Method {
+            name: "describe",
+            fqn: "method.describe",
+            external: false,
+        }],
+    },
 ];
 
 /// Valid domain prefixes for method validation.
-pub const VALID_DOMAIN_PREFIXES: &[&str] = &["game", "health"];
+pub const VALID_DOMAIN_PREFIXES: &[&str] = &["game", "health", "method"];
 
 /// All fully qualified method names across all domains.
 #[must_use]
@@ -325,7 +334,7 @@ mod tests {
         let resp = capability_list_response();
         assert_eq!(resp["primal"], "ludospring");
         assert_eq!(resp["domain"], "game");
-        assert_eq!(resp["total_capabilities"], 32);
+        assert_eq!(resp["total_capabilities"], 33);
     }
 
     #[test]

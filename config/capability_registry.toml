@@ -118,6 +118,7 @@ methods = [
     "health.readiness",
     "health.version",
     "health.drain",
+    "method.describe",
 ]
 
 [semantic_mappings]
@@ -153,6 +154,7 @@ liveness            = "health.liveness"
 readiness           = "health.readiness"
 version             = "health.version"
 drain               = "health.drain"
+describe            = "method.describe"
 
 [external_dependencies]
 "game.npc_dialogue"     = ["ai.query"]
