@@ -1,7 +1,7 @@
 {
   "data": {
     "hitboxes": 3995,
-    "meshes": 3328,
+    "meshes": 3338,
     "skeletons": 33,
     "textures": 1907,
     "zones": 701
@@ -12,15 +12,15 @@
     "name": "NVIDIA GeForce RTX 5090"
   },
   "mesh_analysis": {
-    "parsed": 3328,
-    "submeshes": 3575,
-    "total_indices": 22738488,
-    "total_vertices": 22429664,
-    "triangles": 7579496
+    "parsed": 3338,
+    "submeshes": 3585,
+    "total_indices": 22745169,
+    "total_vertices": 22434763,
+    "triangles": 7581723
   },
   "timing_ms": {
-    "mesh_parse": 26181,
-    "total": 28071
+    "mesh_parse": 27345,
+    "total": 29010
   },
   "version": "0.2.0",
   "wave": 258
