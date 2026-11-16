@@ -12,6 +12,7 @@ voice, trust and memory in minds.json, so they stay themselves between taps.
 import json
 import os
 import re
+import socket
 import struct
 import sys
 import time
@@ -28,9 +29,11 @@ MODEL = os.environ.get("KENSHI_EYES_MODEL", "gaia-tissue-heart")
 VOICE_MODEL = os.environ.get("KENSHI_EYES_VOICE_MODEL", "gaia-tissue-forge")
 PLAYER_FACTION = "Nameless"
 SAVE_POLL_S = 20
-INBOX_POLL_S = 1
+INBOX_POLL_S = 0.25
 SPEAK_COOLDOWN_S = 20
 NAME_KEY = struct.pack("<i", 4) + b"name"
+NERVE_PORT = int(os.environ.get("KENSHI_NERVE_PORT", "7741"))
+NERVE_RETRY_S = 5
 MINDS = OUT / "minds.json"
 MEMORY_KEEP = 8
 TRUST_PER_TAP = 0.2
@@ -282,14 +285,64 @@ def witness(minds, change):
                 remember(mind, f"{l} is gone from the squad")
 
 
-def answer_inbox(state, snap):
+class Nerve:
+    """Client side of gaia_nerve.dll: the socket GaiaMind opens inside the running game."""
+
+    def __init__(self, port=NERVE_PORT):
+        self.port, self.sock, self.buf, self.next_try = port, None, b"", 0.0
+
+    def connected(self):
+        if self.sock is None and time.time() >= self.next_try:
+            self.next_try = time.time() + NERVE_RETRY_S
+            try:
+                self.sock = socket.create_connection(("127.0.0.1", self.port), timeout=0.2)
+                self.sock.setblocking(False)
+                print(f"nerve connected on 127.0.0.1:{self.port}", flush=True)
+            except OSError:
+                self.sock = None
+        return self.sock is not None
+
+    def lines(self):
+        if not self.connected():
+            return []
+        try:
+            while chunk := self.sock.recv(65536):
+                self.buf += chunk
+            self.drop()
+        except BlockingIOError:
+            pass
+        except OSError:
+            self.drop()
+        *done, self.buf = self.buf.split(b"\n")
+        return [l.decode("utf-8", "replace") + "\n" for l in done]
+
+    def send(self, line):
+        if not self.connected():
+            return False
+        try:
+            self.sock.setblocking(True)
+            self.sock.sendall(line.encode("utf-8") + b"\n")
+            self.sock.setblocking(False)
+            return True
+        except OSError:
+            self.drop()
+            return False
+
+    def drop(self):
+        if self.sock:
+            self.sock.close()
+            print("nerve disconnected", flush=True)
+        self.sock = None
+
+
+def answer_inbox(state, snap, nerve):
+    lines = nerve.lines()
     inbox = OUT / "inbox.txt"
-    if not inbox.exists():
-        return
-    with open(inbox, "r", encoding="utf-8", errors="replace") as fh:
-        fh.seek(state.get("offset", 0))
-        lines = fh.readlines()
-        state["offset"] = fh.tell()
+    if inbox.exists():
+        with open(inbox, "r", encoding="utf-8", errors="replace") as fh:
+            fh.seek(state.get("offset", 0))
+            lines += fh.readlines()
+            state["offset"] = fh.tell()
     for raw in lines:
         parts = raw.rstrip("\n").split("\t")
         now = time.time()
@@ -324,8 +377,10 @@ def answer_inbox(state, snap):
         save_minds(minds)
         if not reply or not reply[1]:
             continue
-        with open(OUT / "outbox.txt", "a", encoding="utf-8") as fh:
-            fh.write(f"{reply[0]}\t{reply[1]}\n")
+        line = f"{reply[0]}\t{reply[1]}"
+        if not nerve.send(line):
+            with open(OUT / "outbox.txt", "a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
         print(f"{reply[0]}: {reply[1]}", flush=True)
 
 
@@ -366,9 +421,10 @@ def run(watch):
     seen, next_save_check = None, 0.0
     inbox = OUT / "inbox.txt"
     mailbox = {"offset": inbox.stat().st_size if inbox.exists() else 0, "spoke": {}}
+    nerve = Nerve()
     while True:
         if watch:
-            answer_inbox(mailbox, prev)
+            answer_inbox(mailbox, prev, nerve)
         if time.time() < next_save_check:
             time.sleep(INBOX_POLL_S)
             continue

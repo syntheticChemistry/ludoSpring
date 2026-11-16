@@ -1,0 +1,17 @@
+[package]
+name = "gaia-nerve"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "In-process nerve for Kenshi: a localhost line socket that GaiaMind's Lua reaches through LuaJIT FFI"
+
+[workspace]
+
+[lib]
+name = "gaia_nerve"
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"

@@ -1,6 +1,9 @@
 -- GaiaMind: the squad thinks and speaks through Gaia.
--- File mailbox only (no sockets): this script writes inbox.txt, kenshi_eyes.py
--- answers in outbox.txt. Both live in %LOCALAPPDATA%\Gaia\kenshi.
+-- Two transports carrying the same lines:
+--   nerve: plugin/gaia_nerve.dll (Rust, loaded through LuaJIT FFI) listens on
+--          127.0.0.1:7741 inside the game; kenshi_eyes.py connects to it.
+--   files: inbox.txt / outbox.txt in %LOCALAPPDATA%\Gaia\kenshi, used whenever
+--          the nerve is missing or nobody is connected to it.
 --
 -- inbox lines (Lua -> Gaia):
 --   select <name> <ts>                       player clicked a squad member
@@ -19,16 +22,46 @@ local last_poll, last_roster = 0, -100
 local POLL_S, ROSTER_S, HIT_COOLDOWN_S = 1.0, 5.0, 15.0
 local last_hit = {}
 
+local NERVE_PORT = 7741
+local nerve, nerve_buf, ffi_string
+
+local function open_nerve()
+    local ok, ffi = pcall(require, "ffi")
+    if not ok or type(ffi) ~= "table" then
+        ffi = package and package.loaded and package.loaded.ffi
+    end
+    if not ffi then
+        print("[GaiaMind] no FFI; using the file mailbox")
+        return
+    end
+    pcall(ffi.cdef, [[
+        int gaia_nerve_start(unsigned short port);
+        int gaia_nerve_send(const char *line);
+        int gaia_nerve_recv(char *buf, size_t cap);
+        int gaia_nerve_clients(void);
+    ]])
+    local loaded, lib = pcall(ffi.load, "mods\\GaiaMind\\plugin\\gaia_nerve.dll")
+    if loaded and lib.gaia_nerve_start(NERVE_PORT) == 1 then
+        nerve, nerve_buf, ffi_string = lib, ffi.new("char[4096]"), ffi.string
+        print("[GaiaMind] nerve listening on 127.0.0.1:" .. NERVE_PORT)
+    else
+        print("[GaiaMind] nerve unavailable (" .. tostring(lib) .. "); using the file mailbox")
+    end
+end
+open_nerve()
+
 local function clean(s)
     return (tostring(s or ""):gsub("[\t\r\n]", " "))
 end
 
 local function post(...)
-    local f = io.open(inbox, "a")
-    if not f then return end
     local parts = { ... }
     for i = 1, #parts do parts[i] = clean(parts[i]) end
-    f:write(table.concat(parts, "\t"), "\t", os.time(), "\n")
+    local line = table.concat(parts, "\t") .. "\t" .. os.time()
+    if nerve and nerve.gaia_nerve_send(line) > 0 then return end
+    local f = io.open(inbox, "a")
+    if not f then return end
+    f:write(line, "\n")
     f:close()
 end
 
@@ -95,25 +128,34 @@ Events.on("PlayerInterface::encounterFaction", function(self, faction)
     if ok and n then post("event", "faction", "", n) end
 end)
 
+local function deliver(line)
+    local who, words = line:match("^([^\t]+)\t(.+)$")
+    if who == "@gaia" then
+        pcall(function() getGameWorld():showPlayerAMessage(words, true) end)
+    elseif who and speakers[who] then
+        pcall(function() speakers[who]:sayALine(words, true) end)
+    end
+end
+
 Events.on("MyGUI::Gui::eventFrameStart", function(t)
     local now = os.clock()
     if now - last_roster >= ROSTER_S then
         last_roster = now
         refresh_roster()
     end
+    if nerve then
+        local n = nerve.gaia_nerve_recv(nerve_buf, 4096)
+        while n > 0 do
+            deliver(ffi_string(nerve_buf, n))
+            n = nerve.gaia_nerve_recv(nerve_buf, 4096)
+        end
+    end
     if now - last_poll < POLL_S then return end
     last_poll = now
     if not os.rename(outbox, taken) then return end
     local f = io.open(taken, "r")
     if not f then return end
-    for line in f:lines() do
-        local who, words = line:match("^([^\t]+)\t(.+)$")
-        if who == "@gaia" then
-            pcall(function() getGameWorld():showPlayerAMessage(words, true) end)
-        elseif who and speakers[who] then
-            pcall(function() speakers[who]:sayALine(words, true) end)
-        end
-    end
+    for line in f:lines() do deliver(line) end
     f:close()
     os.remove(taken)
 end)
