@@ -208,6 +208,66 @@ def think_as(name, snap, minds):
     return line
 
 
+EVENT_TEXT = {
+    "hit": "{who} was struck by {detail}",
+    "ko": "{who} was knocked out",
+    "death": "{who} died",
+}
+EVENT_SELF = {"hit": "you were struck by {detail}", "ko": "you were knocked out"}
+REACT_COOLDOWN_S = 30
+
+
+def squad_of(name, snap):
+    return next((ms for ms in (snap or {}).get("squads", {}).values() if name in ms), [])
+
+
+def remember_event(minds, snap, kind, who, detail):
+    """Everyone in the squad remembers a live game event; returns (text, squad)."""
+    if kind == "faction":
+        text = f"the Nameless met the {detail}"
+        for mind in minds.values():
+            remember(mind, text)
+        return text, []
+    text = EVENT_TEXT[kind].format(who=who, detail=detail)
+    squad = squad_of(who, snap) or list(minds)
+    for name in set(squad) | {who}:
+        mind = minds.get(name)
+        if not mind:
+            continue
+        if name != who:
+            remember(mind, text)
+        elif kind in EVENT_SELF:
+            remember(mind, EVENT_SELF[kind].format(detail=detail))
+    return text, squad
+
+
+def react(minds, snap, kind, who, detail, recent_speakers):
+    """A live game event: the squad remembers it, one squadmate who saw it speaks."""
+    text, squad = remember_event(minds, snap, kind, who, detail)
+    if kind == "faction":
+        return "@gaia", f"Gaia: the Nameless have met the {detail}."
+    witnesses = [n for n in squad if n != who and n in recent_speakers] or [n for n in squad if n != who]
+    if not witnesses:
+        return None
+    speaker = witnesses[int(time.time()) % len(witnesses)]
+    mind = minds.get(speaker) or birth(speaker)
+    v = mind["voice"]
+    prompt = (
+        f"You are {speaker}, one of the Nameless, in Kenshi's harsh sword-punk desert.\n"
+        f"Temperament: {v['temperament']}. Verbal habit: {v['habit']}.\n"
+        f"Just now, in front of you: {text}.\n"
+        "Shout or mutter one short line of spoken dialogue in English, under 14 words, reacting to it. "
+        "No actions or narration, no quotes, no name."
+    )
+    said = {s.lower() for m in mind["memory"] if m.startswith("you said: ") for s in sentences(m[len("you said: "):])}
+    line = spoken(generate(prompt, 40, VOICE_MODEL, 0.9), said)
+    if not line:
+        return None
+    remember(mind, f"you said: {line}")
+    minds[speaker] = mind
+    return speaker, line
+
+
 def witness(minds, change):
     """Squad changes between saves become memories for everyone who saw them."""
     joined, lost = change.get("joined", []), change.get("lost", [])
@@ -232,24 +292,41 @@ def answer_inbox(state, snap):
         state["offset"] = fh.tell()
     for raw in lines:
         parts = raw.rstrip("\n").split("\t")
-        if len(parts) < 2 or parts[0] != "select":
-            continue
-        name, now = parts[1], time.time()
-        if now - state["spoke"].get(name, 0) < SPEAK_COOLDOWN_S:
-            continue
-        state["spoke"][name] = now
-        minds = load_minds()
-        try:
-            words = think_as(name, snap, minds)
-        except OSError as e:
-            print(f"ollama unreachable for {name}: {e}", flush=True)
+        now = time.time()
+        if len(parts) >= 2 and parts[0] == "select":
+            name = parts[1]
+            if now - state["spoke"].get(name, 0) < SPEAK_COOLDOWN_S:
+                continue
+            state["spoke"][name] = now
+            minds = load_minds()
+            try:
+                reply = name, think_as(name, snap, minds)
+            except OSError as e:
+                print(f"ollama unreachable for {name}: {e}", flush=True)
+                continue
+        elif len(parts) >= 4 and parts[0] == "event" and parts[1] in (*EVENT_TEXT, "faction"):
+            kind, who, detail = parts[1], parts[2], parts[3]
+            print(f"event {kind}: {who} {detail}".rstrip(), flush=True)
+            minds = load_minds()
+            reply = None
+            if now - state.get("reacted", 0) >= REACT_COOLDOWN_S or kind in ("death", "faction"):
+                recent = {n for n, t in state["spoke"].items() if now - t < 600}
+                try:
+                    reply = react(minds, snap, kind, who, detail, recent)
+                except OSError as e:
+                    print(f"ollama unreachable for {kind}: {e}", flush=True)
+                if reply:
+                    state["reacted"] = now
+            else:
+                remember_event(minds, snap, kind, who, detail)
+        else:
             continue
         save_minds(minds)
-        if not words:
+        if not reply or not reply[1]:
             continue
         with open(OUT / "outbox.txt", "a", encoding="utf-8") as fh:
-            fh.write(f"{name}\t{words}\n")
-        print(f"{name}: {words}", flush=True)
+            fh.write(f"{reply[0]}\t{reply[1]}\n")
+        print(f"{reply[0]}: {reply[1]}", flush=True)
 
 
 def think(snap, change):
