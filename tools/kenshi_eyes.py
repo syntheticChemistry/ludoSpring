@@ -95,8 +95,12 @@ def diff(prev, now):
     return {"joined": sorted(after - before), "lost": sorted(before - after), "faction_shift": moved}
 
 
+ANTI_REPEAT = {"repeat_penalty": 1.15, "presence_penalty": 0.4, "frequency_penalty": 0.3}
+
+
 def generate(prompt, num_predict, model=MODEL, temperature=0.8):
-    body = json.dumps({"model": model, "prompt": prompt, "stream": False, "options": {"num_predict": num_predict, "temperature": temperature}}).encode()
+    options = {"num_predict": num_predict, "temperature": temperature, **ANTI_REPEAT}
+    body = json.dumps({"model": model, "prompt": prompt, "stream": False, "options": options}).encode()
     req = urllib.request.Request(f"{OLLAMA}/api/generate", data=body, headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=120) as r:
         return json.loads(r.read())["response"].strip()
