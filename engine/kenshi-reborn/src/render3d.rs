@@ -22,11 +22,13 @@ struct Uniforms {
 struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) normal: vec3<f32>,
+    @location(2) tint: vec4<f32>,
 };
 struct VertexOutput {
     @builtin(position) clip_pos: vec4<f32>,
     @location(0) world_normal: vec3<f32>,
     @location(1) color: vec3<f32>,
+    @location(2) tint: vec4<f32>,
 };
 
 @vertex
@@ -45,12 +47,22 @@ fn vs_main(in: VertexInput) -> VertexOutput {
         let n_abs = abs(normalize(in.normal));
         out.color = vec3(0.65 + n_abs.x * 0.2, 0.50 + n_abs.y * 0.15, 0.35 + n_abs.z * 0.1);
     }
+    out.tint = in.tint;
     return out;
 }
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    // A tinted mesh carries its own color: alpha 2 = plain (wires, ground), alpha 1 = lit
+    if in.tint.a > 1.5 {
+        return vec4(in.tint.rgb, 1.0);
+    }
     let n = normalize(in.world_normal);
+    if in.tint.a > 0.5 {
+        let lit = max(dot(n, normalize(u.light_dir.xyz)), 0.0) * 0.6
+                + max(dot(n, normalize(vec3(-0.3, 0.8, -0.5))), 0.0) * 0.25;
+        return vec4(in.tint.rgb * (0.35 + lit), 1.0);
+    }
     // Gate nodes: emit light (no shading)
     let is_emissive = length(in.world_normal) < 0.01;
     if is_emissive {
@@ -74,6 +86,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 struct Vertex3D {
     position: [f32; 3],
     normal: [f32; 3],
+    tint: [f32; 4],
 }
 
 #[repr(C)]
@@ -130,148 +143,164 @@ fn cross3(a: [f32; 3], b: [f32; 3]) -> [f32; 3] { [a[1]*b[2]-a[2]*b[1], a[2]*b[0
 fn dot3(a: [f32; 3], b: [f32; 3]) -> f32 { a[0]*b[0] + a[1]*b[1] + a[2]*b[2] }
 fn normalize3(v: [f32; 3]) -> [f32; 3] { let l = dot3(v,v).sqrt(); if l < 1e-10 { v } else { [v[0]/l, v[1]/l, v[2]/l] } }
 
-struct Gpu3D {
-    surface: wgpu::Surface<'static>,
+/// A mesh with where it stands (offset) and how big it is (scale).
+pub type Placed = (MeshData, [f32; 3], f32);
+
+/// How a scene is laid out when it is uploaded.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Layout {
+    /// Every mesh is fitted to its scale around its offset, and the six gate nodes orbit the lot
+    /// (the snow globe, the bestiary).
+    Constellation,
+    /// The meshes are already in world units: the scale multiplies, the offset moves, nothing is
+    /// added and nothing is fitted (the network map).
+    World,
+}
+
+/// Tint alpha of a mesh that takes the scene's light.
+pub const TINT_LIT: f32 = 1.0;
+/// Tint alpha of a mesh drawn in its plain color (wires, ground).
+pub const TINT_FLAT: f32 = 2.0;
+/// How fast the camera goes round, in radians a second.
+const ORBIT_SPEED: f32 = 0.5;
+
+/// How far out the camera goes round, in scene radii: a world fills the frame, a constellation
+/// keeps room for the nodes that orbit it.
+fn orbit_of(layout: Layout) -> f32 {
+    match layout {
+        Layout::Constellation => 2.5,
+        Layout::World => 1.7,
+    }
+}
+
+/// The camera's matrix `t` seconds into its round about a scene.
+fn camera(center: [f32; 3], radius: f32, orbit: f32, aspect: f32, t: f32) -> [[f32; 4]; 4] {
+    let dist = radius * orbit;
+    let angle = t * ORBIT_SPEED;
+    let eye = [
+        center[0] + dist * angle.cos(),
+        center[1] + radius * 0.5,
+        center[2] + dist * angle.sin(),
+    ];
+    let look = mat4_look_at(eye, center, [0.0, 1.0, 0.0]);
+    let proj = mat4_perspective(std::f32::consts::FRAC_PI_4, aspect, 0.1, dist * 10.0);
+    mat4_mul(proj, look)
+}
+
+/// Merge the meshes into one vertex list and one index list. `tints` has one color per mesh
+/// (alpha 0, or no entry: the mesh keeps the engine's own palette). Returns the scene's
+/// center and radius with them.
+fn build_scene(meshes: &[Placed], tints: &[[f32; 4]], layout: Layout) -> (Vec<Vertex3D>, Vec<u32>, [f32; 3], f32) {
+    // Merge all meshes into one mega-buffer, each offset to its constellation position
+    let mut vertices: Vec<Vertex3D> = Vec::new();
+    let mut indices: Vec<u32> = Vec::new();
+    let mut scene_radius: f32 = 0.0;
+    let mut lo = [f32::MAX; 3];
+    let mut hi = [f32::MIN; 3];
+
+    for (m, (mesh, offset, scale)) in meshes.iter().enumerate() {
+        let tint = tints.get(m).copied().unwrap_or([0.0; 4]);
+        let base_vert = vertices.len() as u32;
+        // Compute per-mesh bounding box for normalization
+        let mut mmin = [f32::MAX; 3];
+        let mut mmax = [f32::MIN; 3];
+        for p in &mesh.positions {
+            for i in 0..3 { mmin[i] = mmin[i].min(p[i]); mmax[i] = mmax[i].max(p[i]); }
+        }
+        let (mcenter, s) = match layout {
+            Layout::Constellation => {
+                let mradius = sub3(mmax, mmin).iter().map(|d| d*d).sum::<f32>().sqrt() / 2.0;
+                ([(mmin[0]+mmax[0])/2.0, (mmin[1]+mmax[1])/2.0, (mmin[2]+mmax[2])/2.0],
+                 if mradius > 0.001 { scale / mradius } else { 1.0 })
+            }
+            Layout::World => ([0.0; 3], *scale),
+        };
+
+        for (i, p) in mesh.positions.iter().enumerate() {
+            let n = if i < mesh.normals.len() { mesh.normals[i] } else { [0.0, 1.0, 0.0] };
+            let position = [
+                (p[0] - mcenter[0]) * s + offset[0],
+                (p[1] - mcenter[1]) * s + offset[1],
+                (p[2] - mcenter[2]) * s + offset[2],
+            ];
+            for i in 0..3 { lo[i] = lo[i].min(position[i]); hi[i] = hi[i].max(position[i]); }
+            vertices.push(Vertex3D { position, normal: n, tint });
+            let dist = ((offset[0]*offset[0]) + (offset[1]*offset[1]) + (offset[2]*offset[2])).sqrt() + scale;
+            if dist > scene_radius { scene_radius = dist; }
+        }
+        for idx in &mesh.indices {
+            indices.push(base_vert + idx);
+        }
+    }
+
+    if layout == Layout::World {
+        // A world is looked at from around the middle of what is in it.
+        if vertices.is_empty() { return (vertices, indices, [0.0; 3], 10.0); }
+        let center = [(lo[0]+hi[0])/2.0, (lo[1]+hi[1])/2.0, (lo[2]+hi[2])/2.0];
+        let radius = (sub3(hi, lo).iter().map(|d| d*d).sum::<f32>().sqrt() / 2.0).max(1.0);
+        return (vertices, indices, center, radius);
+    }
+
+    let center = [0.0f32; 3];
+    let radius = if scene_radius > 0.1 { scene_radius } else { 10.0 };
+    println!("  Bestiary scene: {} meshes, {} total verts, {} total tris, radius={:.1}",
+        meshes.len(), vertices.len(), indices.len() / 3, radius);
+
+    // Gate nodes — octahedrons at the edge of the constellation
+    let gate_orbit = radius * 1.1;
+    let node_size = radius * 0.015;
+    struct GateNode { angle: f32, elev: f32, r: f32, g: f32 }
+    let gates = vec![
+        GateNode { angle: 0.0,    elev: 0.2,  r: 0.0, g: 8.0 },  // northGate — green
+        GateNode { angle: 1.05,   elev: 0.0,  r: 8.0, g: 4.0 },  // eastGate — orange
+        GateNode { angle: 2.09,   elev: -0.1, r: 4.0, g: 8.0 },  // ironGate — lime
+        GateNode { angle: 3.14,   elev: 0.1,  r: 2.0, g: 6.0 },  // sporeGate — teal
+        GateNode { angle: 4.19,   elev: 0.3,  r: 8.0, g: 0.0 },  // grapheneGate — red
+        GateNode { angle: 5.24,   elev: -0.2, r: 3.0, g: 3.0 },  // graftGate — dim
+    ];
+    for g in &gates {
+        let cx = gate_orbit * g.angle.cos() * g.elev.cos();
+        let cy = gate_orbit * g.elev.sin();
+        let cz = gate_orbit * g.angle.sin() * g.elev.cos();
+        let s = node_size;
+        let base = vertices.len() as u32;
+        let gn = [99.0, g.r, g.g];
+        let none = [0.0; 4];
+        vertices.push(Vertex3D { position: [cx+s, cy, cz], normal: gn, tint: none });
+        vertices.push(Vertex3D { position: [cx-s, cy, cz], normal: gn, tint: none });
+        vertices.push(Vertex3D { position: [cx, cy+s, cz], normal: gn, tint: none });
+        vertices.push(Vertex3D { position: [cx, cy-s, cz], normal: gn, tint: none });
+        vertices.push(Vertex3D { position: [cx, cy, cz+s], normal: gn, tint: none });
+        vertices.push(Vertex3D { position: [cx, cy, cz-s], normal: gn, tint: none });
+        for &[a,b,c] in &[[0,2,4],[2,1,4],[1,3,4],[3,0,4],[2,0,5],[1,2,5],[3,1,5],[0,3,5u32]] {
+            indices.push(base+a); indices.push(base+b); indices.push(base+c);
+        }
+    }
+    println!("  + {} gate nodes orbiting at {:.1}", gates.len(), gate_orbit);
+
+    (vertices, indices, center, radius)
+}
+
+/// What draws a scene into a color view: the window uses it, and so does the snapshot.
+struct Renderer {
     device: wgpu::Device,
     queue: wgpu::Queue,
-    config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
     vertex_buf: wgpu::Buffer,
     index_buf: wgpu::Buffer,
     uniform_buf: wgpu::Buffer,
     bind_group: wgpu::BindGroup,
-    depth_view: wgpu::TextureView,
     index_count: u32,
     mesh_center: [f32; 3],
     mesh_radius: f32,
-    start_time: Instant,
-    gpu_name: String,
+    orbit: f32,
 }
 
-impl Gpu3D {
-    fn new(window: Arc<Window>, meshes: &[(MeshData, [f32; 3], f32)]) -> Self {
-        let size = window.inner_size();
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::VULKAN | wgpu::Backends::DX12,
-            ..Default::default()
-        });
-        let surface = instance.create_surface(window).expect("surface");
-        let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::HighPerformance,
-            compatible_surface: Some(&surface),
-            force_fallback_adapter: false,
-        })).expect("adapter");
-
-        let info = adapter.get_info();
-        let gpu_name = info.name.clone();
-        println!("  GPU: {} ({:?})", info.name, info.backend);
-
-        let (device, queue) = pollster::block_on(adapter.request_device(
-            &wgpu::DeviceDescriptor {
-                label: Some("KenshiReborn3D"),
-                required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::default(),
-                memory_hints: wgpu::MemoryHints::Performance,
-            },
-            None,
-        )).expect("device");
-
-        let caps = surface.get_capabilities(&adapter);
-        let format = caps.formats[0];
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format,
-            width: size.width.max(1),
-            height: size.height.max(1),
-            present_mode: wgpu::PresentMode::AutoVsync,
-            alpha_mode: caps.alpha_modes[0],
-            view_formats: vec![],
-            desired_maximum_frame_latency: 2,
-        };
-        surface.configure(&device, &config);
-
-        // Merge all meshes into one mega-buffer, each offset to its constellation position
-        let mut vertices: Vec<Vertex3D> = Vec::new();
-        let mut indices: Vec<u32> = Vec::new();
-        let mut total_center = [0.0f32; 3];
-        let mut scene_radius: f32 = 0.0;
-
-        for (mesh, offset, scale) in meshes {
-            let base_vert = vertices.len() as u32;
-            // Compute per-mesh bounding box for normalization
-            let mut mmin = [f32::MAX; 3];
-            let mut mmax = [f32::MIN; 3];
-            for p in &mesh.positions {
-                for i in 0..3 { mmin[i] = mmin[i].min(p[i]); mmax[i] = mmax[i].max(p[i]); }
-            }
-            let mcenter = [(mmin[0]+mmax[0])/2.0, (mmin[1]+mmax[1])/2.0, (mmin[2]+mmax[2])/2.0];
-            let mradius = sub3(mmax, mmin).iter().map(|d| d*d).sum::<f32>().sqrt() / 2.0;
-            let s = if mradius > 0.001 { scale / mradius } else { 1.0 };
-
-            for (i, p) in mesh.positions.iter().enumerate() {
-                let n = if i < mesh.normals.len() { mesh.normals[i] } else { [0.0, 1.0, 0.0] };
-                vertices.push(Vertex3D {
-                    position: [
-                        (p[0] - mcenter[0]) * s + offset[0],
-                        (p[1] - mcenter[1]) * s + offset[1],
-                        (p[2] - mcenter[2]) * s + offset[2],
-                    ],
-                    normal: n,
-                });
-                let dist = ((offset[0]*offset[0]) + (offset[1]*offset[1]) + (offset[2]*offset[2])).sqrt() + scale;
-                if dist > scene_radius { scene_radius = dist; }
-            }
-            for idx in &mesh.indices {
-                indices.push(base_vert + idx);
-            }
-        }
-        let center = total_center;
-        let radius = if scene_radius > 0.1 { scene_radius } else { 10.0 };
-        println!("  Bestiary scene: {} meshes, {} total verts, {} total tris, radius={:.1}",
-            meshes.len(), vertices.len(), indices.len() / 3, radius);
-
-        // Gate nodes — octahedrons at the edge of the constellation
-        let gate_orbit = radius * 1.1;
-        let node_size = radius * 0.015;
-        struct GateNode { angle: f32, elev: f32, r: f32, g: f32 }
-        let gates = vec![
-            GateNode { angle: 0.0,    elev: 0.2,  r: 0.0, g: 8.0 },  // northGate — green
-            GateNode { angle: 1.05,   elev: 0.0,  r: 8.0, g: 4.0 },  // eastGate — orange
-            GateNode { angle: 2.09,   elev: -0.1, r: 4.0, g: 8.0 },  // ironGate — lime
-            GateNode { angle: 3.14,   elev: 0.1,  r: 2.0, g: 6.0 },  // sporeGate — teal
-            GateNode { angle: 4.19,   elev: 0.3,  r: 8.0, g: 0.0 },  // grapheneGate — red
-            GateNode { angle: 5.24,   elev: -0.2, r: 3.0, g: 3.0 },  // graftGate — dim
-        ];
-        for g in &gates {
-            let cx = gate_orbit * g.angle.cos() * g.elev.cos();
-            let cy = gate_orbit * g.elev.sin();
-            let cz = gate_orbit * g.angle.sin() * g.elev.cos();
-            let s = node_size;
-            let base = vertices.len() as u32;
-            let gn = [99.0, g.r, g.g];
-            vertices.push(Vertex3D { position: [cx+s, cy, cz], normal: gn });
-            vertices.push(Vertex3D { position: [cx-s, cy, cz], normal: gn });
-            vertices.push(Vertex3D { position: [cx, cy+s, cz], normal: gn });
-            vertices.push(Vertex3D { position: [cx, cy-s, cz], normal: gn });
-            vertices.push(Vertex3D { position: [cx, cy, cz+s], normal: gn });
-            vertices.push(Vertex3D { position: [cx, cy, cz-s], normal: gn });
-            for &[a,b,c] in &[[0,2,4],[2,1,4],[1,3,4],[3,0,4],[2,0,5],[1,2,5],[3,1,5],[0,3,5u32]] {
-                indices.push(base+a); indices.push(base+b); indices.push(base+c);
-            }
-        }
-        println!("  + {} gate nodes orbiting at {:.1}", gates.len(), gate_orbit);
-
-        let vertex_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("vertex"),
-            contents: bytemuck::cast_slice(&vertices),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let index_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("index"),
-            contents: bytemuck::cast_slice(&indices),
-            usage: wgpu::BufferUsages::INDEX,
-        });
+impl Renderer {
+    fn new(device: wgpu::Device, queue: wgpu::Queue, format: wgpu::TextureFormat,
+           meshes: &[Placed], tints: &[[f32; 4]], layout: Layout) -> Self {
+        let (vertices, indices, center, radius) = build_scene(meshes, tints, layout);
+        let (vertex_buf, index_buf) = Self::upload(&device, &vertices, &indices);
 
         let uniforms = Uniforms { mvp: mat4_identity(), model: mat4_identity(), light_dir: [0.5, 1.0, 0.3, 0.0] };
         let uniform_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -320,6 +349,7 @@ impl Gpu3D {
                     attributes: &[
                         wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
                         wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 12, shader_location: 1 },
+                        wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x4, offset: 24, shader_location: 2 },
                     ],
                 }],
                 compilation_options: Default::default(),
@@ -349,57 +379,45 @@ impl Gpu3D {
             cache: None,
         });
 
-        let depth_view = Self::create_depth(&device, config.width, config.height);
-
         println!("  Uploaded: {} verts + {} indices to GPU", vertices.len(), indices.len());
 
         Self {
-            surface, device, queue, config, pipeline,
-            vertex_buf, index_buf, uniform_buf, bind_group, depth_view,
+            device, queue, pipeline, vertex_buf, index_buf, uniform_buf, bind_group,
             index_count: indices.len() as u32,
-            mesh_center: center, mesh_radius: radius,
-            start_time: Instant::now(), gpu_name,
+            mesh_center: center, mesh_radius: radius, orbit: orbit_of(layout),
         }
     }
 
-    fn create_depth(device: &wgpu::Device, w: u32, h: u32) -> wgpu::TextureView {
-        device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("depth"),
-            size: wgpu::Extent3d { width: w.max(1), height: h.max(1), depth_or_array_layers: 1 },
-            mip_level_count: 1, sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32Float,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        }).create_view(&wgpu::TextureViewDescriptor::default())
+    fn upload(device: &wgpu::Device, vertices: &[Vertex3D], indices: &[u32]) -> (wgpu::Buffer, wgpu::Buffer) {
+        let vertex_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("vertex"),
+            contents: bytemuck::cast_slice(vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let index_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("index"),
+            contents: bytemuck::cast_slice(indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        (vertex_buf, index_buf)
     }
 
-    fn resize(&mut self, w: u32, h: u32) {
-        if w > 0 && h > 0 {
-            self.config.width = w;
-            self.config.height = h;
-            self.surface.configure(&self.device, &self.config);
-            self.depth_view = Self::create_depth(&self.device, w, h);
-        }
+    /// Put another scene in place of the one being drawn.
+    fn set_scene(&mut self, meshes: &[Placed], tints: &[[f32; 4]], layout: Layout) {
+        let (vertices, indices, center, radius) = build_scene(meshes, tints, layout);
+        let (vertex_buf, index_buf) = Self::upload(&self.device, &vertices, &indices);
+        self.vertex_buf = vertex_buf;
+        self.index_buf = index_buf;
+        self.index_count = indices.len() as u32;
+        self.mesh_center = center;
+        self.mesh_radius = radius;
+        self.orbit = orbit_of(layout);
     }
 
-    fn render(&self) -> Result<(), wgpu::SurfaceError> {
-        let t = self.start_time.elapsed().as_secs_f32();
-        let aspect = self.config.width as f32 / self.config.height.max(1) as f32;
-        let dist = self.mesh_radius * 2.5;
-
-        // Auto-orbit camera
-        let angle = t * 0.5;
-        let eye = [
-            self.mesh_center[0] + dist * angle.cos(),
-            self.mesh_center[1] + self.mesh_radius * 0.5,
-            self.mesh_center[2] + dist * angle.sin(),
-        ];
-
+    /// Draw the scene as the orbiting camera sees it `t` seconds into its round.
+    fn draw(&self, view: &wgpu::TextureView, depth_view: &wgpu::TextureView, aspect: f32, t: f32) {
         let model = mat4_identity();
-        let view = mat4_look_at(eye, self.mesh_center, [0.0, 1.0, 0.0]);
-        let proj = mat4_perspective(std::f32::consts::FRAC_PI_4, aspect, 0.1, dist * 10.0);
-        let mvp = mat4_mul(proj, mat4_mul(view, model));
+        let mvp = mat4_mul(camera(self.mesh_center, self.mesh_radius, self.orbit, aspect, t), model);
 
         let uniforms = Uniforms {
             mvp,
@@ -408,15 +426,13 @@ impl Gpu3D {
         };
         self.queue.write_buffer(&self.uniform_buf, 0, bytemuck::cast_slice(&[uniforms]));
 
-        let output = self.surface.get_current_texture()?;
-        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("enc") });
 
         {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("rp"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
+                    view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.02, g: 0.02, b: 0.05, a: 1.0 }),
@@ -424,7 +440,7 @@ impl Gpu3D {
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_view,
+                    view: depth_view,
                     depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(1.0), store: wgpu::StoreOp::Store }),
                     stencil_ops: None,
                 }),
@@ -440,29 +456,230 @@ impl Gpu3D {
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
+    }
+}
+
+fn create_depth(device: &wgpu::Device, w: u32, h: u32) -> wgpu::TextureView {
+    device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("depth"),
+        size: wgpu::Extent3d { width: w.max(1), height: h.max(1), depth_or_array_layers: 1 },
+        mip_level_count: 1, sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Depth32Float,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        view_formats: &[],
+    }).create_view(&wgpu::TextureViewDescriptor::default())
+}
+
+pub struct Gpu3D {
+    surface: wgpu::Surface<'static>,
+    config: wgpu::SurfaceConfiguration,
+    depth_view: wgpu::TextureView,
+    start_time: Instant,
+    gpu_name: String,
+    r: Renderer,
+}
+
+impl Gpu3D {
+    fn new(window: Arc<Window>, meshes: &[Placed], tints: &[[f32; 4]], layout: Layout) -> Self {
+        let size = window.inner_size();
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::VULKAN | wgpu::Backends::DX12,
+            ..Default::default()
+        });
+        let surface = instance.create_surface(window).expect("surface");
+        let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            compatible_surface: Some(&surface),
+            force_fallback_adapter: false,
+        })).expect("adapter");
+
+        let info = adapter.get_info();
+        let gpu_name = info.name.clone();
+        println!("  GPU: {} ({:?})", info.name, info.backend);
+
+        let (device, queue) = pollster::block_on(adapter.request_device(
+            &wgpu::DeviceDescriptor {
+                label: Some("KenshiReborn3D"),
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::Performance,
+            },
+            None,
+        )).expect("device");
+
+        let caps = surface.get_capabilities(&adapter);
+        let format = caps.formats[0];
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format,
+            width: size.width.max(1),
+            height: size.height.max(1),
+            present_mode: wgpu::PresentMode::AutoVsync,
+            alpha_mode: caps.alpha_modes[0],
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        };
+        surface.configure(&device, &config);
+
+        let depth_view = create_depth(&device, config.width, config.height);
+        let r = Renderer::new(device, queue, format, meshes, tints, layout);
+
+        Self { surface, config, depth_view, start_time: Instant::now(), gpu_name, r }
+    }
+
+    fn resize(&mut self, w: u32, h: u32) {
+        if w > 0 && h > 0 {
+            self.config.width = w;
+            self.config.height = h;
+            self.surface.configure(&self.r.device, &self.config);
+            self.depth_view = create_depth(&self.r.device, w, h);
+        }
+    }
+
+    fn render(&self) -> Result<(), wgpu::SurfaceError> {
+        let t = self.start_time.elapsed().as_secs_f32();
+        let aspect = self.config.width as f32 / self.config.height.max(1) as f32;
+
+        let output = self.surface.get_current_texture()?;
+        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+        self.r.draw(&view, &self.depth_view, aspect, t);
         output.present();
         Ok(())
     }
 }
 
+/// Where points of a scene land in a snapshot of it: fractions of the picture's width and
+/// height from its top left corner, or None for a point behind the camera. The scene, layout,
+/// size and angle are the ones given to `snapshot`.
+pub fn project(meshes: &[Placed], tints: &[[f32; 4]], layout: Layout,
+               width: u32, height: u32, angle: f32, points: &[[f32; 3]]) -> Vec<Option<[f32; 2]>> {
+    let (_, _, center, radius) = build_scene(meshes, tints, layout);
+    let m = camera(center, radius, orbit_of(layout), width as f32 / height.max(1) as f32, angle / ORBIT_SPEED);
+    points.iter().map(|p| {
+        let clip = |row: usize| m[0][row] * p[0] + m[1][row] * p[1] + m[2][row] * p[2] + m[3][row];
+        let w = clip(3);
+        (w > 1e-6).then(|| [(clip(0) / w + 1.0) / 2.0, (1.0 - clip(1) / w) / 2.0])
+    }).collect()
+}
+
+/// Draw a scene once, without a window, and write it as a PNG. `angle` is where the camera
+/// stands on its round, in radians. Returns the name of the GPU that drew it.
+pub fn snapshot(meshes: &[Placed], tints: &[[f32; 4]], layout: Layout,
+                width: u32, height: u32, angle: f32, path: &str) -> Result<String, String> {
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::VULKAN | wgpu::Backends::DX12,
+        ..Default::default()
+    });
+    let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+        power_preference: wgpu::PowerPreference::HighPerformance,
+        compatible_surface: None,
+        force_fallback_adapter: false,
+    })).ok_or("no GPU to draw with")?;
+    let gpu_name = adapter.get_info().name;
+
+    let (device, queue) = pollster::block_on(adapter.request_device(
+        &wgpu::DeviceDescriptor {
+            label: Some("KenshiRebornSnapshot"),
+            required_features: wgpu::Features::empty(),
+            required_limits: wgpu::Limits::default(),
+            memory_hints: wgpu::MemoryHints::Performance,
+        },
+        None,
+    )).map_err(|e| e.to_string())?;
+
+    let format = wgpu::TextureFormat::Rgba8UnormSrgb;
+    let extent = wgpu::Extent3d { width, height, depth_or_array_layers: 1 };
+    let target = device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("snapshot"),
+        size: extent,
+        mip_level_count: 1, sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+        view_formats: &[],
+    });
+    let view = target.create_view(&wgpu::TextureViewDescriptor::default());
+    let depth_view = create_depth(&device, width, height);
+
+    let r = Renderer::new(device, queue, format, meshes, tints, layout);
+    r.draw(&view, &depth_view, width as f32 / height.max(1) as f32, angle / ORBIT_SPEED);
+
+    // Rows come back padded to the GPU's row alignment.
+    let row = width * 4;
+    let padded = row.div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    let out = r.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("snapshot-out"),
+        size: (padded * height) as u64,
+        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+        mapped_at_creation: false,
+    });
+    let mut encoder = r.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("snapshot-read") });
+    encoder.copy_texture_to_buffer(
+        wgpu::TexelCopyTextureInfo { texture: &target, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+        wgpu::TexelCopyBufferInfo {
+            buffer: &out,
+            layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(padded), rows_per_image: Some(height) },
+        },
+        extent,
+    );
+    r.queue.submit(std::iter::once(encoder.finish()));
+
+    let slice = out.slice(..);
+    let (tx, rx) = std::sync::mpsc::channel();
+    slice.map_async(wgpu::MapMode::Read, move |result| { let _ = tx.send(result); });
+    r.device.poll(wgpu::Maintain::Wait);
+    rx.recv().map_err(|e| e.to_string())?.map_err(|e| e.to_string())?;
+
+    let mut pixels = Vec::with_capacity((row * height) as usize);
+    {
+        let data = slice.get_mapped_range();
+        for y in 0..height {
+            let start = (y * padded) as usize;
+            pixels.extend_from_slice(&data[start..start + row as usize]);
+        }
+    }
+    out.unmap();
+
+    image::RgbaImage::from_raw(width, height, pixels)
+        .ok_or("the picture came back the wrong size")?
+        .save(path)
+        .map_err(|e| e.to_string())?;
+    Ok(gpu_name)
+}
+
+/// The next state of a scene that changes while its window is open.
+pub struct SceneUpdate {
+    pub meshes: Vec<Placed>,
+    pub tints: Vec<[f32; 4]>,
+    pub title: String,
+}
+
 pub struct App3D {
-    gpu: Option<Gpu3D>,
-    window: Option<Arc<Window>>,
-    meshes: Vec<(MeshData, [f32; 3], f32)>,
-    title: String,
-    frame_count: u64,
-    start: Instant,
+    pub gpu: Option<Gpu3D>,
+    pub window: Option<Arc<Window>>,
+    pub meshes: Vec<(MeshData, [f32; 3], f32)>,
+    pub title: String,
+    pub frame_count: u64,
+    pub start: Instant,
+    /// One tint per mesh; empty when the meshes keep the engine's own palette.
+    pub tints: Vec<[f32; 4]>,
+    pub layout: Layout,
+    /// A scene that changes while its window is open sends its next state here.
+    pub updates: Option<std::sync::mpsc::Receiver<SceneUpdate>>,
 }
 
 impl App3D {
     pub fn new_single(mesh: MeshData) -> Self {
         let title = format!("KenshiReborn v0.7.0 — {} — Snow Globe · RTX 5090", mesh.name);
         let meshes = vec![(mesh, [0.0, 0.0, 0.0], 1.0)];
-        Self { gpu: None, window: None, meshes, title, frame_count: 0, start: Instant::now() }
+        Self { gpu: None, window: None, meshes, title, frame_count: 0, start: Instant::now(),
+               tints: Vec::new(), layout: Layout::Constellation, updates: None }
     }
     pub fn new_bestiary(meshes: Vec<(MeshData, [f32; 3], f32)>, count: usize) -> Self {
         let title = format!("KenshiReborn v0.7.0 — BESTIARY × {} — Snow Globe · RTX 5090", count);
-        Self { gpu: None, window: None, meshes, title, frame_count: 0, start: Instant::now() }
+        Self { gpu: None, window: None, meshes, title, frame_count: 0, start: Instant::now(),
+               tints: Vec::new(), layout: Layout::Constellation, updates: None }
     }
 }
 
@@ -473,10 +690,14 @@ impl ApplicationHandler for App3D {
             .with_title(&self.title)
             .with_inner_size(winit::dpi::LogicalSize::new(1280u32, 720u32));
         let window = Arc::new(event_loop.create_window(attrs).expect("window"));
-        let gpu = Gpu3D::new(window.clone(), &self.meshes);
+        let gpu = Gpu3D::new(window.clone(), &self.meshes, &self.tints, self.layout);
         println!("  Pipeline: 3D render with depth + lighting");
-        println!("  Camera: auto-orbit around bestiary constellation");
-        println!("  STATUS: ██████████ BESTIARY RENDERING LIVE\n");
+        if self.layout == Layout::Constellation {
+            println!("  Camera: auto-orbit around bestiary constellation");
+            println!("  STATUS: ██████████ BESTIARY RENDERING LIVE\n");
+        } else {
+            println!("  Camera: auto-orbit around the world\n");
+        }
         self.gpu = Some(gpu);
         self.window = Some(window);
     }
@@ -490,6 +711,15 @@ impl ApplicationHandler for App3D {
             }
             WindowEvent::Resized(s) => { if let Some(g) = &mut self.gpu { g.resize(s.width, s.height); } }
             WindowEvent::RedrawRequested => {
+                // A scene that follows something outside: take its newest state, if one came.
+                let next = self.updates.as_ref().and_then(|rx| rx.try_iter().last());
+                if let Some(update) = next {
+                    self.meshes = update.meshes;
+                    self.tints = update.tints;
+                    self.title = update.title;
+                    if let Some(g) = &mut self.gpu { g.r.set_scene(&self.meshes, &self.tints, self.layout); }
+                    if let Some(w) = &self.window { w.set_title(&self.title); }
+                }
                 if let Some(g) = &self.gpu {
                     match g.render() {
                         Ok(()) => self.frame_count += 1,
@@ -643,3 +873,32 @@ pub fn run_bestiary(mesh_dir: &str) {
 
 use crate::mesh3d::load_mesh;
 use wgpu::util::DeviceExt;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn body(at: [f32; 3]) -> Placed {
+        (MeshData { name: "body".into(), positions: vec![[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], normals: vec![], indices: vec![] }, at, 1.0)
+    }
+
+    #[test]
+    fn the_middle_of_a_world_lands_in_the_middle_of_its_picture() {
+        // Two bodies spanning -5..7, -1..3, -1..1: the middle is [1, 1, 0].
+        let scene = [body([-4.0, 0.0, 0.0]), body([6.0, 2.0, 0.0])];
+        let at = project(&scene, &[], Layout::World, 1600, 900, 2.0, &[[1.0, 1.0, 0.0], [1.0, 3.0, 0.0]]);
+        let middle = at[0].unwrap();
+        assert!((middle[0] - 0.5).abs() < 1e-4 && (middle[1] - 0.5).abs() < 1e-4, "{middle:?}");
+        // A point straight above the middle is straight above it in the picture.
+        let above = at[1].unwrap();
+        assert!((above[0] - 0.5).abs() < 1e-4 && above[1] < 0.5, "{above:?}");
+    }
+
+    #[test]
+    fn a_point_behind_the_camera_has_no_place_in_the_picture() {
+        let scene = [body([-4.0, 0.0, 0.0]), body([6.0, 2.0, 0.0])];
+        // At angle 0 the camera stands out along +X and looks back at the middle.
+        let at = project(&scene, &[], Layout::World, 1600, 900, 0.0, &[[500.0, 1.0, 0.0]]);
+        assert!(at[0].is_none());
+    }
+}

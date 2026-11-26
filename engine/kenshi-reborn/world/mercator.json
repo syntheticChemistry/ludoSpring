@@ -1,0 +1,37 @@
+{
+  "what": "The world MERCATOR draws: the zones, the gates and machines in them, and the wires between them. Which gates are alive is not written here; the engine asks the mesh. Positions are world units: the houses lie along Z, up is Y. A link ends at a node (its name) or at a point [x, y, z].",
+  "zones": [
+    { "name": "House 1", "center": [0.0, -0.5, 8.0], "size": [14.0, 10.0], "color": [0.2, 0.3, 0.3] },
+    { "name": "House 2", "center": [0.0, -0.5, -8.0], "size": [10.0, 8.0], "color": [0.1, 0.2, 0.3] },
+    { "name": "WAN", "center": [0.0, 13.0, 14.0], "size": [8.0, 4.0], "color": [0.1, 0.3, 0.3] }
+  ],
+  "nodes": [
+    { "name": "northGate", "kind": "gate", "zone": "House 1", "shape": "diamond", "size": 2.0, "pos": [0.0, 1.5, 10.0], "color": [0.2, 0.8, 1.0] },
+    { "name": "eastGate", "kind": "gate", "zone": "House 1", "shape": "octahedron", "size": 1.8, "pos": [-4.0, 0.5, 8.0], "color": [1.0, 0.6, 0.1] },
+    { "name": "ironGate", "kind": "gate", "zone": "House 1", "shape": "cube", "size": 1.6, "pos": [4.0, 0.5, 7.0], "color": [0.7, 0.7, 0.8] },
+    { "name": "southGate", "kind": "gate", "zone": "House 1", "shape": "sphere", "size": 1.4, "pos": [2.0, 0.0, 6.0], "color": [0.0, 0.9, 0.4] },
+    { "name": "sporeGate", "kind": "gate", "zone": "House 1", "shape": "sphere", "size": 1.0, "pos": [-2.0, 0.0, 6.0], "color": [0.5, 0.8, 0.3] },
+    { "name": "deckGate", "kind": "gate", "zone": "House 1", "shape": "cube", "size": 0.8, "pos": [-5.0, -0.5, 6.5], "color": [0.3, 0.3, 0.6] },
+    { "name": "swiftGate", "kind": "gate", "zone": "House 2", "shape": "diamond", "size": 1.5, "pos": [0.0, 1.0, -6.0], "color": [0.9, 0.9, 0.2] },
+    { "name": "frameGate", "kind": "gate", "zone": "House 2", "shape": "octahedron", "size": 1.0, "pos": [-3.0, 0.0, -8.0], "color": [0.8, 0.2, 0.8] },
+    { "name": "graftGate", "kind": "gate", "zone": "House 2", "shape": "sphere", "size": 1.2, "pos": [3.0, 0.0, -8.0], "color": [0.6, 0.6, 0.6] },
+    { "name": "grapheneGate", "kind": "gate", "shape": "diamond", "size": 0.8, "pos": [1.5, 2.0, 0.0], "color": [0.0, 1.0, 0.5] },
+    { "name": "Router", "kind": "infra", "zone": "House 1", "shape": "cube", "size": 1.0, "pos": [0.0, 3.0, 12.0], "color": [0.4, 0.4, 0.4] },
+    { "name": "MikroTik", "kind": "infra", "zone": "House 1", "shape": "cube", "size": 0.6, "pos": [-1.5, 2.5, 11.0], "color": [0.3, 0.3, 0.3] },
+    { "name": "JetStream", "kind": "infra", "shape": "cube", "size": 0.8, "pos": [0.0, 2.0, 0.0], "color": [0.2, 0.5, 0.7] },
+    { "name": "ATT_Modem", "kind": "infra", "zone": "WAN", "shape": "cube", "size": 1.2, "pos": [0.0, 12.0, 14.0], "color": [0.1, 0.3, 0.6] }
+  ],
+  "links": [
+    { "name": "10G_Fiber", "from": [0.0, 2.0, 11.0], "to": [0.0, 2.0, -6.0], "color": [0.0, 0.8, 1.0] },
+    { "name": "WAN_Uplink", "from": "Router", "to": "ATT_Modem", "color": [0.1, 0.3, 0.6] },
+    { "name": "LAN1_Backbone", "from": "Router", "to": "MikroTik", "color": [0.4, 0.4, 0.4] },
+    { "name": "east_wire", "from": "MikroTik", "to": "eastGate", "color": [1.0, 0.6, 0.1] },
+    { "name": "north_wire", "from": "MikroTik", "to": "northGate", "color": [0.2, 0.8, 1.0] },
+    { "name": "iron_wire", "from": "MikroTik", "to": "ironGate", "color": [0.7, 0.7, 0.8] },
+    { "name": "south_wire", "from": "MikroTik", "to": "southGate", "color": [0.0, 0.9, 0.4] },
+    { "name": "fiber_to_jet", "from": "Router", "to": "JetStream", "color": [0.0, 0.5, 0.7] },
+    { "name": "swift_wifi", "from": "JetStream", "to": "swiftGate", "color": [0.9, 0.9, 0.2] },
+    { "name": "frame_wifi", "from": "JetStream", "to": "frameGate", "color": [0.8, 0.2, 0.8] },
+    { "name": "pixel_roam", "from": "grapheneGate", "to": "swiftGate", "color": [0.0, 1.0, 0.5] }
+  ]
+}

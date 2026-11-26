@@ -6,9 +6,12 @@
 //   --scan    Data scan only (no window)
 //   --flow    PID flow controller — cost/value/rate management
 //   --render  Open window and render Kenshi world map (default)
+//   --mercator  The house network as a 3D map that follows the mesh (see mercator.rs)
 
 mod mesh3d;
+mod mercator;
 mod ogre_plugin;
+mod orc;
 mod render3d;
 
 use std::fs;
@@ -22,7 +25,15 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::{Window, WindowId};
 
-const KENSHI_DATA: &str = r"M:\SteamLibrary\steamapps\common\Kenshi\data";
+fn kenshi_data_path() -> String {
+    std::env::var("KENSHI_DATA").unwrap_or_else(|_| {
+        // Linux default: Steam on eastGate
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/home/eastgate".into());
+        format!("{home}/.steam/debian-installation/steamapps/common/Kenshi/data")
+    })
+}
+macro_rules! KENSHI_DATA { () => { &kenshi_data_path() } }
+const _KENSHI_DATA_LEGACY: &str = "M:\\SteamLibrary\\steamapps\\common\\Kenshi\\data";
 
 // === SHADER (WGSL) ===
 
@@ -117,7 +128,7 @@ impl GpuState {
         surface.configure(&device, &config);
 
         // Load texture
-        let biomemap_path = format!(r"{}\newland\land\biomemap.png", KENSHI_DATA);
+        let biomemap_path = format!("{}/newland/land/biomemap.png", KENSHI_DATA!());
         println!("  Loading: {}", biomemap_path);
         let img = image::open(&biomemap_path).expect("open biomemap").to_rgba8();
         let (tw, th) = (img.width(), img.height());
@@ -569,17 +580,17 @@ fn run_scan() {
     let info = adapter.get_info();
     println!("◆ GPU: {} ({:?})", info.name, info.backend);
 
-    let (mesh_count, mesh_bytes) = count_files_by_ext(KENSHI_DATA, "mesh");
-    let (skel_count, _) = count_files_by_ext(KENSHI_DATA, "skeleton");
-    let (dds_count, dds_bytes) = count_files_by_ext(KENSHI_DATA, "dds");
-    let (hkt_count, _) = count_files_by_ext(KENSHI_DATA, "hkt");
-    let zone_count = count_zones(KENSHI_DATA);
+    let (mesh_count, mesh_bytes) = count_files_by_ext(KENSHI_DATA!(), "mesh");
+    let (skel_count, _) = count_files_by_ext(KENSHI_DATA!(), "skeleton");
+    let (dds_count, dds_bytes) = count_files_by_ext(KENSHI_DATA!(), "dds");
+    let (hkt_count, _) = count_files_by_ext(KENSHI_DATA!(), "hkt");
+    let zone_count = count_zones(KENSHI_DATA!());
 
     println!("◆ Files: {} mesh + {} skel + {} dds + {} hkt + {} zones",
         mesh_count, skel_count, dds_count, hkt_count, zone_count);
 
     let mesh_start = Instant::now();
-    let meshes = scan_meshes(KENSHI_DATA);
+    let meshes = scan_meshes(KENSHI_DATA!());
     let mesh_ms = mesh_start.elapsed().as_millis();
 
     let total_idx: u64 = meshes.iter().map(|m| m.total_indices).sum();
@@ -621,7 +632,7 @@ fn run_scan() {
             "triangles": total_idx / 3 },
         "timing_ms": { "mesh_parse": mesh_ms, "total": ms },
     });
-    let p = r"C:\Users\mokke\Desktop\ludoSpring\data\kenshi-reborn-digest.json";
+    let p = r"/home/eastgate/Development/ecoPrimals/data/body/kenshi-reborn-digest.json";
     fs::write(p, serde_json::to_string_pretty(&digest).unwrap()).ok();
     println!("Digest: {}", p);
 }
@@ -747,28 +758,28 @@ fn run_flow() {
 
     // File scan cost
     let scan_start = Instant::now();
-    let (mesh_count, mesh_bytes) = count_files_by_ext(KENSHI_DATA, "mesh");
+    let (mesh_count, mesh_bytes) = count_files_by_ext(KENSHI_DATA!(), "mesh");
     let mesh_scan_ms = scan_start.elapsed().as_secs_f64() * 1000.0;
 
     let scan_start = Instant::now();
-    let (dds_count, dds_bytes) = count_files_by_ext(KENSHI_DATA, "dds");
+    let (dds_count, dds_bytes) = count_files_by_ext(KENSHI_DATA!(), "dds");
     let dds_scan_ms = scan_start.elapsed().as_secs_f64() * 1000.0;
 
     let scan_start = Instant::now();
-    let (hkt_count, hkt_bytes) = count_files_by_ext(KENSHI_DATA, "hkt");
+    let (hkt_count, hkt_bytes) = count_files_by_ext(KENSHI_DATA!(), "hkt");
     let hkt_scan_ms = scan_start.elapsed().as_secs_f64() * 1000.0;
 
     let scan_start = Instant::now();
-    let (skel_count, skel_bytes) = count_files_by_ext(KENSHI_DATA, "skeleton");
+    let (skel_count, skel_bytes) = count_files_by_ext(KENSHI_DATA!(), "skeleton");
     let skel_scan_ms = scan_start.elapsed().as_secs_f64() * 1000.0;
 
     let scan_start = Instant::now();
-    let zone_count = count_zones(KENSHI_DATA);
+    let zone_count = count_zones(KENSHI_DATA!());
     let zone_scan_ms = scan_start.elapsed().as_secs_f64() * 1000.0;
 
     // Mesh parse cost (the heavy work)
     let parse_start = Instant::now();
-    let meshes = scan_meshes(KENSHI_DATA);
+    let meshes = scan_meshes(KENSHI_DATA!());
     let parse_ms = parse_start.elapsed().as_secs_f64() * 1000.0;
 
     let total_verts: u64 = meshes.iter().map(|m| m.total_vertices).sum();
@@ -1005,6 +1016,11 @@ fn run_flow() {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+
+    if args.iter().any(|a| a == "--mercator") {
+        mercator::run_mercator(&args);
+        return;
+    }
 
     if args.iter().any(|a| a == "--scan") {
         run_scan();
